@@ -33,6 +33,7 @@ The root element carries the selection as attributes:
 | `--mdf-text-faint` | Labels, footer metadata, heading anchors |
 | `--mdf-border` / `--mdf-border-strong` | Rules, dividers, control borders |
 | `--mdf-link` / `--mdf-link-hover` | Anchors |
+| `--mdf-on-accent` | Text on a filled accent surface (the Save button) |
 
 ### Accent palette
 
@@ -156,6 +157,9 @@ Wiki.js classes map on too: `is-info` → info, `is-warning` → warning,
    `github` with `mytheme` in the three selectors. Fill in the values — every
    token the other themes set has to be set here too, since there is no fallback
    palette by design (a missing colour should be obvious, not silently grey).
+   `npm test` checks this for you: the theme files must declare an identical set
+   of tokens, each palette hue must be an `R, G, B` triple in both modes, and no
+   structural rule may hard-code a colour.
 2. Import it in `MarkdownFormatterWebPart.ts` next to the other theme imports.
 3. Add `{ key: 'mytheme', text: 'My theme' }` to `THEME_FAMILIES` in
    `utils/ThemeManager.ts`, and add `ThemeFamily` to the union type.

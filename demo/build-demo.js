@@ -38,6 +38,7 @@ function compileProcessor() {
     path.join(root, 'node_modules', '.bin', 'tsc'),
     [
       path.join(root, 'src', 'webparts', 'markdownFormatter', 'utils', 'MarkdownProcessor.ts'),
+      path.join(root, 'src', 'webparts', 'markdownFormatter', 'utils', 'ThemeManager.ts'),
       '--outDir', libDir,
       '--module', 'commonjs',
       '--target', 'es2017',
@@ -58,20 +59,53 @@ function escapeAttribute(value) {
   return value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
+/*
+ * Copies KaTeX's stylesheet and fonts, and Mermaid's browser build, out of
+ * node_modules so the preview is fully self-contained: it renders maths and
+ * diagrams with no network access, exactly like the deployed web part.
+ */
+function copyAssets() {
+  const katexSource = path.join(root, 'node_modules', 'katex', 'dist');
+  const katexTarget = path.join(outDir, 'katex');
+  fs.mkdirSync(path.join(katexTarget, 'fonts'), { recursive: true });
+  fs.copyFileSync(path.join(katexSource, 'katex.min.css'), path.join(katexTarget, 'katex.min.css'));
+  fs.readdirSync(path.join(katexSource, 'fonts'))
+    .filter((file) => file.endsWith('.woff2'))
+    .forEach((file) =>
+      fs.copyFileSync(path.join(katexSource, 'fonts', file), path.join(katexTarget, 'fonts', file))
+    );
+
+  fs.copyFileSync(
+    path.join(root, 'node_modules', 'mermaid', 'dist', 'mermaid.min.js'),
+    path.join(outDir, 'mermaid.min.js')
+  );
+}
+
 function build() {
   compileProcessor();
 
   const { MarkdownProcessor } = require(path.join(libDir, 'MarkdownProcessor.js'));
+  const { ThemeManager } = require(path.join(libDir, 'ThemeManager.js'));
   const processor = new MarkdownProcessor({ showLineNumbers: true, allowHtml: true });
+
+  // Diagrams are themed from the same palettes the web part uses, so the
+  // preview shows what a deployed page shows.
+  const mermaidThemes = {};
+  ['github', 'obsidian', 'vscode'].forEach((family) => {
+    ['light', 'dark'].forEach((mode) => {
+      mermaidThemes[`${family}-${mode}`] = ThemeManager.getMermaidTheme(family, mode);
+    });
+  });
 
   const sample = process.argv[2]
     ? fs.readFileSync(path.resolve(sampleArgument()), 'utf8')
     : fs.readFileSync(path.join(root, 'samples', 'kitchen-sink.md'), 'utf8');
 
   const html = processor.render(sample);
-  const page = template(readCss(), html, buildToc(html));
+  const page = template(readCss(), html, buildToc(html), mermaidThemes);
 
   fs.mkdirSync(outDir, { recursive: true });
+  copyAssets();
   fs.writeFileSync(path.join(outDir, 'index.html'), page);
   console.log('Wrote', path.relative(root, path.join(outDir, 'index.html')));
 }
@@ -99,24 +133,24 @@ function buildToc(html) {
         `<li style="padding-left:${(item.level - 2) * 12}px"><a href="#${item.id}">${item.text}</a></li>`
     )
     .join('\n');
-  return `<aside class="mdf-toc-sidebar">
-      <div class="mdf-toc-heading">On this page</div>
+  return `<details class="mdf-toc-sidebar" open>
+      <summary class="mdf-toc-heading">On this page</summary>
       <nav class="mdf-toc" aria-label="Table of contents"><ul>${links}</ul></nav>
-    </aside>`;
+    </details>`;
 }
 
 function sampleArgument() {
   return process.argv[2];
 }
 
-function template(css, content, toc) {
+function template(css, content, toc, mermaidThemes) {
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Markdown Formatter - theme preview</title>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" crossorigin="anonymous">
+<link rel="stylesheet" href="katex/katex.min.css">
 <style>
 body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
 .demo-bar {
@@ -179,7 +213,10 @@ ${content}
     </div>
   </div>
 </div>
-<script src="https://cdn.jsdelivr.net/npm/mermaid@11.12.0/dist/mermaid.min.js"></script>
+<script src="mermaid.min.js"></script>
+<script>
+var MERMAID_THEMES = ${JSON.stringify(mermaidThemes)};
+</script>
 <script>
 (function () {
   var root = document.getElementById('root');
@@ -221,6 +258,7 @@ ${content}
     setTimeout(function () { button.removeAttribute('data-state'); }, 1500);
   });
 
+  var mermaidThemes = MERMAID_THEMES;
   var sources = [];
   function renderDiagrams() {
     if (typeof mermaid === 'undefined') { return; }
@@ -231,8 +269,14 @@ ${content}
         sources[i] = pre ? pre.textContent : '';
       }
     }
-    var dark = document.getElementById('mode').value === 'dark';
-    mermaid.initialize({ startOnLoad: false, theme: dark ? 'dark' : 'default' });
+    var key = document.getElementById('theme').value + '-' + document.getElementById('mode').value;
+    var config = mermaidThemes[key];
+    mermaid.initialize(Object.assign({
+      startOnLoad: false,
+      securityLevel: 'strict',
+      htmlLabels: false,
+      flowchart: { htmlLabels: false, curve: 'basis', padding: 12, useMaxWidth: true, wrappingWidth: 220 }
+    }, config));
     for (var j = 0; j < hosts.length; j++) {
       (function (host, source, index) {
         mermaid.render('demo-mermaid-' + index + '-' + Date.now(), source).then(function (result) {
