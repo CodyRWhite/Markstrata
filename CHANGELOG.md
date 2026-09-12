@@ -7,6 +7,13 @@ the same number with a fourth part appended (1.2.0 -> 1.2.0.0), stamped by
 
 ## Unreleased
 
+- Repository renamed to `Markstrata`, matching the solution and package
+  names. Every link in the repository now points at the new path, including
+  the documentation site, which moves from `/Markdown-Formatter-SPO/` to
+  `/Markstrata/` — GitHub redirects the old repository URL but not the
+  old Pages paths, so any bookmark to the demo needs updating. Pages paths are
+  case-sensitive, so the site links keep the repository's own capitalisation.
+
 - Renamed to **Markstrata Markdown**. The solution and web part GUIDs are
   unchanged, so a tenant still sees one app rather than two; the package is now
   `markstrata.sppkg` and the CSS prefix is `ink-`.

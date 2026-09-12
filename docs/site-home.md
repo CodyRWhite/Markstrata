@@ -47,15 +47,15 @@ export function resolveMode(mode: ColorMode, isInverted?: boolean): ResolvedMode
 ## Install it
 
 Download the `.sppkg` from the
-[latest release](https://github.com/CodyRWhite/Markdown-Formatter-SPO/releases/latest),
+[latest release](https://github.com/CodyRWhite/Markstrata/releases/latest),
 upload it to your tenant App Catalog, and add **Markstrata Markdown** to a page.
 Nothing is fetched from a CDN at runtime.
 
 | Where to look | What is there |
 |---|---|
-| [README](https://github.com/CodyRWhite/Markdown-Formatter-SPO#readme) | Features, configuration, deployment |
-| [THEMES.md](https://github.com/CodyRWhite/Markdown-Formatter-SPO/blob/main/THEMES.md) | The token contract, and how to add a theme |
-| [CONTRIBUTING.md](https://github.com/CodyRWhite/Markdown-Formatter-SPO/blob/main/CONTRIBUTING.md) | Branches, commits, releases |
+| [README](https://github.com/CodyRWhite/Markstrata#readme) | Features, configuration, deployment |
+| [THEMES.md](https://github.com/CodyRWhite/Markstrata/blob/main/THEMES.md) | The token contract, and how to add a theme |
+| [CONTRIBUTING.md](https://github.com/CodyRWhite/Markstrata/blob/main/CONTRIBUTING.md) | Branches, commits, releases |
 
 ```mermaid
 flowchart LR
