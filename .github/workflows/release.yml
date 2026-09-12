@@ -15,6 +15,10 @@ on:
       version:
         description: 'Version to build, without the leading v (e.g. 1.2.0)'
         required: true
+      prerelease:
+        description: 'Publish as a pre-release, for testing before it is the recommended download'
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -71,6 +75,10 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           VERSION: ${{ steps.version.outputs.version }}
           PACKAGE: ${{ steps.package.outputs.path }}
+          # The solution version stays four-part numeric either way: SharePoint
+          # will not install a package whose version carries a semver suffix, so
+          # a pre-release is marked on the GitHub release, not in the number.
+          PRERELEASE: ${{ inputs.prerelease && '--prerelease' || '' }}
         run: |
           NOTES=$(node scripts/release-notes.js "$VERSION")
           if gh release view "v$VERSION" >/dev/null 2>&1; then
@@ -78,5 +86,6 @@ jobs:
           else
             gh release create "v$VERSION" "$PACKAGE" \
               --title "v$VERSION" \
-              --notes "$NOTES"
+              --notes "$NOTES" \
+              $PRERELEASE
           fi
