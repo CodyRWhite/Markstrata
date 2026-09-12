@@ -5,6 +5,17 @@ All notable changes to this project are recorded here. Versions follow
 the same number with a fourth part appended (1.2.0 -> 1.2.0.0), stamped by
 `scripts/set-version.js` when a release is tagged.
 
+## Unreleased
+
+- SharePoint Framework 1.21.1 -> 1.23.2, which clears every advisory against
+  the packages that ship to the browser (`npm audit --omit=dev` reports none).
+  SPFx 1.23 resolves stylesheet `url()` as a module request, so KaTeX's bundled
+  fonts need the resolver alias now in `gulpfile.js`.
+- gulp 4 -> 5, TypeScript 5.3 -> 5.9, and the GitHub Actions in both workflows
+  to their current majors, which also clears the Node 20 deprecation warnings.
+- Dropped `@pnp/logging` and `ajv`: both came from the project scaffold and
+  neither was imported or needed.
+
 ## 1.0.0
 
 First release.
