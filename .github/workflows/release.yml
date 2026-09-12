@@ -1,0 +1,82 @@
+name: Release
+
+# Tag a commit to cut a release:
+#   npm version 1.2.0 --no-git-tag-version   (or edit package.json)
+#   git commit -am "Release 1.2.0" && git tag v1.2.0 && git push --follow-tags
+#
+# The tag is the source of truth for the version: it is stamped into
+# package.json and config/package-solution.json before the package is built, so
+# the .sppkg a tenant installs always reports the version it was released as.
+on:
+  push:
+    tags: ['v*.*.*']
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to build, without the leading v (e.g. 1.2.0)'
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Build and publish the .sppkg
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Work out the version
+        id: version
+        run: |
+          if [ -n "${{ github.event.inputs.version }}" ]; then
+            VERSION="${{ github.event.inputs.version }}"
+          else
+            VERSION="${GITHUB_REF_NAME#v}"
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Releasing $VERSION"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Stamp the version
+        run: node scripts/set-version.js "${{ steps.version.outputs.version }}"
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Build the solution package
+        run: npm run package
+
+      - name: Name the package with its version
+        id: package
+        run: |
+          SOURCE=sharepoint/solution/markdown-formatter-spo.sppkg
+          TARGET=sharepoint/solution/markdown-formatter-spo-${{ steps.version.outputs.version }}.sppkg
+          test -f "$SOURCE"
+          mv "$SOURCE" "$TARGET"
+          echo "path=$TARGET" >> "$GITHUB_OUTPUT"
+
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.version.outputs.version }}
+          PACKAGE: ${{ steps.package.outputs.path }}
+        run: |
+          NOTES=$(node scripts/release-notes.js "$VERSION")
+          if gh release view "v$VERSION" >/dev/null 2>&1; then
+            gh release upload "v$VERSION" "$PACKAGE" --clobber
+          else
+            gh release create "v$VERSION" "$PACKAGE" \
+              --title "v$VERSION" \
+              --notes "$NOTES"
+          fi

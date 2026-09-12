@@ -1,0 +1,39 @@
+/*
+ * modifiers.css - reading options that apply on top of whichever theme is
+ * selected. Loaded last so these always win over the theme defaults.
+ */
+
+/* ----------------------------------------------------------------- density */
+
+.mdf-root[data-mdf-density='compact'] {
+  --mdf-density-scale: 0.88;
+}
+
+.mdf-root[data-mdf-density='relaxed'] {
+  --mdf-density-scale: 1.12;
+}
+
+/* --------------------------------------------------------------- text size */
+
+.mdf-root[data-mdf-size='small'] { --mdf-font-scale: 0.9; }
+.mdf-root[data-mdf-size='large'] { --mdf-font-scale: 1.12; }
+.mdf-root[data-mdf-size='xlarge'] { --mdf-font-scale: 1.25; }
+
+/* ------------------------------------------------------------ line measure */
+
+.mdf-root[data-mdf-width='narrow'] { --mdf-content-max-width: 680px; }
+.mdf-root[data-mdf-width='wide'] { --mdf-content-max-width: 1100px; }
+.mdf-root[data-mdf-width='full'] { --mdf-content-max-width: none; }
+
+/* --------------------------------------------------------------- code size */
+
+.mdf-root[data-mdf-code-size='small'] { --mdf-code-font-size: 0.8em; }
+.mdf-root[data-mdf-code-size='large'] { --mdf-code-font-size: 0.95em; }
+
+/* Respect the reader's motion preference for the few transitions we use. */
+@media (prefers-reduced-motion: reduce) {
+  .mdf-root * {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}

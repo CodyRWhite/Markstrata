@@ -1,0 +1,48 @@
+# Build output
+dist/
+lib/
+temp/
+release/
+solution/
+sharepoint/solution/
+*.sppkg
+
+# Dependencies
+node_modules/
+
+# Generated during the build
+*.scss.ts
+*.css.ts
+*.tsbuildinfo
+*.js.map
+*.css.map
+
+# Preview output (npm run demo)
+demo/dist/
+
+# Local configuration and secrets
+.env
+.env.*
+!.env.example
+*.pfx
+*.cer
+
+# Editors and operating systems
+.vscode/
+.idea/
+.vs/
+*.swp
+*~
+.DS_Store
+Thumbs.db
+
+# Logs and coverage
+*.log
+npm-debug.log*
+coverage/
+
+# Harness build output
+harness/dist/
+
+# Docs site build output
+site/

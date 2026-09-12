@@ -1,0 +1,164 @@
+/*
+ * callouts.css - GitHub alerts, Obsidian callouts and legacy Wiki.js
+ * blockquote classes, all rendered from one markup shape.
+ *
+ * Colour comes from --mdf-callout-rgb, an "R, G, B" triple set per callout
+ * type below, so backgrounds can be a low-alpha tint of the same hue used for
+ * the icon and title. Shape (tint strength, accent bar, radius, padding) is
+ * supplied by the theme, which is how the same callout reads as a GitHub
+ * alert, an Obsidian callout or a VS Code notice.
+ */
+
+.mdf-callout {
+  display: block;
+  margin: 0 0 var(--mdf-block-gap);
+  border: var(--mdf-callout-border-width) solid rgba(var(--mdf-callout-rgb), var(--mdf-callout-border-alpha, 0.25));
+  border-left: var(--mdf-callout-accent-width, 0) solid rgb(var(--mdf-callout-rgb));
+  border-radius: var(--mdf-callout-radius);
+  background-color: rgba(var(--mdf-callout-rgb), var(--mdf-callout-bg-alpha));
+  color: var(--mdf-text);
+  overflow: hidden;
+}
+
+.mdf-callout-title {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: var(--mdf-callout-title-padding, 8px 16px 0);
+  background-color: rgba(var(--mdf-callout-rgb), var(--mdf-callout-title-bg-alpha));
+  color: rgb(var(--mdf-callout-rgb));
+  font-weight: var(--mdf-callout-title-weight);
+  line-height: 1.4;
+}
+
+.mdf-callout-icon {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  height: calc(1.4em);
+}
+
+.mdf-callout-icon svg {
+  width: 1.05em;
+  height: 1.05em;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Filled icons (GitHub uses solid Octicons) opt in with this attribute. */
+.mdf-callout-icon[data-icon-style='filled'] svg {
+  fill: currentColor;
+  stroke: none;
+}
+
+.mdf-callout-title-text {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.mdf-callout-content {
+  padding: var(--mdf-callout-content-padding, 4px 16px 8px);
+}
+
+.mdf-callout-content > :last-child {
+  margin-bottom: 0;
+}
+
+.mdf-callout-content > :first-child {
+  margin-top: 0;
+}
+
+/* A callout whose body is empty (title-only) should not leave a gap. */
+.mdf-callout-content:empty {
+  display: none;
+}
+
+/* Nested content inherits the tint, so keep inner blocks readable. */
+.mdf-callout blockquote {
+  border-left-color: rgba(var(--mdf-callout-rgb), 0.45);
+}
+
+/* ------------------------------------------------------- foldable callouts */
+
+details.mdf-callout > summary.mdf-callout-title {
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+}
+
+details.mdf-callout > summary.mdf-callout-title::-webkit-details-marker {
+  display: none;
+}
+
+.mdf-callout-fold {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  margin-left: auto;
+  padding-left: 8px;
+  transition: transform 0.15s ease-in-out;
+}
+
+.mdf-callout-fold svg {
+  width: 0.9em;
+  height: 0.9em;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+details.mdf-callout:not([open]) .mdf-callout-fold {
+  transform: rotate(-90deg);
+}
+
+details.mdf-callout:not([open]) > summary.mdf-callout-title {
+  padding-bottom: var(--mdf-callout-fold-closed-pad, 8px);
+}
+
+/* ------------------------------------------------------------ type palette */
+
+.mdf-callout[data-callout='note'],
+.mdf-callout[data-callout='info'],
+.mdf-callout[data-callout='todo'] {
+  --mdf-callout-rgb: var(--mdf-color-blue);
+}
+
+.mdf-callout[data-callout='abstract'],
+.mdf-callout[data-callout='hint'] {
+  --mdf-callout-rgb: var(--mdf-color-cyan);
+}
+
+.mdf-callout[data-callout='tip'],
+.mdf-callout[data-callout='success'] {
+  --mdf-callout-rgb: var(--mdf-color-green);
+}
+
+.mdf-callout[data-callout='important'],
+.mdf-callout[data-callout='example'] {
+  --mdf-callout-rgb: var(--mdf-color-purple);
+}
+
+.mdf-callout[data-callout='question'] {
+  --mdf-callout-rgb: var(--mdf-color-yellow);
+}
+
+.mdf-callout[data-callout='warning'] {
+  --mdf-callout-rgb: var(--mdf-color-orange);
+}
+
+.mdf-callout[data-callout='caution'],
+.mdf-callout[data-callout='failure'],
+.mdf-callout[data-callout='danger'],
+.mdf-callout[data-callout='bug'] {
+  --mdf-callout-rgb: var(--mdf-color-red);
+}
+
+.mdf-callout[data-callout='quote'] {
+  --mdf-callout-rgb: var(--mdf-color-gray);
+}
