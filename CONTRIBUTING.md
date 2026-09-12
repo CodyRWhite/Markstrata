@@ -85,18 +85,21 @@ reachable on anything below Enterprise Cloud.
 
 ## Toolchain
 
-The build is SPFx 1.21.1 with gulp, deliberately, rather than 1.22.x with Heft.
-1.21.1 is supported, the build is verified end to end here, and the migration
-touches every config file in the repo for no user-visible gain. Two things are
-worth knowing if you do migrate later:
+The build is SPFx 1.23.2 with gulp 5. The Heft migration is still open: it
+touches every config file for no user-visible gain, and the gulp rig builds,
+serves and packages cleanly. Three things are worth knowing:
 
-- The compiler SPFx 1.21 pins is TypeScript 4.7, which cannot parse the
+- The compiler SPFx pins is still TypeScript 4.7, which cannot parse the
   TypeScript 5 syntax in Mermaid's transitive `@types/d3-*`. That is why
   `src/types/mermaid.d.ts` and the `paths` entry in `tsconfig.json` exist; both
-  can be deleted once the compiler is 5.x.
-- `npm audit` findings against `@microsoft/*` packages all come from one `ajv`
-  advisory inside `@rushstack/node-core-library`. It is present in 1.22.x too,
-  and it is build-time code, not shipped to the browser.
+  can be deleted once the rig's compiler is 5.x.
+- `typescript` in devDependencies is separate from that: it compiles the unit
+  tests and the demo. It has to stay on 5.x, because TypeScript 7 removed
+  `baseUrl` and `moduleResolution: node`, which the SPFx-compatible config
+  needs.
+- SPFx 1.23 resolves `url()` in a stylesheet as a module request, so KaTeX's
+  bundled font references need the alias in `gulpfile.js`. Without it the
+  package build fails outright.
 
 ## Adding a theme
 

@@ -128,11 +128,9 @@ npm run serve
   on; callout titles are escaped either way.
 - Mermaid runs with `securityLevel: 'strict'` and HTML labels disabled, so
   diagram text can never become markup.
-- `npm audit` reports advisories against the SharePoint Framework packages
-  themselves — all of them trace to one `ajv` ReDoS inside
-  `@rushstack/node-core-library`, which is a build-time schema validator, not
-  code that reaches the browser. Every SPFx version through 1.22.x carries it.
-  The dependencies this project actually ships are clean.
+- `npm audit --omit=dev` reports no advisories at all: nothing that ships to the
+  browser has a known vulnerability. Build-time tooling still carries some, as
+  most JavaScript toolchains do; none of it reaches a page.
 
 ### No CDN dependency
 
