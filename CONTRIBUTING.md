@@ -68,6 +68,17 @@ Nothing else is needed - do not commit a built `.sppkg`. To build one for a
 test tenant without releasing, download the artifact from the CI run, or run
 `npm run package` locally.
 
+## The documentation site
+
+`npm run site` builds `site/` — the landing page, the theme preview and the
+working demo — from the same sources as the package. It is published to GitHub
+Pages by `.github/workflows/pages.yml` on every push to `main`.
+
+That workflow needs Pages turned on once: **Settings -> Pages -> Source: GitHub
+Actions**. The `github-pages` environment only accepts deployments from the
+default branch unless other branches are added under **Settings ->
+Environments**, so the site will not publish from a feature branch by default.
+
 ## Toolchain
 
 The build is SPFx 1.21.1 with gulp, deliberately, rather than 1.22.x with Heft.

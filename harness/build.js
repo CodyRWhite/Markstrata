@@ -15,8 +15,18 @@ const fs = require('fs');
 const path = require('path');
 const { execFileSync } = require('child_process');
 
+/*
+ * Two modes:
+ *   (default)     the page links the stylesheets where they live, so editing
+ *                 one and reloading shows the change
+ *   --standalone  assets are copied next to the page, for publishing
+ */
+const args = process.argv.slice(2);
+const standalone = args.indexOf('--standalone') !== -1;
+const outArg = args.indexOf('--out');
+
 const root = path.join(__dirname, '..');
-const outDir = path.join(__dirname, 'dist');
+const outDir = outArg === -1 ? path.join(__dirname, 'dist') : path.resolve(args[outArg + 1]);
 const stylesDir = path.join(root, 'src', 'webparts', 'markdownFormatter', 'styles');
 
 const CSS_FILES = [
@@ -48,16 +58,40 @@ execFileSync(
     '--bundle',
     '--format=iife',
     `--outfile=${path.join(outDir, 'bundle.js')}`,
-    '--define:process.env.NODE_ENV="development"',
+    `--define:process.env.NODE_ENV="${standalone ? 'production' : 'development'}"`,
+    standalone ? '--minify' : '--sourcemap',
     '--log-level=warning'
   ],
   { stdio: 'inherit', cwd: root }
 );
 
+function copyInto(sourceDir, targetDir, filter) {
+  fs.mkdirSync(targetDir, { recursive: true });
+  fs.readdirSync(sourceDir).forEach((entry) => {
+    const source = path.join(sourceDir, entry);
+    if (fs.statSync(source).isDirectory()) {
+      copyInto(source, path.join(targetDir, entry), filter);
+    } else if (!filter || filter(entry)) {
+      fs.copyFileSync(source, path.join(targetDir, entry));
+    }
+  });
+}
+
+if (standalone) {
+  copyInto(stylesDir, path.join(outDir, 'styles'), (name) => name.endsWith('.css'));
+  const katexSource = path.join(root, 'node_modules', 'katex', 'dist');
+  fs.mkdirSync(path.join(outDir, 'katex', 'fonts'), { recursive: true });
+  fs.copyFileSync(path.join(katexSource, 'katex.min.css'), path.join(outDir, 'katex', 'katex.min.css'));
+  copyInto(path.join(katexSource, 'fonts'), path.join(outDir, 'katex', 'fonts'), (name) => name.endsWith('.woff2'));
+}
+
 // Stylesheets are plain CSS, so the page links the real files rather than a
 // copy: editing one and reloading is enough to see the change.
-const links = ['../../node_modules/katex/dist/katex.min.css']
-  .concat(CSS_FILES.map((file) => `../../src/webparts/markdownFormatter/styles/${file}`))
+const cssBase = standalone ? 'styles' : '../../src/webparts/markdownFormatter/styles';
+const katexHref = standalone ? 'katex/katex.min.css' : '../../node_modules/katex/dist/katex.min.css';
+
+const links = [katexHref]
+  .concat(CSS_FILES.map((file) => `${cssBase}/${file}`))
   .map((href) => `<link rel="stylesheet" href="${href}">`)
   .join('\n');
 
@@ -90,4 +124,4 @@ ${links}
 `
 );
 
-console.log('Wrote harness/dist/index.html');
+console.log(`Wrote ${path.relative(root, path.join(outDir, 'index.html'))}`);

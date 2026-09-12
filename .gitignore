@@ -43,3 +43,6 @@ coverage/
 
 # Harness build output
 harness/dist/
+
+# Docs site build output
+site/

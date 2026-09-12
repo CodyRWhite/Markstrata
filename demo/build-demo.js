@@ -12,8 +12,16 @@ const fs = require('fs');
 const path = require('path');
 const { execFileSync } = require('child_process');
 
+/*
+ * Usage:
+ *   node demo/build-demo.js [markdown file] [--out <directory>]
+ */
+const args = process.argv.slice(2);
+const outArg = args.indexOf('--out');
+const sampleArg = args.filter((arg, index) => arg.indexOf('--') !== 0 && args[index - 1] !== '--out')[0];
+
 const root = path.join(__dirname, '..');
-const outDir = path.join(__dirname, 'dist');
+const outDir = outArg === -1 ? path.join(__dirname, 'dist') : path.resolve(args[outArg + 1]);
 const libDir = path.join(root, 'temp', 'demo-lib');
 
 const CSS_FILES = [
@@ -97,8 +105,8 @@ function build() {
     });
   });
 
-  const sample = process.argv[2]
-    ? fs.readFileSync(path.resolve(sampleArgument()), 'utf8')
+  const sample = sampleArg
+    ? fs.readFileSync(path.resolve(sampleArg), 'utf8')
     : fs.readFileSync(path.join(root, 'samples', 'kitchen-sink.md'), 'utf8');
 
   const html = processor.render(sample);
@@ -142,10 +150,6 @@ function buildToc(html) {
       <summary class="mdf-toc-heading">On this page</summary>
       <nav class="mdf-toc" aria-label="Table of contents"><ul>${links}</ul></nav>
     </details>`;
-}
-
-function sampleArgument() {
-  return process.argv[2];
 }
 
 function template(css, content, toc, mermaidThemes) {

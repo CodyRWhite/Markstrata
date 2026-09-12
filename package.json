@@ -15,6 +15,7 @@
     "lint": "eslint \"src/**/*.ts\" --max-warnings 0",
     "package": "gulp bundle --ship && gulp package-solution --ship",
     "serve": "gulp serve",
+    "site": "node scripts/build-site.js",
     "test": "node scripts/run-tests.js",
     "test:spfx": "gulp test"
   },

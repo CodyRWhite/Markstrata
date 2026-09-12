@@ -4,6 +4,10 @@ A SharePoint Framework (SPFx) web part that renders markdown from a document
 library, a URL, or typed straight into the page — with themes that mirror how
 **GitHub**, **Obsidian** and **VS Code** display markdown, in light and dark.
 
+**[Try it in your browser](https://codyrwhite.github.io/Markdown-Formatter-SPO/)** —
+the live demo runs the web part's own renderer: switch themes, fold callouts,
+copy code, and type in the split editor. No install needed.
+
 It was written after living with
 [npapadacis/better-markdown-webpart](https://github.com/npapadacis/better-markdown-webpart),
 which gets a lot right, and is aimed squarely at the parts that were hard to
@@ -186,6 +190,21 @@ the content came from a library file, **Save to SharePoint** writes it back,
 warning you first if someone else has saved it since you opened it. This is a
 plain textarea rather than Monaco — it always loads, and a large editor bundle is
 hard to justify for the short edits that happen on a SharePoint page.
+
+## The demo site
+
+[codyrwhite.github.io/Markdown-Formatter-SPO](https://codyrwhite.github.io/Markdown-Formatter-SPO/)
+is published from this repository on every push to `main`:
+
+| Page | What it is |
+|------|------------|
+| [`/`](https://codyrwhite.github.io/Markdown-Formatter-SPO/) | This project's own introduction, rendered by the web part's pipeline |
+| [`/themes/`](https://codyrwhite.github.io/Markdown-Formatter-SPO/themes/) | The kitchen sink document — every feature at once, for judging a theme |
+| [`/app/`](https://codyrwhite.github.io/Markdown-Formatter-SPO/app/) | The working demo: toolbar, contents sidebar, copy buttons, theme switcher, split editor |
+
+Build it locally with `npm run site`. Everything on it is built from the same
+sources as the solution package, so the site cannot drift from what the web part
+does.
 
 ## Previewing themes without deploying
 
