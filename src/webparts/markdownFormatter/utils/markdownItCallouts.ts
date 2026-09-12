@@ -13,8 +13,9 @@
  */
 
 import { resolveCallout, buildIcon, FOLD_ICON, ICalloutType } from './callouts';
+import { IMarkdownIt, IStateCore, IToken } from './markdownItTypes';
 
-interface ICalloutMeta {
+export interface ICalloutMeta {
   type: string;
   title: string;
   icon: string;
@@ -24,7 +25,7 @@ interface ICalloutMeta {
 const MARKER: RegExp = /^\s{0,3}\[!([\w-]+)\]([+-]?)[ \t]*(.*)$/;
 
 /** Finds the blockquote_close that matches the open token at `start`. */
-function findClose(tokens: any[], start: number): number {
+function findClose(tokens: IToken[], start: number): number {
   const level: number = tokens[start].level;
   for (let i: number = start + 1; i < tokens.length; i++) {
     if (tokens[i].type === 'blockquote_close' && tokens[i].level === level) {
@@ -34,7 +35,7 @@ function findClose(tokens: any[], start: number): number {
   return -1;
 }
 
-function toCallout(tokens: any[], openIdx: number, meta: ICalloutMeta): void {
+function toCallout(tokens: IToken[], openIdx: number, meta: ICalloutMeta): void {
   const closeIdx: number = findClose(tokens, openIdx);
   if (closeIdx === -1) {
     return;
@@ -51,16 +52,16 @@ function toCallout(tokens: any[], openIdx: number, meta: ICalloutMeta): void {
  * Editing `content` at this point is far safer than rewriting an already
  * parsed child list.
  */
-function calloutRule(state: any): void {
-  const tokens: any[] = state.tokens;
+function calloutRule(state: IStateCore): void {
+  const tokens: IToken[] = state.tokens;
 
   for (let i: number = 0; i < tokens.length; i++) {
     if (tokens[i].type !== 'blockquote_open') {
       continue;
     }
 
-    const paragraph: any = tokens[i + 1];
-    const inline: any = tokens[i + 2];
+    const paragraph: IToken = tokens[i + 1];
+    const inline: IToken = tokens[i + 2];
     if (!paragraph || paragraph.type !== 'paragraph_open' || !inline || inline.type !== 'inline') {
       continue;
     }
@@ -100,8 +101,8 @@ function calloutRule(state: any): void {
  * blockquote by the time this runs, so there is no text to strip - only the
  * class to translate.
  */
-function legacyClassRule(state: any): void {
-  const tokens: any[] = state.tokens;
+function legacyClassRule(state: IStateCore): void {
+  const tokens: IToken[] = state.tokens;
 
   for (let i: number = 0; i < tokens.length; i++) {
     if (tokens[i].type !== 'blockquote_open') {
@@ -123,13 +124,13 @@ function legacyClassRule(state: any): void {
   }
 }
 
-export function calloutPlugin(md: any): void {
+export function calloutPlugin(md: IMarkdownIt): void {
   md.core.ruler.after('block', 'mdf_callout', calloutRule);
 
   // markdown-it-attrs registers `curly_attributes` before `linkify`; sit after
   // it when it is present so the class is already on the token.
   const ruleNames: string[] = md.core.ruler.__rules__
-    ? md.core.ruler.__rules__.map((rule: any) => rule.name)
+    ? md.core.ruler.__rules__.map((rule: { name: string }) => rule.name)
     : [];
   if (ruleNames.indexOf('curly_attributes') !== -1) {
     md.core.ruler.after('curly_attributes', 'mdf_legacy_callout', legacyClassRule);
@@ -137,14 +138,15 @@ export function calloutPlugin(md: any): void {
     md.core.ruler.before('linkify', 'mdf_legacy_callout', legacyClassRule);
   }
 
-  md.renderer.rules.mdf_callout_open = (tokens: any[], idx: number): string => {
-    const meta: ICalloutMeta = tokens[idx].meta.callout;
+  md.renderer.rules.mdf_callout_open = (tokens: IToken[], idx: number): string => {
+    const meta: ICalloutMeta = (tokens[idx].meta as { callout: ICalloutMeta }).callout;
     const foldable: boolean = meta.fold === '+' || meta.fold === '-';
 
     let title: string;
     try {
       title = md.renderInline(meta.title);
-    } catch (error) {
+    } catch {
+      // A title that cannot be parsed as inline markdown is still shown, as text.
       title = md.utils.escapeHtml(meta.title);
     }
 
@@ -168,8 +170,8 @@ export function calloutPlugin(md: any): void {
     return parts.join('');
   };
 
-  md.renderer.rules.mdf_callout_close = (tokens: any[], idx: number): string => {
-    const meta: ICalloutMeta = tokens[idx].meta && tokens[idx].meta.callout;
+  md.renderer.rules.mdf_callout_close = (tokens: IToken[], idx: number): string => {
+    const meta: ICalloutMeta | undefined = (tokens[idx].meta as { callout?: ICalloutMeta } | undefined)?.callout;
     const foldable: boolean = !!meta && (meta.fold === '+' || meta.fold === '-');
     return `</div></${foldable ? 'details' : 'div'}>`;
   };

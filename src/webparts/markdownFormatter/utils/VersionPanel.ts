@@ -54,29 +54,31 @@ export class VersionPanel {
     head.appendChild(close);
 
     const body: HTMLElement = document.createElement('div');
-    body.className = 'mdf-panel-body';
     body.appendChild(this.text('div', 'Loading versions...', 'mdf-version'));
 
+    body.className = 'mdf-panel-body';
     panel.appendChild(head);
     panel.appendChild(body);
     host.insertBefore(panel, host.firstChild);
     this.element = panel;
 
     const versions: IVersionInfo[] = await this.service.getVersions(fileUrl);
-    body.innerHTML = '';
-
-    if (versions.length === 0) {
-      body.appendChild(
-        this.text(
-          'div',
-          'No previous versions. Versioning may be switched off for this library.',
-          'mdf-version'
-        )
-      );
+    if (this.element !== panel) {
+      // Closed, or reopened, while the versions were loading.
       return;
     }
 
-    versions.forEach((version: IVersionInfo) => body.appendChild(this.buildRow(version, fileUrl)));
+    const list: HTMLElement = document.createElement('div');
+    list.className = 'mdf-panel-body';
+    if (versions.length === 0) {
+      list.appendChild(
+        this.text('div', 'No previous versions. Versioning may be switched off for this library.', 'mdf-version')
+      );
+    } else {
+      versions.forEach((version: IVersionInfo) => list.appendChild(this.buildRow(version, fileUrl)));
+    }
+
+    panel.replaceChild(list, body);
   }
 
   private buildRow(version: IVersionInfo, fileUrl: string): HTMLElement {

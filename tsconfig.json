@@ -26,6 +26,10 @@
     "alwaysStrict": false,
     "noUnusedLocals": false,
     "noUnusedParameters": false,
+    "baseUrl": ".",
+    "paths": {
+      "mermaid": ["src/types/mermaid"]
+    },
     "typeRoots": [
       "./node_modules/@types",
       "./node_modules/@microsoft"

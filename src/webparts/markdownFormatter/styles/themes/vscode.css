@@ -29,6 +29,7 @@
   --mdf-h1-rule-width: 1px;
   --mdf-h1-rule-space: 0.3em;
   --mdf-h2-rule-width: 0;
+  --mdf-h2-rule-space: 0;
 
   --mdf-radius-sm: 2px;
   --mdf-radius-md: 3px;
@@ -51,6 +52,7 @@
   --mdf-callout-title-padding: 8px 12px 2px;
   --mdf-callout-content-padding: 0 12px 10px;
   --mdf-callout-title-weight: 600;
+  --mdf-callout-fold-closed-pad: 8px;
 
   --mdf-quote-padding: 8px 12px;
   --mdf-quote-border-width: 5px;
@@ -70,6 +72,7 @@
   --mdf-border-strong: #4d4d4d;
   --mdf-link: #4daafc;
   --mdf-link-hover: #6cb8ff;
+  --mdf-on-accent: #ffffff;
 
   --mdf-color-blue: 55, 148, 255;
   --mdf-color-cyan: 41, 184, 219;
@@ -92,6 +95,7 @@
   /* textPreformat.foreground */
   --mdf-code-inline-bg: rgba(255, 255, 255, 0.08);
   --mdf-code-inline-text: #d7ba7d;
+  --mdf-code-inline-border: transparent;
 
   --mdf-quote-bg: rgba(255, 255, 255, 0.05);
   --mdf-quote-border-color: rgba(0, 122, 204, 0.6);
@@ -100,6 +104,7 @@
   --mdf-table-border: #3c3c3c;
   --mdf-table-header-bg: #252526;
   --mdf-table-stripe-bg: rgba(255, 255, 255, 0.02);
+  --mdf-table-hover-bg: transparent;
 
   --mdf-scrollbar-thumb: #4f4f4f;
   --mdf-mark-alpha: 0.3;
@@ -142,6 +147,7 @@
   --mdf-border-strong: #cecece;
   --mdf-link: #005fb8;
   --mdf-link-hover: #0f4a85;
+  --mdf-on-accent: #ffffff;
 
   --mdf-color-blue: 0, 95, 184;
   --mdf-color-cyan: 0, 115, 119;
@@ -163,6 +169,7 @@
   --mdf-code-line-hover: rgba(0, 0, 0, 0.03);
   --mdf-code-inline-bg: rgba(0, 0, 0, 0.06);
   --mdf-code-inline-text: #b5200d;
+  --mdf-code-inline-border: transparent;
 
   --mdf-quote-bg: rgba(0, 0, 0, 0.04);
   --mdf-quote-border-color: rgba(0, 95, 184, 0.5);
@@ -171,6 +178,7 @@
   --mdf-table-border: #e5e5e5;
   --mdf-table-header-bg: #f8f8f8;
   --mdf-table-stripe-bg: rgba(0, 0, 0, 0.015);
+  --mdf-table-hover-bg: transparent;
 
   --mdf-scrollbar-thumb: #c8c8c8;
   --mdf-mark-alpha: 0.4;

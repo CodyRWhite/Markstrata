@@ -32,6 +32,42 @@ export interface ILibraryInfo {
   serverRelativeUrl: string;
 }
 
+/**
+ * The shapes SharePoint's REST API returns for the fields this web part asks
+ * for. PnPjs types these loosely, so they are written out here rather than
+ * reaching into `any` - a renamed field then fails to compile instead of
+ * silently reading undefined at runtime.
+ */
+interface ISpUser {
+  Title?: string;
+  EMail?: string;
+}
+
+interface ISpFile {
+  Name: string;
+  ServerRelativeUrl: string;
+  TimeLastModified: string;
+  Length: number;
+  Author?: ISpUser;
+}
+
+interface ISpList {
+  Title: string;
+  RootFolder: { ServerRelativeUrl: string };
+}
+
+interface ISpFolder {
+  Name: string;
+}
+
+interface ISpVersion {
+  VersionLabel: string;
+  Created: string;
+  Url: string;
+  IsCurrentVersion: boolean;
+  CreatedBy?: ISpUser;
+}
+
 const MARKDOWN_EXTENSIONS: string[] = ['.md', '.markdown', '.mdx', '.txt'];
 const POLL_INTERVAL_MS: number = 30000;
 
@@ -48,12 +84,12 @@ export class SharePointService {
 
   public async getDocumentLibraries(): Promise<ILibraryInfo[]> {
     try {
-      const lists: any[] = await this.sp.web.lists
+      const lists: ISpList[] = await this.sp.web.lists
         .filter('BaseTemplate eq 101 and Hidden eq false')
         .select('Title', 'RootFolder/ServerRelativeUrl')
         .expand('RootFolder')();
 
-      return lists.map((list: any) => ({
+      return lists.map((list: ISpList) => ({
         title: list.Title,
         serverRelativeUrl: list.RootFolder.ServerRelativeUrl
       }));
@@ -65,12 +101,12 @@ export class SharePointService {
 
   public async getFolders(libraryUrl: string): Promise<string[]> {
     try {
-      const folders: any[] = await this.sp.web
+      const folders: ISpFolder[] = await this.sp.web
         .getFolderByServerRelativePath(libraryUrl)
         .folders.select('Name')
         .filter("Name ne 'Forms'")();
 
-      return folders.map((folder: any) => folder.Name);
+      return folders.map((folder: ISpFolder) => folder.Name);
     } catch (error) {
       console.error('[MarkdownFormatter] Could not list folders', error);
       return [];
@@ -81,14 +117,14 @@ export class SharePointService {
     const target: string = folderPath && folderPath.trim() ? `${libraryUrl}/${folderPath}` : libraryUrl;
 
     try {
-      const files: any[] = await this.sp.web
+      const files: ISpFile[] = await this.sp.web
         .getFolderByServerRelativePath(target)
         .files.select('Name', 'ServerRelativeUrl', 'TimeLastModified', 'Author/Title', 'Length')
         .expand('Author')();
 
       return files
-        .filter((file: any) => this.isMarkdown(file.Name))
-        .map((file: any) => this.toMetadata(file));
+        .filter((file: ISpFile) => this.isMarkdown(file.Name))
+        .map((file: ISpFile) => this.toMetadata(file));
     } catch (error) {
       console.error('[MarkdownFormatter] Could not list markdown files', error);
       return [];
@@ -101,7 +137,7 @@ export class SharePointService {
 
   public async getFileMetadata(serverRelativeUrl: string): Promise<IFileMetadata | undefined> {
     try {
-      const file: any = await this.sp.web
+      const file: ISpFile = await this.sp.web
         .getFileByServerRelativePath(serverRelativeUrl)
         .select('Name', 'ServerRelativeUrl', 'TimeLastModified', 'Author/Title', 'Length')
         .expand('Author')();
@@ -118,13 +154,13 @@ export class SharePointService {
 
   public async getVersions(serverRelativeUrl: string): Promise<IVersionInfo[]> {
     try {
-      const versions: any[] = await this.sp.web
+      const versions: ISpVersion[] = await this.sp.web
         .getFileByServerRelativePath(serverRelativeUrl)
         .versions.select('VersionLabel', 'Created', 'CreatedBy/Title', 'Url', 'IsCurrentVersion')
         .expand('CreatedBy')();
 
       return versions
-        .map((version: any) => ({
+        .map((version: ISpVersion) => ({
           versionLabel: version.VersionLabel,
           created: version.Created,
           createdBy: version.CreatedBy ? version.CreatedBy.Title : 'Unknown',
@@ -172,6 +208,10 @@ export class SharePointService {
     });
 
     this.pollTimer = window.setInterval(() => {
+      // No point asking SharePoint for changes nobody is looking at.
+      if (document.hidden) {
+        return;
+      }
       void this.getFileMetadata(serverRelativeUrl).then((metadata: IFileMetadata | undefined) => {
         if (!metadata) {
           return;
@@ -212,7 +252,7 @@ export class SharePointService {
     return MARKDOWN_EXTENSIONS.some((extension: string) => lower.lastIndexOf(extension) === lower.length - extension.length);
   }
 
-  private toMetadata(file: any): IFileMetadata {
+  private toMetadata(file: ISpFile): IFileMetadata {
     return {
       name: file.Name,
       serverRelativeUrl: file.ServerRelativeUrl,

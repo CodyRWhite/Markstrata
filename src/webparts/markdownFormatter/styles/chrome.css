@@ -55,7 +55,7 @@
 .mdf-btn-primary {
   border-color: var(--mdf-link);
   background-color: var(--mdf-link);
-  color: #ffffff;
+  color: var(--mdf-on-accent);
 }
 
 .mdf-btn-primary:hover {
@@ -171,10 +171,31 @@
   color: var(--mdf-text-faint);
 }
 
-@media (max-width: 900px) {
+/* A web part in a narrow column must drop the split view, or the editor and
+   the Save button end up squeezed out of reach. Keyed on the web part's own
+   width, with a viewport media query as the fallback. */
+@container mdf (max-width: 720px) {
   .mdf-editor[data-layout='split'] {
     grid-template-columns: 1fr;
   }
+
+  .mdf-editor[data-layout='split'] .mdf-preview-pane {
+    max-height: 40vh;
+  }
+}
+
+@supports not (container-type: inline-size) {
+  @media (max-width: 900px) {
+    .mdf-editor[data-layout='split'] {
+      grid-template-columns: 1fr;
+    }
+  }
+}
+
+/* The toolbar wraps rather than clipping, so Save stays reachable however
+   narrow the column is. */
+.mdf-toolbar > .mdf-btn-primary {
+  margin-left: auto;
 }
 
 /* ------------------------------------------------------------ version panel */

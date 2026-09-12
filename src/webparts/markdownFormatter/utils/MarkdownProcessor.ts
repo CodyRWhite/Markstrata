@@ -6,21 +6,29 @@
  */
 
 import { calloutPlugin } from './markdownItCallouts';
+import { taskListPlugin } from './markdownItTaskLists';
 import { renderCodeBlock, ICodeBlockOptions, escapeHtml } from './codeBlocks';
+import {
+  IMarkdownIt,
+  IRenderer,
+  IStateBlock,
+  IStateInline,
+  IToken,
+  RenderRule
+} from './markdownItTypes';
 
-const MarkdownIt = require('markdown-it');
-const markdownItAttrs = require('markdown-it-attrs');
-const markdownItFootnote = require('markdown-it-footnote');
-const markdownItEmoji = require('markdown-it-emoji');
-const markdownItAbbr = require('markdown-it-abbr');
-const markdownItDeflist = require('markdown-it-deflist');
-const markdownItSub = require('markdown-it-sub');
-const markdownItSup = require('markdown-it-sup');
-const markdownItAnchor = require('markdown-it-anchor');
-const markdownItTOC = require('markdown-it-table-of-contents');
-const markdownItTaskLists = require('markdown-it-task-lists');
-const markdownItMultimdTable = require('markdown-it-multimd-table');
-const katex = require('katex');
+import MarkdownIt from 'markdown-it';
+import markdownItAttrs from 'markdown-it-attrs';
+import markdownItFootnote from 'markdown-it-footnote';
+import * as markdownItEmoji from 'markdown-it-emoji';
+import markdownItAbbr from 'markdown-it-abbr';
+import markdownItDeflist from 'markdown-it-deflist';
+import markdownItSub from 'markdown-it-sub';
+import markdownItSup from 'markdown-it-sup';
+import markdownItAnchor from 'markdown-it-anchor';
+import markdownItTOC from 'markdown-it-table-of-contents';
+import markdownItMultimdTable from 'markdown-it-multimd-table';
+import * as katex from 'katex';
 
 export interface IMarkdownProcessorOptions {
   enableSyntaxHighlighting: boolean;
@@ -47,12 +55,13 @@ export const DEFAULT_PROCESSOR_OPTIONS: IMarkdownProcessorOptions = {
 };
 
 /** Loads a plugin whether it is a CommonJS or ES default export. */
-function resolvePlugin(plugin: any): any {
-  return plugin && plugin.default ? plugin.default : plugin;
+function resolvePlugin(plugin: unknown): unknown {
+  const candidate: { default?: unknown } = plugin as { default?: unknown };
+  return candidate && candidate.default ? candidate.default : plugin;
 }
 
 export class MarkdownProcessor {
-  private md: any;
+  private md: IMarkdownIt;
   private options: IMarkdownProcessorOptions;
   private mermaidCounter: number = 0;
 
@@ -87,12 +96,12 @@ export class MarkdownProcessor {
   // ----------------------------------------------------------------- build
 
   private build(): void {
-    this.md = new MarkdownIt({
+    this.md = (new MarkdownIt({
       html: this.options.allowHtml,
       linkify: true,
       typographer: true,
       breaks: false
-    });
+    }) as unknown) as IMarkdownIt;
 
     this.addPlugins();
     this.addCodeBlocks();
@@ -108,26 +117,36 @@ export class MarkdownProcessor {
     // Callouts must be registered after markdown-it-attrs so the Wiki.js
     // `{.is-info}` classes have already landed on the blockquote token.
     this.md.use(calloutPlugin);
+    this.md.use(taskListPlugin);
   }
 
   private addPlugins(): void {
-    const use = (plugin: any, opts?: any): void => {
+    // markdown-it 15 removed `utils.assign`, which markdown-it-multimd-table
+    // still calls. It only ever delegated to Object.assign.
+    if (!this.md.utils.assign) {
+      this.md.utils.assign = Object.assign;
+    }
+
+    // A plugin that throws must not take the whole render with it, but it must
+    // also not fail quietly - a missing plugin is a missing feature.
+    const use = (name: string, plugin: unknown, opts?: unknown): void => {
       try {
         this.md.use(resolvePlugin(plugin), opts);
       } catch (error) {
-        console.warn('[MarkdownFormatter] plugin failed to load', error);
+        console.error(`[MarkdownFormatter] the ${name} plugin did not load; that feature is off.`, error);
       }
     };
 
-    use(markdownItAttrs, { leftDelimiter: '{', rightDelimiter: '}', allowedAttributes: ['id', 'class'] });
-    use(markdownItFootnote);
-    use(markdownItEmoji);
-    use(markdownItAbbr);
-    use(markdownItDeflist);
-    use(markdownItSub);
-    use(markdownItSup);
-    use(markdownItTaskLists, { enabled: true, label: true, labelAfter: false });
-    use(markdownItMultimdTable, {
+    use('attributes', markdownItAttrs, { leftDelimiter: '{', rightDelimiter: '}', allowedAttributes: ['id', 'class'] });
+    use('footnotes', markdownItFootnote);
+    // markdown-it-emoji 3 exports `full`, `light` and `bare` rather than a
+    // single default plugin.
+    use('emoji', markdownItEmoji.full || markdownItEmoji);
+    use('abbreviations', markdownItAbbr);
+    use('definition lists', markdownItDeflist);
+    use('subscript', markdownItSub);
+    use('superscript', markdownItSup);
+    use('tables', markdownItMultimdTable, {
       multiline: true,
       rowspan: true,
       headerless: false,
@@ -139,8 +158,8 @@ export class MarkdownProcessor {
     });
 
     if (this.options.enableAnchors || this.options.enableToc) {
-      const anchor: any = resolvePlugin(markdownItAnchor);
-      const permalink: any =
+      const anchor: typeof markdownItAnchor = resolvePlugin(markdownItAnchor) as typeof markdownItAnchor;
+      const permalink: unknown =
         this.options.enableAnchors && anchor.permalink && anchor.permalink.linkInsideHeader
           ? anchor.permalink.linkInsideHeader({
               symbol: '#',
@@ -152,11 +171,11 @@ export class MarkdownProcessor {
               space: false
             })
           : undefined;
-      use(anchor, { level: [1, 2, 3, 4], permalink: permalink, tabIndex: false });
+      use('heading anchors', anchor, { level: [1, 2, 3, 4], permalink: permalink, tabIndex: false });
     }
 
     if (this.options.enableToc) {
-      use(markdownItTOC, {
+      use('table of contents', markdownItTOC, {
         includeLevel: [2, 3],
         containerClass: 'mdf-toc',
         listType: 'ul'
@@ -172,37 +191,53 @@ export class MarkdownProcessor {
       wrap: this.options.wrapCodeLines
     });
 
-    this.md.renderer.rules.fence = (tokens: any[], idx: number): string => {
-      const token: any = tokens[idx];
-      return renderCodeBlock(token.content, token.info, codeOptions());
+    this.md.renderer.rules.fence = (tokens: IToken[], idx: number): string => {
+      const token: IToken = tokens[idx];
+      return renderCodeBlock(token.content, this.fenceInfo(token), codeOptions());
     };
 
     // Indented code blocks get the same treatment, just without a language.
-    this.md.renderer.rules.code_block = (tokens: any[], idx: number): string =>
+    this.md.renderer.rules.code_block = (tokens: IToken[], idx: number): string =>
       renderCodeBlock(tokens[idx].content, '', codeOptions());
+  }
+
+  /** The token's info string; markdown-it keeps it outside the typed surface. */
+  private fenceInfo(token: IToken): string {
+    return ((token as unknown) as { info?: string }).info || '';
   }
 
   /** Wide tables scroll inside their own box instead of stretching the page. */
   private addTableWrapper(): void {
-    const defaultOpen: any =
-      this.md.renderer.rules.table_open ||
-      ((tokens: any[], idx: number, options: any, env: any, self: any) => self.renderToken(tokens, idx, options));
-    const defaultClose: any =
-      this.md.renderer.rules.table_close ||
-      ((tokens: any[], idx: number, options: any, env: any, self: any) => self.renderToken(tokens, idx, options));
+    const renderDefault = (rule: RenderRule | undefined): RenderRule =>
+      rule ||
+      ((tokens: IToken[], idx: number, options: unknown, env: unknown, self: IRenderer) =>
+        self.renderToken(tokens, idx, options));
 
-    this.md.renderer.rules.table_open = (tokens: any[], idx: number, options: any, env: any, self: any): string =>
-      '<div class="mdf-table-scroll">' + defaultOpen(tokens, idx, options, env, self);
+    const defaultOpen: RenderRule = renderDefault(this.md.renderer.rules.table_open);
+    const defaultClose: RenderRule = renderDefault(this.md.renderer.rules.table_close);
 
-    this.md.renderer.rules.table_close = (tokens: any[], idx: number, options: any, env: any, self: any): string =>
-      defaultClose(tokens, idx, options, env, self) + '</div>';
+    this.md.renderer.rules.table_open = (
+      tokens: IToken[],
+      idx: number,
+      options: unknown,
+      env: unknown,
+      self: IRenderer
+    ): string => '<div class="mdf-table-scroll">' + defaultOpen(tokens, idx, options, env, self);
+
+    this.md.renderer.rules.table_close = (
+      tokens: IToken[],
+      idx: number,
+      options: unknown,
+      env: unknown,
+      self: IRenderer
+    ): string => defaultClose(tokens, idx, options, env, self) + '</div>';
   }
 
   // ------------------------------------------------------------------ math
 
   private addMath(): void {
     // Inline: $...$ with guards so prices ("$5 and $10") are not swallowed.
-    this.md.inline.ruler.before('escape', 'mdf_math_inline', (state: any, silent: boolean): boolean => {
+    this.md.inline.ruler.before('escape', 'mdf_math_inline', (state: IStateInline, silent: boolean): boolean => {
       const start: number = state.pos;
       if (state.src.charCodeAt(start) !== 0x24 /* $ */) {
         return false;
@@ -232,7 +267,7 @@ export class MarkdownProcessor {
       }
 
       if (!silent) {
-        const token: any = state.push('mdf_math_inline', 'math', 0);
+        const token: IToken = state.push('mdf_math_inline', 'math', 0);
         token.content = content;
         token.markup = '$';
       }
@@ -245,7 +280,7 @@ export class MarkdownProcessor {
     this.md.block.ruler.before(
       'fence',
       'mdf_math_block',
-      (state: any, startLine: number, endLine: number, silent: boolean): boolean => {
+      (state: IStateBlock, startLine: number, endLine: number, silent: boolean): boolean => {
         const startPos: number = state.bMarks[startLine] + state.tShift[startLine];
         const startMax: number = state.eMarks[startLine];
         if (startPos + 2 > startMax || state.src.slice(startPos, startPos + 2) !== '$$') {
@@ -282,7 +317,7 @@ export class MarkdownProcessor {
             firstLine.trim().slice(-2) === '$$'
               ? firstLine.trim().slice(0, -2)
               : firstLine + '\n' + state.getLines(startLine + 1, nextLine, 0, false) + lastLine;
-          const token: any = state.push('mdf_math_block', 'math', 0);
+          const token: IToken = state.push('mdf_math_block', 'math', 0);
           token.content = body.trim();
           token.markup = '$$';
           token.map = [startLine, nextLine + 1];
@@ -293,15 +328,15 @@ export class MarkdownProcessor {
       }
     );
 
-    this.md.renderer.rules.mdf_math_inline = (tokens: any[], idx: number): string => {
+    this.md.renderer.rules.mdf_math_inline = (tokens: IToken[], idx: number): string => {
       try {
         return katex.renderToString(tokens[idx].content, { throwOnError: false, output: 'html' });
-      } catch (error) {
+      } catch {
         return `<span class="mdf-math-error-inline">${escapeHtml(tokens[idx].content)}</span>`;
       }
     };
 
-    this.md.renderer.rules.mdf_math_block = (tokens: any[], idx: number): string => {
+    this.md.renderer.rules.mdf_math_block = (tokens: IToken[], idx: number): string => {
       try {
         const html: string = katex.renderToString(tokens[idx].content, {
           throwOnError: false,
@@ -309,7 +344,7 @@ export class MarkdownProcessor {
           output: 'html'
         });
         return `<div class="mdf-math-block">${html}</div>`;
-      } catch (error) {
+      } catch {
         return `<div class="mdf-math-error">${escapeHtml(tokens[idx].content)}</div>`;
       }
     };
@@ -318,11 +353,17 @@ export class MarkdownProcessor {
   // --------------------------------------------------------------- mermaid
 
   private addMermaid(): void {
-    const defaultFence: any = this.md.renderer.rules.fence;
+    const defaultFence: RenderRule = this.md.renderer.rules.fence as RenderRule;
 
-    this.md.renderer.rules.fence = (tokens: any[], idx: number, options: any, env: any, self: any): string => {
-      const token: any = tokens[idx];
-      if ((token.info || '').trim().toLowerCase() === 'mermaid') {
+    this.md.renderer.rules.fence = (
+      tokens: IToken[],
+      idx: number,
+      options: unknown,
+      env: unknown,
+      self: IRenderer
+    ): string => {
+      const token: IToken = tokens[idx];
+      if (this.fenceInfo(token).trim().toLowerCase() === 'mermaid') {
         this.mermaidCounter += 1;
         const id: string = `mdf-mermaid-${Date.now().toString(36)}-${this.mermaidCounter}`;
         return (

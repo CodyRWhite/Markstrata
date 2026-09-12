@@ -33,7 +33,9 @@
   --mdf-h1-weight: 700;
   --mdf-heading-color: var(--mdf-text);
   --mdf-h1-rule-width: 0;
+  --mdf-h1-rule-space: 0;
   --mdf-h2-rule-width: 0;
+  --mdf-h2-rule-space: 0;
 
   --mdf-radius-sm: 4px;
   --mdf-radius-md: 8px;
@@ -59,6 +61,7 @@
 
   --mdf-quote-padding: 2px 0 2px 16px;
   --mdf-quote-border-width: 3px;
+  --mdf-quote-radius: 0;
 }
 
 /* Obsidian's own hue choices for the types it ships. */
@@ -80,6 +83,7 @@
   --mdf-border-strong: #cfcfcf;
   --mdf-link: #7852ee;
   --mdf-link-hover: #5f36d6;
+  --mdf-on-accent: #ffffff;
 
   /* Obsidian hues, darkened for contrast on white (see header note). */
   --mdf-color-blue: 8, 104, 214;
@@ -104,6 +108,7 @@
   --mdf-code-inline-text: #222222;
   --mdf-code-inline-border: #e3e3e3;
 
+  --mdf-quote-bg: transparent;
   --mdf-quote-border-color: #7852ee;
   --mdf-quote-text: #5a5a5a;
 
@@ -113,6 +118,7 @@
   --mdf-table-hover-bg: #fafafa;
 
   --mdf-scrollbar-thumb: #d4d4d4;
+  --mdf-mermaid-bg: var(--mdf-bg-elevated);
   --mdf-mark-alpha: 0.4;
 
   /* Prism token mapping used by Obsidian's default theme. */
@@ -152,6 +158,7 @@
   --mdf-border-strong: #4d4d4d;
   --mdf-link: #a882ff;
   --mdf-link-hover: #c0a5ff;
+  --mdf-on-accent: #ffffff;
 
   --mdf-color-blue: 74, 158, 255;
   --mdf-color-cyan: 83, 223, 221;
@@ -175,6 +182,7 @@
   --mdf-code-inline-text: #dadada;
   --mdf-code-inline-border: transparent;
 
+  --mdf-quote-bg: transparent;
   --mdf-quote-border-color: #a882ff;
   --mdf-quote-text: #b3b3b3;
 
@@ -184,6 +192,7 @@
   --mdf-table-hover-bg: #242424;
 
   --mdf-scrollbar-thumb: #4a4a4a;
+  --mdf-mermaid-bg: var(--mdf-bg-elevated);
   --mdf-mark-alpha: 0.3;
 
   --mdf-syn-comment: #8a8a8a;

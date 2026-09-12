@@ -1,0 +1,20 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "module": "commonjs",
+    "target": "es2017",
+    "outDir": "temp/test-lib",
+    "declaration": false,
+    "sourceMap": false,
+    "types": [
+      "webpack-env"
+    ],
+    "rootDir": "src/webparts/markdownFormatter/utils"
+  },
+  "include": [
+    "src/webparts/markdownFormatter/utils/MarkdownProcessor.ts",
+    "src/webparts/markdownFormatter/utils/ThemeManager.ts",
+    "src/webparts/markdownFormatter/utils/codeBlocks.ts",
+    "src/webparts/markdownFormatter/utils/callouts.ts"
+  ]
+}

@@ -51,9 +51,11 @@
   --mdf-callout-title-padding: 8px 16px 2px;
   --mdf-callout-content-padding: 0 16px 8px;
   --mdf-callout-title-weight: 600;
+  --mdf-callout-fold-closed-pad: 8px;
 
   --mdf-quote-padding: 0 1em;
   --mdf-quote-border-width: 4px;
+  --mdf-quote-radius: 0;
 }
 
 /* ------------------------------------------------------------ GitHub light */
@@ -69,6 +71,7 @@
   --mdf-border-strong: #afb8c1;
   --mdf-link: #0969da;
   --mdf-link-hover: #0550ae;
+  --mdf-on-accent: #ffffff;
 
   --mdf-color-blue: 9, 105, 218;
   --mdf-color-cyan: 27, 124, 131;
@@ -90,15 +93,19 @@
   --mdf-code-line-hover: rgba(175, 184, 193, 0.15);
   --mdf-code-inline-bg: rgba(129, 139, 152, 0.12);
   --mdf-code-inline-text: #1f2328;
+  --mdf-code-inline-border: transparent;
 
+  --mdf-quote-bg: transparent;
   --mdf-quote-border-color: #d1d9e0;
   --mdf-quote-text: #59636e;
 
   --mdf-table-border: #d1d9e0;
   --mdf-table-header-bg: transparent;
   --mdf-table-stripe-bg: #f6f8fa;
+  --mdf-table-hover-bg: transparent;
 
   --mdf-scrollbar-thumb: #c8d1da;
+  --mdf-mermaid-bg: var(--mdf-bg-elevated);
   --mdf-mark-alpha: 0.35;
 
   /* prettylights-syntax-* (light) */
@@ -138,6 +145,7 @@
   --mdf-border-strong: #56606b;
   --mdf-link: #4493f8;
   --mdf-link-hover: #6cb6ff;
+  --mdf-on-accent: #ffffff;
 
   --mdf-color-blue: 68, 147, 248;
   --mdf-color-cyan: 57, 197, 207;
@@ -159,15 +167,19 @@
   --mdf-code-line-hover: rgba(110, 118, 129, 0.1);
   --mdf-code-inline-bg: rgba(101, 108, 118, 0.2);
   --mdf-code-inline-text: #e6edf3;
+  --mdf-code-inline-border: transparent;
 
+  --mdf-quote-bg: transparent;
   --mdf-quote-border-color: #3d444d;
   --mdf-quote-text: #9198a1;
 
   --mdf-table-border: #3d444d;
   --mdf-table-header-bg: transparent;
   --mdf-table-stripe-bg: #151b23;
+  --mdf-table-hover-bg: transparent;
 
   --mdf-scrollbar-thumb: #484f58;
+  --mdf-mermaid-bg: var(--mdf-bg-elevated);
   --mdf-mark-alpha: 0.3;
 
   /* prettylights-syntax-* (dark) */

@@ -72,6 +72,12 @@ export const DEFAULT_THEME_SETTINGS: IThemeSettings = {
   codeSize: 'normal'
 };
 
+/** The config object handed to mermaid.initialize for a theme. */
+export interface IMermaidThemeConfig {
+  theme: string;
+  themeVariables: { [name: string]: string | boolean };
+}
+
 interface IMermaidPalette {
   background: string;
   surface: string;
@@ -184,7 +190,7 @@ export class ThemeManager {
     element.style.colorScheme = resolved;
   }
 
-  public static getMermaidTheme(family: ThemeFamily, mode: ResolvedMode): any {
+  public static getMermaidTheme(family: ThemeFamily, mode: ResolvedMode): IMermaidThemeConfig {
     const palette: IMermaidPalette = MERMAID_PALETTES[`${family}-${mode}`] || MERMAID_PALETTES['github-light'];
 
     return {
