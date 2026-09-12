@@ -15,6 +15,7 @@
     "harness:drive": "node harness/build.js && node harness/drive.js",
     "lint": "eslint \"src/**/*.ts\" --max-warnings 0",
     "package": "gulp bundle --ship && gulp package-solution --ship",
+    "screenshots": "node scripts/build-screenshots.js",
     "serve": "gulp serve",
     "site": "node scripts/build-site.js",
     "test": "node scripts/run-tests.js",

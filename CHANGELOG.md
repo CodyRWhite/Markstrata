@@ -7,6 +7,13 @@ the same number with a fourth part appended (1.2.0 -> 1.2.0.0), stamped by
 
 ## Unreleased
 
+- Regenerated the theme screenshots, and added `npm run screenshots` to build
+  them. The dark ones carried a white strip down the left edge: the capture
+  included the page behind the web part rather than the theme surface. The
+  README also stopped claiming the line-number gutter is always sticky (it is
+  not, once a line wraps), and no longer leads with a release download - there
+  is no release tagged yet, so that link was a 404.
+
 - A brand asset set in `assets/`, cut from the logo master (`assets/mark.svg`)
   by `npm run brand`: the mark on its own, the stacked and horizontal lockups,
   the wordmark, single-colour and dark-surface variants, the favicon and app
