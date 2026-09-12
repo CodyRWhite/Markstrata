@@ -1,0 +1,40 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/spfx-build/package-solution.schema.json",
+  "solution": {
+    "name": "markdown-formatter-spo-client-side-solution",
+    "id": "7160b942-6869-49d0-b3e9-db7b50ca5fdc",
+    "version": "1.0.0.0",
+    "includeClientSideAssets": true,
+    "skipFeatureDeployment": true,
+    "isDomainIsolated": false,
+    "developer": {
+      "name": "Cody White",
+      "websiteUrl": "https://github.com/codyrwhite/markdown-formatter-spo",
+      "privacyUrl": "https://github.com/codyrwhite/markdown-formatter-spo",
+      "termsOfUseUrl": "https://github.com/codyrwhite/markdown-formatter-spo",
+      "mpnId": ""
+    },
+    "metadata": {
+      "shortDescription": {
+        "default": "Markdown renderer for SharePoint with GitHub, Obsidian and VS Code themes"
+      },
+      "longDescription": {
+        "default": "Renders markdown from SharePoint libraries, URLs or inline content with readable, faithful themes modelled on GitHub, Obsidian and VS Code - including proper code block contrast, GitHub alerts and Obsidian callouts, Mermaid diagrams, KaTeX math and a table of contents."
+      },
+      "screenshotPaths": [],
+      "videoUrl": "",
+      "categories": []
+    },
+    "features": [
+      {
+        "title": "markdown-formatter-spo Feature",
+        "description": "The feature that activates elements of the markdown-formatter-spo solution.",
+        "id": "d4f340af-99c8-4167-88ef-53b89003b7bc",
+        "version": "1.0.0.0"
+      }
+    ]
+  },
+  "paths": {
+    "zippedPackage": "solution/markdown-formatter-spo.sppkg"
+  }
+}

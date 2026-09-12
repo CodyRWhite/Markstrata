@@ -1,0 +1,156 @@
+/* typography.css - headings, text, links, quotes, rules, images */
+
+.mdf-content h1,
+.mdf-content h2,
+.mdf-content h3,
+.mdf-content h4,
+.mdf-content h5,
+.mdf-content h6 {
+  margin-top: calc(var(--mdf-block-gap) * 1.5);
+  margin-bottom: calc(var(--mdf-block-gap) * 0.5);
+  font-family: var(--mdf-font-heading);
+  font-weight: var(--mdf-heading-weight);
+  line-height: 1.25;
+  color: var(--mdf-heading-color);
+  scroll-margin-top: 24px;
+}
+
+.mdf-content > h1:first-child,
+.mdf-content > h2:first-child,
+.mdf-content > h3:first-child {
+  margin-top: 0;
+}
+
+.mdf-content h1 { font-size: var(--mdf-h1-size); font-weight: var(--mdf-h1-weight); }
+.mdf-content h2 { font-size: var(--mdf-h2-size); }
+.mdf-content h3 { font-size: var(--mdf-h3-size); }
+.mdf-content h4 { font-size: var(--mdf-h4-size); }
+.mdf-content h5 { font-size: var(--mdf-h5-size); }
+.mdf-content h6 { font-size: var(--mdf-h6-size); color: var(--mdf-text-muted); }
+
+/* Themes opt in to underlined headings by setting --mdf-heading-rule-* to a
+   colour; GitHub rules h1+h2, VS Code rules h1 only, Obsidian rules neither. */
+.mdf-content h1 {
+  padding-bottom: var(--mdf-h1-rule-space, 0);
+  border-bottom: var(--mdf-h1-rule-width, 0) solid var(--mdf-h1-rule-color, transparent);
+}
+
+.mdf-content h2 {
+  padding-bottom: var(--mdf-h2-rule-space, 0);
+  border-bottom: var(--mdf-h2-rule-width, 0) solid var(--mdf-h2-rule-color, transparent);
+}
+
+.mdf-content p {
+  margin: 0 0 var(--mdf-block-gap);
+}
+
+.mdf-content a {
+  color: var(--mdf-link);
+  text-decoration: var(--mdf-link-decoration, none);
+  text-underline-offset: 0.2em;
+}
+
+.mdf-content a:hover {
+  color: var(--mdf-link-hover);
+  text-decoration: underline;
+}
+
+.mdf-content strong { font-weight: 600; color: var(--mdf-text-strong, inherit); }
+.mdf-content em { font-style: italic; }
+.mdf-content del { color: var(--mdf-text-muted); }
+.mdf-content mark {
+  padding: 0.1em 0.2em;
+  border-radius: var(--mdf-radius-sm);
+  background-color: rgba(var(--mdf-color-yellow), var(--mdf-mark-alpha, 0.3));
+  color: inherit;
+}
+
+.mdf-content hr {
+  height: 1px;
+  margin: calc(var(--mdf-block-gap) * 1.75) 0;
+  border: 0;
+  background-color: var(--mdf-border);
+}
+
+.mdf-content img {
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--mdf-radius-sm);
+}
+
+.mdf-content kbd {
+  display: inline-block;
+  padding: 2px 5px;
+  border: 1px solid var(--mdf-border-strong);
+  border-bottom-width: 2px;
+  border-radius: var(--mdf-radius-sm);
+  background-color: var(--mdf-bg-elevated);
+  font-family: var(--mdf-font-mono);
+  font-size: 0.8em;
+  line-height: 1.2;
+  color: var(--mdf-text);
+}
+
+.mdf-content abbr[title] {
+  text-decoration: underline dotted;
+  cursor: help;
+}
+
+/* Plain blockquote (a blockquote that is not a callout). */
+.mdf-content blockquote {
+  margin: 0 0 var(--mdf-block-gap);
+  padding: var(--mdf-quote-padding, 2px 0 2px 16px);
+  border-left: var(--mdf-quote-border-width, 4px) solid var(--mdf-quote-border-color, var(--mdf-border-strong));
+  border-radius: var(--mdf-quote-radius, 0);
+  background-color: var(--mdf-quote-bg, transparent);
+  color: var(--mdf-quote-text, var(--mdf-text-muted));
+}
+
+.mdf-content blockquote > :last-child {
+  margin-bottom: 0;
+}
+
+/* Heading anchor links: hidden until the heading is hovered or focused, which
+   keeps the reading surface clean but leaves the link keyboard reachable. */
+.mdf-content .mdf-anchor {
+  float: left;
+  width: 1em;
+  margin-left: -1em;
+  padding-right: 0.2em;
+  color: var(--mdf-text-faint);
+  text-decoration: none;
+  opacity: 0;
+  transition: opacity 0.12s ease-in-out;
+}
+
+.mdf-content h1:hover .mdf-anchor,
+.mdf-content h2:hover .mdf-anchor,
+.mdf-content h3:hover .mdf-anchor,
+.mdf-content h4:hover .mdf-anchor,
+.mdf-content h5:hover .mdf-anchor,
+.mdf-content h6:hover .mdf-anchor,
+.mdf-content .mdf-anchor:focus {
+  opacity: 1;
+}
+
+/* Footnotes */
+.mdf-content .footnotes {
+  margin-top: calc(var(--mdf-block-gap) * 2);
+  padding-top: var(--mdf-block-gap);
+  border-top: 1px solid var(--mdf-border);
+  font-size: 0.9em;
+  color: var(--mdf-text-muted);
+}
+
+.mdf-content .footnotes ol {
+  padding-left: 20px;
+}
+
+.mdf-content .footnote-backref {
+  text-decoration: none;
+}
+
+/* Definition lists (markdown-it-deflist) */
+.mdf-content dl { margin: 0 0 var(--mdf-block-gap); }
+.mdf-content dt { font-weight: 600; margin-top: 8px; }
+.mdf-content dd { margin: 2px 0 0 20px; color: var(--mdf-text-muted); }

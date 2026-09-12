@@ -1,0 +1,236 @@
+/*
+ * chrome.css - the web part's own UI (toolbar, theme switcher, editor, version
+ * panel). Themed from the same variables as the content so the frame never
+ * fights the markdown it wraps.
+ */
+
+.mdf-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 6px 0 10px;
+  border-bottom: 1px solid var(--mdf-border);
+  margin-bottom: 12px;
+  font-size: 0.8125em;
+  color: var(--mdf-text-muted);
+}
+
+.mdf-toolbar-spacer {
+  flex: 1 1 auto;
+}
+
+.mdf-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border: 1px solid var(--mdf-border);
+  border-radius: var(--mdf-radius-sm);
+  background-color: var(--mdf-bg-elevated);
+  color: var(--mdf-text);
+  font-family: inherit;
+  font-size: inherit;
+  line-height: 1.4;
+  cursor: pointer;
+  transition: background-color 0.12s ease, border-color 0.12s ease;
+}
+
+.mdf-btn:hover {
+  background-color: var(--mdf-bg-hover);
+  border-color: var(--mdf-border-strong);
+}
+
+.mdf-btn[aria-pressed='true'],
+.mdf-btn.is-active {
+  border-color: var(--mdf-link);
+  color: var(--mdf-link);
+}
+
+.mdf-btn[disabled] {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.mdf-btn-primary {
+  border-color: var(--mdf-link);
+  background-color: var(--mdf-link);
+  color: #ffffff;
+}
+
+.mdf-btn-primary:hover {
+  background-color: var(--mdf-link-hover);
+  border-color: var(--mdf-link-hover);
+}
+
+.mdf-select {
+  padding: 4px 6px;
+  border: 1px solid var(--mdf-border);
+  border-radius: var(--mdf-radius-sm);
+  background-color: var(--mdf-bg-elevated);
+  color: var(--mdf-text);
+  font-family: inherit;
+  font-size: inherit;
+}
+
+.mdf-switcher {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.mdf-switcher label {
+  color: var(--mdf-text-faint);
+}
+
+.mdf-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  margin-top: 16px;
+  padding-top: 10px;
+  border-top: 1px solid var(--mdf-border);
+  color: var(--mdf-text-faint);
+  font-size: 0.8125em;
+}
+
+.mdf-status {
+  padding: 4px 8px;
+  border-radius: var(--mdf-radius-sm);
+  background-color: var(--mdf-bg-elevated);
+  color: var(--mdf-text-muted);
+}
+
+.mdf-status[data-tone='error'] {
+  background-color: rgba(var(--mdf-color-red), 0.12);
+  color: rgb(var(--mdf-color-red));
+}
+
+.mdf-status[data-tone='success'] {
+  background-color: rgba(var(--mdf-color-green), 0.12);
+  color: rgb(var(--mdf-color-green));
+}
+
+/* ------------------------------------------------------------------ editor */
+
+.mdf-editor {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: 1fr;
+  align-items: start;
+}
+
+.mdf-editor[data-layout='split'] {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+
+.mdf-editor-pane,
+.mdf-preview-pane {
+  min-width: 0;
+}
+
+.mdf-editor[data-layout='preview'] .mdf-editor-pane,
+.mdf-editor[data-layout='edit'] .mdf-preview-pane {
+  display: none;
+}
+
+.mdf-editor-input {
+  display: block;
+  width: 100%;
+  min-height: 420px;
+  padding: 12px 14px;
+  border: 1px solid var(--mdf-border);
+  border-radius: var(--mdf-radius-md);
+  background-color: var(--mdf-code-bg);
+  color: var(--mdf-code-text);
+  font-family: var(--mdf-font-mono);
+  font-size: var(--mdf-code-font-size);
+  line-height: var(--mdf-code-line-height);
+  resize: vertical;
+  tab-size: 2;
+}
+
+.mdf-editor-input:focus {
+  outline: 2px solid var(--mdf-link);
+  outline-offset: -1px;
+}
+
+.mdf-preview-pane {
+  padding: 12px 14px;
+  border: 1px solid var(--mdf-border);
+  border-radius: var(--mdf-radius-md);
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.mdf-pane-label {
+  margin-bottom: 6px;
+  font-size: 0.75em;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--mdf-text-faint);
+}
+
+@media (max-width: 900px) {
+  .mdf-editor[data-layout='split'] {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ------------------------------------------------------------ version panel */
+
+.mdf-panel {
+  margin-bottom: 12px;
+  border: 1px solid var(--mdf-border);
+  border-radius: var(--mdf-radius-md);
+  background-color: var(--mdf-bg-elevated);
+  overflow: hidden;
+}
+
+.mdf-panel-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--mdf-border);
+  font-weight: 600;
+}
+
+.mdf-panel-body {
+  max-height: 320px;
+  overflow-y: auto;
+  padding: 4px 0;
+}
+
+.mdf-version {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--mdf-border);
+  font-size: 0.875em;
+}
+
+.mdf-version:last-child {
+  border-bottom: 0;
+}
+
+.mdf-version-label {
+  min-width: 3.5em;
+  font-family: var(--mdf-font-mono);
+  color: var(--mdf-text-muted);
+}
+
+.mdf-version-meta {
+  flex: 1 1 auto;
+  min-width: 0;
+  color: var(--mdf-text-muted);
+}
+
+.mdf-version-current {
+  padding: 1px 6px;
+  border-radius: 999px;
+  background-color: rgba(var(--mdf-color-green), 0.15);
+  color: rgb(var(--mdf-color-green));
+  font-size: 0.85em;
+}

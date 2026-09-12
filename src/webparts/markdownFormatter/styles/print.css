@@ -1,0 +1,65 @@
+/* print.css - printing the page or exporting it to PDF from the browser. */
+
+@media print {
+  .mdf-root {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+
+  .mdf-toolbar,
+  .mdf-code-actions,
+  .mdf-panel,
+  .mdf-editor-pane,
+  .mdf-anchor {
+    display: none !important;
+  }
+
+  .mdf-layout {
+    display: block;
+  }
+
+  .mdf-toc-sidebar {
+    position: static;
+    width: 100%;
+    max-height: none;
+    page-break-after: always;
+  }
+
+  .mdf-content {
+    max-width: none;
+  }
+
+  /* Code and callouts keep their fill in print - a bordered, tinted block is
+     what makes them legible on paper too - but never split across pages. */
+  .mdf-code,
+  .mdf-callout,
+  .mdf-mermaid,
+  table {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .mdf-code pre {
+    white-space: pre-wrap;
+    overflow: visible;
+  }
+
+  .mdf-code-line {
+    width: auto;
+  }
+
+  h1, h2, h3, h4 {
+    break-after: avoid;
+    page-break-after: avoid;
+  }
+
+  details.mdf-callout:not([open]) .mdf-callout-content {
+    display: block;
+  }
+
+  a[href^='http']::after {
+    content: ' (' attr(href) ')';
+    font-size: 0.85em;
+    color: #444444;
+  }
+}

@@ -1,0 +1,195 @@
+/*
+ * base.css - token contract + structural layout
+ *
+ * Everything in this web part is styled through CSS custom properties that are
+ * declared here and given values by the theme files in ./themes. A theme only
+ * has to supply colours and a few shape/typography choices; nothing in the
+ * structural rules hard-codes a colour. That is what makes "GitHub / Obsidian /
+ * VS Code" a data change rather than a fork of the stylesheet.
+ *
+ * Token groups
+ *   --mdf-bg / -elevated / -hover ....... surfaces
+ *   --mdf-text / -muted / -faint ........ foreground text
+ *   --mdf-border / -strong .............. rules and dividers
+ *   --mdf-link / -hover ................. anchors
+ *   --mdf-color-<hue> ................... accent palette, stored as an "R, G, B"
+ *                                         triple so rules can do
+ *                                         rgba(var(--mdf-color-blue), .12)
+ *   --mdf-font-* / --mdf-*-size ......... typography
+ *   --mdf-code-* ........................ code surfaces and gutter
+ *   --mdf-syn-* ......................... syntax highlighting tokens
+ *   --mdf-callout-* ..................... callout shape (colour comes from the
+ *                                         per-type --mdf-callout-rgb)
+ */
+
+.mdf-root {
+  /* Shape defaults - themes may override. */
+  --mdf-radius-sm: 3px;
+  --mdf-radius-md: 6px;
+  --mdf-radius-lg: 8px;
+
+  /* Rhythm. Themes set the *-base values; the density and font-size options in
+     modifiers.css scale them, so neither side has to win a specificity fight. */
+  --mdf-block-gap-base: 16px;
+  --mdf-density-scale: 1;
+  --mdf-font-scale: 1;
+  --mdf-line-height-base: 1.6;
+  --mdf-block-gap: calc(var(--mdf-block-gap-base) * var(--mdf-density-scale));
+  --mdf-line-height: calc(var(--mdf-line-height-base) * var(--mdf-density-scale));
+  --mdf-content-max-width: 860px;
+
+  /* Code defaults that themes rarely need to change. */
+  --mdf-code-font-size: 0.875em;
+  --mdf-code-line-height: 1.55;
+  --mdf-code-padding: 14px 16px;
+  --mdf-code-radius: var(--mdf-radius-md);
+  --mdf-code-border: transparent;
+  --mdf-code-header-bg: transparent;
+
+  /* Callout shape defaults; each theme restyles these. */
+  --mdf-callout-radius: var(--mdf-radius-md);
+  --mdf-callout-bg-alpha: 0.1;
+  --mdf-callout-title-bg-alpha: 0.1;
+  --mdf-callout-border-width: 0px;
+  --mdf-callout-accent-width: 0px;
+  --mdf-callout-title-weight: 600;
+  --mdf-callout-rgb: var(--mdf-color-gray);
+
+  box-sizing: border-box;
+  position: relative;
+  background-color: var(--mdf-bg);
+  color: var(--mdf-text);
+  font-family: var(--mdf-font-body);
+  font-size: calc(var(--mdf-font-size) * var(--mdf-font-scale));
+  line-height: var(--mdf-line-height);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  overflow-wrap: break-word;
+}
+
+.mdf-root *,
+.mdf-root *::before,
+.mdf-root *::after {
+  box-sizing: inherit;
+}
+
+/* ------------------------------------------------------------------ layout */
+
+.mdf-layout {
+  display: flex;
+  align-items: flex-start;
+  gap: 32px;
+  padding: 4px 0 8px;
+}
+
+.mdf-content {
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: var(--mdf-content-max-width);
+}
+
+/* Blocks own their bottom margin only, so spacing never doubles up. */
+.mdf-content > * {
+  margin-top: 0;
+  margin-bottom: var(--mdf-block-gap);
+}
+
+.mdf-content > *:last-child {
+  margin-bottom: 0;
+}
+
+/* ------------------------------------------------------------- table of contents */
+
+.mdf-toc-sidebar {
+  flex: 0 0 240px;
+  position: sticky;
+  top: 16px;
+  max-height: calc(100vh - 120px);
+  overflow-y: auto;
+  padding: 12px 14px;
+  border: 1px solid var(--mdf-border);
+  border-radius: var(--mdf-radius-md);
+  background-color: var(--mdf-bg-elevated);
+  font-size: 0.875em;
+}
+
+.mdf-toc-sidebar .mdf-toc-heading {
+  margin: 0 0 8px;
+  font-size: 0.8em;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--mdf-text-muted);
+}
+
+.mdf-toc ul {
+  margin: 0;
+  padding-left: 14px;
+  list-style: none;
+}
+
+.mdf-toc > ul {
+  padding-left: 0;
+}
+
+.mdf-toc li {
+  margin: 2px 0;
+}
+
+.mdf-toc a {
+  display: block;
+  padding: 3px 6px;
+  border-radius: var(--mdf-radius-sm);
+  color: var(--mdf-text-muted);
+  text-decoration: none;
+  line-height: 1.35;
+}
+
+.mdf-toc a:hover {
+  background-color: var(--mdf-bg-hover);
+  color: var(--mdf-link);
+}
+
+/* Inline (in-content) table of contents, used when the sidebar is off. */
+.mdf-content .mdf-toc {
+  padding: 12px 16px;
+  border: 1px solid var(--mdf-border);
+  border-radius: var(--mdf-radius-md);
+  background-color: var(--mdf-bg-elevated);
+}
+
+@media (max-width: 900px) {
+  .mdf-layout {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .mdf-toc-sidebar {
+    position: static;
+    flex: 1 1 auto;
+    width: 100%;
+    max-height: none;
+  }
+}
+
+/* ------------------------------------------------------------------ states */
+
+.mdf-empty,
+.mdf-error {
+  padding: 16px;
+  border-radius: var(--mdf-radius-md);
+  border: 1px solid var(--mdf-border);
+  color: var(--mdf-text-muted);
+  font-size: 0.95em;
+}
+
+.mdf-error {
+  border-color: rgb(var(--mdf-color-red));
+  background-color: rgba(var(--mdf-color-red), 0.1);
+  color: var(--mdf-text);
+}
+
+.mdf-root :focus-visible {
+  outline: 2px solid var(--mdf-link);
+  outline-offset: 2px;
+}

@@ -1,0 +1,195 @@
+/*
+ * github.css - GitHub (Primer) theme.
+ *
+ * Colours are Primer's published light/dark values as used on github.com for
+ * rendered markdown: the same greys, the same link blue, the same
+ * prettylights-syntax-* token colours, GitHub's alert shape (left accent bar,
+ * no fill) and its heading rules under h1/h2.
+ */
+
+.mdf-root[data-mdf-theme='github'] {
+  --mdf-font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif,
+    'Apple Color Emoji', 'Segoe UI Emoji';
+  --mdf-font-heading: var(--mdf-font-body);
+  --mdf-font-mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
+  --mdf-font-size: 16px;
+  --mdf-line-height-base: 1.5;
+  --mdf-block-gap-base: 16px;
+
+  --mdf-h1-size: 2em;
+  --mdf-h2-size: 1.5em;
+  --mdf-h3-size: 1.25em;
+  --mdf-h4-size: 1em;
+  --mdf-h5-size: 0.875em;
+  --mdf-h6-size: 0.85em;
+  --mdf-heading-weight: 600;
+  --mdf-h1-weight: 600;
+  --mdf-heading-color: var(--mdf-text);
+  --mdf-h1-rule-width: 1px;
+  --mdf-h1-rule-space: 0.3em;
+  --mdf-h2-rule-width: 1px;
+  --mdf-h2-rule-space: 0.3em;
+
+  --mdf-radius-sm: 4px;
+  --mdf-radius-md: 6px;
+  --mdf-radius-lg: 8px;
+  --mdf-list-indent: 2em;
+  --mdf-list-item-gap: 4px;
+
+  /* Code: flat fill, no border, rounded 6px - the github.com block. */
+  --mdf-code-radius: 6px;
+  --mdf-code-padding: 16px;
+  --mdf-code-line-height: 1.45;
+  --mdf-code-font-size: 0.85em;
+
+  /* Alerts: 4px accent bar, no fill, square. */
+  --mdf-callout-bg-alpha: 0;
+  --mdf-callout-title-bg-alpha: 0;
+  --mdf-callout-border-width: 0px;
+  --mdf-callout-accent-width: 4px;
+  --mdf-callout-radius: 0;
+  --mdf-callout-title-padding: 8px 16px 2px;
+  --mdf-callout-content-padding: 0 16px 8px;
+  --mdf-callout-title-weight: 600;
+
+  --mdf-quote-padding: 0 1em;
+  --mdf-quote-border-width: 4px;
+}
+
+/* ------------------------------------------------------------ GitHub light */
+
+.mdf-root[data-mdf-theme='github'][data-mdf-mode='light'] {
+  --mdf-bg: #ffffff;
+  --mdf-bg-elevated: #f6f8fa;
+  --mdf-bg-hover: #eef1f4;
+  --mdf-text: #1f2328;
+  --mdf-text-muted: #59636e;
+  --mdf-text-faint: #818b98;
+  --mdf-border: #d1d9e0;
+  --mdf-border-strong: #afb8c1;
+  --mdf-link: #0969da;
+  --mdf-link-hover: #0550ae;
+
+  --mdf-color-blue: 9, 105, 218;
+  --mdf-color-cyan: 27, 124, 131;
+  --mdf-color-green: 26, 127, 55;
+  --mdf-color-yellow: 154, 103, 0;
+  --mdf-color-orange: 188, 76, 0;
+  --mdf-color-red: 207, 34, 46;
+  --mdf-color-purple: 130, 80, 223;
+  --mdf-color-pink: 191, 57, 137;
+  --mdf-color-gray: 89, 99, 110;
+
+  --mdf-code-bg: #f6f8fa;
+  --mdf-code-text: #1f2328;
+  --mdf-code-border: transparent;
+  --mdf-code-header-bg: #eaeef2;
+  --mdf-code-header-border: #d1d9e0;
+  --mdf-code-gutter-text: #8c959f;
+  --mdf-code-gutter-border: #d8dee4;
+  --mdf-code-line-hover: rgba(175, 184, 193, 0.15);
+  --mdf-code-inline-bg: rgba(129, 139, 152, 0.12);
+  --mdf-code-inline-text: #1f2328;
+
+  --mdf-quote-border-color: #d1d9e0;
+  --mdf-quote-text: #59636e;
+
+  --mdf-table-border: #d1d9e0;
+  --mdf-table-header-bg: transparent;
+  --mdf-table-stripe-bg: #f6f8fa;
+
+  --mdf-scrollbar-thumb: #c8d1da;
+  --mdf-mark-alpha: 0.35;
+
+  /* prettylights-syntax-* (light) */
+  --mdf-syn-comment: #59636e;
+  --mdf-syn-keyword: #cf222e;
+  --mdf-syn-type: #cf222e;
+  --mdf-syn-entity: #8250df;
+  --mdf-syn-constant: #0550ae;
+  --mdf-syn-attr: #0550ae;
+  --mdf-syn-operator: #0550ae;
+  --mdf-syn-string: #0a3069;
+  --mdf-syn-regexp: #0a3069;
+  --mdf-syn-variable: #953800;
+  --mdf-syn-builtin: #953800;
+  --mdf-syn-tag: #116329;
+  --mdf-syn-property: #1f2328;
+  --mdf-syn-punctuation: #1f2328;
+  --mdf-syn-section: #0550ae;
+  --mdf-syn-bullet: #7d4e00;
+  --mdf-syn-link: #0969da;
+  --mdf-syn-addition: #116329;
+  --mdf-syn-addition-bg: #dafbe1;
+  --mdf-syn-deletion: #82071e;
+  --mdf-syn-deletion-bg: #ffebe9;
+}
+
+/* ------------------------------------------------------------- GitHub dark */
+
+.mdf-root[data-mdf-theme='github'][data-mdf-mode='dark'] {
+  --mdf-bg: #0d1117;
+  --mdf-bg-elevated: #151b23;
+  --mdf-bg-hover: #1c2128;
+  --mdf-text: #e6edf3;
+  --mdf-text-muted: #9198a1;
+  --mdf-text-faint: #6e7681;
+  --mdf-border: #3d444d;
+  --mdf-border-strong: #56606b;
+  --mdf-link: #4493f8;
+  --mdf-link-hover: #6cb6ff;
+
+  --mdf-color-blue: 68, 147, 248;
+  --mdf-color-cyan: 57, 197, 207;
+  --mdf-color-green: 63, 185, 80;
+  --mdf-color-yellow: 210, 153, 34;
+  --mdf-color-orange: 219, 109, 40;
+  --mdf-color-red: 248, 81, 73;
+  --mdf-color-purple: 171, 125, 248;
+  --mdf-color-pink: 247, 120, 186;
+  --mdf-color-gray: 145, 152, 161;
+
+  --mdf-code-bg: #151b23;
+  --mdf-code-text: #e6edf3;
+  --mdf-code-border: #2a313c;
+  --mdf-code-header-bg: #1c2128;
+  --mdf-code-header-border: #3d444d;
+  --mdf-code-gutter-text: #6e7681;
+  --mdf-code-gutter-border: #30363d;
+  --mdf-code-line-hover: rgba(110, 118, 129, 0.1);
+  --mdf-code-inline-bg: rgba(101, 108, 118, 0.2);
+  --mdf-code-inline-text: #e6edf3;
+
+  --mdf-quote-border-color: #3d444d;
+  --mdf-quote-text: #9198a1;
+
+  --mdf-table-border: #3d444d;
+  --mdf-table-header-bg: transparent;
+  --mdf-table-stripe-bg: #151b23;
+
+  --mdf-scrollbar-thumb: #484f58;
+  --mdf-mark-alpha: 0.3;
+
+  /* prettylights-syntax-* (dark) */
+  --mdf-syn-comment: #9198a1;
+  --mdf-syn-keyword: #ff7b72;
+  --mdf-syn-type: #ff7b72;
+  --mdf-syn-entity: #d2a8ff;
+  --mdf-syn-constant: #79c0ff;
+  --mdf-syn-attr: #79c0ff;
+  --mdf-syn-operator: #79c0ff;
+  --mdf-syn-string: #a5d6ff;
+  --mdf-syn-regexp: #a5d6ff;
+  --mdf-syn-variable: #ffa657;
+  --mdf-syn-builtin: #ffa657;
+  --mdf-syn-tag: #7ee787;
+  --mdf-syn-property: #e6edf3;
+  --mdf-syn-punctuation: #e6edf3;
+  --mdf-syn-section: #79c0ff;
+  --mdf-syn-bullet: #f2cc60;
+  --mdf-syn-link: #a5d6ff;
+  --mdf-syn-addition: #aff5b4;
+  --mdf-syn-addition-bg: #033a16;
+  --mdf-syn-deletion: #ffdcd7;
+  --mdf-syn-deletion-bg: #67060c;
+}

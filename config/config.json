@@ -1,0 +1,23 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/spfx-build/config.2.0.schema.json",
+  "version": "2.0",
+  "bundles": {
+    "markdown-formatter-web-part": {
+      "components": [
+        {
+          "entrypoint": "./lib/webparts/markdownFormatter/MarkdownFormatterWebPart.js",
+          "manifest": "./src/webparts/markdownFormatter/MarkdownFormatterWebPart.manifest.json"
+        }
+      ]
+    }
+  },
+  "externals": {
+    "mermaid": {
+      "path": "https://cdn.jsdelivr.net/npm/mermaid@11.12.0/dist/mermaid.min.js",
+      "globalName": "mermaid"
+    }
+  },
+  "localizedResources": {
+    "MarkdownFormatterWebPartStrings": "lib/webparts/markdownFormatter/loc/{locale}.js"
+  }
+}

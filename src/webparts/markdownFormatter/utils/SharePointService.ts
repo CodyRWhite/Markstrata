@@ -1,0 +1,224 @@
+/**
+ * SharePoint access: browsing libraries for markdown files, reading and
+ * writing file content, version history and change polling.
+ */
+
+import { WebPartContext } from '@microsoft/sp-webpart-base';
+import { spfi, SPFI, SPFx } from '@pnp/sp';
+import '@pnp/sp/webs';
+import '@pnp/sp/lists';
+import '@pnp/sp/items';
+import '@pnp/sp/files';
+import '@pnp/sp/folders';
+
+export interface IFileMetadata {
+  name: string;
+  serverRelativeUrl: string;
+  timeLastModified: string;
+  author: string;
+  length: number;
+}
+
+export interface IVersionInfo {
+  versionLabel: string;
+  created: string;
+  createdBy: string;
+  url: string;
+  isCurrentVersion: boolean;
+}
+
+export interface ILibraryInfo {
+  title: string;
+  serverRelativeUrl: string;
+}
+
+const MARKDOWN_EXTENSIONS: string[] = ['.md', '.markdown', '.mdx', '.txt'];
+const POLL_INTERVAL_MS: number = 30000;
+
+export class SharePointService {
+  private sp: SPFI;
+  private webServerRelativeUrl: string;
+  private pollTimer: number | undefined;
+  private lastSeenModified: string | undefined;
+
+  constructor(context: WebPartContext) {
+    this.sp = spfi().using(SPFx(context));
+    this.webServerRelativeUrl = context.pageContext.web.serverRelativeUrl;
+  }
+
+  public async getDocumentLibraries(): Promise<ILibraryInfo[]> {
+    try {
+      const lists: any[] = await this.sp.web.lists
+        .filter('BaseTemplate eq 101 and Hidden eq false')
+        .select('Title', 'RootFolder/ServerRelativeUrl')
+        .expand('RootFolder')();
+
+      return lists.map((list: any) => ({
+        title: list.Title,
+        serverRelativeUrl: list.RootFolder.ServerRelativeUrl
+      }));
+    } catch (error) {
+      console.error('[MarkdownFormatter] Could not list document libraries', error);
+      return [];
+    }
+  }
+
+  public async getFolders(libraryUrl: string): Promise<string[]> {
+    try {
+      const folders: any[] = await this.sp.web
+        .getFolderByServerRelativePath(libraryUrl)
+        .folders.select('Name')
+        .filter("Name ne 'Forms'")();
+
+      return folders.map((folder: any) => folder.Name);
+    } catch (error) {
+      console.error('[MarkdownFormatter] Could not list folders', error);
+      return [];
+    }
+  }
+
+  public async getMarkdownFiles(libraryUrl: string, folderPath?: string): Promise<IFileMetadata[]> {
+    const target: string = folderPath && folderPath.trim() ? `${libraryUrl}/${folderPath}` : libraryUrl;
+
+    try {
+      const files: any[] = await this.sp.web
+        .getFolderByServerRelativePath(target)
+        .files.select('Name', 'ServerRelativeUrl', 'TimeLastModified', 'Author/Title', 'Length')
+        .expand('Author')();
+
+      return files
+        .filter((file: any) => this.isMarkdown(file.Name))
+        .map((file: any) => this.toMetadata(file));
+    } catch (error) {
+      console.error('[MarkdownFormatter] Could not list markdown files', error);
+      return [];
+    }
+  }
+
+  public async getFileContent(serverRelativeUrl: string): Promise<string> {
+    return this.sp.web.getFileByServerRelativePath(serverRelativeUrl).getText();
+  }
+
+  public async getFileMetadata(serverRelativeUrl: string): Promise<IFileMetadata | undefined> {
+    try {
+      const file: any = await this.sp.web
+        .getFileByServerRelativePath(serverRelativeUrl)
+        .select('Name', 'ServerRelativeUrl', 'TimeLastModified', 'Author/Title', 'Length')
+        .expand('Author')();
+      return this.toMetadata(file);
+    } catch (error) {
+      console.error('[MarkdownFormatter] Could not read file metadata', error);
+      return undefined;
+    }
+  }
+
+  public async saveFileContent(serverRelativeUrl: string, content: string): Promise<void> {
+    await this.sp.web.getFileByServerRelativePath(serverRelativeUrl).setContent(content);
+  }
+
+  public async getVersions(serverRelativeUrl: string): Promise<IVersionInfo[]> {
+    try {
+      const versions: any[] = await this.sp.web
+        .getFileByServerRelativePath(serverRelativeUrl)
+        .versions.select('VersionLabel', 'Created', 'CreatedBy/Title', 'Url', 'IsCurrentVersion')
+        .expand('CreatedBy')();
+
+      return versions
+        .map((version: any) => ({
+          versionLabel: version.VersionLabel,
+          created: version.Created,
+          createdBy: version.CreatedBy ? version.CreatedBy.Title : 'Unknown',
+          url: version.Url,
+          isCurrentVersion: !!version.IsCurrentVersion
+        }))
+        .reverse();
+    } catch (error) {
+      console.error('[MarkdownFormatter] Could not read version history', error);
+      return [];
+    }
+  }
+
+  /**
+   * Reads the text of one historical version. SharePoint returns a web-relative
+   * `_vti_history/...` path for each version; resolving that is far safer than
+   * trying to rebuild the version id from its label.
+   */
+  public async getVersionContent(version: IVersionInfo): Promise<string> {
+    const base: string = this.webServerRelativeUrl.replace(/\/$/, '');
+    const relative: string = version.url.indexOf('/') === 0 ? version.url : `/${version.url}`;
+    const response: Response = await fetch(`${window.location.origin}${base}${relative}`, {
+      credentials: 'include'
+    });
+    if (!response.ok) {
+      throw new Error(`Version ${version.versionLabel} could not be read (HTTP ${response.status})`);
+    }
+    return response.text();
+  }
+
+  public async hasChangedSince(serverRelativeUrl: string, lastModified: string): Promise<boolean> {
+    const metadata: IFileMetadata | undefined = await this.getFileMetadata(serverRelativeUrl);
+    if (!metadata || !lastModified) {
+      return false;
+    }
+    return new Date(metadata.timeLastModified) > new Date(lastModified);
+  }
+
+  /** Polls for changes; SharePoint has no push channel available to a web part. */
+  public watchFile(serverRelativeUrl: string, onChanged: () => void): void {
+    this.unwatchFile();
+
+    void this.getFileMetadata(serverRelativeUrl).then((metadata: IFileMetadata | undefined) => {
+      this.lastSeenModified = metadata ? metadata.timeLastModified : undefined;
+    });
+
+    this.pollTimer = window.setInterval(() => {
+      void this.getFileMetadata(serverRelativeUrl).then((metadata: IFileMetadata | undefined) => {
+        if (!metadata) {
+          return;
+        }
+        if (this.lastSeenModified && metadata.timeLastModified !== this.lastSeenModified) {
+          this.lastSeenModified = metadata.timeLastModified;
+          onChanged();
+        } else if (!this.lastSeenModified) {
+          this.lastSeenModified = metadata.timeLastModified;
+        }
+      });
+    }, POLL_INTERVAL_MS);
+  }
+
+  public unwatchFile(): void {
+    if (this.pollTimer !== undefined) {
+      window.clearInterval(this.pollTimer);
+      this.pollTimer = undefined;
+    }
+    this.lastSeenModified = undefined;
+  }
+
+  /**
+   * Fetches markdown from an arbitrary URL. Same-origin URLs go out with the
+   * user's SharePoint cookies so a plain link to a file in the tenant works.
+   */
+  public static async fetchUrl(url: string): Promise<string> {
+    const sameOrigin: boolean = url.indexOf('/') === 0 || url.indexOf(window.location.origin) === 0;
+    const response: Response = await fetch(url, sameOrigin ? { credentials: 'include' } : {});
+    if (!response.ok) {
+      throw new Error(`Could not load ${url} (HTTP ${response.status})`);
+    }
+    return response.text();
+  }
+
+  private isMarkdown(name: string): boolean {
+    const lower: string = (name || '').toLowerCase();
+    return MARKDOWN_EXTENSIONS.some((extension: string) => lower.lastIndexOf(extension) === lower.length - extension.length);
+  }
+
+  private toMetadata(file: any): IFileMetadata {
+    return {
+      name: file.Name,
+      serverRelativeUrl: file.ServerRelativeUrl,
+      timeLastModified: file.TimeLastModified,
+      author: file.Author ? file.Author.Title : 'Unknown',
+      length: file.Length
+    };
+  }
+}

@@ -1,0 +1,210 @@
+/*
+ * obsidian.css - Obsidian default theme.
+ *
+ * Follows Obsidian's own base-xx grey ramp, its colour palette, its callout
+ * shape (tinted panel, tinted title row, rounded, icon in the accent colour)
+ * and its Prism token mapping (--code-keyword -> pink, --code-string -> green,
+ * --code-function -> yellow, --code-property -> cyan, --code-value -> purple).
+ *
+ * Deliberate deviation: Obsidian's light-mode accents are tuned for its own
+ * off-white canvas and several of them (green, cyan, yellow) land near 2.5:1
+ * on white, which is exactly the "hard to read" problem this project exists to
+ * fix. Light-mode accents below keep Obsidian's hue but are darkened to clear
+ * WCAG AA for body text. Dark mode keeps Obsidian's values except blue
+ * (#027aff -> #4a9eff), which is under 3.5:1 on Obsidian's own #1e1e1e.
+ */
+
+.mdf-root[data-mdf-theme='obsidian'] {
+  --mdf-font-body: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --mdf-font-heading: var(--mdf-font-body);
+  --mdf-font-mono: 'JetBrains Mono', 'Source Code Pro', ui-monospace, Menlo, Consolas, monospace;
+  --mdf-font-size: 16px;
+  --mdf-line-height-base: 1.55;
+  --mdf-block-gap-base: 16px;
+
+  /* Obsidian's modular heading scale. */
+  --mdf-h1-size: 1.802em;
+  --mdf-h2-size: 1.602em;
+  --mdf-h3-size: 1.424em;
+  --mdf-h4-size: 1.266em;
+  --mdf-h5-size: 1.125em;
+  --mdf-h6-size: 1em;
+  --mdf-heading-weight: 600;
+  --mdf-h1-weight: 700;
+  --mdf-heading-color: var(--mdf-text);
+  --mdf-h1-rule-width: 0;
+  --mdf-h2-rule-width: 0;
+
+  --mdf-radius-sm: 4px;
+  --mdf-radius-md: 8px;
+  --mdf-radius-lg: 12px;
+  --mdf-list-indent: 1.9em;
+  --mdf-list-item-gap: 3px;
+
+  --mdf-code-radius: 8px;
+  --mdf-code-padding: 14px 16px;
+  --mdf-code-line-height: 1.5;
+  --mdf-code-font-size: 0.875em;
+
+  /* Callouts: tinted panel with a tinted title row and no accent bar. */
+  --mdf-callout-bg-alpha: 0.1;
+  --mdf-callout-title-bg-alpha: 0.1;
+  --mdf-callout-border-width: 0px;
+  --mdf-callout-accent-width: 0px;
+  --mdf-callout-radius: 8px;
+  --mdf-callout-title-padding: 10px 14px;
+  --mdf-callout-content-padding: 2px 14px 12px;
+  --mdf-callout-title-weight: 600;
+  --mdf-callout-fold-closed-pad: 10px;
+
+  --mdf-quote-padding: 2px 0 2px 16px;
+  --mdf-quote-border-width: 3px;
+}
+
+/* Obsidian's own hue choices for the types it ships. */
+.mdf-root[data-mdf-theme='obsidian'] .mdf-callout[data-callout='tip'],
+.mdf-root[data-mdf-theme='obsidian'] .mdf-callout[data-callout='important'] {
+  --mdf-callout-rgb: var(--mdf-color-cyan);
+}
+
+/* ---------------------------------------------------------- Obsidian light */
+
+.mdf-root[data-mdf-theme='obsidian'][data-mdf-mode='light'] {
+  --mdf-bg: #ffffff;
+  --mdf-bg-elevated: #f6f6f6;
+  --mdf-bg-hover: #ebebeb;
+  --mdf-text: #222222;
+  --mdf-text-muted: #5a5a5a;
+  --mdf-text-faint: #999999;
+  --mdf-border: #e0e0e0;
+  --mdf-border-strong: #cfcfcf;
+  --mdf-link: #7852ee;
+  --mdf-link-hover: #5f36d6;
+
+  /* Obsidian hues, darkened for contrast on white (see header note). */
+  --mdf-color-blue: 8, 104, 214;
+  --mdf-color-cyan: 0, 128, 126;
+  --mdf-color-green: 7, 128, 58;
+  --mdf-color-yellow: 154, 108, 0;
+  --mdf-color-orange: 179, 92, 0;
+  --mdf-color-red: 207, 31, 54;
+  --mdf-color-purple: 115, 70, 232;
+  --mdf-color-pink: 192, 42, 114;
+  --mdf-color-gray: 107, 107, 107;
+
+  --mdf-code-bg: #f6f6f6;
+  --mdf-code-text: #222222;
+  --mdf-code-border: #ececec;
+  --mdf-code-header-bg: #efefef;
+  --mdf-code-header-border: #e0e0e0;
+  --mdf-code-gutter-text: #a3a3a3;
+  --mdf-code-gutter-border: #e0e0e0;
+  --mdf-code-line-hover: rgba(0, 0, 0, 0.03);
+  --mdf-code-inline-bg: #f2f3f5;
+  --mdf-code-inline-text: #222222;
+  --mdf-code-inline-border: #e3e3e3;
+
+  --mdf-quote-border-color: #7852ee;
+  --mdf-quote-text: #5a5a5a;
+
+  --mdf-table-border: #e0e0e0;
+  --mdf-table-header-bg: #f6f6f6;
+  --mdf-table-stripe-bg: transparent;
+  --mdf-table-hover-bg: #fafafa;
+
+  --mdf-scrollbar-thumb: #d4d4d4;
+  --mdf-mark-alpha: 0.4;
+
+  /* Prism token mapping used by Obsidian's default theme. */
+  --mdf-syn-comment: #757575;
+  --mdf-syn-keyword: #c02a72;
+  --mdf-syn-type: #00807e;
+  --mdf-syn-entity: #8a6000;
+  --mdf-syn-constant: #7346e8;
+  --mdf-syn-attr: #00807e;
+  --mdf-syn-operator: #cf1f36;
+  --mdf-syn-string: #07803a;
+  --mdf-syn-regexp: #07803a;
+  --mdf-syn-variable: #b35c00;
+  --mdf-syn-builtin: #b35c00;
+  --mdf-syn-tag: #cf1f36;
+  --mdf-syn-property: #00807e;
+  --mdf-syn-punctuation: #5a5a5a;
+  --mdf-syn-section: #8a6000;
+  --mdf-syn-bullet: #b35c00;
+  --mdf-syn-link: #0868d6;
+  --mdf-syn-addition: #07803a;
+  --mdf-syn-addition-bg: rgba(7, 128, 58, 0.12);
+  --mdf-syn-deletion: #cf1f36;
+  --mdf-syn-deletion-bg: rgba(207, 31, 54, 0.12);
+}
+
+/* ----------------------------------------------------------- Obsidian dark */
+
+.mdf-root[data-mdf-theme='obsidian'][data-mdf-mode='dark'] {
+  --mdf-bg: #1e1e1e;
+  --mdf-bg-elevated: #262626;
+  --mdf-bg-hover: #2d2d2d;
+  --mdf-text: #dadada;
+  --mdf-text-muted: #b3b3b3;
+  --mdf-text-faint: #7a7a7a;
+  --mdf-border: #3a3a3a;
+  --mdf-border-strong: #4d4d4d;
+  --mdf-link: #a882ff;
+  --mdf-link-hover: #c0a5ff;
+
+  --mdf-color-blue: 74, 158, 255;
+  --mdf-color-cyan: 83, 223, 221;
+  --mdf-color-green: 68, 207, 110;
+  --mdf-color-yellow: 224, 222, 113;
+  --mdf-color-orange: 233, 151, 63;
+  --mdf-color-red: 251, 70, 76;
+  --mdf-color-purple: 168, 130, 255;
+  --mdf-color-pink: 250, 153, 205;
+  --mdf-color-gray: 153, 153, 153;
+
+  --mdf-code-bg: #161616;
+  --mdf-code-text: #dadada;
+  --mdf-code-border: #2b2b2b;
+  --mdf-code-header-bg: #1f1f1f;
+  --mdf-code-header-border: #2f2f2f;
+  --mdf-code-gutter-text: #6b6b6b;
+  --mdf-code-gutter-border: #2f2f2f;
+  --mdf-code-line-hover: rgba(255, 255, 255, 0.04);
+  --mdf-code-inline-bg: #2a2a2a;
+  --mdf-code-inline-text: #dadada;
+  --mdf-code-inline-border: transparent;
+
+  --mdf-quote-border-color: #a882ff;
+  --mdf-quote-text: #b3b3b3;
+
+  --mdf-table-border: #3a3a3a;
+  --mdf-table-header-bg: #262626;
+  --mdf-table-stripe-bg: transparent;
+  --mdf-table-hover-bg: #242424;
+
+  --mdf-scrollbar-thumb: #4a4a4a;
+  --mdf-mark-alpha: 0.3;
+
+  --mdf-syn-comment: #8a8a8a;
+  --mdf-syn-keyword: #fa99cd;
+  --mdf-syn-type: #53dfdd;
+  --mdf-syn-entity: #e0de71;
+  --mdf-syn-constant: #a882ff;
+  --mdf-syn-attr: #53dfdd;
+  --mdf-syn-operator: #fb464c;
+  --mdf-syn-string: #44cf6e;
+  --mdf-syn-regexp: #44cf6e;
+  --mdf-syn-variable: #e9973f;
+  --mdf-syn-builtin: #e9973f;
+  --mdf-syn-tag: #fb464c;
+  --mdf-syn-property: #53dfdd;
+  --mdf-syn-punctuation: #b3b3b3;
+  --mdf-syn-section: #e0de71;
+  --mdf-syn-bullet: #e9973f;
+  --mdf-syn-link: #4a9eff;
+  --mdf-syn-addition: #44cf6e;
+  --mdf-syn-addition-bg: rgba(68, 207, 110, 0.14);
+  --mdf-syn-deletion: #fb464c;
+  --mdf-syn-deletion-bg: rgba(251, 70, 76, 0.14);
+}

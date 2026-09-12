@@ -1,0 +1,143 @@
+/*
+ * syntax.css - maps highlight.js token classes onto theme tokens.
+ *
+ * highlight.js ships one stylesheet per theme with the colours baked in, which
+ * is why the original web part could only ever look like atom-one-dark. Here
+ * every token resolves to a --mdf-syn-* variable, so switching theme or light/
+ * dark switches the highlighting with it and nothing has to be re-imported.
+ *
+ * Class groupings follow highlight.js 11's own themes so language coverage
+ * matches what the library actually emits.
+ */
+
+.mdf-code .hljs {
+  color: var(--mdf-code-text);
+  background: transparent;
+}
+
+.mdf-code .hljs-doctag,
+.mdf-code .hljs-keyword,
+.mdf-code .hljs-meta .hljs-keyword,
+.mdf-code .hljs-template-tag,
+.mdf-code .hljs-template-variable,
+.mdf-code .hljs-variable.language_ {
+  color: var(--mdf-syn-keyword);
+}
+
+.mdf-code .hljs-type,
+.mdf-code .hljs-class .hljs-title {
+  color: var(--mdf-syn-type, var(--mdf-syn-keyword));
+}
+
+.mdf-code .hljs-title,
+.mdf-code .hljs-title.class_,
+.mdf-code .hljs-title.class_.inherited__,
+.mdf-code .hljs-title.function_ {
+  color: var(--mdf-syn-entity);
+}
+
+.mdf-code .hljs-attr,
+.mdf-code .hljs-attribute,
+.mdf-code .hljs-selector-attr,
+.mdf-code .hljs-selector-class,
+.mdf-code .hljs-selector-id {
+  color: var(--mdf-syn-attr, var(--mdf-syn-constant));
+}
+
+.mdf-code .hljs-literal,
+.mdf-code .hljs-number,
+.mdf-code .hljs-meta {
+  color: var(--mdf-syn-constant);
+}
+
+.mdf-code .hljs-operator {
+  color: var(--mdf-syn-operator, var(--mdf-syn-constant));
+}
+
+.mdf-code .hljs-variable {
+  color: var(--mdf-syn-variable);
+}
+
+.mdf-code .hljs-regexp {
+  color: var(--mdf-syn-regexp, var(--mdf-syn-string));
+}
+
+.mdf-code .hljs-string,
+.mdf-code .hljs-meta .hljs-string,
+.mdf-code .hljs-char.escape_ {
+  color: var(--mdf-syn-string);
+}
+
+.mdf-code .hljs-built_in,
+.mdf-code .hljs-symbol {
+  color: var(--mdf-syn-builtin);
+}
+
+.mdf-code .hljs-comment,
+.mdf-code .hljs-code,
+.mdf-code .hljs-formula {
+  color: var(--mdf-syn-comment);
+  font-style: var(--mdf-syn-comment-style, normal);
+}
+
+.mdf-code .hljs-name,
+.mdf-code .hljs-quote,
+.mdf-code .hljs-selector-tag,
+.mdf-code .hljs-selector-pseudo {
+  color: var(--mdf-syn-tag);
+}
+
+.mdf-code .hljs-property {
+  color: var(--mdf-syn-property, var(--mdf-code-text));
+}
+
+.mdf-code .hljs-punctuation,
+.mdf-code .hljs-params {
+  color: var(--mdf-syn-punctuation, var(--mdf-code-text));
+}
+
+.mdf-code .hljs-tag {
+  color: var(--mdf-syn-punctuation, var(--mdf-code-text));
+}
+
+.mdf-code .hljs-subst {
+  color: var(--mdf-code-text);
+}
+
+.mdf-code .hljs-section {
+  color: var(--mdf-syn-section, var(--mdf-syn-constant));
+  font-weight: 700;
+}
+
+.mdf-code .hljs-bullet {
+  color: var(--mdf-syn-bullet, var(--mdf-syn-variable));
+}
+
+.mdf-code .hljs-link {
+  color: var(--mdf-syn-link, var(--mdf-link));
+  text-decoration: underline;
+}
+
+.mdf-code .hljs-emphasis {
+  font-style: italic;
+}
+
+.mdf-code .hljs-strong {
+  font-weight: 700;
+}
+
+/* Diff blocks: tint the whole line so additions and deletions stay legible
+   even when the foreground colour is close to the body text. */
+.mdf-code .hljs-addition {
+  display: inline-block;
+  width: 100%;
+  color: var(--mdf-syn-addition);
+  background-color: var(--mdf-syn-addition-bg);
+}
+
+.mdf-code .hljs-deletion {
+  display: inline-block;
+  width: 100%;
+  color: var(--mdf-syn-deletion);
+  background-color: var(--mdf-syn-deletion-bg);
+}
