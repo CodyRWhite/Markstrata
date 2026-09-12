@@ -7,6 +7,7 @@
     "node": ">=22.0.0"
   },
   "scripts": {
+    "brand": "node scripts/build-brand.js",
     "build": "gulp bundle",
     "clean": "gulp clean",
     "demo": "node demo/build-demo.js",

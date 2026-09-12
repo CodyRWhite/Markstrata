@@ -7,6 +7,14 @@ the same number with a fourth part appended (1.2.0 -> 1.2.0.0), stamped by
 
 ## Unreleased
 
+- A brand asset set in `assets/`, cut from the logo master (`assets/mark.svg`)
+  by `npm run brand`: the mark on its own, the stacked and horizontal lockups,
+  the wordmark, single-colour and dark-surface variants, the favicon and app
+  icon PNGs, and a 1200x630 social card. `assets/brand.md` records the palette
+  and which file belongs where. The docs site and the harness now carry the
+  favicon and the logo, the README leads with the lockup, and the solution
+  package ships the mark as its app catalog tile.
+
 - Repository renamed to `Markstrata`, matching the solution and package
   names. Every link in the repository now points at the new path, including
   the documentation site, which moves from `/Markdown-Formatter-SPO/` to

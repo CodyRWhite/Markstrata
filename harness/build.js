@@ -14,6 +14,7 @@
 const fs = require('fs');
 const path = require('path');
 const { execFileSync } = require('child_process');
+const { copyBrand, brandHead } = require('../scripts/brand-assets');
 
 /*
  * Two modes:
@@ -79,6 +80,7 @@ function copyInto(sourceDir, targetDir, filter) {
 
 if (standalone) {
   copyInto(stylesDir, path.join(outDir, 'styles'), (name) => name.endsWith('.css'));
+  copyBrand(outDir);
   const katexSource = path.join(root, 'node_modules', 'katex', 'dist');
   fs.mkdirSync(path.join(outDir, 'katex', 'fonts'), { recursive: true });
   fs.copyFileSync(path.join(katexSource, 'katex.min.css'), path.join(outDir, 'katex', 'katex.min.css'));
@@ -103,6 +105,7 @@ fs.writeFileSync(
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Markstrata Markdown - runtime harness</title>
+${standalone ? brandHead('Markstrata Markdown', 'The web part\'s own renderer, running in the page.') : ''}
 ${links}
 <style>
   body { margin: 0; font-family: system-ui, sans-serif; }

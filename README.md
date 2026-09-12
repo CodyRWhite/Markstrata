@@ -1,3 +1,8 @@
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/lockup-dark.svg">
+  <img src="assets/lockup.svg" alt="Markstrata Markdown" width="260">
+</picture>
+
 # Markstrata Markdown
 
 A SharePoint Framework (SPFx) web part that renders markdown from a document
@@ -263,7 +268,8 @@ src/webparts/markstrata/
 tests/                            unit tests (node --test)
 samples/                          welcome + kitchen-sink markdown
 demo/build-demo.js                static theme preview builder
-scripts/                          version stamping, release notes, loc strings
+assets/                           logo master, generated brand assets, brand.md
+scripts/                          brand assets, version stamping, release notes, loc strings
 .github/workflows/                CI and release pipelines
 ```
 
@@ -282,6 +288,13 @@ on; this project is not affiliated with or endorsed by any of them. Colour
 values are drawn from [Primer](https://primer.style/), Obsidian's default theme
 and VS Code's Dark+ / Light+ themes — the look is reimplemented, no code is
 redistributed.
+
+## Brand
+
+The logo, its variants and the icon set live in [`assets/`](./assets), built
+from one master artboard by `npm run brand`. See
+[assets/brand.md](./assets/brand.md) for the palette and where each file is
+meant to be used.
 
 ## License
 

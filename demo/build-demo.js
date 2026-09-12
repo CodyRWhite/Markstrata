@@ -11,6 +11,7 @@
 const fs = require('fs');
 const path = require('path');
 const { execFileSync } = require('child_process');
+const { copyBrand, brandHead, brandLogo } = require('../scripts/brand-assets');
 
 /*
  * Usage:
@@ -87,6 +88,8 @@ function copyAssets() {
     path.join(root, 'node_modules', 'mermaid', 'dist', 'mermaid.min.js'),
     path.join(outDir, 'mermaid.min.js')
   );
+
+  copyBrand(outDir);
 }
 
 function build() {
@@ -175,6 +178,7 @@ function template(css, content, toc, mermaidThemes, title) {
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${title}</title>
+${brandHead(title, 'Markdown for SharePoint, themed like the editors you write it in.')}
 <link rel="stylesheet" href="katex/katex.min.css">
 <style>
 body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
@@ -182,7 +186,7 @@ body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sa
   position: sticky; top: 0; z-index: 20; display: flex; flex-wrap: wrap; gap: 12px;
   align-items: center; padding: 10px 16px; background: #1b1f24; color: #e6edf3; font-size: 13px;
 }
-.demo-bar strong { font-weight: 600; }
+.demo-bar .demo-brand { display: flex; align-items: center; margin-right: 4px; }
 .demo-bar select, .demo-bar button {
   padding: 4px 8px; border-radius: 4px; border: 1px solid #444c56;
   background: #22272e; color: #e6edf3; font: inherit;
@@ -195,7 +199,7 @@ ${css}
 </head>
 <body>
 <div class="demo-bar">
-  <strong>Markstrata Markdown</strong>
+  <a class="demo-brand" href="./" aria-label="Markstrata Markdown">${brandLogo(26, 'dark')}</a>
   <label>Theme
     <select id="theme">
       <option value="github">GitHub</option>
