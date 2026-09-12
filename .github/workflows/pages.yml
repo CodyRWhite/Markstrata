@@ -5,9 +5,14 @@ name: Docs site
 #   /themes/   the kitchen sink document, for judging a theme
 #   /app/      the web part's real renderer classes, running in the page
 #
-# One-off setup: Settings -> Pages -> Source: GitHub Actions. The github-pages
-# environment only allows deployments from the default branch unless you add
-# others under Settings -> Environments.
+# The build job enables Pages itself (`enablement: true`) rather than needing
+# Settings -> Pages set by hand: the action creates the Pages site through the
+# API with the pages: write permission below. Private repositories need a paid
+# plan for Pages, and the resulting site is publicly reachable on anything below
+# Enterprise Cloud.
+#
+# The github-pages environment still only allows deployments from the default
+# branch unless others are added under Settings -> Environments.
 on:
   push:
     branches: [main]
@@ -45,6 +50,8 @@ jobs:
         run: node scripts/build-site.js site
 
       - uses: actions/configure-pages@v5
+        with:
+          enablement: true
 
       - uses: actions/upload-pages-artifact@v3
         with:

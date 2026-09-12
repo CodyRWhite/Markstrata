@@ -74,10 +74,14 @@ test tenant without releasing, download the artifact from the CI run, or run
 working demo — from the same sources as the package. It is published to GitHub
 Pages by `.github/workflows/pages.yml` on every push to `main`.
 
-That workflow needs Pages turned on once: **Settings -> Pages -> Source: GitHub
-Actions**. The `github-pages` environment only accepts deployments from the
-default branch unless other branches are added under **Settings ->
-Environments**, so the site will not publish from a feature branch by default.
+The workflow enables Pages itself through the API, so no manual setting is
+needed. Two constraints still apply: a private repository needs a paid plan for
+Pages at all, and the `github-pages` environment only accepts deployments from
+the default branch unless other branches are added under **Settings ->
+Environments** - so the site does not publish from a feature branch.
+
+Note that a Pages site built from a private repository is still publicly
+reachable on anything below Enterprise Cloud.
 
 ## Toolchain
 
