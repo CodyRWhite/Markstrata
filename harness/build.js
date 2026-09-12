@@ -27,7 +27,7 @@ const outArg = args.indexOf('--out');
 
 const root = path.join(__dirname, '..');
 const outDir = outArg === -1 ? path.join(__dirname, 'dist') : path.resolve(args[outArg + 1]);
-const stylesDir = path.join(root, 'src', 'webparts', 'markdownFormatter', 'styles');
+const stylesDir = path.join(root, 'src', 'webparts', 'markstrata', 'styles');
 
 const CSS_FILES = [
   'base.css',
@@ -87,7 +87,7 @@ if (standalone) {
 
 // Stylesheets are plain CSS, so the page links the real files rather than a
 // copy: editing one and reloading is enough to see the change.
-const cssBase = standalone ? 'styles' : '../../src/webparts/markdownFormatter/styles';
+const cssBase = standalone ? 'styles' : '../../src/webparts/markstrata/styles';
 const katexHref = standalone ? 'katex/katex.min.css' : '../../node_modules/katex/dist/katex.min.css';
 
 const links = [katexHref]
@@ -102,7 +102,7 @@ fs.writeFileSync(
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Markdown Formatter - runtime harness</title>
+<title>Markstrata Markdown - runtime harness</title>
 ${links}
 <style>
   body { margin: 0; font-family: system-ui, sans-serif; }

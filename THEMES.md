@@ -1,7 +1,7 @@
 # Themes
 
 Every colour, font and shape in this web part comes from a CSS custom property
-declared in `src/webparts/markdownFormatter/styles/base.css` and given a value
+declared in `src/webparts/markstrata/styles/base.css` and given a value
 by a theme file in `styles/themes/`. Nothing in the structural stylesheets
 hard-codes a colour, which is why "GitHub / Obsidian / VS Code" is a data change
 rather than three forks of the same CSS — and why adding a fourth theme is one
@@ -10,13 +10,13 @@ file plus one dropdown entry.
 The root element carries the selection as attributes:
 
 ```html
-<div class="mdf-root"
-     data-mdf-theme="github|obsidian|vscode"
-     data-mdf-mode="light|dark"
-     data-mdf-width="narrow|comfortable|wide|full"
-     data-mdf-density="compact|normal|relaxed"
-     data-mdf-size="small|normal|large|xlarge"
-     data-mdf-code-size="small|normal|large">
+<div class="ink-root"
+     data-ink-theme="github|obsidian|vscode"
+     data-ink-mode="light|dark"
+     data-ink-width="narrow|comfortable|wide|full"
+     data-ink-density="compact|normal|relaxed"
+     data-ink-size="small|normal|large|xlarge"
+     data-ink-code-size="small|normal|large">
 ```
 
 ## The token contract
@@ -25,15 +25,15 @@ The root element carries the selection as attributes:
 
 | Token | Used for |
 |-------|----------|
-| `--mdf-bg` | Page background |
-| `--mdf-bg-elevated` | Sidebar, table header, toolbar buttons, panels |
-| `--mdf-bg-hover` | Hover state for the above |
-| `--mdf-text` | Body text |
-| `--mdf-text-muted` | Secondary text, plain blockquotes, list markers |
-| `--mdf-text-faint` | Labels, footer metadata, heading anchors |
-| `--mdf-border` / `--mdf-border-strong` | Rules, dividers, control borders |
-| `--mdf-link` / `--mdf-link-hover` | Anchors |
-| `--mdf-on-accent` | Text on a filled accent surface (the Save button) |
+| `--ink-bg` | Page background |
+| `--ink-bg-elevated` | Sidebar, table header, toolbar buttons, panels |
+| `--ink-bg-hover` | Hover state for the above |
+| `--ink-text` | Body text |
+| `--ink-text-muted` | Secondary text, plain blockquotes, list markers |
+| `--ink-text-faint` | Labels, footer metadata, heading anchors |
+| `--ink-border` / `--ink-border-strong` | Rules, dividers, control borders |
+| `--ink-link` / `--ink-link-hover` | Anchors |
+| `--ink-on-accent` | Text on a filled accent surface (the Save button) |
 
 ### Accent palette
 
@@ -41,34 +41,34 @@ Nine hues, each stored as an `R, G, B` triple so a rule can use both the solid
 colour and a tint of it:
 
 ```css
---mdf-color-blue: 9, 105, 218;
-/* solid */  color: rgb(var(--mdf-color-blue));
-/* tint  */  background: rgba(var(--mdf-color-blue), 0.1);
+--ink-color-blue: 9, 105, 218;
+/* solid */  color: rgb(var(--ink-color-blue));
+/* tint  */  background: rgba(var(--ink-color-blue), 0.1);
 ```
 
 `blue`, `cyan`, `green`, `yellow`, `orange`, `red`, `purple`, `pink`, `gray`.
-Callouts pick one of these through `--mdf-callout-rgb`, which is the same
+Callouts pick one of these through `--ink-callout-rgb`, which is the same
 technique Obsidian uses for its own callouts.
 
 ### Typography
 
-`--mdf-font-body`, `--mdf-font-heading`, `--mdf-font-mono`, `--mdf-font-size`,
-`--mdf-line-height-base`, `--mdf-block-gap-base`, `--mdf-h1-size` … `--mdf-h6-size`,
-`--mdf-heading-weight`, `--mdf-h1-weight`, `--mdf-heading-color`, and the
-optional heading rules `--mdf-h1-rule-width` / `-space` / `-color` (and the h2
+`--ink-font-body`, `--ink-font-heading`, `--ink-font-mono`, `--ink-font-size`,
+`--ink-line-height-base`, `--ink-block-gap-base`, `--ink-h1-size` … `--ink-h6-size`,
+`--ink-heading-weight`, `--ink-h1-weight`, `--ink-heading-color`, and the
+optional heading rules `--ink-h1-rule-width` / `-space` / `-color` (and the h2
 equivalents).
 
 Density and text size scale the base values rather than replacing them
-(`--mdf-density-scale`, `--mdf-font-scale`), so a theme never has to know which
+(`--ink-density-scale`, `--ink-font-scale`), so a theme never has to know which
 reading options are selected.
 
 ### Code
 
-`--mdf-code-bg`, `--mdf-code-text`, `--mdf-code-border`, `--mdf-code-radius`,
-`--mdf-code-padding`, `--mdf-code-font-size`, `--mdf-code-line-height`,
-`--mdf-code-header-bg`, `--mdf-code-header-border`, `--mdf-code-gutter-text`,
-`--mdf-code-gutter-border`, `--mdf-code-line-hover`, `--mdf-code-inline-bg`,
-`--mdf-code-inline-text`, `--mdf-code-inline-border`.
+`--ink-code-bg`, `--ink-code-text`, `--ink-code-border`, `--ink-code-radius`,
+`--ink-code-padding`, `--ink-code-font-size`, `--ink-code-line-height`,
+`--ink-code-header-bg`, `--ink-code-header-border`, `--ink-code-gutter-text`,
+`--ink-code-gutter-border`, `--ink-code-line-hover`, `--ink-code-inline-bg`,
+`--ink-code-inline-text`, `--ink-code-inline-border`.
 
 ### Syntax tokens
 
@@ -77,27 +77,27 @@ grouping so language coverage matches what the library emits:
 
 | Token | highlight.js classes |
 |-------|----------------------|
-| `--mdf-syn-comment` | `comment`, `code`, `formula` |
-| `--mdf-syn-keyword` | `keyword`, `doctag`, `template-tag`, `template-variable`, `variable.language_` |
-| `--mdf-syn-type` | `type`, `class .title` |
-| `--mdf-syn-entity` | `title`, `title.function_`, `title.class_` |
-| `--mdf-syn-constant` | `number`, `literal`, `meta` |
-| `--mdf-syn-attr` | `attr`, `attribute`, `selector-attr/class/id` |
-| `--mdf-syn-string` | `string`, `char.escape_` |
-| `--mdf-syn-regexp` | `regexp` |
-| `--mdf-syn-variable` | `variable` |
-| `--mdf-syn-builtin` | `built_in`, `symbol` |
-| `--mdf-syn-tag` | `name`, `quote`, `selector-tag`, `selector-pseudo` |
-| `--mdf-syn-property`, `--mdf-syn-punctuation`, `--mdf-syn-operator` | `property`, `punctuation`/`params`/`tag`, `operator` |
-| `--mdf-syn-section`, `--mdf-syn-bullet`, `--mdf-syn-link` | markdown structures |
-| `--mdf-syn-addition` / `-bg`, `--mdf-syn-deletion` / `-bg` | diff lines |
+| `--ink-syn-comment` | `comment`, `code`, `formula` |
+| `--ink-syn-keyword` | `keyword`, `doctag`, `template-tag`, `template-variable`, `variable.language_` |
+| `--ink-syn-type` | `type`, `class .title` |
+| `--ink-syn-entity` | `title`, `title.function_`, `title.class_` |
+| `--ink-syn-constant` | `number`, `literal`, `meta` |
+| `--ink-syn-attr` | `attr`, `attribute`, `selector-attr/class/id` |
+| `--ink-syn-string` | `string`, `char.escape_` |
+| `--ink-syn-regexp` | `regexp` |
+| `--ink-syn-variable` | `variable` |
+| `--ink-syn-builtin` | `built_in`, `symbol` |
+| `--ink-syn-tag` | `name`, `quote`, `selector-tag`, `selector-pseudo` |
+| `--ink-syn-property`, `--ink-syn-punctuation`, `--ink-syn-operator` | `property`, `punctuation`/`params`/`tag`, `operator` |
+| `--ink-syn-section`, `--ink-syn-bullet`, `--ink-syn-link` | markdown structures |
+| `--ink-syn-addition` / `-bg`, `--ink-syn-deletion` / `-bg` | diff lines |
 
 ### Callout shape
 
-`--mdf-callout-bg-alpha`, `--mdf-callout-title-bg-alpha`,
-`--mdf-callout-border-width`, `--mdf-callout-accent-width`,
-`--mdf-callout-radius`, `--mdf-callout-title-padding`,
-`--mdf-callout-content-padding`, `--mdf-callout-title-weight`.
+`--ink-callout-bg-alpha`, `--ink-callout-title-bg-alpha`,
+`--ink-callout-border-width`, `--ink-callout-accent-width`,
+`--ink-callout-radius`, `--ink-callout-title-padding`,
+`--ink-callout-content-padding`, `--ink-callout-title-weight`.
 
 A GitHub alert is `bg-alpha: 0` + `accent-width: 4px` + `radius: 0`; an Obsidian
 callout is `bg-alpha: .1` + `title-bg-alpha: .1` + `radius: 8px`; a VS Code
@@ -160,7 +160,7 @@ Wiki.js classes map on too: `is-info` → info, `is-warning` → warning,
    `npm test` checks this for you: the theme files must declare an identical set
    of tokens, each palette hue must be an `R, G, B` triple in both modes, and no
    structural rule may hard-code a colour.
-2. Import it in `MarkdownFormatterWebPart.ts` next to the other theme imports.
+2. Import it in `MarkstrataWebPart.ts` next to the other theme imports.
 3. Add `{ key: 'mytheme', text: 'My theme' }` to `THEME_FAMILIES` in
    `utils/ThemeManager.ts`, and add `ThemeFamily` to the union type.
 4. Add a `mytheme-light` and `mytheme-dark` entry to `MERMAID_PALETTES` in the

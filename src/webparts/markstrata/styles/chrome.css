@@ -1,0 +1,257 @@
+/*
+ * chrome.css - the web part's own UI (toolbar, theme switcher, editor, version
+ * panel). Themed from the same variables as the content so the frame never
+ * fights the markdown it wraps.
+ */
+
+.ink-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 6px 0 10px;
+  border-bottom: 1px solid var(--ink-border);
+  margin-bottom: 12px;
+  font-size: 0.8125em;
+  color: var(--ink-text-muted);
+}
+
+.ink-toolbar-spacer {
+  flex: 1 1 auto;
+}
+
+.ink-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border: 1px solid var(--ink-border);
+  border-radius: var(--ink-radius-sm);
+  background-color: var(--ink-bg-elevated);
+  color: var(--ink-text);
+  font-family: inherit;
+  font-size: inherit;
+  line-height: 1.4;
+  cursor: pointer;
+  transition: background-color 0.12s ease, border-color 0.12s ease;
+}
+
+.ink-btn:hover {
+  background-color: var(--ink-bg-hover);
+  border-color: var(--ink-border-strong);
+}
+
+.ink-btn[aria-pressed='true'],
+.ink-btn.is-active {
+  border-color: var(--ink-link);
+  color: var(--ink-link);
+}
+
+.ink-btn[disabled] {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.ink-btn-primary {
+  border-color: var(--ink-link);
+  background-color: var(--ink-link);
+  color: var(--ink-on-accent);
+}
+
+.ink-btn-primary:hover {
+  background-color: var(--ink-link-hover);
+  border-color: var(--ink-link-hover);
+}
+
+.ink-select {
+  padding: 4px 6px;
+  border: 1px solid var(--ink-border);
+  border-radius: var(--ink-radius-sm);
+  background-color: var(--ink-bg-elevated);
+  color: var(--ink-text);
+  font-family: inherit;
+  font-size: inherit;
+}
+
+.ink-switcher {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ink-switcher label {
+  color: var(--ink-text-faint);
+}
+
+.ink-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  margin-top: 16px;
+  padding-top: 10px;
+  border-top: 1px solid var(--ink-border);
+  color: var(--ink-text-faint);
+  font-size: 0.8125em;
+}
+
+.ink-status {
+  padding: 4px 8px;
+  border-radius: var(--ink-radius-sm);
+  background-color: var(--ink-bg-elevated);
+  color: var(--ink-text-muted);
+}
+
+.ink-status[data-tone='error'] {
+  background-color: rgba(var(--ink-color-red), 0.12);
+  color: rgb(var(--ink-color-red));
+}
+
+.ink-status[data-tone='success'] {
+  background-color: rgba(var(--ink-color-green), 0.12);
+  color: rgb(var(--ink-color-green));
+}
+
+/* ------------------------------------------------------------------ editor */
+
+.ink-editor {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: 1fr;
+  align-items: start;
+}
+
+.ink-editor[data-layout='split'] {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+
+.ink-editor-pane,
+.ink-preview-pane {
+  min-width: 0;
+}
+
+.ink-editor[data-layout='preview'] .ink-editor-pane,
+.ink-editor[data-layout='edit'] .ink-preview-pane {
+  display: none;
+}
+
+.ink-editor-input {
+  display: block;
+  width: 100%;
+  min-height: 420px;
+  padding: 12px 14px;
+  border: 1px solid var(--ink-border);
+  border-radius: var(--ink-radius-md);
+  background-color: var(--ink-code-bg);
+  color: var(--ink-code-text);
+  font-family: var(--ink-font-mono);
+  font-size: var(--ink-code-font-size);
+  line-height: var(--ink-code-line-height);
+  resize: vertical;
+  tab-size: 2;
+}
+
+.ink-editor-input:focus {
+  outline: 2px solid var(--ink-link);
+  outline-offset: -1px;
+}
+
+.ink-preview-pane {
+  padding: 12px 14px;
+  border: 1px solid var(--ink-border);
+  border-radius: var(--ink-radius-md);
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.ink-pane-label {
+  margin-bottom: 6px;
+  font-size: 0.75em;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-text-faint);
+}
+
+/* A web part in a narrow column must drop the split view, or the editor and
+   the Save button end up squeezed out of reach. Keyed on the web part's own
+   width, with a viewport media query as the fallback. */
+@container mdf (max-width: 720px) {
+  .ink-editor[data-layout='split'] {
+    grid-template-columns: 1fr;
+  }
+
+  .ink-editor[data-layout='split'] .ink-preview-pane {
+    max-height: 40vh;
+  }
+}
+
+@supports not (container-type: inline-size) {
+  @media (max-width: 900px) {
+    .ink-editor[data-layout='split'] {
+      grid-template-columns: 1fr;
+    }
+  }
+}
+
+/* The toolbar wraps rather than clipping, so Save stays reachable however
+   narrow the column is. */
+.ink-toolbar > .ink-btn-primary {
+  margin-left: auto;
+}
+
+/* ------------------------------------------------------------ version panel */
+
+.ink-panel {
+  margin-bottom: 12px;
+  border: 1px solid var(--ink-border);
+  border-radius: var(--ink-radius-md);
+  background-color: var(--ink-bg-elevated);
+  overflow: hidden;
+}
+
+.ink-panel-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--ink-border);
+  font-weight: 600;
+}
+
+.ink-panel-body {
+  max-height: 320px;
+  overflow-y: auto;
+  padding: 4px 0;
+}
+
+.ink-version {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--ink-border);
+  font-size: 0.875em;
+}
+
+.ink-version:last-child {
+  border-bottom: 0;
+}
+
+.ink-version-label {
+  min-width: 3.5em;
+  font-family: var(--ink-font-mono);
+  color: var(--ink-text-muted);
+}
+
+.ink-version-meta {
+  flex: 1 1 auto;
+  min-width: 0;
+  color: var(--ink-text-muted);
+}
+
+.ink-version-current {
+  padding: 1px 6px;
+  border-radius: 999px;
+  background-color: rgba(var(--ink-color-green), 0.15);
+  color: rgb(var(--ink-color-green));
+  font-size: 0.85em;
+}

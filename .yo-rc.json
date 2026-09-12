@@ -8,11 +8,11 @@
       "@microsoft/teams-js": "2.24.0"
     },
     "version": "1.23.2",
-    "libraryName": "markdown-formatter-spo",
+    "libraryName": "markstrata",
     "libraryId": "3e270390-73b1-4d6c-b161-a262c1bc27d0",
     "environment": "spo",
     "packageManager": "npm",
-    "solutionName": "markdown-formatter-spo",
+    "solutionName": "markstrata",
     "solutionShortDescription": "Markdown renderer for SharePoint with GitHub, Obsidian and VS Code themes",
     "skipFeatureDeployment": true,
     "isDomainIsolated": false,

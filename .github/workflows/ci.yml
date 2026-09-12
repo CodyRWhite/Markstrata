@@ -39,15 +39,15 @@ jobs:
 
       - name: Check the package was produced
         run: |
-          test -f sharepoint/solution/markdown-formatter-spo.sppkg
-          ls -lh sharepoint/solution/markdown-formatter-spo.sppkg
+          test -f sharepoint/solution/markstrata.sppkg
+          ls -lh sharepoint/solution/markstrata.sppkg
 
       # Handy for testing a branch in a tenant without building locally.
       - name: Upload the package
         uses: actions/upload-artifact@v7
         with:
-          name: markdown-formatter-spo-${{ github.sha }}
-          path: sharepoint/solution/markdown-formatter-spo.sppkg
+          name: markstrata-${{ github.sha }}
+          path: sharepoint/solution/markstrata.sppkg
           retention-days: 14
 
   browser:

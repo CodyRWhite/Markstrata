@@ -1,0 +1,39 @@
+/*
+ * modifiers.css - reading options that apply on top of whichever theme is
+ * selected. Loaded last so these always win over the theme defaults.
+ */
+
+/* ----------------------------------------------------------------- density */
+
+.ink-root[data-ink-density='compact'] {
+  --ink-density-scale: 0.88;
+}
+
+.ink-root[data-ink-density='relaxed'] {
+  --ink-density-scale: 1.12;
+}
+
+/* --------------------------------------------------------------- text size */
+
+.ink-root[data-ink-size='small'] { --ink-font-scale: 0.9; }
+.ink-root[data-ink-size='large'] { --ink-font-scale: 1.12; }
+.ink-root[data-ink-size='xlarge'] { --ink-font-scale: 1.25; }
+
+/* ------------------------------------------------------------ line measure */
+
+.ink-root[data-ink-width='narrow'] { --ink-content-max-width: 680px; }
+.ink-root[data-ink-width='wide'] { --ink-content-max-width: 1100px; }
+.ink-root[data-ink-width='full'] { --ink-content-max-width: none; }
+
+/* --------------------------------------------------------------- code size */
+
+.ink-root[data-ink-code-size='small'] { --ink-code-font-size: 0.8em; }
+.ink-root[data-ink-code-size='large'] { --ink-code-font-size: 0.95em; }
+
+/* Respect the reader's motion preference for the few transitions we use. */
+@media (prefers-reduced-motion: reduce) {
+  .ink-root * {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}

@@ -1,0 +1,88 @@
+/* extras.css - math, Mermaid, inline table of contents, loose ends */
+
+.ink-math-block {
+  margin: 0 0 var(--ink-block-gap);
+  padding: 8px 0;
+  overflow-x: auto;
+  text-align: center;
+}
+
+.ink-math-error,
+.ink-math-error-inline {
+  padding: 2px 6px;
+  border-radius: var(--ink-radius-sm);
+  background-color: rgba(var(--ink-color-red), 0.12);
+  color: rgb(var(--ink-color-red));
+  font-family: var(--ink-font-mono);
+  font-size: 0.9em;
+}
+
+.ink-mermaid {
+  display: flex;
+  justify-content: center;
+  margin: 0 0 var(--ink-block-gap);
+  padding: 16px;
+  border: 1px solid var(--ink-border);
+  border-radius: var(--ink-radius-md);
+  background-color: var(--ink-mermaid-bg, var(--ink-bg-elevated));
+  overflow-x: auto;
+}
+
+.ink-mermaid svg {
+  max-width: 100%;
+  height: auto;
+}
+
+.ink-mermaid pre.mermaid {
+  margin: 0;
+  font-family: var(--ink-font-mono);
+  font-size: var(--ink-code-font-size);
+  color: var(--ink-text-muted);
+  white-space: pre-wrap;
+}
+
+.ink-mermaid-error {
+  border-color: rgb(var(--ink-color-red));
+  background-color: rgba(var(--ink-color-red), 0.08);
+}
+
+.ink-mermaid-error pre {
+  color: rgb(var(--ink-color-red));
+}
+
+/* Details / summary written directly in markdown (callouts style themselves). */
+.ink-content details:not(.ink-callout) {
+  margin: 0 0 var(--ink-block-gap);
+  padding: 8px 12px;
+  border: 1px solid var(--ink-border);
+  border-radius: var(--ink-radius-md);
+  background-color: var(--ink-bg-elevated);
+}
+
+.ink-content details:not(.ink-callout) > summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+/* Keep KaTeX from inheriting the body line-height and clipping. */
+.ink-content .katex {
+  font-size: 1.05em;
+  line-height: 1.2;
+}
+
+.ink-content .katex-display {
+  margin: 0;
+  padding: 4px 0;
+}
+
+/* Mermaid fallback: show the diagram source when rendering fails. */
+.ink-mermaid-error {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+}
+
+.ink-mermaid-message {
+  color: rgb(var(--ink-color-red));
+  font-size: 0.875em;
+}

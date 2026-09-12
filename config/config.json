@@ -2,16 +2,16 @@
   "$schema": "https://developer.microsoft.com/json-schemas/spfx-build/config.2.0.schema.json",
   "version": "2.0",
   "bundles": {
-    "markdown-formatter-web-part": {
+    "markstrata-web-part": {
       "components": [
         {
-          "entrypoint": "./lib/webparts/markdownFormatter/MarkdownFormatterWebPart.js",
-          "manifest": "./src/webparts/markdownFormatter/MarkdownFormatterWebPart.manifest.json"
+          "entrypoint": "./lib/webparts/markstrata/MarkstrataWebPart.js",
+          "manifest": "./src/webparts/markstrata/MarkstrataWebPart.manifest.json"
         }
       ]
     }
   },
   "localizedResources": {
-    "MarkdownFormatterWebPartStrings": "lib/webparts/markdownFormatter/loc/{locale}.js"
+    "MarkstrataWebPartStrings": "lib/webparts/markstrata/loc/{locale}.js"
   }
 }

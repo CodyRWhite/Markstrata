@@ -1,4 +1,4 @@
-# Markdown Formatter for SharePoint
+# Markstrata Markdown
 
 A SharePoint Framework web part that renders markdown with themes modelled on
 **GitHub**, **Obsidian** and **VS Code**, in light and dark.
@@ -48,7 +48,7 @@ export function resolveMode(mode: ColorMode, isInverted?: boolean): ResolvedMode
 
 Download the `.sppkg` from the
 [latest release](https://github.com/CodyRWhite/Markdown-Formatter-SPO/releases/latest),
-upload it to your tenant App Catalog, and add **Markdown Formatter** to a page.
+upload it to your tenant App Catalog, and add **Markstrata Markdown** to a page.
 Nothing is fetched from a CDN at runtime.
 
 | Where to look | What is there |

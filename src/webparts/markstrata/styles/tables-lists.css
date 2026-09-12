@@ -1,0 +1,90 @@
+/* tables-lists.css - tables, lists and task lists */
+
+.ink-table-scroll {
+  margin: 0 0 var(--ink-block-gap);
+  overflow-x: auto;
+}
+
+.ink-content table {
+  width: auto;
+  max-width: 100%;
+  margin: 0 0 var(--ink-block-gap);
+  border-collapse: collapse;
+  border-spacing: 0;
+  font-size: 0.95em;
+}
+
+.ink-table-scroll > table {
+  margin-bottom: 0;
+}
+
+.ink-content th,
+.ink-content td {
+  padding: 6px 13px;
+  border: 1px solid var(--ink-table-border, var(--ink-border));
+  text-align: left;
+  vertical-align: top;
+}
+
+.ink-content thead th {
+  background-color: var(--ink-table-header-bg, var(--ink-bg-elevated));
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.ink-content tbody tr:nth-child(2n) td {
+  background-color: var(--ink-table-stripe-bg, transparent);
+}
+
+.ink-content tbody tr:hover td {
+  background-color: var(--ink-table-hover-bg, transparent);
+}
+
+/* ------------------------------------------------------------------- lists */
+
+.ink-content ul,
+.ink-content ol {
+  margin: 0 0 var(--ink-block-gap);
+  padding-left: var(--ink-list-indent, 2em);
+}
+
+.ink-content li {
+  margin: var(--ink-list-item-gap, 2px) 0;
+}
+
+.ink-content li > ul,
+.ink-content li > ol {
+  margin: var(--ink-list-item-gap, 2px) 0;
+}
+
+.ink-content li::marker {
+  color: var(--ink-list-marker, var(--ink-text-muted));
+}
+
+.ink-content li > p {
+  margin-bottom: 8px;
+}
+
+/* -------------------------------------------------------------- task lists */
+
+/* Only task items lose their marker: a list can mix task items and ordinary
+   bullets, and the ordinary ones should keep theirs. */
+.ink-content .ink-task-item {
+  list-style: none;
+  text-indent: -1.55em;
+  padding-left: 1.55em;
+}
+
+.ink-content .ink-task-checkbox {
+  width: 1em;
+  height: 1em;
+  margin: 0 0.45em 0 0;
+  vertical-align: middle;
+  accent-color: var(--ink-checkbox-accent, var(--ink-link));
+  cursor: default;
+}
+
+.ink-content .ink-task-item[data-checked='true'] {
+  color: var(--ink-task-done-color, inherit);
+  text-decoration: var(--ink-task-done-decoration, none);
+}

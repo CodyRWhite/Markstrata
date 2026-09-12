@@ -7,6 +7,10 @@ the same number with a fourth part appended (1.2.0 -> 1.2.0.0), stamped by
 
 ## Unreleased
 
+- Renamed to **Markstrata Markdown**. The solution and web part GUIDs are
+  unchanged, so a tenant still sees one app rather than two; the package is now
+  `markstrata.sppkg` and the CSS prefix is `ink-`.
+
 - SharePoint Framework 1.21.1 -> 1.23.2, which clears every advisory against
   the packages that ship to the browser (`npm audit --omit=dev` reports none).
   SPFx 1.23 resolves stylesheet `url()` as a module request, so KaTeX's bundled

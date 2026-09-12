@@ -45,8 +45,8 @@ function compileProcessor() {
   execFileSync(
     path.join(root, 'node_modules', '.bin', 'tsc'),
     [
-      path.join(root, 'src', 'webparts', 'markdownFormatter', 'utils', 'MarkdownProcessor.ts'),
-      path.join(root, 'src', 'webparts', 'markdownFormatter', 'utils', 'ThemeManager.ts'),
+      path.join(root, 'src', 'webparts', 'markstrata', 'utils', 'MarkdownProcessor.ts'),
+      path.join(root, 'src', 'webparts', 'markstrata', 'utils', 'ThemeManager.ts'),
       '--outDir', libDir,
       '--module', 'commonjs',
       '--target', 'es2017',
@@ -59,7 +59,7 @@ function compileProcessor() {
 }
 
 function readCss() {
-  const stylesDir = path.join(root, 'src', 'webparts', 'markdownFormatter', 'styles');
+  const stylesDir = path.join(root, 'src', 'webparts', 'markstrata', 'styles');
   return CSS_FILES.map((file) => fs.readFileSync(path.join(stylesDir, file), 'utf8')).join('\n');
 }
 
@@ -130,7 +130,7 @@ function buildToc(html) {
     const text = match[3]
       // Drop the heading's anchor link, or its "#" ends up in the entry - the
       // web part removes the same element when it builds the list from the DOM.
-      .replace(/<a class="mdf-anchor"[\s\S]*?<\/a>/g, '')
+      .replace(/<a class="ink-anchor"[\s\S]*?<\/a>/g, '')
       .replace(/<[^>]+>/g, '')
       .trim();
     if (text) {
@@ -146,9 +146,9 @@ function buildToc(html) {
         `<li style="padding-left:${(item.level - 2) * 12}px"><a href="#${item.id}">${item.text}</a></li>`
     )
     .join('\n');
-  return `<details class="mdf-toc-sidebar" open>
-      <summary class="mdf-toc-heading">On this page</summary>
-      <nav class="mdf-toc" aria-label="Table of contents"><ul>${links}</ul></nav>
+  return `<details class="ink-toc-sidebar" open>
+      <summary class="ink-toc-heading">On this page</summary>
+      <nav class="ink-toc" aria-label="Table of contents"><ul>${links}</ul></nav>
     </details>`;
 }
 
@@ -159,13 +159,13 @@ function buildToc(html) {
 function pageTitle(html) {
   const match = /<h1[^>]*>([\s\S]*?)<\/h1>/.exec(html);
   if (!match) {
-    return 'Markdown Formatter';
+    return 'Markstrata Markdown';
   }
   const text = match[1]
-    .replace(/<a class="mdf-anchor"[\s\S]*?<\/a>/g, '')
+    .replace(/<a class="ink-anchor"[\s\S]*?<\/a>/g, '')
     .replace(/<[^>]+>/g, '')
     .trim();
-  return text || 'Markdown Formatter';
+  return text || 'Markstrata Markdown';
 }
 
 function template(css, content, toc, mermaidThemes, title) {
@@ -195,7 +195,7 @@ ${css}
 </head>
 <body>
 <div class="demo-bar">
-  <strong>Markdown Formatter</strong>
+  <strong>Markstrata Markdown</strong>
   <label>Theme
     <select id="theme">
       <option value="github">GitHub</option>
@@ -236,11 +236,11 @@ ${css}
   <label><input type="checkbox" id="wrap"> Wrap code</label>
 </div>
 <div class="demo-stage">
-  <div class="mdf-root" id="root" data-mdf-theme="github" data-mdf-mode="light"
-       data-mdf-width="comfortable" data-mdf-density="normal" data-mdf-size="normal" data-mdf-code-size="normal">
-    <div class="mdf-layout" id="layout" data-mdf-toc="left">
+  <div class="ink-root" id="root" data-ink-theme="github" data-ink-mode="light"
+       data-ink-width="comfortable" data-ink-density="normal" data-ink-size="normal" data-ink-code-size="normal">
+    <div class="ink-layout" id="layout" data-ink-toc="left">
       ${toc}
-      <article class="mdf-content" id="content">
+      <article class="ink-content" id="content">
 ${content}
       </article>
     </div>
@@ -259,11 +259,11 @@ var MERMAID_THEMES = ${JSON.stringify(mermaidThemes)};
   var layout = document.getElementById('layout');
   var content = document.getElementById('content');
   tocSelect.addEventListener('change', function () {
-    var panel = document.querySelector('.mdf-toc-sidebar, .mdf-toc-inline');
+    var panel = document.querySelector('.ink-toc-sidebar, .ink-toc-inline');
     var placement = tocSelect.value;
     panel.hidden = placement === 'off';
-    layout.setAttribute('data-mdf-toc', placement === 'off' ? 'left' : placement);
-    panel.className = placement === 'inline' ? 'mdf-toc-inline' : 'mdf-toc-sidebar';
+    layout.setAttribute('data-ink-toc', placement === 'off' ? 'left' : placement);
+    panel.className = placement === 'inline' ? 'ink-toc-inline' : 'ink-toc-sidebar';
     if (placement === 'inline') {
       content.insertBefore(panel, content.firstChild);
     } else {
@@ -273,7 +273,7 @@ var MERMAID_THEMES = ${JSON.stringify(mermaidThemes)};
 
   // Mirror the web part: the contents start collapsed when the column is too
   // narrow to sit them beside the text.
-  var toc = document.querySelector('.mdf-toc-sidebar');
+  var toc = document.querySelector('.ink-toc-sidebar');
   if (toc && root.clientWidth <= 720) {
     toc.open = false;
   }
@@ -285,29 +285,29 @@ var MERMAID_THEMES = ${JSON.stringify(mermaidThemes)};
       renderDiagrams();
     });
   }
-  bind('theme', 'data-mdf-theme');
-  bind('mode', 'data-mdf-mode');
-  bind('width', 'data-mdf-width');
-  bind('density', 'data-mdf-density');
+  bind('theme', 'data-ink-theme');
+  bind('mode', 'data-ink-mode');
+  bind('width', 'data-ink-width');
+  bind('density', 'data-ink-density');
 
   function toggleClass(id, className) {
     var input = document.getElementById(id);
     input.addEventListener('change', function () {
-      var blocks = document.querySelectorAll('.mdf-code');
+      var blocks = document.querySelectorAll('.ink-code');
       for (var i = 0; i < blocks.length; i++) {
         blocks[i].classList.toggle(className, input.checked);
       }
     });
   }
-  toggleClass('numbers', 'mdf-code--numbered');
-  toggleClass('wrap', 'mdf-code--wrap');
+  toggleClass('numbers', 'ink-code--numbered');
+  toggleClass('wrap', 'ink-code--wrap');
 
   // Copy buttons, same behaviour as the web part.
   document.addEventListener('click', function (event) {
-    var button = event.target.closest ? event.target.closest('.mdf-code-copy') : null;
+    var button = event.target.closest ? event.target.closest('.ink-code-copy') : null;
     if (!button) { return; }
-    var block = button.closest('.mdf-code');
-    var lines = block.querySelectorAll('.mdf-code-line-text');
+    var block = button.closest('.ink-code');
+    var lines = block.querySelectorAll('.ink-code-line-text');
     var text = [];
     for (var i = 0; i < lines.length; i++) { text.push(lines[i].textContent); }
     navigator.clipboard.writeText(text.join('\\n'));
@@ -319,7 +319,7 @@ var MERMAID_THEMES = ${JSON.stringify(mermaidThemes)};
   var sources = [];
   function renderDiagrams() {
     if (typeof mermaid === 'undefined') { return; }
-    var hosts = document.querySelectorAll('.mdf-mermaid');
+    var hosts = document.querySelectorAll('.ink-mermaid');
     for (var i = 0; i < hosts.length; i++) {
       if (sources[i] === undefined) {
         var pre = hosts[i].querySelector('pre.mermaid');

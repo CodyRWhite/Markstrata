@@ -1,0 +1,234 @@
+/*
+ * code.css - inline code and fenced code blocks.
+ *
+ * The readability problems this replaces (from the web part this project is
+ * based on) were: a hard-coded near-black block background in every theme, a
+ * text-shadow over the code, an inset black box-shadow, line-height:0 on the
+ * <code> element, and line numbers positioned absolutely so they overlapped
+ * long lines. None of that is here: colours come from the theme, the gutter is
+ * a sticky column that survives horizontal scrolling, and the numbers are CSS
+ * counters so "copy" never picks them up.
+ */
+
+/* ------------------------------------------------------------ inline code */
+
+.ink-content code {
+  padding: 0.15em 0.35em;
+  border: 1px solid var(--ink-code-inline-border, transparent);
+  border-radius: var(--ink-radius-sm);
+  background-color: var(--ink-code-inline-bg);
+  color: var(--ink-code-inline-text);
+  font-family: var(--ink-font-mono);
+  font-size: var(--ink-code-font-size);
+  font-variant-ligatures: none;
+}
+
+/* Links and headings keep their own colour for inline code. */
+.ink-content a code { color: inherit; }
+.ink-content h1 code,
+.ink-content h2 code,
+.ink-content h3 code,
+.ink-content h4 code { font-size: 0.9em; }
+
+/* ------------------------------------------------------------ code blocks */
+
+.ink-code {
+  position: relative;
+  margin: 0 0 var(--ink-block-gap);
+  border: 1px solid var(--ink-code-border);
+  border-radius: var(--ink-code-radius);
+  background-color: var(--ink-code-bg);
+  overflow: hidden;
+}
+
+.ink-code-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px 6px 14px;
+  border-bottom: 1px solid var(--ink-code-header-border, var(--ink-border));
+  background-color: var(--ink-code-header-bg);
+  font-family: var(--ink-font-mono);
+  font-size: 0.75em;
+  line-height: 1.4;
+  color: var(--ink-text-muted);
+}
+
+.ink-code-lang {
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.ink-code-filename {
+  color: var(--ink-text);
+  font-weight: 600;
+}
+
+.ink-code-lang + .ink-code-filename::before {
+  content: '\00b7';
+  margin-right: 8px;
+  color: var(--ink-text-faint);
+}
+
+.ink-code-actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.ink-code-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8px;
+  border: 1px solid var(--ink-border);
+  border-radius: var(--ink-radius-sm);
+  background-color: var(--ink-bg-elevated);
+  color: var(--ink-text-muted);
+  font-family: inherit;
+  font-size: 1em;
+  line-height: 1.4;
+  cursor: pointer;
+  transition: color 0.12s ease, background-color 0.12s ease, border-color 0.12s ease;
+}
+
+.ink-code-btn:hover {
+  background-color: var(--ink-bg-hover);
+  border-color: var(--ink-border-strong);
+  color: var(--ink-text);
+}
+
+.ink-code-btn[data-state='done'] {
+  border-color: rgb(var(--ink-color-green));
+  color: rgb(var(--ink-color-green));
+}
+
+.ink-code-btn[data-state='error'] {
+  border-color: rgb(var(--ink-color-red));
+  color: rgb(var(--ink-color-red));
+}
+
+.ink-code-btn svg {
+  width: 12px;
+  height: 12px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* With the header switched off the copy button floats over the block and only
+   appears on hover or keyboard focus. */
+.ink-code:not(.ink-code--has-header) .ink-code-actions {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 2;
+  opacity: 0;
+  transition: opacity 0.12s ease-in-out;
+}
+
+.ink-code:not(.ink-code--has-header):hover .ink-code-actions,
+.ink-code:not(.ink-code--has-header):focus-within .ink-code-actions {
+  opacity: 1;
+}
+
+.ink-code pre {
+  margin: 0;
+  padding: var(--ink-code-padding);
+  overflow-x: auto;
+  background-color: transparent;
+  counter-reset: ink-line;
+  color: var(--ink-code-text);
+  font-family: var(--ink-font-mono);
+  font-size: var(--ink-code-font-size);
+  line-height: var(--ink-code-line-height);
+  tab-size: 4;
+}
+
+.ink-code pre code {
+  display: block;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+  white-space: pre;
+}
+
+/* One block element per source line. width:max-content + min-width:100% lets
+   the sticky gutter stay put while the line scrolls under it. */
+.ink-code-line {
+  display: block;
+  width: max-content;
+  min-width: 100%;
+  counter-increment: ink-line;
+}
+
+.ink-code-ln {
+  display: none;
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  width: var(--ink-code-gutter-width, 2.5em);
+  margin-right: 1em;
+  padding-right: 0.75em;
+  border-right: 1px solid var(--ink-code-gutter-border, var(--ink-border));
+  background-color: var(--ink-code-bg);
+  color: var(--ink-code-gutter-text);
+  text-align: right;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.ink-code-ln::before {
+  content: counter(ink-line);
+}
+
+.ink-code--numbered .ink-code-ln {
+  display: inline-block;
+}
+
+.ink-code--numbered pre {
+  padding-left: 0;
+}
+
+.ink-code--numbered .ink-code-line:hover {
+  background-color: var(--ink-code-line-hover, transparent);
+}
+
+/* Soft wrap instead of horizontal scrolling. */
+.ink-code--wrap pre code,
+.ink-code--wrap .ink-code-line {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.ink-code--wrap .ink-code-line {
+  width: auto;
+}
+
+.ink-code--wrap .ink-code-ln {
+  vertical-align: top;
+}
+
+/* Scrollbars inside code blocks should read as part of the block. */
+.ink-code pre::-webkit-scrollbar {
+  height: 10px;
+  width: 10px;
+}
+
+.ink-code pre::-webkit-scrollbar-thumb {
+  border: 3px solid transparent;
+  border-radius: 6px;
+  background-clip: content-box;
+  background-color: var(--ink-scrollbar-thumb, var(--ink-border-strong));
+}
+
+.ink-code pre::-webkit-scrollbar-track {
+  background-color: transparent;
+}

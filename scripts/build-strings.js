@@ -68,5 +68,5 @@ const banner = [
 
 const body = `define([], function () {\n  return ${JSON.stringify(STRINGS, null, 2).replace(/\n/g, '\n  ')};\n});\n`;
 
-fs.writeFileSync(path.join(root, 'src', 'webparts', 'markdownFormatter', 'loc', 'en-us.js'), banner + body);
+fs.writeFileSync(path.join(root, 'src', 'webparts', 'markstrata', 'loc', 'en-us.js'), banner + body);
 console.log('Wrote loc/en-us.js');

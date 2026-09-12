@@ -48,43 +48,43 @@ const pageUrl = 'file://' + path.join(OUT, 'index.html');
   console.log('Driving the web part:');
 
   await step('toolbar rendered', async () => {
-    await page.waitForSelector('.mdf-toolbar .mdf-btn', { timeout: 5000 });
+    await page.waitForSelector('.ink-toolbar .ink-btn', { timeout: 5000 });
   });
 
   await step('contents sidebar built from headings', async () => {
-    const count = await page.locator('.mdf-toc-sidebar .mdf-toc a').count();
+    const count = await page.locator('.ink-toc-sidebar .ink-toc a').count();
     if (count < 5) throw new Error('only ' + count + ' entries');
   });
 
   await step('callouts rendered', async () => {
-    const count = await page.locator('.mdf-callout').count();
+    const count = await page.locator('.ink-callout').count();
     if (count < 8) throw new Error('only ' + count + ' callouts');
   });
 
   await step('mermaid diagram rendered to svg', async () => {
-    await page.waitForSelector('.mdf-mermaid svg', { timeout: 15000 });
+    await page.waitForSelector('.ink-mermaid svg', { timeout: 15000 });
   });
 
   await step('katex rendered', async () => {
-    await page.waitForSelector('.mdf-math-block .katex', { timeout: 5000 });
+    await page.waitForSelector('.ink-math-block .katex', { timeout: 5000 });
   });
 
   await step('copy button copies the code, without line numbers', async () => {
     await page.context().grantPermissions(['clipboard-read', 'clipboard-write']);
-    const block = page.locator('.mdf-code[data-lang="typescript"]').first();
+    const block = page.locator('.ink-code[data-lang="typescript"]').first();
     await block.hover();
-    await block.locator('.mdf-code-copy').click();
+    await block.locator('.ink-code-copy').click();
     await page.waitForTimeout(300);
     const text = await page.evaluate(() => navigator.clipboard.readText());
     if (!text.includes('export function resolveMode')) throw new Error('unexpected clipboard: ' + text.slice(0, 40));
     if (/^\s*1\s/.test(text)) throw new Error('line numbers were copied');
     if (text.split('\n').length < 8) throw new Error('too few lines copied');
-    const state = await block.locator('.mdf-code-copy').getAttribute('data-state');
+    const state = await block.locator('.ink-code-copy').getAttribute('data-state');
     if (state !== 'done') throw new Error('button did not confirm, state=' + state);
   });
 
   await step('foldable callout opens on click', async () => {
-    const details = page.locator('details.mdf-callout').first();
+    const details = page.locator('details.ink-callout').first();
     if (await details.evaluate((el) => el.open)) throw new Error('started open');
     await details.locator('summary').click();
     if (!(await details.evaluate((el) => el.open))) throw new Error('did not open');
@@ -93,37 +93,37 @@ const pageUrl = 'file://' + path.join(OUT, 'index.html');
   await step('scroll spy marks the heading in view', async () => {
     await page.evaluate(() => document.querySelector('#tables').scrollIntoView());
     await page.waitForTimeout(600);
-    const current = await page.locator('.mdf-toc a[aria-current="true"]').count();
+    const current = await page.locator('.ink-toc a[aria-current="true"]').count();
     if (current !== 1) throw new Error(current + ' entries marked current');
-    const label = await page.locator('.mdf-toc a[aria-current="true"]').innerText();
+    const label = await page.locator('.ink-toc a[aria-current="true"]').innerText();
     if (label.trim() !== 'Tables') throw new Error('marked "' + label.trim() + '"');
   });
 
   await step('clicking a contents entry highlights that entry', async () => {
-    await page.locator('.mdf-toc a', { hasText: 'Callouts' }).first().click();
+    await page.locator('.ink-toc a', { hasText: 'Callouts' }).first().click();
     await page.waitForTimeout(900);
-    const label = await page.locator('.mdf-toc a[aria-current="true"]').innerText();
+    const label = await page.locator('.ink-toc a[aria-current="true"]').innerText();
     if (label.trim() !== 'Callouts') throw new Error('marked "' + label.trim() + '"');
     await page.evaluate(() => window.scrollTo(0, 0));
     await page.waitForTimeout(400);
   });
 
   await step('reader theme switcher repaints', async () => {
-    await page.selectOption('.mdf-switcher select', 'obsidian');
+    await page.selectOption('.ink-switcher select', 'obsidian');
     await page.waitForTimeout(400);
-    const theme = await page.locator('.mdf-root').getAttribute('data-mdf-theme');
+    const theme = await page.locator('.ink-root').getAttribute('data-ink-theme');
     if (theme !== 'obsidian') throw new Error('theme is ' + theme);
   });
 
   await step('dark mode toggle repaints', async () => {
     await page.getByRole('button', { name: 'Dark mode' }).click();
     await page.waitForTimeout(600);
-    const mode = await page.locator('.mdf-root').getAttribute('data-mdf-mode');
+    const mode = await page.locator('.ink-root').getAttribute('data-ink-mode');
     if (mode !== 'dark') throw new Error('mode is ' + mode);
   });
 
   await step('mermaid re-rendered for the new theme', async () => {
-    await page.waitForSelector('.mdf-mermaid svg', { timeout: 15000 });
+    await page.waitForSelector('.ink-mermaid svg', { timeout: 15000 });
   });
 
   await page.screenshot({ path: path.join(OUT, 'harness-view-obsidian-dark.png'), fullPage: false });
@@ -131,34 +131,34 @@ const pageUrl = 'file://' + path.join(OUT, 'index.html');
   await step('contents move to the right', async () => {
     await page.evaluate(() => window.harness.setToc('right'));
     await page.waitForTimeout(400);
-    const placement = await page.locator('.mdf-layout').getAttribute('data-mdf-toc');
+    const placement = await page.locator('.ink-layout').getAttribute('data-ink-toc');
     if (placement !== 'right') throw new Error('placement is ' + placement);
   });
 
   await step('edit mode opens a split editor with a live preview', async () => {
     await page.evaluate(() => window.harness.toggleEdit());
-    await page.waitForSelector('.mdf-editor-input', { timeout: 5000 });
-    await page.fill('.mdf-editor-input', '# Live\n\n> [!tip] Typed just now\n> The preview should follow.\n\n```js\nconst x = 1;\n```');
+    await page.waitForSelector('.ink-editor-input', { timeout: 5000 });
+    await page.fill('.ink-editor-input', '# Live\n\n> [!tip] Typed just now\n> The preview should follow.\n\n```js\nconst x = 1;\n```');
     await page.waitForTimeout(800);
-    const previewText = await page.locator('.mdf-preview-pane .mdf-content').innerText();
+    const previewText = await page.locator('.ink-preview-pane .ink-content').innerText();
     if (!previewText.includes('Typed just now')) throw new Error('preview did not update');
-    const callouts = await page.locator('.mdf-preview-pane .mdf-callout').count();
+    const callouts = await page.locator('.ink-preview-pane .ink-callout').count();
     if (callouts !== 1) throw new Error('preview callouts: ' + callouts);
   });
 
   await page.screenshot({ path: path.join(OUT, 'harness-edit-split.png'), fullPage: false });
 
   await step('Ctrl+S saves', async () => {
-    await page.locator('.mdf-editor-input').press('Control+s');
+    await page.locator('.ink-editor-input').press('Control+s');
     await page.waitForTimeout(400);
-    const status = await page.locator('.mdf-status').innerText();
+    const status = await page.locator('.ink-status').innerText();
     if (!/Saved/i.test(status)) throw new Error('status reads "' + status + '"');
   });
 
   await step('layout switches to edit or preview only', async () => {
     await page.getByRole('button', { name: 'Preview', exact: true }).click();
     await page.waitForTimeout(200);
-    const layout = await page.locator('.mdf-editor').getAttribute('data-layout');
+    const layout = await page.locator('.ink-editor').getAttribute('data-layout');
     if (layout !== 'preview') throw new Error('layout is ' + layout);
   });
 
@@ -167,8 +167,8 @@ const pageUrl = 'file://' + path.join(OUT, 'index.html');
     await page.waitForTimeout(300);
     await page.setViewportSize({ width: 560, height: 900 });
     await page.waitForTimeout(400);
-    const box = await page.locator('.mdf-content').boundingBox();
-    const toc = await page.locator('.mdf-toc-sidebar').boundingBox();
+    const box = await page.locator('.ink-content').boundingBox();
+    const toc = await page.locator('.ink-toc-sidebar').boundingBox();
     if (toc.y + toc.height > box.y + 8) throw new Error('contents overlap the text');
   });
 

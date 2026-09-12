@@ -1,5 +1,5 @@
 {
-  "name": "markdown-formatter-spo",
+  "name": "markstrata",
   "version": "1.0.0",
   "private": true,
   "main": "lib/index.js",

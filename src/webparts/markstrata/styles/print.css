@@ -1,0 +1,65 @@
+/* print.css - printing the page or exporting it to PDF from the browser. */
+
+@media print {
+  .ink-root {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+
+  .ink-toolbar,
+  .ink-code-actions,
+  .ink-panel,
+  .ink-editor-pane,
+  .ink-anchor {
+    display: none !important;
+  }
+
+  .ink-layout {
+    display: block;
+  }
+
+  .ink-toc-sidebar {
+    position: static;
+    width: 100%;
+    max-height: none;
+    page-break-after: always;
+  }
+
+  .ink-content {
+    max-width: none;
+  }
+
+  /* Code and callouts keep their fill in print - a bordered, tinted block is
+     what makes them legible on paper too - but never split across pages. */
+  .ink-code,
+  .ink-callout,
+  .ink-mermaid,
+  table {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .ink-code pre {
+    white-space: pre-wrap;
+    overflow: visible;
+  }
+
+  .ink-code-line {
+    width: auto;
+  }
+
+  h1, h2, h3, h4 {
+    break-after: avoid;
+    page-break-after: avoid;
+  }
+
+  details.ink-callout:not([open]) .ink-callout-content {
+    display: block;
+  }
+
+  a[href^='http']::after {
+    content: ' (' attr(href) ')';
+    font-size: 0.85em;
+    color: #444444;
+  }
+}
