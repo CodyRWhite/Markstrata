@@ -7,11 +7,22 @@
  * re-render from after the <pre> has been replaced by the SVG.
  */
 
-import { AssetLoader } from './AssetLoader';
+import { IMermaidApi, IMermaidRenderResult } from 'mermaid';
 import { ThemeManager, ThemeFamily, ResolvedMode } from './ThemeManager';
 
 export class MermaidRenderer {
-  private mermaid: any;
+  /**
+   * Mermaid is large, so it is a lazily imported chunk rather than part of the
+   * web part bundle: pages without a diagram never download it. It is imported
+   * rather than fetched from a CDN so a locked-down tenant can still use it and
+   * no third party can change what runs.
+   */
+  private static async load(): Promise<IMermaidApi> {
+    const loaded: { default: IMermaidApi } = await import(/* webpackChunkName: 'mermaid' */ 'mermaid');
+    return loaded.default || ((loaded as unknown) as IMermaidApi);
+  }
+
+  private mermaid: IMermaidApi | undefined;
   private renderCount: number = 0;
   /** Ids must be unique across every web part on the page, not just this one. */
   private idPrefix: string = `mdf-mermaid-${Math.random().toString(36).substring(2, 8)}`;
@@ -40,17 +51,21 @@ export class MermaidRenderer {
 
     try {
       if (!this.mermaid) {
-        this.mermaid = await AssetLoader.loadMermaid();
+        this.mermaid = await MermaidRenderer.load();
       }
       this.mermaid.initialize({
         startOnLoad: false,
+        // strict escapes HTML in diagram text and disables click bindings;
+        // htmlLabels off means labels can never become markup at all. Mermaid
+        // still wraps long label text without them.
         securityLevel: 'strict',
-        flowchart: { htmlLabels: true, curve: 'basis', padding: 12, useMaxWidth: true },
+        htmlLabels: false,
+        flowchart: { htmlLabels: false, curve: 'basis', padding: 12, useMaxWidth: true, wrappingWidth: 220 },
         sequence: { useMaxWidth: true },
         gantt: { useMaxWidth: true },
         ...ThemeManager.getMermaidTheme(family, mode)
       });
-    } catch (error) {
+    } catch {
       jobs.forEach((job) => this.showError(job.host, job.source, 'Mermaid could not be loaded.'));
       return;
     }
@@ -58,7 +73,10 @@ export class MermaidRenderer {
     for (const job of jobs) {
       this.renderCount += 1;
       try {
-        const result: { svg: string } = await this.mermaid.render(`${this.idPrefix}-${this.renderCount}`, job.source);
+        const result: IMermaidRenderResult = await this.mermaid.render(
+          `${this.idPrefix}-${this.renderCount}`,
+          job.source
+        );
         job.host.classList.remove('mdf-mermaid-error');
         job.host.innerHTML = result.svg;
       } catch (error) {

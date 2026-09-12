@@ -11,12 +11,6 @@
       ]
     }
   },
-  "externals": {
-    "mermaid": {
-      "path": "https://cdn.jsdelivr.net/npm/mermaid@11.12.0/dist/mermaid.min.js",
-      "globalName": "mermaid"
-    }
-  },
   "localizedResources": {
     "MarkdownFormatterWebPartStrings": "lib/webparts/markdownFormatter/loc/{locale}.js"
   }
