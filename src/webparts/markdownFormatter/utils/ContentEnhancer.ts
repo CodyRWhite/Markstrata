@@ -14,6 +14,7 @@ const CHECK_ICON: string =
 
 export class ContentEnhancer {
   private copyResetTimers: number[] = [];
+  private headingObserver: IntersectionObserver | undefined;
 
   /** Wires every copy button inside `container` exactly once. */
   public attachCopyButtons(container: HTMLElement): void {
@@ -78,7 +79,7 @@ export class ContentEnhancer {
       const ok: boolean = document.execCommand('copy');
       document.body.removeChild(area);
       return ok;
-    } catch (error) {
+    } catch {
       return false;
     }
   }
@@ -147,7 +148,7 @@ export class ContentEnhancer {
       .filter((entry: ITocEntry) => entry.text.length > 0);
   }
 
-  /** Builds the sidebar list and scrolls smoothly instead of jumping the page. */
+  /** Builds the contents list and scrolls smoothly instead of jumping the page. */
   public buildToc(entries: ITocEntry[], container: HTMLElement): HTMLElement | undefined {
     if (entries.length === 0) {
       return undefined;
@@ -186,8 +187,68 @@ export class ContentEnhancer {
     return nav;
   }
 
+  /**
+   * Marks the entry for the heading currently in view. Uses an observer rather
+   * than a scroll handler so it costs nothing while the reader is still.
+   */
+  public trackActiveHeading(content: HTMLElement, nav: HTMLElement): void {
+    this.stopTracking();
+
+    const links: HTMLAnchorElement[] = Array.prototype.slice.call(nav.querySelectorAll('a[href^="#"]'));
+    if (links.length === 0 || typeof IntersectionObserver === 'undefined') {
+      return;
+    }
+
+    const byId: { [id: string]: HTMLAnchorElement } = {};
+    links.forEach((link: HTMLAnchorElement) => {
+      byId[decodeURIComponent(link.getAttribute('href') || '').substring(1)] = link;
+    });
+
+    const visible: string[] = [];
+
+    this.headingObserver = new IntersectionObserver(
+      (entries: IntersectionObserverEntry[]) => {
+        entries.forEach((entry: IntersectionObserverEntry) => {
+          const id: string = (entry.target as HTMLElement).id;
+          const index: number = visible.indexOf(id);
+          if (entry.isIntersecting && index === -1) {
+            visible.push(id);
+          } else if (!entry.isIntersecting && index !== -1) {
+            visible.splice(index, 1);
+          }
+        });
+
+        links.forEach((link: HTMLAnchorElement) => link.removeAttribute('aria-current'));
+
+        // Highlight the topmost heading that is on screen.
+        const first: HTMLAnchorElement | undefined = Object.keys(byId)
+          .filter((id: string) => visible.indexOf(id) !== -1)
+          .map((id: string) => byId[id])[0];
+        if (first) {
+          first.setAttribute('aria-current', 'true');
+        }
+      },
+      { rootMargin: '-80px 0px -70% 0px', threshold: 0 }
+    );
+
+    Object.keys(byId).forEach((id: string) => {
+      const heading: HTMLElement | null = content.querySelector(`#${CSS.escape(id)}`);
+      if (heading && this.headingObserver) {
+        this.headingObserver.observe(heading);
+      }
+    });
+  }
+
+  public stopTracking(): void {
+    if (this.headingObserver) {
+      this.headingObserver.disconnect();
+      this.headingObserver = undefined;
+    }
+  }
+
   public dispose(): void {
     this.copyResetTimers.forEach((timer: number) => window.clearTimeout(timer));
     this.copyResetTimers = [];
+    this.stopTracking();
   }
 }

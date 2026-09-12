@@ -42,6 +42,7 @@ export class EditModeManager {
   private textarea: HTMLTextAreaElement | undefined;
   private preview: HTMLElement | undefined;
   private status: HTMLElement | undefined;
+  private saveButton: HTMLButtonElement | undefined;
 
   constructor(
     processor: MarkdownProcessor,
@@ -80,6 +81,7 @@ export class EditModeManager {
     this.textarea.setAttribute('aria-label', 'Markdown source');
     this.textarea.addEventListener('input', () => this.onInput(options));
     this.textarea.addEventListener('keydown', (event: KeyboardEvent) => this.onKeyDown(event, options));
+    this.textarea.addEventListener('keydown', (event: KeyboardEvent) => this.onSaveShortcut(event, options));
     editorPane.appendChild(this.textarea);
 
     const previewPane: HTMLElement = document.createElement('div');
@@ -131,6 +133,9 @@ export class EditModeManager {
 
     this.status = document.createElement('span');
     this.status.className = 'mdf-status';
+    // Announce save results to screen readers without stealing focus.
+    this.status.setAttribute('role', 'status');
+    this.status.setAttribute('aria-live', 'polite');
     this.status.textContent = options.canSave ? `Editing ${options.saveTargetName}` : 'Editing web part content';
     toolbar.appendChild(this.status);
 
@@ -141,9 +146,28 @@ export class EditModeManager {
       save.textContent = 'Save to SharePoint';
       save.addEventListener('click', () => void this.save(save));
       toolbar.appendChild(save);
+      this.saveButton = save;
+    } else {
+      this.saveButton = undefined;
     }
 
     return toolbar;
+  }
+
+  /**
+   * Ctrl+S (Cmd+S on a Mac) saves without reaching for the button, which
+   * matters most in a narrow column where the toolbar has wrapped.
+   */
+  private onSaveShortcut(event: KeyboardEvent, options: IEditOptions): void {
+    if (!(event.ctrlKey || event.metaKey) || event.key.toLowerCase() !== 's') {
+      return;
+    }
+    event.preventDefault();
+    if (!options.canSave || !this.saveButton) {
+      this.setStatus('Nothing to save to - this content is stored with the web part', '');
+      return;
+    }
+    void this.save(this.saveButton);
   }
 
   /** Tab inserts two spaces instead of leaving the textarea. */

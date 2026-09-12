@@ -36,7 +36,8 @@ const STRINGS = {
   ContentWidthLabel: 'Content width',
   DensityLabel: 'Spacing',
   TextSizeLabel: 'Text size',
-  ShowToolbarLabel: 'Show toolbar',
+  ToolbarVisibilityLabel: 'Show toolbar',
+  PrintButtonLabel: 'Show print button',
   ShowSourceInfoLabel: 'Show file name and last updated',
   CodeGroupName: 'Code blocks',
   SyntaxHighlightingLabel: 'Syntax highlighting',
@@ -47,13 +48,14 @@ const STRINGS = {
 
   FeaturesPageDescription: 'Turn individual rendering features on or off.',
   FeaturesGroupName: 'Features',
-  TocSidebarLabel: 'Table of contents sidebar',
+  TocPositionLabel: 'Table of contents',
   TocLevelLabel: 'Deepest heading in the contents',
   AnchorsLabel: 'Heading link anchors',
   MermaidLabel: 'Mermaid diagrams',
   MathLabel: 'Math (KaTeX)',
   AllowHtmlLabel: 'Allow raw HTML in markdown',
   AllowHtmlHint: 'Leave off unless you trust everyone who can edit the source. With it on, HTML in the markdown is rendered as-is.',
+  SaveShortcutHint: 'Ctrl+S saves while the editor has focus.',
 
   SampleContent: sample
 };

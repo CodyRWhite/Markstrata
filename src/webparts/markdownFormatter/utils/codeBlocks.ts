@@ -14,11 +14,16 @@
 // keeps roughly a megabyte out of the bundle. The extras below are the ones a
 // SharePoint audience actually pastes that common leaves out - add more the
 // same way if your content needs them.
-const hljs = require('highlight.js/lib/common');
-hljs.registerLanguage('powershell', require('highlight.js/lib/languages/powershell'));
-hljs.registerLanguage('dockerfile', require('highlight.js/lib/languages/dockerfile'));
-hljs.registerLanguage('dos', require('highlight.js/lib/languages/dos'));
-hljs.registerLanguage('http', require('highlight.js/lib/languages/http'));
+import hljs from 'highlight.js/lib/common';
+import powershell from 'highlight.js/lib/languages/powershell';
+import dockerfile from 'highlight.js/lib/languages/dockerfile';
+import dos from 'highlight.js/lib/languages/dos';
+import http from 'highlight.js/lib/languages/http';
+
+hljs.registerLanguage('powershell', powershell);
+hljs.registerLanguage('dockerfile', dockerfile);
+hljs.registerLanguage('dos', dos);
+hljs.registerLanguage('http', http);
 
 export interface ICodeBlockOptions {
   highlight: boolean;
@@ -93,11 +98,25 @@ export function escapeHtml(value: string): string {
     .replace(/"/g, '&quot;');
 }
 
+export interface IFenceInfo {
+  lang: string;
+  filename: string;
+  /** Per-fence override of the wrap setting; undefined means "use the default". */
+  wrap?: boolean;
+  /** Per-fence override of the line number setting. */
+  lineNumbers?: boolean;
+}
+
 /**
- * Parses a fence info string. Supports `ts`, `ts title="app.ts"` and the
- * `ts:app.ts` shorthand some editors use.
+ * Parses a fence info string:
+ *
+ *   ```ts                     language only
+ *   ```ts title="app.ts"      language plus a filename in the header
+ *   ```ts:app.ts              the shorthand some editors use
+ *   ```python wrap            soft-wrap this block whatever the web part default
+ *   ```python nowrap numbers  and the opposites, per block
  */
-export function parseInfo(info: string): { lang: string; filename: string } {
+export function parseInfo(info: string): IFenceInfo {
   const trimmed: string = (info || '').trim();
   if (!trimmed) {
     return { lang: '', filename: '' };
@@ -106,11 +125,29 @@ export function parseInfo(info: string): { lang: string; filename: string } {
   const titleMatch: RegExpExecArray | null = /\btitle\s*=\s*"([^"]+)"|\btitle\s*=\s*'([^']+)'/.exec(trimmed);
   const first: string = trimmed.split(/\s+/)[0];
   const colonIndex: number = first.indexOf(':');
+  const flags: string[] = trimmed
+    .split(/\s+/)
+    .slice(1)
+    .map((flag: string) => flag.toLowerCase());
 
-  return {
+  const parsed: IFenceInfo = {
     lang: (colonIndex > 0 ? first.slice(0, colonIndex) : first).toLowerCase(),
     filename: titleMatch ? titleMatch[1] || titleMatch[2] : colonIndex > 0 ? first.slice(colonIndex + 1) : ''
   };
+
+  if (flags.indexOf('wrap') !== -1) {
+    parsed.wrap = true;
+  } else if (flags.indexOf('nowrap') !== -1) {
+    parsed.wrap = false;
+  }
+
+  if (flags.indexOf('numbers') !== -1 || flags.indexOf('linenums') !== -1) {
+    parsed.lineNumbers = true;
+  } else if (flags.indexOf('nonumbers') !== -1 || flags.indexOf('nolinenums') !== -1) {
+    parsed.lineNumbers = false;
+  }
+
+  return parsed;
 }
 
 export function languageLabel(lang: string): string {
@@ -160,20 +197,18 @@ export function splitHighlightedLines(html: string): string[] {
 function highlightCode(code: string, lang: string, enabled: boolean): { html: string; language: string } {
   if (enabled && lang && hljs.getLanguage(lang)) {
     try {
-      const result: { value: string; language: string } = hljs.highlight(code, {
-        language: lang,
-        ignoreIllegals: true
-      });
-      return { html: result.value, language: lang };
-    } catch (error) {
-      // fall through to plain text
+      return { html: hljs.highlight(code, { language: lang, ignoreIllegals: true }).value, language: lang };
+    } catch {
+      // An unhighlightable block is still worth showing, just as plain text.
     }
   }
   return { html: escapeHtml(code), language: lang };
 }
 
 export function renderCodeBlock(code: string, info: string, options: ICodeBlockOptions): string {
-  const parsed: { lang: string; filename: string } = parseInfo(info);
+  const parsed: IFenceInfo = parseInfo(info);
+  const lineNumbers: boolean = parsed.lineNumbers === undefined ? options.lineNumbers : parsed.lineNumbers;
+  const wrap: boolean = parsed.wrap === undefined ? options.wrap : parsed.wrap;
   const source: string = code.replace(/\n$/, '');
   const highlighted: { html: string; language: string } = highlightCode(source, parsed.lang, options.highlight);
 
@@ -191,10 +226,10 @@ export function renderCodeBlock(code: string, info: string, options: ICodeBlockO
   if (options.showHeader) {
     classes.push('mdf-code--has-header');
   }
-  if (options.lineNumbers) {
+  if (lineNumbers) {
     classes.push('mdf-code--numbered');
   }
-  if (options.wrap) {
+  if (wrap) {
     classes.push('mdf-code--wrap');
   }
 

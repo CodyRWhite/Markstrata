@@ -22,7 +22,8 @@ declare interface IMarkdownFormatterWebPartStrings {
   ContentWidthLabel: string;
   DensityLabel: string;
   TextSizeLabel: string;
-  ShowToolbarLabel: string;
+  ToolbarVisibilityLabel: string;
+  PrintButtonLabel: string;
   ShowSourceInfoLabel: string;
   CodeGroupName: string;
   SyntaxHighlightingLabel: string;
@@ -33,13 +34,14 @@ declare interface IMarkdownFormatterWebPartStrings {
 
   FeaturesPageDescription: string;
   FeaturesGroupName: string;
-  TocSidebarLabel: string;
+  TocPositionLabel: string;
   TocLevelLabel: string;
   AnchorsLabel: string;
   MermaidLabel: string;
   MathLabel: string;
   AllowHtmlLabel: string;
   AllowHtmlHint: string;
+  SaveShortcutHint: string;
 
   SampleContent: string;
 }

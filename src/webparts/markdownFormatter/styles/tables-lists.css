@@ -67,37 +67,24 @@
 
 /* -------------------------------------------------------------- task lists */
 
-/* Only the task items lose their marker: markdown-it-task-lists marks the
-   whole <ul>, and a mixed list still has ordinary bullets in it. */
-.mdf-content .task-list-item {
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
+/* Only task items lose their marker: a list can mix task items and ordinary
+   bullets, and the ordinary ones should keep theirs. */
+.mdf-content .mdf-task-item {
   list-style: none;
+  text-indent: -1.55em;
+  padding-left: 1.55em;
 }
 
-.mdf-content .task-list-item > label {
-  display: inline-flex;
-  align-items: flex-start;
-  gap: 8px;
-}
-
-.mdf-content .task-list-item > p {
-  margin: 0;
-}
-
-.mdf-content .task-list-item-checkbox,
-.mdf-content input[type='checkbox'] {
-  flex: 0 0 auto;
+.mdf-content .mdf-task-checkbox {
   width: 1em;
   height: 1em;
-  margin: 0.3em 0 0;
+  margin: 0 0.45em 0 0;
+  vertical-align: middle;
   accent-color: var(--mdf-checkbox-accent, var(--mdf-link));
   cursor: default;
 }
 
-.mdf-content .task-list-item.is-checked,
-.mdf-content .task-list-item-checkbox:checked ~ * {
-  color: var(--mdf-task-done-color, var(--mdf-text-muted));
+.mdf-content .mdf-task-item[data-checked='true'] {
+  color: var(--mdf-task-done-color, inherit);
   text-decoration: var(--mdf-task-done-decoration, none);
 }

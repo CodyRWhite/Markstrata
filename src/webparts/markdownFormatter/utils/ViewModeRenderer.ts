@@ -16,19 +16,27 @@ import {
 } from './ThemeManager';
 import { IFileMetadata } from './SharePointService';
 
+export type TocPosition = 'left' | 'right' | 'inline' | 'off';
+
 export interface IViewOptions {
   settings: IThemeSettings;
   resolvedMode: ResolvedMode;
   showToolbar: boolean;
   showThemeSwitcher: boolean;
-  showToc: boolean;
+  showPrintButton: boolean;
+  tocPosition: TocPosition;
   tocMaxLevel: number;
   showSourceInfo: boolean;
   enableMermaid: boolean;
   canReload: boolean;
   canShowVersions: boolean;
+  /** True while the SharePoint page itself is being edited. */
+  isPageEditing: boolean;
   fileMetadata?: IFileMetadata;
 }
+
+/** Below this width the contents collapse instead of sitting open beside the text. */
+const NARROW_WIDTH: number = 720;
 
 export interface IViewCallbacks {
   onReload: () => void;
@@ -42,6 +50,8 @@ export class ViewModeRenderer {
   private mermaid: MermaidRenderer;
   private enhancer: ContentEnhancer;
   private callbacks: IViewCallbacks;
+  /** Ids have to be unique across the whole page, not just this web part. */
+  private readonly uid: string = `mdf-${Math.random().toString(36).substring(2, 8)}`;
 
   constructor(
     processor: MarkdownProcessor,
@@ -56,8 +66,10 @@ export class ViewModeRenderer {
   }
 
   public render(host: HTMLElement, markdown: string, options: IViewOptions): void {
+    this.enhancer.stopTracking();
     host.innerHTML = '';
     ThemeManager.apply(host, options.settings, options.resolvedMode);
+    host.setAttribute('data-mdf-editing', String(options.isPageEditing));
 
     if (options.showToolbar) {
       host.appendChild(this.buildToolbar(options));
@@ -65,6 +77,9 @@ export class ViewModeRenderer {
 
     const layout: HTMLElement = document.createElement('div');
     layout.className = 'mdf-layout';
+    if (options.tocPosition === 'left' || options.tocPosition === 'right') {
+      layout.setAttribute('data-mdf-toc', options.tocPosition);
+    }
 
     const article: HTMLElement = document.createElement('article');
     article.className = 'mdf-content';
@@ -83,20 +98,7 @@ export class ViewModeRenderer {
     layout.appendChild(article);
     host.appendChild(layout);
 
-    if (options.showToc) {
-      const entries: ITocEntry[] = this.enhancer.collectHeadings(article, options.tocMaxLevel);
-      const nav: HTMLElement | undefined = this.enhancer.buildToc(entries, article);
-      if (nav) {
-        const aside: HTMLElement = document.createElement('aside');
-        aside.className = 'mdf-toc-sidebar';
-        const heading: HTMLElement = document.createElement('div');
-        heading.className = 'mdf-toc-heading';
-        heading.textContent = 'On this page';
-        aside.appendChild(heading);
-        aside.appendChild(nav);
-        layout.insertBefore(aside, article);
-      }
-    }
+    this.addToc(layout, article, host, options);
 
     if (options.showSourceInfo && options.fileMetadata) {
       host.appendChild(this.buildSourceInfo(options.fileMetadata));
@@ -108,6 +110,44 @@ export class ViewModeRenderer {
     if (options.enableMermaid) {
       void this.mermaid.render(article, options.settings.themeFamily, options.resolvedMode);
     }
+  }
+
+  /**
+   * Adds the table of contents as a column of the layout or as a block above
+   * the text. It is never positioned over the content: an overlay sidebar is
+   * exactly what makes a page awkward to edit.
+   */
+  private addToc(layout: HTMLElement, article: HTMLElement, host: HTMLElement, options: IViewOptions): void {
+    if (options.tocPosition === 'off') {
+      return;
+    }
+
+    const entries: ITocEntry[] = this.enhancer.collectHeadings(article, options.tocMaxLevel);
+    const nav: HTMLElement | undefined = this.enhancer.buildToc(entries, article);
+    if (!nav) {
+      return;
+    }
+
+    const panel: HTMLDetailsElement = document.createElement('details');
+    panel.className = options.tocPosition === 'inline' ? 'mdf-toc-inline' : 'mdf-toc-sidebar';
+
+    // Collapsed to start with only where it would otherwise crowd the text.
+    const width: number = host.clientWidth || 0;
+    panel.open = options.tocPosition === 'inline' || width === 0 || width > NARROW_WIDTH;
+
+    const summary: HTMLElement = document.createElement('summary');
+    summary.className = 'mdf-toc-heading';
+    summary.textContent = 'On this page';
+    panel.appendChild(summary);
+    panel.appendChild(nav);
+
+    if (options.tocPosition === 'inline') {
+      article.insertBefore(panel, article.firstChild);
+    } else {
+      layout.insertBefore(panel, article);
+    }
+
+    this.enhancer.trackActiveHeading(article, nav);
   }
 
   private buildToolbar(options: IViewOptions): HTMLElement {
@@ -132,7 +172,9 @@ export class ViewModeRenderer {
         this.button('Version history', 'Show previous versions of this file', () => this.callbacks.onShowVersions())
       );
     }
-    toolbar.appendChild(this.button('Print', 'Print or save as PDF', () => this.callbacks.onPrint()));
+    if (options.showPrintButton) {
+      toolbar.appendChild(this.button('Print', 'Print or save as PDF', () => this.callbacks.onPrint()));
+    }
 
     return toolbar;
   }
@@ -144,12 +186,12 @@ export class ViewModeRenderer {
 
     const label: HTMLLabelElement = document.createElement('label');
     label.textContent = 'Theme';
-    label.htmlFor = 'mdf-theme-select';
+    label.htmlFor = `${this.uid}-theme`;
     wrapper.appendChild(label);
 
     const select: HTMLSelectElement = document.createElement('select');
     select.className = 'mdf-select';
-    select.id = 'mdf-theme-select';
+    select.id = `${this.uid}-theme`;
     THEME_FAMILIES.forEach((choice: IThemeChoice) => {
       const option: HTMLOptionElement = document.createElement('option');
       option.value = choice.key;

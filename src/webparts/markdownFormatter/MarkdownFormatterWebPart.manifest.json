@@ -7,13 +7,22 @@
   "manifestVersion": 2,
   "requiresCustomScript": false,
   "supportsFullBleed": true,
-  "supportedHosts": ["SharePointWebPart", "TeamsPersonalApp", "TeamsTab", "SharePointFullPage"],
+  "supportedHosts": [
+    "SharePointWebPart",
+    "TeamsPersonalApp",
+    "TeamsTab",
+    "SharePointFullPage"
+  ],
   "supportsThemeVariants": true,
   "preconfiguredEntries": [
     {
       "groupId": "5c03119e-3074-46fd-976b-c60198311f70",
-      "group": { "default": "Content" },
-      "title": { "default": "Markdown Formatter" },
+      "group": {
+        "default": "Content"
+      },
+      "title": {
+        "default": "Markdown Formatter"
+      },
       "description": {
         "default": "Markdown with GitHub, Obsidian and VS Code themes - readable code blocks, callouts, diagrams and math."
       },
@@ -34,13 +43,14 @@
         "enableMermaid": true,
         "enableMath": true,
         "enableAnchors": true,
-        "showTocSidebar": false,
         "tocMaxLevel": 3,
-        "showToolbar": true,
         "showSourceInfo": true,
         "enableVersionHistory": true,
         "enableAutoRefresh": false,
-        "allowHtml": false
+        "allowHtml": false,
+        "tocPosition": "off",
+        "toolbarVisibility": "always",
+        "showPrintButton": true
       }
     }
   ]

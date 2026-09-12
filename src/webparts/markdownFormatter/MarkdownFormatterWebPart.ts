@@ -8,9 +8,13 @@ import {
   PropertyPaneToggle,
   PropertyPaneLabel
 } from '@microsoft/sp-property-pane';
-import { BaseClientSideWebPart } from '@microsoft/sp-webpart-base';
+import { BaseClientSideWebPart, IWebPartPropertiesMetadata } from '@microsoft/sp-webpart-base';
 import { ThemeProvider, IReadonlyTheme } from '@microsoft/sp-component-base';
 import * as strings from 'MarkdownFormatterWebPartStrings';
+
+// KaTeX's stylesheet and its fonts are bundled with the solution: no part of
+// this web part loads anything from a third-party CDN at runtime.
+import 'katex/dist/katex.min.css';
 
 // Content styles. Loaded in this order: tokens, structure, then themes, then
 // the reader options that override them.
@@ -28,11 +32,10 @@ import './styles/themes/vscode.css';
 import './styles/modifiers.css';
 import './styles/print.css';
 
-import { MarkdownProcessor } from './utils/MarkdownProcessor';
+import { MarkdownProcessor, IMarkdownProcessorOptions } from './utils/MarkdownProcessor';
 import { MermaidRenderer } from './utils/MermaidRenderer';
 import { ContentEnhancer } from './utils/ContentEnhancer';
-import { AssetLoader } from './utils/AssetLoader';
-import { ViewModeRenderer } from './utils/ViewModeRenderer';
+import { ViewModeRenderer, TocPosition } from './utils/ViewModeRenderer';
 import { EditModeManager } from './utils/EditModeManager';
 import { VersionPanel } from './utils/VersionPanel';
 import { SharePointService, IFileMetadata, ILibraryInfo } from './utils/SharePointService';
@@ -80,16 +83,27 @@ export interface IMarkdownFormatterWebPartProps {
   enableMermaid: boolean;
   enableMath: boolean;
   enableAnchors: boolean;
-  showTocSidebar: boolean;
+  tocPosition: TocPosition;
   tocMaxLevel: number;
-  showToolbar: boolean;
+  toolbarVisibility: 'always' | 'editing' | 'never';
+  showPrintButton: boolean;
   showSourceInfo: boolean;
   enableVersionHistory: boolean;
   allowHtml: boolean;
 
   // Runtime state kept with the web part
   fileMetadata?: IFileMetadata;
+  /**
+   * Plain text of the rendered document. Declared searchable below, which is
+   * what puts the content into the Microsoft Search index - a client-side web
+   * part renders after the crawler has seen the page, so the text has to be
+   * stored with the part to be findable.
+   */
+  searchablePlainText: string;
 }
+
+/** Longest text handed to the search index, to keep the page payload sane. */
+const MAX_SEARCH_TEXT: number = 20000;
 
 interface IThemeOverride {
   themeFamily: ThemeFamily;
@@ -105,6 +119,8 @@ export default class MarkdownFormatterWebPart extends BaseClientSideWebPart<IMar
   private versionPanel: VersionPanel;
   private sharePoint: SharePointService;
   private themeProvider: ThemeProvider;
+  /** Kept so the listener can be detached again; SPFx matches on the handler. */
+  private handleThemeChanged: (args: { theme?: IReadonlyTheme }) => void;
 
   private isInverted: boolean | undefined;
   private themeOverride: IThemeOverride | undefined;
@@ -129,12 +145,13 @@ export default class MarkdownFormatterWebPart extends BaseClientSideWebPart<IMar
     this.themeProvider = this.context.serviceScope.consume(ThemeProvider.serviceKey);
     const theme: IReadonlyTheme | undefined = this.themeProvider.tryGetTheme();
     this.isInverted = theme ? theme.isInverted : undefined;
-    this.themeProvider.themeChangedEvent.add(this, (args) => {
+    this.handleThemeChanged = (args: { theme?: IReadonlyTheme }): void => {
       this.isInverted = args.theme ? args.theme.isInverted : undefined;
       if (this.properties.colorMode === 'auto') {
         this.render();
       }
-    });
+    };
+    this.themeProvider.themeChangedEvent.add(this, this.handleThemeChanged);
 
     this.sharePoint = new SharePointService(this.context);
     this.processor = new MarkdownProcessor(this.processorOptions());
@@ -152,7 +169,11 @@ export default class MarkdownFormatterWebPart extends BaseClientSideWebPart<IMar
       onChange: (markdown: string) => {
         this.properties.markdownContent = markdown;
       },
-      onSave: (markdown: string) => this.saveToSharePoint(markdown)
+      onSave: async (markdown: string) => {
+        const saved: boolean = await this.saveToSharePoint(markdown);
+        this.updateSearchText();
+        return saved;
+      }
     });
 
     this.versionPanel = new VersionPanel(this.sharePoint, {
@@ -164,15 +185,14 @@ export default class MarkdownFormatterWebPart extends BaseClientSideWebPart<IMar
       onRestored: () => void this.loadContent(true)
     });
 
-    if (this.properties.enableMath) {
-      AssetLoader.loadKatexCss();
-    }
-
     void this.loadPropertyPaneSources();
     await this.loadContent(false);
   }
 
   protected onDispose(): void {
+    if (this.themeProvider && this.handleThemeChanged) {
+      this.themeProvider.themeChangedEvent.remove(this, this.handleThemeChanged);
+    }
     this.sharePoint.unwatchFile();
     this.enhancer.dispose();
     this.editManager.dispose();
@@ -181,6 +201,20 @@ export default class MarkdownFormatterWebPart extends BaseClientSideWebPart<IMar
 
   protected get dataVersion(): Version {
     return Version.parse('1.0');
+  }
+
+  /**
+   * Tells SharePoint which properties carry indexable content, so the rendered
+   * text is findable in Microsoft Search and links are rewritten when a site is
+   * copied. Without this, markdown rendered by a client-side web part is
+   * invisible to search.
+   */
+  protected get propertiesMetadata(): IWebPartPropertiesMetadata {
+    return {
+      searchablePlainText: { isSearchablePlainText: true },
+      markdownContent: { isSearchablePlainText: true },
+      fileUrl: { isLink: true }
+    };
   }
 
   /** Defaults matter here: an unconfigured web part still has to look right. */
@@ -207,17 +241,22 @@ export default class MarkdownFormatterWebPart extends BaseClientSideWebPart<IMar
       enableMermaid: true,
       enableMath: true,
       enableAnchors: true,
-      showTocSidebar: false,
+      tocPosition: 'off',
       tocMaxLevel: 3,
-      showToolbar: true,
+      toolbarVisibility: 'always',
+      showPrintButton: true,
       showSourceInfo: true,
       enableVersionHistory: true,
-      allowHtml: false
+      allowHtml: false,
+      searchablePlainText: ''
     };
 
-    Object.keys(defaults).forEach((key: string) => {
-      if ((this.properties as any)[key] === undefined || (this.properties as any)[key] === null) {
-        (this.properties as any)[key] = (defaults as any)[key];
+    const properties: Record<string, unknown> = this.properties as unknown as Record<string, unknown>;
+    const fallbacks: Record<string, unknown> = defaults as Record<string, unknown>;
+
+    Object.keys(fallbacks).forEach((key: string) => {
+      if (properties[key] === undefined || properties[key] === null) {
+        properties[key] = fallbacks[key];
       }
     });
   }
@@ -241,22 +280,29 @@ export default class MarkdownFormatterWebPart extends BaseClientSideWebPart<IMar
         canSave: this.canSaveToSharePoint(),
         saveTargetName: this.properties.fileMetadata ? this.properties.fileMetadata.name : ''
       });
+      // The editor renders a live preview, which is the same rendered text the
+      // search index wants - and edit mode is when the page gets saved.
+      this.updateSearchText();
       return;
     }
 
     this.viewRenderer.render(this.domElement, markdown, {
       settings: settings,
       resolvedMode: mode,
-      showToolbar: this.properties.showToolbar,
+      showToolbar: this.isToolbarVisible(),
       showThemeSwitcher: this.properties.showThemeSwitcher,
-      showToc: this.properties.showTocSidebar,
+      showPrintButton: this.properties.showPrintButton,
+      tocPosition: this.properties.tocPosition,
       tocMaxLevel: this.properties.tocMaxLevel,
       showSourceInfo: this.properties.showSourceInfo,
       enableMermaid: this.properties.enableMermaid,
       canReload: this.properties.contentSource !== 'manual',
       canShowVersions: this.properties.enableVersionHistory && this.canSaveToSharePoint(),
+      isPageEditing: this.displayMode === DisplayMode.Edit,
       fileMetadata: this.properties.fileMetadata
     });
+
+    this.updateSearchText();
 
     if (this.previewBanner) {
       this.showBanner(this.previewBanner, 'success');
@@ -264,6 +310,30 @@ export default class MarkdownFormatterWebPart extends BaseClientSideWebPart<IMar
     if (this.loadError) {
       this.showBanner(this.loadError, 'error');
     }
+  }
+
+  /** True when the toolbar should be shown for the current display mode. */
+  private isToolbarVisible(): boolean {
+    if (this.properties.toolbarVisibility === 'never') {
+      return false;
+    }
+    if (this.properties.toolbarVisibility === 'editing') {
+      return this.displayMode === DisplayMode.Edit;
+    }
+    return true;
+  }
+
+  /**
+   * Copies the rendered text into a searchable property. Read from the DOM so
+   * markdown syntax, code fences and HTML never reach the index.
+   */
+  private updateSearchText(): void {
+    const article: HTMLElement | null = this.domElement.querySelector('.mdf-content');
+    if (!article) {
+      return;
+    }
+    const text: string = (article.textContent || '').replace(/\s+/g, ' ').trim();
+    this.properties.searchablePlainText = text.substring(0, MAX_SEARCH_TEXT);
   }
 
   private showBanner(message: string, tone: string): void {
@@ -292,7 +362,7 @@ export default class MarkdownFormatterWebPart extends BaseClientSideWebPart<IMar
     return ThemeManager.resolveMode(settings.colorMode, this.isInverted);
   }
 
-  private processorOptions(): any {
+  private processorOptions(): IMarkdownProcessorOptions {
     return {
       enableSyntaxHighlighting: this.properties.enableSyntaxHighlighting,
       enableMath: this.properties.enableMath,
@@ -316,7 +386,8 @@ export default class MarkdownFormatterWebPart extends BaseClientSideWebPart<IMar
     try {
       const raw: string | null = window.localStorage.getItem(this.overrideStorageKey());
       this.themeOverride = raw ? (JSON.parse(raw) as IThemeOverride) : undefined;
-    } catch (error) {
+    } catch {
+      // Storage can be blocked; the author's theme is then simply used as-is.
       this.themeOverride = undefined;
     }
   }
@@ -325,7 +396,7 @@ export default class MarkdownFormatterWebPart extends BaseClientSideWebPart<IMar
     this.themeOverride = { themeFamily: family, colorMode: mode };
     try {
       window.localStorage.setItem(this.overrideStorageKey(), JSON.stringify(this.themeOverride));
-    } catch (error) {
+    } catch {
       // Private browsing or blocked storage: the choice just will not stick.
     }
     this.render();
@@ -439,6 +510,9 @@ export default class MarkdownFormatterWebPart extends BaseClientSideWebPart<IMar
     this.fileOptions = files.map((file: IFileMetadata) => ({ key: file.serverRelativeUrl, text: file.name }));
   }
 
+  // The signature is fixed by BaseClientSideWebPart; property values really can
+  // be any of the property types.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   protected onPropertyPaneFieldChanged(propertyPath: string, oldValue: any, newValue: any): void {
     super.onPropertyPaneFieldChanged(propertyPath, oldValue, newValue);
 
@@ -455,9 +529,6 @@ export default class MarkdownFormatterWebPart extends BaseClientSideWebPart<IMar
 
     if (rebuildProcessor.indexOf(propertyPath) !== -1) {
       this.processor.updateOptions(this.processorOptions());
-      if (propertyPath === 'enableMath' && newValue) {
-        AssetLoader.loadKatexCss();
-      }
     }
 
     if (propertyPath === 'contentSource') {
@@ -492,8 +563,8 @@ export default class MarkdownFormatterWebPart extends BaseClientSideWebPart<IMar
       this.themeOverride = undefined;
       try {
         window.localStorage.removeItem(this.overrideStorageKey());
-      } catch (error) {
-        // ignore
+      } catch {
+        // Nothing stored, or storage is blocked; either way there is no override.
       }
     }
   }
@@ -619,10 +690,20 @@ export default class MarkdownFormatterWebPart extends BaseClientSideWebPart<IMar
                   options: this.toDropdown(TEXT_SIZES),
                   selectedKey: this.properties.textSize
                 }),
-                PropertyPaneToggle('showToolbar', {
-                  label: strings.ShowToolbarLabel,
+                PropertyPaneDropdown('toolbarVisibility', {
+                  label: strings.ToolbarVisibilityLabel,
+                  options: [
+                    { key: 'always', text: 'Always' },
+                    { key: 'editing', text: 'Only while editing the page' },
+                    { key: 'never', text: 'Never' }
+                  ],
+                  selectedKey: this.properties.toolbarVisibility
+                }),
+                PropertyPaneToggle('showPrintButton', {
+                  label: strings.PrintButtonLabel,
                   onText: 'On',
-                  offText: 'Off'
+                  offText: 'Off',
+                  disabled: this.properties.toolbarVisibility === 'never'
                 }),
                 PropertyPaneToggle('showSourceInfo', {
                   label: strings.ShowSourceInfoLabel,
@@ -669,17 +750,22 @@ export default class MarkdownFormatterWebPart extends BaseClientSideWebPart<IMar
             {
               groupName: strings.FeaturesGroupName,
               groupFields: [
-                PropertyPaneToggle('showTocSidebar', {
-                  label: strings.TocSidebarLabel,
-                  onText: 'On',
-                  offText: 'Off'
+                PropertyPaneDropdown('tocPosition', {
+                  label: strings.TocPositionLabel,
+                  options: [
+                    { key: 'off', text: 'No contents' },
+                    { key: 'left', text: 'Sidebar on the left' },
+                    { key: 'right', text: 'Sidebar on the right' },
+                    { key: 'inline', text: 'Above the content' }
+                  ],
+                  selectedKey: this.properties.tocPosition
                 }),
                 PropertyPaneSlider('tocMaxLevel', {
                   label: strings.TocLevelLabel,
                   min: 1,
                   max: 4,
                   step: 1,
-                  disabled: !this.properties.showTocSidebar
+                  disabled: this.properties.tocPosition === 'off'
                 }),
                 PropertyPaneToggle('enableAnchors', {
                   label: strings.AnchorsLabel,
