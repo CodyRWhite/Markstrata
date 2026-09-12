@@ -1,4 +1,4 @@
-# Markdown Formatter for SharePoint
+# Markstrata Markdown
 
 A SharePoint Framework (SPFx) web part that renders markdown from a document
 library, a URL, or typed straight into the page — with themes that mirror how
@@ -103,7 +103,7 @@ KaTeX math.
 The quickest route is a released package: download the `.sppkg` from the
 [latest release](../../releases/latest), upload it to your tenant App Catalog,
 choose **Enable this app and add it to all sites** (or add it per site), then
-add **Markdown Formatter** to a page from the Content group of the web part
+add **Markstrata Markdown** to a page from the Content group of the web part
 picker.
 
 To build it yourself you need Node.js 22.x:
@@ -241,10 +241,10 @@ release conventions.
 ## Project layout
 
 ```
-src/webparts/markdownFormatter/
-  MarkdownFormatterWebPart.ts     web part, property pane, content loading
+src/webparts/markstrata/
+  MarkstrataWebPart.ts     web part, property pane, content loading
   styles/
-    base.css                      the --mdf-* token contract and layout
+    base.css                      the --ink-* token contract and layout
     typography.css code.css syntax.css callouts.css tables-lists.css extras.css
     chrome.css                    toolbar, editor, version panel
     modifiers.css                 width / spacing / text size options

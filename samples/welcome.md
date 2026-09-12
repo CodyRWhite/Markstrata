@@ -1,4 +1,4 @@
-# Markdown Formatter
+# Markstrata Markdown
 
 Pick a theme in the property pane — **GitHub**, **Obsidian** or **VS Code**, each in light or dark — and the whole page follows: text, tables, callouts and syntax highlighting.
 

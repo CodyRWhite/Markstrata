@@ -6,12 +6,12 @@
  * drives those classes directly: the same ViewModeRenderer, EditModeManager,
  * ContentEnhancer, MermaidRenderer and MarkdownProcessor a deployed page uses.
  */
-import { MarkdownProcessor } from '../src/webparts/markdownFormatter/utils/MarkdownProcessor';
-import { MermaidRenderer } from '../src/webparts/markdownFormatter/utils/MermaidRenderer';
-import { ContentEnhancer } from '../src/webparts/markdownFormatter/utils/ContentEnhancer';
-import { ViewModeRenderer } from '../src/webparts/markdownFormatter/utils/ViewModeRenderer';
-import { EditModeManager } from '../src/webparts/markdownFormatter/utils/EditModeManager';
-import { ThemeManager } from '../src/webparts/markdownFormatter/utils/ThemeManager';
+import { MarkdownProcessor } from '../src/webparts/markstrata/utils/MarkdownProcessor';
+import { MermaidRenderer } from '../src/webparts/markstrata/utils/MermaidRenderer';
+import { ContentEnhancer } from '../src/webparts/markstrata/utils/ContentEnhancer';
+import { ViewModeRenderer } from '../src/webparts/markstrata/utils/ViewModeRenderer';
+import { EditModeManager } from '../src/webparts/markstrata/utils/EditModeManager';
+import { ThemeManager } from '../src/webparts/markstrata/utils/ThemeManager';
 
 declare const SAMPLE: string;
 

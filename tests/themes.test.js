@@ -4,7 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const { ThemeManager } = require('./helpers');
 
-const STYLES = path.join(__dirname, '..', 'src', 'webparts', 'markdownFormatter', 'styles');
+const STYLES = path.join(__dirname, '..', 'src', 'webparts', 'markstrata', 'styles');
 const THEME_FILES = ['github.css', 'obsidian.css', 'vscode.css'];
 const STRUCTURAL_FILES = [
   'base.css',
@@ -25,7 +25,7 @@ function read(file) {
 
 function declaredTokens(css) {
   const tokens = new Set();
-  const pattern = /(--mdf-[a-z0-9-]+)\s*:/g;
+  const pattern = /(--ink-[a-z0-9-]+)\s*:/g;
   let match;
   while ((match = pattern.exec(css)) !== null) {
     tokens.add(match[1]);
@@ -39,10 +39,10 @@ function declaredTokens(css) {
  * which are not part of the theme contract.
  */
 function themeBlockTokens(css) {
-  const blocks = css.match(/\.mdf-root\[data-mdf-theme=[^{]*\{[^}]*\}/g) || [];
+  const blocks = css.match(/\.ink-root\[data-ink-theme=[^{]*\{[^}]*\}/g) || [];
   const tokens = new Set();
   blocks
-    .filter((block) => block.indexOf('.mdf-callout') === -1)
+    .filter((block) => block.indexOf('.ink-callout') === -1)
     .forEach((block) => declaredTokens(block).forEach((token) => tokens.add(token)));
   return tokens;
 }
@@ -50,7 +50,7 @@ function themeBlockTokens(css) {
 /** Tokens used as `var(--x)` with no fallback value. */
 function requiredTokens(css) {
   const tokens = new Set();
-  const pattern = /var\(\s*(--mdf-[a-z0-9-]+)\s*\)/g;
+  const pattern = /var\(\s*(--ink-[a-z0-9-]+)\s*\)/g;
   let match;
   while ((match = pattern.exec(css)) !== null) {
     tokens.add(match[1]);
@@ -74,8 +74,8 @@ test('every theme defines both a light and a dark block', () => {
   THEME_FILES.forEach((file) => {
     const css = read(`themes/${file}`);
     const name = file.replace('.css', '');
-    assert.match(css, new RegExp(`\\[data-mdf-theme='${name}'\\]\\[data-mdf-mode='light'\\]`), `${file} light block`);
-    assert.match(css, new RegExp(`\\[data-mdf-theme='${name}'\\]\\[data-mdf-mode='dark'\\]`), `${file} dark block`);
+    assert.match(css, new RegExp(`\\[data-ink-theme='${name}'\\]\\[data-ink-mode='light'\\]`), `${file} light block`);
+    assert.match(css, new RegExp(`\\[data-ink-theme='${name}'\\]\\[data-ink-mode='dark'\\]`), `${file} dark block`);
   });
 });
 
@@ -102,8 +102,8 @@ test('the accent palette is complete and stored as RGB triples', () => {
   THEME_FILES.forEach((file) => {
     const css = read(`themes/${file}`);
     hues.forEach((hue) => {
-      const matches = css.match(new RegExp(`--mdf-color-${hue}:\\s*\\d+,\\s*\\d+,\\s*\\d+;`, 'g')) || [];
-      assert.equal(matches.length, 2, `${file} should set --mdf-color-${hue} in both light and dark`);
+      const matches = css.match(new RegExp(`--ink-color-${hue}:\\s*\\d+,\\s*\\d+,\\s*\\d+;`, 'g')) || [];
+      assert.equal(matches.length, 2, `${file} should set --ink-color-${hue} in both light and dark`);
     });
   });
 });

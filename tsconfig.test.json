@@ -9,13 +9,13 @@
     "types": [
       "webpack-env"
     ],
-    "rootDir": "src/webparts/markdownFormatter/utils"
+    "rootDir": "src/webparts/markstrata/utils"
   },
   "include": [
     "src/types/**/*.d.ts",
-    "src/webparts/markdownFormatter/utils/MarkdownProcessor.ts",
-    "src/webparts/markdownFormatter/utils/ThemeManager.ts",
-    "src/webparts/markdownFormatter/utils/codeBlocks.ts",
-    "src/webparts/markdownFormatter/utils/callouts.ts"
+    "src/webparts/markstrata/utils/MarkdownProcessor.ts",
+    "src/webparts/markstrata/utils/ThemeManager.ts",
+    "src/webparts/markstrata/utils/codeBlocks.ts",
+    "src/webparts/markstrata/utils/callouts.ts"
   ]
 }

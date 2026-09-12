@@ -60,8 +60,8 @@ jobs:
       - name: Name the package with its version
         id: package
         run: |
-          SOURCE=sharepoint/solution/markdown-formatter-spo.sppkg
-          TARGET=sharepoint/solution/markdown-formatter-spo-${{ steps.version.outputs.version }}.sppkg
+          SOURCE=sharepoint/solution/markstrata.sppkg
+          TARGET=sharepoint/solution/markstrata-${{ steps.version.outputs.version }}.sppkg
           test -f "$SOURCE"
           mv "$SOURCE" "$TARGET"
           echo "path=$TARGET" >> "$GITHUB_OUTPUT"

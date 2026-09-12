@@ -81,7 +81,7 @@ print(Theme("Obsidian", dark=True).label())  # Obsidian (dark)
 ```powershell
 # Deploy the package to the tenant app catalog
 $ctx = Connect-PnPOnline -Url "https://contoso.sharepoint.com/sites/apps" -Interactive
-Add-PnPApp -Path .\sharepoint\solution\markdown-formatter-spo.sppkg -Scope Tenant -Publish
+Add-PnPApp -Path .\sharepoint\solution\markstrata.sppkg -Scope Tenant -Publish
 Get-PnPApp | Where-Object { $_.Title -like "*markdown*" } | Format-Table Title, Deployed
 ```
 
@@ -96,9 +96,9 @@ Get-PnPApp | Where-Object { $_.Title -like "*markdown*" } | Format-Table Title, 
 ```
 
 ```diff
-- --mdf-code-bg: #212121;
+- --ink-code-bg: #212121;
 - text-shadow: 0 -0.1em 0.2em #000;
-+ --mdf-code-bg: var(--mdf-code-bg);
++ --ink-code-bg: var(--ink-code-bg);
 + /* contrast comes from the theme, not from a shadow */
 ```
 
@@ -169,5 +169,5 @@ flowchart TD
 Themes are defined entirely in CSS custom properties[^1], so adding a fourth one
 is a data change[^2].
 
-[^1]: See `src/webparts/markdownFormatter/styles/base.css` for the full token list.
+[^1]: See `src/webparts/markstrata/styles/base.css` for the full token list.
 [^2]: Copy a file in `styles/themes/`, change the values, add it to the dropdown.

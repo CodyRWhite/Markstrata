@@ -1,0 +1,219 @@
+/*
+ * obsidian.css - Obsidian default theme.
+ *
+ * Follows Obsidian's own base-xx grey ramp, its colour palette, its callout
+ * shape (tinted panel, tinted title row, rounded, icon in the accent colour)
+ * and its Prism token mapping (--code-keyword -> pink, --code-string -> green,
+ * --code-function -> yellow, --code-property -> cyan, --code-value -> purple).
+ *
+ * Deliberate deviation: Obsidian's light-mode accents are tuned for its own
+ * off-white canvas and several of them (green, cyan, yellow) land near 2.5:1
+ * on white, which is exactly the "hard to read" problem this project exists to
+ * fix. Light-mode accents below keep Obsidian's hue but are darkened to clear
+ * WCAG AA for body text. Dark mode keeps Obsidian's values except blue
+ * (#027aff -> #4a9eff), which is under 3.5:1 on Obsidian's own #1e1e1e.
+ */
+
+.ink-root[data-ink-theme='obsidian'] {
+  --ink-font-body: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --ink-font-heading: var(--ink-font-body);
+  --ink-font-mono: 'JetBrains Mono', 'Source Code Pro', ui-monospace, Menlo, Consolas, monospace;
+  --ink-font-size: 16px;
+  --ink-line-height-base: 1.55;
+  --ink-block-gap-base: 16px;
+
+  /* Obsidian's modular heading scale. */
+  --ink-h1-size: 1.802em;
+  --ink-h2-size: 1.602em;
+  --ink-h3-size: 1.424em;
+  --ink-h4-size: 1.266em;
+  --ink-h5-size: 1.125em;
+  --ink-h6-size: 1em;
+  --ink-heading-weight: 600;
+  --ink-h1-weight: 700;
+  --ink-heading-color: var(--ink-text);
+  --ink-h1-rule-width: 0;
+  --ink-h1-rule-space: 0;
+  --ink-h2-rule-width: 0;
+  --ink-h2-rule-space: 0;
+
+  --ink-radius-sm: 4px;
+  --ink-radius-md: 8px;
+  --ink-radius-lg: 12px;
+  --ink-list-indent: 1.9em;
+  --ink-list-item-gap: 3px;
+
+  --ink-code-radius: 8px;
+  --ink-code-padding: 14px 16px;
+  --ink-code-line-height: 1.5;
+  --ink-code-font-size: 0.875em;
+
+  /* Callouts: tinted panel with a tinted title row and no accent bar. */
+  --ink-callout-bg-alpha: 0.1;
+  --ink-callout-title-bg-alpha: 0.1;
+  --ink-callout-border-width: 0px;
+  --ink-callout-accent-width: 0px;
+  --ink-callout-radius: 8px;
+  --ink-callout-title-padding: 10px 14px;
+  --ink-callout-content-padding: 2px 14px 12px;
+  --ink-callout-title-weight: 600;
+  --ink-callout-fold-closed-pad: 10px;
+
+  --ink-quote-padding: 2px 0 2px 16px;
+  --ink-quote-border-width: 3px;
+  --ink-quote-radius: 0;
+}
+
+/* Obsidian's own hue choices for the types it ships. */
+.ink-root[data-ink-theme='obsidian'] .ink-callout[data-callout='tip'],
+.ink-root[data-ink-theme='obsidian'] .ink-callout[data-callout='important'] {
+  --ink-callout-rgb: var(--ink-color-cyan);
+}
+
+/* ---------------------------------------------------------- Obsidian light */
+
+.ink-root[data-ink-theme='obsidian'][data-ink-mode='light'] {
+  --ink-bg: #ffffff;
+  --ink-bg-elevated: #f6f6f6;
+  --ink-bg-hover: #ebebeb;
+  --ink-text: #222222;
+  --ink-text-muted: #5a5a5a;
+  --ink-text-faint: #999999;
+  --ink-border: #e0e0e0;
+  --ink-border-strong: #cfcfcf;
+  --ink-link: #7852ee;
+  --ink-link-hover: #5f36d6;
+  --ink-on-accent: #ffffff;
+
+  /* Obsidian hues, darkened for contrast on white (see header note). */
+  --ink-color-blue: 8, 104, 214;
+  --ink-color-cyan: 0, 128, 126;
+  --ink-color-green: 7, 128, 58;
+  --ink-color-yellow: 154, 108, 0;
+  --ink-color-orange: 179, 92, 0;
+  --ink-color-red: 207, 31, 54;
+  --ink-color-purple: 115, 70, 232;
+  --ink-color-pink: 192, 42, 114;
+  --ink-color-gray: 107, 107, 107;
+
+  --ink-code-bg: #f6f6f6;
+  --ink-code-text: #222222;
+  --ink-code-border: #ececec;
+  --ink-code-header-bg: #efefef;
+  --ink-code-header-border: #e0e0e0;
+  --ink-code-gutter-text: #a3a3a3;
+  --ink-code-gutter-border: #e0e0e0;
+  --ink-code-line-hover: rgba(0, 0, 0, 0.03);
+  --ink-code-inline-bg: #f2f3f5;
+  --ink-code-inline-text: #222222;
+  --ink-code-inline-border: #e3e3e3;
+
+  --ink-quote-bg: transparent;
+  --ink-quote-border-color: #7852ee;
+  --ink-quote-text: #5a5a5a;
+
+  --ink-table-border: #e0e0e0;
+  --ink-table-header-bg: #f6f6f6;
+  --ink-table-stripe-bg: transparent;
+  --ink-table-hover-bg: #fafafa;
+
+  --ink-scrollbar-thumb: #d4d4d4;
+  --ink-mermaid-bg: var(--ink-bg-elevated);
+  --ink-mark-alpha: 0.4;
+
+  /* Prism token mapping used by Obsidian's default theme. */
+  --ink-syn-comment: #757575;
+  --ink-syn-keyword: #c02a72;
+  --ink-syn-type: #00807e;
+  --ink-syn-entity: #8a6000;
+  --ink-syn-constant: #7346e8;
+  --ink-syn-attr: #00807e;
+  --ink-syn-operator: #cf1f36;
+  --ink-syn-string: #07803a;
+  --ink-syn-regexp: #07803a;
+  --ink-syn-variable: #b35c00;
+  --ink-syn-builtin: #b35c00;
+  --ink-syn-tag: #cf1f36;
+  --ink-syn-property: #00807e;
+  --ink-syn-punctuation: #5a5a5a;
+  --ink-syn-section: #8a6000;
+  --ink-syn-bullet: #b35c00;
+  --ink-syn-link: #0868d6;
+  --ink-syn-addition: #07803a;
+  --ink-syn-addition-bg: rgba(7, 128, 58, 0.12);
+  --ink-syn-deletion: #cf1f36;
+  --ink-syn-deletion-bg: rgba(207, 31, 54, 0.12);
+}
+
+/* ----------------------------------------------------------- Obsidian dark */
+
+.ink-root[data-ink-theme='obsidian'][data-ink-mode='dark'] {
+  --ink-bg: #1e1e1e;
+  --ink-bg-elevated: #262626;
+  --ink-bg-hover: #2d2d2d;
+  --ink-text: #dadada;
+  --ink-text-muted: #b3b3b3;
+  --ink-text-faint: #7a7a7a;
+  --ink-border: #3a3a3a;
+  --ink-border-strong: #4d4d4d;
+  --ink-link: #a882ff;
+  --ink-link-hover: #c0a5ff;
+  --ink-on-accent: #ffffff;
+
+  --ink-color-blue: 74, 158, 255;
+  --ink-color-cyan: 83, 223, 221;
+  --ink-color-green: 68, 207, 110;
+  --ink-color-yellow: 224, 222, 113;
+  --ink-color-orange: 233, 151, 63;
+  --ink-color-red: 251, 70, 76;
+  --ink-color-purple: 168, 130, 255;
+  --ink-color-pink: 250, 153, 205;
+  --ink-color-gray: 153, 153, 153;
+
+  --ink-code-bg: #161616;
+  --ink-code-text: #dadada;
+  --ink-code-border: #2b2b2b;
+  --ink-code-header-bg: #1f1f1f;
+  --ink-code-header-border: #2f2f2f;
+  --ink-code-gutter-text: #6b6b6b;
+  --ink-code-gutter-border: #2f2f2f;
+  --ink-code-line-hover: rgba(255, 255, 255, 0.04);
+  --ink-code-inline-bg: #2a2a2a;
+  --ink-code-inline-text: #dadada;
+  --ink-code-inline-border: transparent;
+
+  --ink-quote-bg: transparent;
+  --ink-quote-border-color: #a882ff;
+  --ink-quote-text: #b3b3b3;
+
+  --ink-table-border: #3a3a3a;
+  --ink-table-header-bg: #262626;
+  --ink-table-stripe-bg: transparent;
+  --ink-table-hover-bg: #242424;
+
+  --ink-scrollbar-thumb: #4a4a4a;
+  --ink-mermaid-bg: var(--ink-bg-elevated);
+  --ink-mark-alpha: 0.3;
+
+  --ink-syn-comment: #8a8a8a;
+  --ink-syn-keyword: #fa99cd;
+  --ink-syn-type: #53dfdd;
+  --ink-syn-entity: #e0de71;
+  --ink-syn-constant: #a882ff;
+  --ink-syn-attr: #53dfdd;
+  --ink-syn-operator: #fb464c;
+  --ink-syn-string: #44cf6e;
+  --ink-syn-regexp: #44cf6e;
+  --ink-syn-variable: #e9973f;
+  --ink-syn-builtin: #e9973f;
+  --ink-syn-tag: #fb464c;
+  --ink-syn-property: #53dfdd;
+  --ink-syn-punctuation: #b3b3b3;
+  --ink-syn-section: #e0de71;
+  --ink-syn-bullet: #e9973f;
+  --ink-syn-link: #4a9eff;
+  --ink-syn-addition: #44cf6e;
+  --ink-syn-addition-bg: rgba(68, 207, 110, 0.14);
+  --ink-syn-deletion: #fb464c;
+  --ink-syn-deletion-bg: rgba(251, 70, 76, 0.14);
+}
