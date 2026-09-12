@@ -110,7 +110,7 @@ function build() {
     : fs.readFileSync(path.join(root, 'samples', 'kitchen-sink.md'), 'utf8');
 
   const html = processor.render(sample);
-  const page = template(readCss(), html, buildToc(html), mermaidThemes);
+  const page = template(readCss(), html, buildToc(html), mermaidThemes, pageTitle(html));
 
   fs.mkdirSync(outDir, { recursive: true });
   copyAssets();
@@ -152,13 +152,29 @@ function buildToc(html) {
     </details>`;
 }
 
-function template(css, content, toc, mermaidThemes) {
+/*
+ * The document's own first heading, so a page built from another markdown file
+ * is not labelled "theme preview" in the browser tab.
+ */
+function pageTitle(html) {
+  const match = /<h1[^>]*>([\s\S]*?)<\/h1>/.exec(html);
+  if (!match) {
+    return 'Markdown Formatter';
+  }
+  const text = match[1]
+    .replace(/<a class="mdf-anchor"[\s\S]*?<\/a>/g, '')
+    .replace(/<[^>]+>/g, '')
+    .trim();
+  return text || 'Markdown Formatter';
+}
+
+function template(css, content, toc, mermaidThemes, title) {
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Markdown Formatter - theme preview</title>
+<title>${title}</title>
 <link rel="stylesheet" href="katex/katex.min.css">
 <style>
 body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
