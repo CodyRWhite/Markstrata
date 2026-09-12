@@ -42,6 +42,11 @@ declare module 'markdown-it-sup' {
   export = plugin;
 }
 
+declare module 'markdown-it-mark' {
+  const plugin: (md: unknown) => void;
+  export = plugin;
+}
+
 declare module 'markdown-it-multimd-table' {
   const plugin: (md: unknown, options?: unknown) => void;
   export = plugin;

@@ -119,7 +119,12 @@ function buildToc(html) {
   const pattern = /<(h[23]) id="([^"]+)"[^>]*>([\s\S]*?)<\/\1>/g;
   let match;
   while ((match = pattern.exec(html)) !== null) {
-    const text = match[3].replace(/<[^>]+>/g, '').trim();
+    const text = match[3]
+      // Drop the heading's anchor link, or its "#" ends up in the entry - the
+      // web part removes the same element when it builds the list from the DOM.
+      .replace(/<a class="mdf-anchor"[\s\S]*?<\/a>/g, '')
+      .replace(/<[^>]+>/g, '')
+      .trim();
     if (text) {
       items.push({ level: Number(match[1].slice(1)), id: match[2], text: text });
     }
@@ -192,6 +197,14 @@ ${css}
       <option value="full">Full</option>
     </select>
   </label>
+  <label>Contents
+    <select id="toc">
+      <option value="left" selected>Left</option>
+      <option value="right">Right</option>
+      <option value="inline">Above</option>
+      <option value="off">Off</option>
+    </select>
+  </label>
   <label>Spacing
     <select id="density">
       <option value="compact">Compact</option>
@@ -205,7 +218,7 @@ ${css}
 <div class="demo-stage">
   <div class="mdf-root" id="root" data-mdf-theme="github" data-mdf-mode="light"
        data-mdf-width="comfortable" data-mdf-density="normal" data-mdf-size="normal" data-mdf-code-size="normal">
-    <div class="mdf-layout">
+    <div class="mdf-layout" id="layout" data-mdf-toc="left">
       ${toc}
       <article class="mdf-content" id="content">
 ${content}
@@ -220,6 +233,30 @@ var MERMAID_THEMES = ${JSON.stringify(mermaidThemes)};
 <script>
 (function () {
   var root = document.getElementById('root');
+
+  // Contents placement, the same attribute and classes the web part sets.
+  var tocSelect = document.getElementById('toc');
+  var layout = document.getElementById('layout');
+  var content = document.getElementById('content');
+  tocSelect.addEventListener('change', function () {
+    var panel = document.querySelector('.mdf-toc-sidebar, .mdf-toc-inline');
+    var placement = tocSelect.value;
+    panel.hidden = placement === 'off';
+    layout.setAttribute('data-mdf-toc', placement === 'off' ? 'left' : placement);
+    panel.className = placement === 'inline' ? 'mdf-toc-inline' : 'mdf-toc-sidebar';
+    if (placement === 'inline') {
+      content.insertBefore(panel, content.firstChild);
+    } else {
+      layout.insertBefore(panel, content);
+    }
+  });
+
+  // Mirror the web part: the contents start collapsed when the column is too
+  // narrow to sit them beside the text.
+  var toc = document.querySelector('.mdf-toc-sidebar');
+  if (toc && root.clientWidth <= 720) {
+    toc.open = false;
+  }
   function bind(id, attribute) {
     var input = document.getElementById(id);
     input.addEventListener('change', function () {

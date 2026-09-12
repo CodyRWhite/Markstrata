@@ -20,7 +20,8 @@ First release.
 - Code blocks with a language header, optional filename
   (` ```ts title="app.ts" `), a copy button that never copies line numbers,
   and per-fence `wrap` / `nowrap` / `numbers` / `nonumbers` flags.
-- Mermaid diagrams, themed to match the selected theme, and KaTeX maths.
+- Mermaid diagrams, themed to match the selected theme, KaTeX maths, and
+  `==highlighted==` text.
 
 ### Themes
 

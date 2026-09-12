@@ -109,6 +109,10 @@ test('raw HTML is escaped by default and rendered when allowed', () => {
   assert.match(permissive.render('<b>hi</b>'), /<b>hi<\/b>/);
 });
 
+test('highlighted text renders as a mark element', () => {
+  assert.match(md.render('some ==important== text'), /<mark>important<\/mark>/);
+});
+
 test('footnotes, definition lists, sub and sup all load', () => {
   assert.match(md.render('text[^1]\n\n[^1]: note'), /class="footnotes/);
   assert.match(md.render('Term\n: definition'), /<dl>/);

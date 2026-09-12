@@ -1,0 +1,33 @@
+# Keeps dependencies current without anyone having to remember.
+#
+# The markdown and maths libraries are the ones that matter: this project
+# started by replacing versions carrying five KaTeX CVEs and a markdown-it
+# ReDoS. SPFx packages are grouped and kept on a longer leash because they move
+# as a set and a bump there means re-testing the whole build.
+version: 2
+
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      markdown:
+        patterns:
+          - 'markdown-it*'
+          - 'highlight.js'
+          - 'katex'
+          - 'mermaid'
+      spfx:
+        patterns:
+          - '@microsoft/*'
+          - '@rushstack/*'
+        update-types:
+          - minor
+          - patch
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly

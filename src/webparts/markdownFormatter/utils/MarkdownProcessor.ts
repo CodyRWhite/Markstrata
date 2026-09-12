@@ -25,6 +25,7 @@ import markdownItAbbr from 'markdown-it-abbr';
 import markdownItDeflist from 'markdown-it-deflist';
 import markdownItSub from 'markdown-it-sub';
 import markdownItSup from 'markdown-it-sup';
+import markdownItMark from 'markdown-it-mark';
 import markdownItAnchor from 'markdown-it-anchor';
 import markdownItTOC from 'markdown-it-table-of-contents';
 import markdownItMultimdTable from 'markdown-it-multimd-table';
@@ -146,6 +147,8 @@ export class MarkdownProcessor {
     use('definition lists', markdownItDeflist);
     use('subscript', markdownItSub);
     use('superscript', markdownItSup);
+    // ==highlight==, which Obsidian users write a lot of.
+    use('highlight', markdownItMark);
     use('tables', markdownItMultimdTable, {
       multiline: true,
       rowspan: true,

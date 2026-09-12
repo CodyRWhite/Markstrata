@@ -89,9 +89,10 @@ Three syntaxes, one rendering:
 ## Also rendered
 
 Tables (including colspan/rowspan and alignment), task lists, footnotes,
-definition lists, abbreviations, emoji, sub/sup, heading anchors, a table of
-contents (sidebar built from the headings, or inline with `[[toc]]`),
-[Mermaid](https://mermaid.js.org/) diagrams themed to match, and KaTeX math.
+definition lists, abbreviations, emoji, sub/sup, `==highlighted==` text, heading
+anchors, a table of contents (built from the headings, or inline with
+`[[toc]]`), [Mermaid](https://mermaid.js.org/) diagrams themed to match, and
+KaTeX math.
 
 ## Install
 

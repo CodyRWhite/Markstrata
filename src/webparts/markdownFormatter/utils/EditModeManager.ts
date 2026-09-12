@@ -63,6 +63,7 @@ export class EditModeManager {
   public render(host: HTMLElement, markdown: string, options: IEditOptions): void {
     host.innerHTML = '';
     ThemeManager.apply(host, options.settings, options.resolvedMode);
+    host.setAttribute('data-mdf-editing', 'true');
 
     const editor: HTMLElement = document.createElement('div');
     editor.className = 'mdf-editor';

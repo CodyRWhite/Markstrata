@@ -57,6 +57,21 @@ Nothing else is needed - do not commit a built `.sppkg`. To build one for a
 test tenant without releasing, download the artifact from the CI run, or run
 `npm run package` locally.
 
+## Toolchain
+
+The build is SPFx 1.21.1 with gulp, deliberately, rather than 1.22.x with Heft.
+1.21.1 is supported, the build is verified end to end here, and the migration
+touches every config file in the repo for no user-visible gain. Two things are
+worth knowing if you do migrate later:
+
+- The compiler SPFx 1.21 pins is TypeScript 4.7, which cannot parse the
+  TypeScript 5 syntax in Mermaid's transitive `@types/d3-*`. That is why
+  `src/types/mermaid.d.ts` and the `paths` entry in `tsconfig.json` exist; both
+  can be deleted once the compiler is 5.x.
+- `npm audit` findings against `@microsoft/*` packages all come from one `ajv`
+  advisory inside `@rushstack/node-core-library`. It is present in 1.22.x too,
+  and it is build-time code, not shipped to the browser.
+
 ## Adding a theme
 
 See [THEMES.md](./THEMES.md). `npm test` enforces that every theme declares the

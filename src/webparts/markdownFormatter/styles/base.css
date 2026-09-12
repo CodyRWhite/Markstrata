@@ -89,9 +89,13 @@
 
 /* The contents sidebar is a column of the flex row, never an overlay: it
    cannot cover the text or the page's editing controls the way a floated or
-   fixed-position sidebar does. */
-.mdf-layout[data-mdf-toc='right'] {
-  flex-direction: row-reverse;
+   fixed-position sidebar does.
+
+   Right placement reorders rather than reversing the row: row-reverse packs
+   both columns against the right edge when the content is narrower than the
+   web part, which leaves an odd gap on the left. */
+.mdf-layout[data-mdf-toc='right'] > .mdf-toc-sidebar {
+  order: 2;
 }
 
 .mdf-content {
@@ -207,8 +211,10 @@
   font-weight: 600;
 }
 
-/* Inline placement, and the `[[toc]]` marker's own container. */
-.mdf-content .mdf-toc,
+/* The `[[toc]]` marker's own container, and the inline panel. The child
+   combinator matters: the inline panel holds a .mdf-toc of its own, which must
+   not pick up a second border. */
+.mdf-content > .mdf-toc,
 .mdf-toc-inline {
   padding: 12px 16px;
   border: 1px solid var(--mdf-border);
@@ -222,10 +228,14 @@
 
 /* Narrow web part: stack, and let the contents collapse out of the way. */
 @container mdf (max-width: 720px) {
-  .mdf-layout,
-  .mdf-layout[data-mdf-toc='right'] {
+  .mdf-layout {
     flex-direction: column;
     gap: 16px;
+  }
+
+  /* Stacked, the contents belong above the text whichever side they were on. */
+  .mdf-layout[data-mdf-toc='right'] > .mdf-toc-sidebar {
+    order: 0;
   }
 
   .mdf-toc-sidebar {
@@ -239,10 +249,13 @@
 /* Fallback for browsers without container queries. */
 @supports not (container-type: inline-size) {
   @media (max-width: 900px) {
-    .mdf-layout,
-    .mdf-layout[data-mdf-toc='right'] {
+    .mdf-layout {
       flex-direction: column;
       gap: 16px;
+    }
+
+    .mdf-layout[data-mdf-toc='right'] > .mdf-toc-sidebar {
+      order: 0;
     }
 
     .mdf-toc-sidebar {
