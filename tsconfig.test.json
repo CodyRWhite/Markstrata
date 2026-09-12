@@ -12,6 +12,7 @@
     "rootDir": "src/webparts/markdownFormatter/utils"
   },
   "include": [
+    "src/types/**/*.d.ts",
     "src/webparts/markdownFormatter/utils/MarkdownProcessor.ts",
     "src/webparts/markdownFormatter/utils/ThemeManager.ts",
     "src/webparts/markdownFormatter/utils/codeBlocks.ts",

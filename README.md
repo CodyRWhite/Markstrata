@@ -4,12 +4,12 @@ A SharePoint Framework (SPFx) web part that renders markdown from a document
 library, a URL, or typed straight into the page — with themes that mirror how
 **GitHub**, **Obsidian** and **VS Code** display markdown, in light and dark.
 
-It is a ground-up rebuild inspired by
-[npapadacis/better-markdown-webpart](https://github.com/npapadacis/better-markdown-webpart)
-(MIT). That web part gets a lot right; this one is aimed squarely at the part
-that was hard to live with: **code blocks and note/callout blocks that were
-difficult to read**, and a rendering style you could not match to the tools your
-documentation is actually written in.
+It was written after living with
+[npapadacis/better-markdown-webpart](https://github.com/npapadacis/better-markdown-webpart),
+which gets a lot right, and is aimed squarely at the parts that were hard to
+live with: **code blocks and note/callout blocks that were difficult to read**,
+and a rendering style you could not match to the tools your documentation is
+actually written in. The code here is written from scratch.
 
 ## What is different
 
@@ -248,15 +248,19 @@ scripts/                          version stamping, release notes, loc strings
 
 ## Credits
 
-Inspired by [Better Markdown for SharePoint](https://github.com/npapadacis/better-markdown-webpart)
-by Nath Papadacis (MIT) — the SPFx scaffolding conventions and the SharePoint
-file-browsing approach follow that project. Its open issues and the security
-review in its open PR shaped this build: search indexing, per-fence word wrap,
-toolbar visibility, usable editing in narrow columns, diagrams surviving a
-refresh, current dependencies and no CDN at runtime are all addressed here. Colour values are taken from
-[Primer](https://primer.style/), Obsidian's default theme, and VS Code's Dark+ /
-Light+ themes, and belong to their respective owners; this project reimplements
-the look, it does not redistribute their code.
+Thanks to [Better Markdown for SharePoint](https://github.com/npapadacis/better-markdown-webpart)
+by Nath Papadacis, which prompted this project. Its open issues and the security
+review in its open pull request shaped what got built: search indexing,
+per-fence word wrap, toolbar visibility, usable editing in narrow columns,
+diagrams surviving a refresh, current dependencies and nothing loaded from a CDN
+are all addressed here.
+
+GitHub, Obsidian and Visual Studio Code are trademarks of their respective
+owners. The theme names describe which editor's rendering each theme is modelled
+on; this project is not affiliated with or endorsed by any of them. Colour
+values are drawn from [Primer](https://primer.style/), Obsidian's default theme
+and VS Code's Dark+ / Light+ themes — the look is reimplemented, no code is
+redistributed.
 
 ## License
 

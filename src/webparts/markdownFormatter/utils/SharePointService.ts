@@ -163,7 +163,9 @@ export class SharePointService {
         .map((version: ISpVersion) => ({
           versionLabel: version.VersionLabel,
           created: version.Created,
-          createdBy: version.CreatedBy ? version.CreatedBy.Title : 'Unknown',
+          // Title is optional on the REST payload: system accounts and
+          // unexpanded fields both come back without one.
+          createdBy: (version.CreatedBy && version.CreatedBy.Title) || 'Unknown',
           url: version.Url,
           isCurrentVersion: !!version.IsCurrentVersion
         }))
@@ -257,7 +259,7 @@ export class SharePointService {
       name: file.Name,
       serverRelativeUrl: file.ServerRelativeUrl,
       timeLastModified: file.TimeLastModified,
-      author: file.Author ? file.Author.Title : 'Unknown',
+      author: (file.Author && file.Author.Title) || 'Unknown',
       length: file.Length
     };
   }

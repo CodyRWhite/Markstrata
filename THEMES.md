@@ -173,3 +173,10 @@ Wiki.js classes map on too: `is-info` → info, `is-warning` → warning,
 The demo page is the fastest check: open `demo/dist/index.html`, switch through
 the six combinations, and look at the callout titles, comments in code, and the
 muted text in the footer — those are the three places a palette usually fails.
+
+## Names and trademarks
+
+GitHub, Obsidian and Visual Studio Code are trademarks of their respective
+owners. The theme names say which editor's rendering each theme reproduces;
+nothing here is affiliated with or endorsed by them, and no code from those
+projects is included.
