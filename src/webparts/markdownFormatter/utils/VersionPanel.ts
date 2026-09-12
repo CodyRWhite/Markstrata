@@ -4,7 +4,8 @@
  * text back as a new version (never by deleting history).
  */
 
-import { SharePointService, IVersionInfo } from './SharePointService';
+import { SharePointService } from './SharePointService';
+import type { IVersionInfo } from './SharePointService';
 
 export interface IVersionPanelCallbacks {
   onPreview: (content: string, label: string) => void;

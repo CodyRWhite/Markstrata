@@ -9,12 +9,16 @@ export interface ITocEntry {
   level: number;
 }
 
+/** Distance from the top of the viewport that counts as "being read". */
+const ACTIVE_HEADING_LINE: number = 120;
+
 const CHECK_ICON: string =
   '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m20 6-11 11-5-5"/></svg>';
 
 export class ContentEnhancer {
   private copyResetTimers: number[] = [];
-  private headingObserver: IntersectionObserver | undefined;
+  private onScroll: (() => void) | undefined;
+  private scrollFrame: number | undefined;
 
   /** Wires every copy button inside `container` exactly once. */
   public attachCopyButtons(container: HTMLElement): void {
@@ -188,61 +192,70 @@ export class ContentEnhancer {
   }
 
   /**
-   * Marks the entry for the heading currently in view. Uses an observer rather
-   * than a scroll handler so it costs nothing while the reader is still.
+   * Marks the entry for the heading currently being read.
+   *
+   * Deliberately not an IntersectionObserver keyed on a narrow band: a heading
+   * scrolled to the very top - which is exactly what clicking an entry does -
+   * sits outside such a band, so nothing at all would be highlighted. This
+   * takes the last heading that has passed the reading line, which is well
+   * defined at the top of the document, at the bottom, and everywhere between.
    */
   public trackActiveHeading(content: HTMLElement, nav: HTMLElement): void {
     this.stopTracking();
 
     const links: HTMLAnchorElement[] = Array.prototype.slice.call(nav.querySelectorAll('a[href^="#"]'));
-    if (links.length === 0 || typeof IntersectionObserver === 'undefined') {
+    const tracked: { link: HTMLAnchorElement; heading: HTMLElement }[] = [];
+
+    links.forEach((link: HTMLAnchorElement) => {
+      const id: string = decodeURIComponent(link.getAttribute('href') || '').substring(1);
+      const heading: HTMLElement | null = id ? content.querySelector(`#${CSS.escape(id)}`) : null;
+      if (heading) {
+        tracked.push({ link: link, heading: heading });
+      }
+    });
+
+    if (tracked.length === 0) {
       return;
     }
 
-    const byId: { [id: string]: HTMLAnchorElement } = {};
-    links.forEach((link: HTMLAnchorElement) => {
-      byId[decodeURIComponent(link.getAttribute('href') || '').substring(1)] = link;
-    });
-
-    const visible: string[] = [];
-
-    this.headingObserver = new IntersectionObserver(
-      (entries: IntersectionObserverEntry[]) => {
-        entries.forEach((entry: IntersectionObserverEntry) => {
-          const id: string = (entry.target as HTMLElement).id;
-          const index: number = visible.indexOf(id);
-          if (entry.isIntersecting && index === -1) {
-            visible.push(id);
-          } else if (!entry.isIntersecting && index !== -1) {
-            visible.splice(index, 1);
-          }
-        });
-
-        links.forEach((link: HTMLAnchorElement) => link.removeAttribute('aria-current'));
-
-        // Highlight the topmost heading that is on screen.
-        const first: HTMLAnchorElement | undefined = Object.keys(byId)
-          .filter((id: string) => visible.indexOf(id) !== -1)
-          .map((id: string) => byId[id])[0];
-        if (first) {
-          first.setAttribute('aria-current', 'true');
+    const update = (): void => {
+      let active: { link: HTMLAnchorElement; heading: HTMLElement } = tracked[0];
+      tracked.forEach((entry) => {
+        if (entry.heading.getBoundingClientRect().top <= ACTIVE_HEADING_LINE) {
+          active = entry;
         }
-      },
-      { rootMargin: '-80px 0px -70% 0px', threshold: 0 }
-    );
+      });
 
-    Object.keys(byId).forEach((id: string) => {
-      const heading: HTMLElement | null = content.querySelector(`#${CSS.escape(id)}`);
-      if (heading && this.headingObserver) {
-        this.headingObserver.observe(heading);
+      tracked.forEach((entry) => entry.link.removeAttribute('aria-current'));
+      active.link.setAttribute('aria-current', 'true');
+    };
+
+    this.onScroll = (): void => {
+      if (this.scrollFrame !== undefined) {
+        return;
       }
-    });
+      this.scrollFrame = window.requestAnimationFrame(() => {
+        this.scrollFrame = undefined;
+        update();
+      });
+    };
+
+    // Captured on the document: a SharePoint page scrolls an inner container,
+    // not the window, and scroll events do not bubble.
+    document.addEventListener('scroll', this.onScroll, { capture: true, passive: true });
+    window.addEventListener('resize', this.onScroll, { passive: true });
+    update();
   }
 
   public stopTracking(): void {
-    if (this.headingObserver) {
-      this.headingObserver.disconnect();
-      this.headingObserver = undefined;
+    if (this.onScroll) {
+      document.removeEventListener('scroll', this.onScroll, true);
+      window.removeEventListener('resize', this.onScroll);
+      this.onScroll = undefined;
+    }
+    if (this.scrollFrame !== undefined) {
+      window.cancelAnimationFrame(this.scrollFrame);
+      this.scrollFrame = undefined;
     }
   }
 

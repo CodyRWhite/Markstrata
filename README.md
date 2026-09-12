@@ -205,16 +205,20 @@ node demo/build-demo.js path/to/your.md
 ## Development
 
 ```bash
-npm run lint     # eslint, zero warnings allowed
-npm test         # unit tests: markdown pipeline, code blocks, theme contract
-npm run demo     # static preview of every theme
-npm run package  # the .sppkg
+npm run lint           # eslint, zero warnings allowed
+npm test               # unit tests: markdown pipeline, code blocks, theme contract
+npm run demo           # static preview of every theme
+npm run harness:drive  # run the renderer classes in a real browser
+npm run package        # the .sppkg
 ```
 
 The tests cover the parts that have no SharePoint dependency — the markdown
 pipeline, the code block renderer and theme resolution — and enforce the theme
 token contract, so a theme missing a colour fails the build instead of
-rendering grey. See [CONTRIBUTING.md](./CONTRIBUTING.md) for branch, commit and
+rendering grey. The harness goes further: SPFx has no local workbench any more,
+so `harness:drive` loads the real renderer classes into a browser page and
+checks the toolbar, contents tracking, copy buttons, theme switching, diagram
+re-rendering and the live preview. CI runs both. See [CONTRIBUTING.md](./CONTRIBUTING.md) for branch, commit and
 release conventions.
 
 ## Project layout

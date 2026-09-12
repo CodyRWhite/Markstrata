@@ -40,3 +40,6 @@ Thumbs.db
 *.log
 npm-debug.log*
 coverage/
+
+# Harness build output
+harness/dist/

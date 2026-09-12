@@ -14,7 +14,9 @@ import {
   THEME_FAMILIES,
   IThemeChoice
 } from './ThemeManager';
-import { IFileMetadata } from './SharePointService';
+// Type only: the view renderer knows nothing about SharePoint at runtime, so
+// it can be exercised in a plain browser page without the SPFx host.
+import type { IFileMetadata } from './SharePointService';
 
 export type TocPosition = 'left' | 'right' | 'inline' | 'off';
 

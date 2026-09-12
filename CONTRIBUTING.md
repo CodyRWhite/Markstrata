@@ -34,9 +34,20 @@ npm test         # unit tests for the markdown pipeline and themes
 npm run package  # the .sppkg CI will build
 ```
 
-`npm run demo` writes `demo/dist/index.html`, a self-contained preview of every
-theme that runs the real pipeline - the quickest way to check a rendering or
-theme change without deploying to a tenant.
+Two ways to look at it without a tenant:
+
+```bash
+npm run demo           # demo/dist/index.html - every theme, real pipeline
+npm run harness        # harness/dist/index.html - the real renderer classes
+npm run harness:drive  # ...and drive them in Chromium (needs Playwright)
+```
+
+`demo` is for judging how markdown *renders*. `harness` is for the parts only a
+running page exercises - the toolbar, the contents sidebar and its scroll
+tracking, copy buttons, theme switching, diagram re-rendering, the split editor
+and its live preview. SPFx removed the local workbench and the hosted one needs
+a tenant, so this is as close to running the web part as you get locally. CI
+runs `harness:drive` on every push.
 
 ## Releasing
 

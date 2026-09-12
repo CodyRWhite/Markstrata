@@ -49,3 +49,32 @@ jobs:
           name: markdown-formatter-spo-${{ github.sha }}
           path: sharepoint/solution/markdown-formatter-spo.sppkg
           retention-days: 14
+
+  browser:
+    name: Drive the web part in a browser
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Playwright is not a dependency of the project: only this job needs it.
+      - name: Install Playwright
+        run: |
+          npm install --no-save playwright
+          npx playwright install --with-deps chromium
+
+      # SPFx has no local workbench any more, so this runs the renderer classes
+      # in a real browser instead: toolbar, contents, copy, theme switching,
+      # diagrams and the live preview.
+      - name: Drive the harness
+        run: npm run harness:drive
