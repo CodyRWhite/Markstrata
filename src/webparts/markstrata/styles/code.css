@@ -216,6 +216,28 @@
   vertical-align: top;
 }
 
+/* With numbers shown as well, the text has to keep its wrapped continuations
+   clear of the gutter - inline, they start back at the line box's left edge,
+   under the numbers. A row does that without a hanging indent, and the gutter
+   can stop being sticky here: a wrapped block has nothing scrolling under it.
+   min-width on the text is what lets a long unbreakable token wrap instead of
+   pushing the line wider than the block. */
+.ink-code--wrap.ink-code--numbered .ink-code-line {
+  display: flex;
+  align-items: flex-start;
+}
+
+.ink-code--wrap.ink-code--numbered .ink-code-ln {
+  position: static;
+  flex: none;
+}
+
+.ink-code--wrap.ink-code--numbered .ink-code-line-text {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
 /* Scrollbars inside code blocks should read as part of the block. */
 .ink-code pre::-webkit-scrollbar {
   height: 10px;

@@ -114,9 +114,14 @@
    keeps the reading surface clean but leaves the link keyboard reachable. */
 .ink-content .ink-anchor {
   float: left;
-  width: 1em;
-  margin-left: -1em;
+  /* Sized from the same gutter the column reserves, and held at body size so
+     every heading level gets the same anchor rather than one that grows with
+     the heading. */
+  width: var(--ink-anchor-gutter);
+  margin-left: calc(var(--ink-anchor-gutter) * -1);
   padding-right: 0.2em;
+  font-size: calc(var(--ink-font-size) * var(--ink-font-scale));
+  line-height: inherit;
   color: var(--ink-text-faint);
   text-decoration: none;
   opacity: 0;

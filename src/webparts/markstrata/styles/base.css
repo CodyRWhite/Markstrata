@@ -37,6 +37,11 @@
   --ink-block-gap: calc(var(--ink-block-gap-base) * var(--ink-density-scale));
   --ink-line-height: calc(var(--ink-line-height-base) * var(--ink-density-scale));
   --ink-content-max-width: 860px;
+  /* Heading anchors hang to the left of the text, so the content column
+     reserves a gutter to hang them in. It is computed from the body size
+     rather than written in em, because an em inside an h1 resolves against
+     the heading and the gutter would no longer match the anchor. */
+  --ink-anchor-gutter: calc(var(--ink-font-size) * var(--ink-font-scale) * 1.35);
 
   /* Code defaults that themes rarely need to change. */
   --ink-code-font-size: 0.875em;
@@ -102,6 +107,10 @@
   flex: 1 1 auto;
   min-width: 0;
   max-width: var(--ink-content-max-width);
+  /* Room for the heading anchors. Without it they sit outside the web part
+     and the page canvas clips them - which only showed up with the contents
+     anywhere but on the left, where the sidebar happened to provide the gap. */
+  padding-left: var(--ink-anchor-gutter);
 }
 
 /* Blocks own their bottom margin only, so spacing never doubles up. */

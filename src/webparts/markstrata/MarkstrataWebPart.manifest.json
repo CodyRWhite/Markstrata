@@ -29,16 +29,16 @@
       "officeFabricIconFontName": "InkingTool",
       "properties": {
         "contentSource": "manual",
-        "themeFamily": "github",
+        "themeFamily": "vscode",
         "colorMode": "light",
         "contentWidth": "comfortable",
-        "density": "normal",
+        "density": "compact",
         "textSize": "normal",
         "codeSize": "normal",
         "showThemeSwitcher": false,
         "enableSyntaxHighlighting": true,
         "showCodeHeader": true,
-        "showLineNumbers": false,
+        "showLineNumbers": true,
         "wrapCodeLines": false,
         "enableMermaid": true,
         "enableMath": true,
@@ -48,7 +48,7 @@
         "enableVersionHistory": true,
         "enableAutoRefresh": false,
         "allowHtml": false,
-        "tocPosition": "off",
+        "tocPosition": "inline",
         "toolbarVisibility": "always",
         "showPrintButton": true
       }

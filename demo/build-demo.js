@@ -200,7 +200,7 @@ ${css}
     <select id="theme">
       <option value="github">GitHub</option>
       <option value="obsidian">Obsidian</option>
-      <option value="vscode">VS Code</option>
+      <option value="vscode" selected>VS Code</option>
     </select>
   </label>
   <label>Mode
@@ -219,16 +219,16 @@ ${css}
   </label>
   <label>Contents
     <select id="toc">
-      <option value="left" selected>Left</option>
+      <option value="left">Left</option>
       <option value="right">Right</option>
-      <option value="inline">Above</option>
+      <option value="inline" selected>Above</option>
       <option value="off">Off</option>
     </select>
   </label>
   <label>Spacing
     <select id="density">
-      <option value="compact">Compact</option>
-      <option value="normal" selected>Normal</option>
+      <option value="compact" selected>Compact</option>
+      <option value="normal">Normal</option>
       <option value="relaxed">Relaxed</option>
     </select>
   </label>
@@ -236,9 +236,9 @@ ${css}
   <label><input type="checkbox" id="wrap"> Wrap code</label>
 </div>
 <div class="demo-stage">
-  <div class="ink-root" id="root" data-ink-theme="github" data-ink-mode="light"
-       data-ink-width="comfortable" data-ink-density="normal" data-ink-size="normal" data-ink-code-size="normal">
-    <div class="ink-layout" id="layout" data-ink-toc="left">
+  <div class="ink-root" id="root" data-ink-theme="vscode" data-ink-mode="light"
+       data-ink-width="comfortable" data-ink-density="compact" data-ink-size="normal" data-ink-code-size="normal">
+    <div class="ink-layout" id="layout" data-ink-toc="inline">
       ${toc}
       <article class="ink-content" id="content">
 ${content}
@@ -258,7 +258,7 @@ var MERMAID_THEMES = ${JSON.stringify(mermaidThemes)};
   var tocSelect = document.getElementById('toc');
   var layout = document.getElementById('layout');
   var content = document.getElementById('content');
-  tocSelect.addEventListener('change', function () {
+  function placeToc() {
     var panel = document.querySelector('.ink-toc-sidebar, .ink-toc-inline');
     var placement = tocSelect.value;
     panel.hidden = placement === 'off';
@@ -269,10 +269,15 @@ var MERMAID_THEMES = ${JSON.stringify(mermaidThemes)};
     } else {
       layout.insertBefore(panel, content);
     }
-  });
+  }
+  tocSelect.addEventListener('change', placeToc);
+  // Run it once so the page starts wherever the select does, rather than the
+  // markup having to repeat the default placement and drift from it.
+  placeToc();
 
-  // Mirror the web part: the contents start collapsed when the column is too
-  // narrow to sit them beside the text.
+  // Mirror the web part: a contents sidebar starts collapsed when the column
+  // is too narrow to sit it beside the text. Above the content it always
+  // starts open, which is what the web part does too.
   var toc = document.querySelector('.ink-toc-sidebar');
   if (toc && root.clientWidth <= 720) {
     toc.open = false;
