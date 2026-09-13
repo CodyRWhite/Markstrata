@@ -6,6 +6,10 @@ the same number with a fourth part appended (1.2.0 -> 1.2.0.0), stamped by
 `scripts/set-version.js` when a release is tagged.
 ## Unreleased
 
+- Badges in the README: CI, latest release, SPFx version, licence, live demo
+  and Buy Me a Coffee. The first two read the repository through GitHub's
+  public endpoints, so they render once the repository is public.
+
 - No em dashes in the site's prose, and a test that keeps them out.
 
 - Fixed the solution package being rejected by the App Catalog. SharePoint

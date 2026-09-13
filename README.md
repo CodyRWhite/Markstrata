@@ -5,6 +5,17 @@
 
 # Markstrata Markdown
 
+<!-- The CI and Release badges read the repository through GitHub's public
+     endpoints, so they only render once the repository is public: while it is
+     private the Actions badge 403s and shields.io reports "repo not found".
+     The other four are static and render either way. -->
+[![CI](https://github.com/CodyRWhite/Markstrata/actions/workflows/ci.yml/badge.svg)](https://github.com/CodyRWhite/Markstrata/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/CodyRWhite/Markstrata?include_prereleases&label=release)](https://github.com/CodyRWhite/Markstrata/releases/latest)
+[![SPFx](https://img.shields.io/badge/SPFx-1.23.2-0078d4)](https://learn.microsoft.com/en-us/sharepoint/dev/spfx/sharepoint-framework-overview)
+[![Licence: MIT](https://img.shields.io/badge/licence-MIT-green)](./LICENSE)
+[![Live demo](https://img.shields.io/badge/demo-live-36a7ca)](https://codywhite.me/Markstrata/demo/)
+[![Buy me a coffee](https://img.shields.io/badge/buy%20me%20a%20coffee-ffdd00?logo=buymeacoffee&logoColor=000)](https://buymeacoffee.com/codyrwhite)
+
 A SharePoint Framework (SPFx) web part that renders markdown from a document
 library, a URL, or typed straight into the page — with themes that mirror how
 **GitHub**, **Obsidian** and **VS Code** display markdown, in light and dark.
