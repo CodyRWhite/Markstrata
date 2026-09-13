@@ -24,6 +24,11 @@ the same number with a fourth part appended (0.2.0 -> 0.2.0.0), stamped by
   master for everything visual. `npm run brand` no longer cuts assets from a
   single SVG: it copies the right file out of the package into each place the
   build expects, and renders only the two composites made from brand artwork.
+- The release workflow can replace a release. Re-running a version that
+  already exists used to re-upload the package but leave the tag where it
+  was, which strands it if the history has moved since. The new `replace`
+  input deletes the release and its tag first, so the re-cut tags the commit
+  actually being released.
 - Renumbered onto a pre-1.0 line. Nothing here has been released as final, so
   the versions that read 1.0.0 to 1.0.5 are now 0.0.0 to 0.0.5 and this is
   0.0.6. The first stable release will be 1.0.0. Because SharePoint compares

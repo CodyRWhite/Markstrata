@@ -19,6 +19,10 @@ on:
         description: 'Publish as a pre-release, for testing before it is the recommended download'
         type: boolean
         default: false
+      replace:
+        description: 'Replace the release if this version already exists, moving its tag to the current commit'
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -83,8 +87,16 @@ jobs:
           # will not install a package whose version carries a semver suffix, so
           # a pre-release is marked on the GitHub release, not in the number.
           PRERELEASE: ${{ inputs.prerelease && '--prerelease' || '' }}
+          REPLACE: ${{ inputs.replace }}
         run: |
           NOTES=$(node scripts/release-notes.js "$VERSION")
+          # An existing release keeps its tag where it is, so re-running a
+          # version after the history moved would leave the tag on a commit
+          # that is no longer on the branch. --cleanup-tag drops both, and the
+          # create below re-tags whatever this run checked out.
+          if [ "$REPLACE" = "true" ] && gh release view "v$VERSION" >/dev/null 2>&1; then
+            gh release delete "v$VERSION" --yes --cleanup-tag
+          fi
           if gh release view "v$VERSION" >/dev/null 2>&1; then
             gh release upload "v$VERSION" "$PACKAGE" --clobber
           else
