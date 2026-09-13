@@ -240,6 +240,11 @@
   .ink-layout {
     flex-direction: column;
     gap: 16px;
+    /* align-items is flex-start in the row layout so a short contents sidebar
+       does not stretch to the height of the text. Stacked, that same value
+       aligns horizontally, which shrink-wraps the content column to its widest
+       line and pushes it out of the web part - so stretch it back. */
+    align-items: stretch;
   }
 
   /* Stacked, the contents belong above the text whichever side they were on. */

@@ -1,0 +1,164 @@
+/*
+ * The shape of the documentation site: which pages exist, what they are built
+ * from, and the header and footer they share.
+ *
+ * Every page is generated - the markdown ones through the web part's own
+ * pipeline, the demo through its real renderer classes - so this file is the
+ * only place the navigation is written down. Adding a page is an entry here
+ * and a markdown file.
+ */
+
+/*
+ * Where to send people who want to say thanks. Both of these are also listed
+ * in .github/FUNDING.yml, which is what puts the Sponsor button on the
+ * repository page - keep the two in step.
+ */
+const COFFEE_HANDLE = 'codyrwhite';
+const COFFEE_URL = `https://www.buymeacoffee.com/${COFFEE_HANDLE}`;
+const SPONSORS_USER = 'CodyRWhite';
+const SPONSORS_URL = `https://github.com/sponsors/${SPONSORS_USER}`;
+
+const REPO = 'https://github.com/CodyRWhite/Markstrata';
+
+/*
+ * `source` is the markdown the page is built from; the demo has none because
+ * it is the web part itself rather than a document. `dir` is the directory it
+ * is published at, empty for the site root.
+ */
+const PAGES = [
+  {
+    id: 'home', dir: '', label: 'Home', title: 'Markstrata Markdown',
+    source: 'docs/site/home.md',
+    description: 'Markdown for SharePoint, themed like the editors you write it in - GitHub, Obsidian and VS Code, in light and dark.'
+  },
+  {
+    id: 'demo', dir: 'demo', label: 'Demo', title: 'Demo - Markstrata Markdown',
+    description: 'The web part itself, running in your browser: toolbar, contents, copy buttons, theme switcher and the split editor.'
+  },
+  {
+    id: 'themes', dir: 'themes', label: 'Themes', title: 'Themes - Markstrata Markdown',
+    source: 'samples/kitchen-sink.md',
+    description: 'Every feature at once - callouts, code, tables, diagrams and maths - in each theme, so you can judge one at a glance.'
+  },
+  {
+    id: 'docs', dir: 'docs', label: 'Documentation', title: 'Documentation - Markstrata Markdown',
+    source: 'docs/site/documentation.md',
+    description: 'Install, content sources, themes, code block flags, callout syntaxes, the table of contents and editing in the page.'
+  },
+  {
+    id: 'about', dir: 'about', label: 'About', title: 'About - Markstrata Markdown',
+    source: 'docs/site/about.md',
+    description: 'Why Markstrata Markdown exists, how it is built, and what it borrows from the web part that prompted it.'
+  },
+  {
+    id: 'support', dir: 'support', label: 'Support', title: 'Support - Markstrata Markdown',
+    source: 'docs/site/support.md',
+    description: 'Markstrata Markdown is free and MIT licensed. Ways to help - most of which cost nothing.'
+  }
+];
+
+function page(id) {
+  const found = PAGES.find((entry) => entry.id === id);
+  if (!found) {
+    throw new Error(`no site page called "${id}"`);
+  }
+  return found;
+}
+
+/*
+ * Links are relative, not root-relative: the site is published under a
+ * repository path (/Markstrata/), so a leading slash would land on the
+ * domain root. Every page but the home page sits one directory down.
+ */
+function linkTo(fromId, toId) {
+  const up = page(fromId).dir ? '../' : '';
+  const target = page(toId).dir;
+  return `${up}${target ? `${target}/` : ''}` || './';
+}
+
+/* The site header: the logo, the navigation, and the call to action. */
+function header(currentId) {
+  const up = page(currentId).dir ? '../' : '';
+  const links = PAGES
+    .map((entry) => {
+      const current = entry.id === currentId;
+      return `<a class="site-nav-link${current ? ' is-current' : ''}" href="${linkTo(currentId, entry.id)}"`
+        + `${current ? ' aria-current="page"' : ''}>${entry.label}</a>`;
+    })
+    .join('');
+  return `<header class="site-header">
+  <a class="site-brand" href="${linkTo(currentId, 'home')}" aria-label="Markstrata Markdown">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="${up}brand/lockup-horizontal-dark.svg">
+      <img src="${up}brand/lockup-horizontal.svg" alt="Markstrata Markdown">
+    </picture>
+  </a>
+  <nav class="site-nav" aria-label="Site">${links}</nav>
+  <a class="site-cta" href="${REPO}/releases/latest">Download</a>
+</header>`;
+}
+
+function footer(currentId) {
+  return `<footer class="site-footer">
+  <p>Markstrata Markdown — a SharePoint web part that renders markdown the way you write it.</p>
+  <p>
+    <a href="${REPO}">GitHub</a> ·
+    <a href="${REPO}/releases/latest">Releases</a> ·
+    <a href="${REPO}/blob/main/LICENSE">MIT licence</a> ·
+    <a href="${linkTo(currentId, 'support')}">Support this project</a>
+  </p>
+</footer>`;
+}
+
+/* Styling for the chrome above. The page body below it is the web part's. */
+const CHROME_CSS = `
+.site-header {
+  display: flex; flex-wrap: wrap; gap: 10px 22px; align-items: center;
+  padding: 14px 22px; background: #012039; color: #e8eef5;
+  font: 15px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+.site-brand { margin-right: auto; display: flex; align-items: center; }
+.site-brand img { height: 30px; display: block; }
+.site-nav { display: flex; flex-wrap: wrap; gap: 4px; }
+.site-nav-link {
+  padding: 6px 11px; border-radius: 6px; color: #c6d6e6; text-decoration: none;
+}
+.site-nav-link:hover { background: rgba(255, 255, 255, .1); color: #fff; }
+.site-nav-link.is-current { background: rgba(54, 167, 202, .2); color: #8fd3ea; }
+.site-cta {
+  padding: 7px 15px; border-radius: 6px; background: #36a7ca; color: #012039;
+  font-weight: 600; text-decoration: none;
+}
+.site-cta:hover { background: #58bcdb; }
+.site-footer {
+  padding: 30px 22px 44px; background: #012039; color: #9fb6cc;
+  font: 14px/1.7 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  text-align: center;
+}
+.site-footer p { margin: 0 0 6px; }
+.site-footer a { color: #8fd3ea; }
+
+/* The support page's two buttons. They sit inside rendered markdown, so they
+   are styled here rather than in the web part's own stylesheets - nothing on a
+   SharePoint page has any use for them. */
+.support-buttons { display: flex; flex-wrap: wrap; gap: 12px; margin: 22px 0 28px; }
+/* Scoped through .ink-content so these beat the theme's own link colour -
+   without it a button reads as a blue hyperlink on a yellow slab. */
+.ink-content a.support-btn {
+  display: inline-block; padding: 12px 22px; border-radius: 8px;
+  font-weight: 600; text-decoration: none; border: 1px solid transparent;
+}
+.ink-content a.support-btn--coffee { background: #ffdd00; color: #17120a; }
+.ink-content a.support-btn--coffee:hover { background: #ffe74d; color: #17120a; }
+.ink-content a.support-btn--sponsor { background: transparent; border-color: #a371f7; color: #a371f7; }
+.ink-content a.support-btn--sponsor:hover { background: rgba(163, 113, 247, .14); color: #a371f7; }
+@media (max-width: 620px) {
+  .site-header { gap: 10px 12px; }
+  .site-brand { margin-right: 0; width: 100%; }
+}
+`;
+
+module.exports = {
+  PAGES, page, linkTo, header, footer, CHROME_CSS,
+  COFFEE_URL, COFFEE_HANDLE, SPONSORS_URL, SPONSORS_USER, REPO
+};

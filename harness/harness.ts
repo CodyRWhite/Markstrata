@@ -21,9 +21,9 @@ const enhancer = new ContentEnhancer();
 
 const state = {
   markdown: SAMPLE,
-  family: 'github' as 'github' | 'obsidian' | 'vscode',
+  family: 'vscode' as 'github' | 'obsidian' | 'vscode',
   mode: 'light' as 'light' | 'dark',
-  toc: 'left' as 'left' | 'right' | 'inline' | 'off',
+  toc: 'inline' as 'left' | 'right' | 'inline' | 'off',
   editing: false
 };
 
@@ -56,7 +56,7 @@ function settings(): any {
     themeFamily: state.family,
     colorMode: state.mode,
     contentWidth: 'comfortable',
-    density: 'normal',
+    density: 'compact',
     textSize: 'normal',
     codeSize: 'normal'
   };

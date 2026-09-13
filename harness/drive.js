@@ -51,8 +51,10 @@ const pageUrl = 'file://' + path.join(OUT, 'index.html');
     await page.waitForSelector('.ink-toolbar .ink-btn', { timeout: 5000 });
   });
 
-  await step('contents sidebar built from headings', async () => {
-    const count = await page.locator('.ink-toc-sidebar .ink-toc a').count();
+  // Either placement, so the check follows the harness's starting position
+  // rather than pinning it: what matters is that headings became entries.
+  await step('contents built from headings', async () => {
+    const count = await page.locator('.ink-toc-sidebar .ink-toc a, .ink-toc-inline .ink-toc a').count();
     if (count < 5) throw new Error('only ' + count + ' entries');
   });
 

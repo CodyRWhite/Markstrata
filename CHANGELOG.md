@@ -6,7 +6,20 @@ the same number with a fourth part appended (1.2.0 -> 1.2.0.0), stamped by
 `scripts/set-version.js` when a release is tagged.
 ## Unreleased
 
-Nothing yet.
+- The documentation site has pages: home, demo, themes, documentation, about and
+  support, with a shared header and footer. The pages, their order and the
+  navigation between them are declared once in `scripts/site.js`, so adding one
+  is an entry there and a markdown file. The working demo moves from `/app/` to
+  `/demo/`.
+- Ways to support the project: a Buy Me a Coffee link and GitHub Sponsors, on
+  the site's support page and in `.github/FUNDING.yml`, which is what puts the
+  Sponsor button on the repository.
+- Fixed the stacked layout overflowing the web part. `.ink-layout` aligns its
+  children to the start so a short contents sidebar does not stretch to the
+  height of the text; once the container query stacks the layout, that same
+  value aligns horizontally and shrink-wrapped the content column to its widest
+  line, pushing it outside the web part. At 400px the content column came out
+  748px wide.
 
 ## 1.0.0
 

@@ -11,7 +11,8 @@
 const fs = require('fs');
 const path = require('path');
 const { execFileSync } = require('child_process');
-const { copyBrand, brandHead, brandLogo } = require('../scripts/brand-assets');
+const { copyBrand, brandHead } = require('../scripts/brand-assets');
+const site = require('../scripts/site');
 
 /*
  * Usage:
@@ -19,7 +20,12 @@ const { copyBrand, brandHead, brandLogo } = require('../scripts/brand-assets');
  */
 const args = process.argv.slice(2);
 const outArg = args.indexOf('--out');
-const sampleArg = args.filter((arg, index) => arg.indexOf('--') !== 0 && args[index - 1] !== '--out')[0];
+const pageArg = args.indexOf('--page');
+/* With --page the output carries the site's header and footer; without it the
+   file stands alone, which is what `npm run demo` wants. */
+const pageId = pageArg === -1 ? null : args[pageArg + 1];
+const sampleArg = args.filter((arg, index) =>
+  arg.indexOf('--') !== 0 && args[index - 1] !== '--out' && args[index - 1] !== '--page')[0];
 
 const root = path.join(__dirname, '..');
 const outDir = outArg === -1 ? path.join(__dirname, 'dist') : path.resolve(args[outArg + 1]);
@@ -113,7 +119,8 @@ function build() {
     : fs.readFileSync(path.join(root, 'samples', 'kitchen-sink.md'), 'utf8');
 
   const html = processor.render(sample);
-  const page = template(readCss(), html, buildToc(html), mermaidThemes, pageTitle(html));
+  const page = template(readCss(), html, buildToc(html), mermaidThemes,
+    pageId ? site.page(pageId).title : pageTitle(html));
 
   fs.mkdirSync(outDir, { recursive: true });
   copyAssets();
@@ -172,13 +179,15 @@ function pageTitle(html) {
 }
 
 function template(css, content, toc, mermaidThemes, title) {
+  const header = pageId ? site.header(pageId) : '';
+  const footer = pageId ? site.footer(pageId) : '';
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${title}</title>
-${brandHead(title, 'Markdown for SharePoint, themed like the editors you write it in.')}
+${brandHead(title, pageId ? site.page(pageId).description : 'Markdown for SharePoint, themed like the editors you write it in.')}
 <link rel="stylesheet" href="katex/katex.min.css">
 <style>
 body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
@@ -192,14 +201,15 @@ body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sa
   background: #22272e; color: #e6edf3; font: inherit;
 }
 .demo-stage { padding: 24px 20px 64px; }
+${pageId ? site.CHROME_CSS : ''}
 </style>
 <style>
 ${css}
 </style>
 </head>
 <body>
+${header}
 <div class="demo-bar">
-  <a class="demo-brand" href="./" aria-label="Markstrata Markdown">${brandLogo(26, 'dark')}</a>
   <label>Theme
     <select id="theme">
       <option value="github">GitHub</option>
@@ -250,6 +260,7 @@ ${content}
     </div>
   </div>
 </div>
+${footer}
 <script src="mermaid.min.js"></script>
 <script>
 var MERMAID_THEMES = ${JSON.stringify(mermaidThemes)};

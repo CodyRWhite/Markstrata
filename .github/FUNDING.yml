@@ -1,0 +1,4 @@
+# Puts the Sponsor button on the repository page. The same two links are on the
+# site's support page, built from scripts/site.js - keep them in step.
+github: [CodyRWhite]
+buy_me_a_coffee: codyrwhite

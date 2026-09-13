@@ -3,7 +3,7 @@ name: Docs site
 # Publishes the documentation site to GitHub Pages:
 #   /          this project, rendered by its own pipeline
 #   /themes/   the kitchen sink document, for judging a theme
-#   /app/      the web part's real renderer classes, running in the page
+#   /demo/     the web part's real renderer classes, running in the page
 #
 # The build job enables Pages itself (`enablement: true`) rather than needing
 # Settings -> Pages set by hand: the action creates the Pages site through the

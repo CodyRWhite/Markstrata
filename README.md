@@ -213,8 +213,14 @@ is published from this repository on every push to `main`:
 | Page | What it is |
 |------|------------|
 | [`/`](https://codywhite.me/Markstrata/) | This project's own introduction, rendered by the web part's pipeline |
+| [`/demo/`](https://codywhite.me/Markstrata/demo/) | The working demo: toolbar, contents, copy buttons, theme switcher, split editor |
 | [`/themes/`](https://codywhite.me/Markstrata/themes/) | The kitchen sink document — every feature at once, for judging a theme |
-| [`/app/`](https://codywhite.me/Markstrata/app/) | The working demo: toolbar, contents sidebar, copy buttons, theme switcher, split editor |
+| [`/docs/`](https://codywhite.me/Markstrata/docs/) | Documentation: install, settings, fence flags, callout syntaxes |
+| [`/about/`](https://codywhite.me/Markstrata/about/) | Why it exists and how it is built |
+| [`/support/`](https://codywhite.me/Markstrata/support/) | Ways to help, most of which cost nothing |
+
+The pages, their order and the navigation between them are declared once in
+`scripts/site.js`; adding one is an entry there and a markdown file.
 
 Build it locally with `npm run site`. Everything on it is built from the same
 sources as the solution package, so the site cannot drift from what the web part

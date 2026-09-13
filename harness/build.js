@@ -15,6 +15,7 @@ const fs = require('fs');
 const path = require('path');
 const { execFileSync } = require('child_process');
 const { copyBrand, brandHead } = require('../scripts/brand-assets');
+const site = require('../scripts/site');
 
 /*
  * Two modes:
@@ -28,6 +29,10 @@ const outArg = args.indexOf('--out');
 
 const root = path.join(__dirname, '..');
 const outDir = outArg === -1 ? path.join(__dirname, 'dist') : path.resolve(args[outArg + 1]);
+/* With --page the harness is published as a page of the site and carries its
+   header and footer; without it, it is the bare development harness. */
+const pageArg = args.indexOf('--page');
+const pageId = pageArg === -1 ? null : args[pageArg + 1];
 const stylesDir = path.join(root, 'src', 'webparts', 'markstrata', 'styles');
 
 const CSS_FILES = [
@@ -104,21 +109,30 @@ fs.writeFileSync(
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Markstrata Markdown - runtime harness</title>
-${standalone ? brandHead('Markstrata Markdown', 'The web part\'s own renderer, running in the page.') : ''}
+<title>${pageId ? site.page(pageId).title : 'Markstrata Markdown - runtime harness'}</title>
+${standalone ? brandHead(pageId ? site.page(pageId).title : 'Markstrata Markdown',
+    pageId ? site.page(pageId).description : 'The web part\'s own renderer, running in the page.') : ''}
 ${links}
 <style>
   body { margin: 0; font-family: system-ui, sans-serif; }
   /* Stands in for the SharePoint page canvas around the web part. */
   .page { padding: 24px; background: #f3f2f1; min-height: 100vh; }
   .canvas { margin: 0 auto; max-width: 1100px; }
+  .demo-intro { margin: 0; padding: 18px 22px 0; max-width: 1100px;
+                margin-inline: auto; color: #424242;
+                font: 15px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
   #log { position: fixed; right: 8px; bottom: 8px; width: 280px; max-height: 160px;
          overflow: auto; background: #111; color: #0f0; font: 11px monospace;
          padding: 6px; border-radius: 4px; opacity: .9; }
+  ${pageId ? '#log { display: none; }' : ''}
+${pageId ? site.CHROME_CSS : ''}
 </style>
 </head>
 <body>
+${pageId ? site.header(pageId) : ''}
+${pageId ? '<p class="demo-intro">This is the web part itself, running its real renderer classes in this page &mdash; the same code a SharePoint page loads. Use the toolbar, fold a callout, copy a code block, or switch to the editor and type.</p>' : ''}
 <div class="page"><div class="canvas"><div id="host"></div></div></div>
+${pageId ? site.footer(pageId) : ''}
 <div id="log"></div>
 <script src="sample.js"></script>
 <script src="bundle.js"></script>

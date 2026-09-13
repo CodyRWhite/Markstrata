@@ -8,12 +8,12 @@ spacing — this page is rendered by the web part's own pipeline and stylesheets
 so what you see here is what a SharePoint page shows.
 
 > [!TIP] Two things to try
-> **[The kitchen sink](themes/)** renders every feature at once — callouts, code,
-> tables, diagrams, maths — so you can judge a theme at a glance.
+> **[The working demo](demo/)** is the web part itself: toolbar, contents
+> sidebar, copy buttons, the reader theme switcher, and the split editor with
+> its live preview. Type in it.
 >
-> **[The working demo](app/)** is the web part itself: toolbar, contents sidebar,
-> copy buttons, the reader theme switcher, and the split editor with its live
-> preview. Type in it.
+> **[The themes page](themes/)** renders every feature at once — callouts, code,
+> tables, diagrams, maths — so you can judge a theme at a glance.
 
 ## Why it exists
 
@@ -51,11 +51,11 @@ Download the `.sppkg` from the
 upload it to your tenant App Catalog, and add **Markstrata Markdown** to a page.
 Nothing is fetched from a CDN at runtime.
 
-| Where to look | What is there |
-|---|---|
-| [README](https://github.com/CodyRWhite/Markstrata#readme) | Features, configuration, deployment |
-| [THEMES.md](https://github.com/CodyRWhite/Markstrata/blob/main/THEMES.md) | The token contract, and how to add a theme |
-| [CONTRIBUTING.md](https://github.com/CodyRWhite/Markstrata/blob/main/CONTRIBUTING.md) | Branches, commits, releases |
+**[Full documentation →](docs/)** — every setting, the fence flags, the
+callout syntaxes and how to add a theme.
+
+Markstrata Markdown is free and MIT licensed. If it saved you an afternoon,
+[you can buy me a coffee](support/).
 
 ```mermaid
 flowchart LR
