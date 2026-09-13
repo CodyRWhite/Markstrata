@@ -44,5 +44,6 @@ coverage/
 # Harness build output
 harness/dist/
 
-# Docs site build output
-site/
+# Docs site build output. Anchored: an unanchored `site/` also matches
+# docs/site/, where the pages the site is built *from* live.
+/site/
