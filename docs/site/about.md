@@ -6,7 +6,7 @@ actually written in.
 
 ## Why it exists
 
-Plenty of teams keep their documentation in markdown — in a repository, in
+Plenty of teams keep their documentation in markdown: in a repository, in
 Obsidian, in a folder of `.md` files someone syncs to SharePoint. Getting it
 onto an intranet page usually means one of two compromises: paste it in as rich
 text and lose the source, or use a markdown web part and accept how it renders.
@@ -14,7 +14,7 @@ text and lose the source, or use a markdown web part and accept how it renders.
 The existing web parts render, but they are hard to *read*. Code blocks come out
 on a fixed near-black fill whatever the page theme is, with a text shadow and an
 inset glow over the syntax colours. Line numbers are absolutely positioned, so
-they overlap long lines — and they get copied along with the code. Note blocks
+they overlap long lines, and they get copied along with the code. Note blocks
 use saturated fills that fight the text sitting on them. None of it is wrong,
 exactly; it is just tiring to read a page of.
 
@@ -27,7 +27,7 @@ The idea the whole thing rests on is that **a theme is data, not code**. Every
 colour, font, radius and spacing value is a CSS custom property, and a theme is
 a file that sets them. The structural stylesheets never name a colour. That is
 what makes three faithful themes practical rather than three sets of overrides
-fighting each other — and it is enforced: a test fails the build if a theme
+fighting each other, and it is enforced: a test fails the build if a theme
 leaves a token undefined, or if a structural stylesheet hard-codes a hex value.
 
 A few other decisions worth knowing about:
@@ -65,5 +65,5 @@ modelled on; this project is not affiliated with or endorsed by any of them.
 
 ## Licence
 
-MIT. Use it, fork it, ship it inside your organisation — no attribution
+MIT. Use it, fork it, ship it inside your organisation, with no attribution
 required.

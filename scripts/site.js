@@ -100,7 +100,7 @@ function header(currentId) {
 
 function footer(currentId) {
   return `<footer class="site-footer">
-  <p>Markstrata Markdown — a SharePoint web part that renders markdown the way you write it.</p>
+  <p>Markstrata Markdown: a SharePoint web part that renders markdown the way you write it.</p>
   <p>
     <a href="${REPO}">GitHub</a> ·
     <a href="${REPO}/releases/latest">Releases</a> ·

@@ -4,7 +4,7 @@ A SharePoint Framework web part that renders markdown with themes modelled on
 **GitHub**, **Obsidian** and **VS Code**, in light and dark.
 
 Use the controls at the top of this page to change theme, colour mode, width and
-spacing — this page is rendered by the web part's own pipeline and stylesheets,
+spacing. This page is rendered by the web part's own pipeline and stylesheets,
 so what you see here is what a SharePoint page shows.
 
 > [!TIP] Two things to try
@@ -12,15 +12,15 @@ so what you see here is what a SharePoint page shows.
 > sidebar, copy buttons, the reader theme switcher, and the split editor with
 > its live preview. Type in it.
 >
-> **[The themes page](themes/)** renders every feature at once — callouts, code,
-> tables, diagrams, maths — so you can judge a theme at a glance.
+> **[The themes page](themes/)** renders every feature at once (callouts,
+> code, tables, diagrams, maths), so you can judge a theme at a glance.
 
 ## Why it exists
 
 Markdown web parts for SharePoint tend to render code blocks and note blocks
 that are hard to read: a fixed dark code background whatever the page theme, one
 syntax palette baked in, and callouts with harsh fills. This one treats the
-theme as data — every colour, font and shape is a CSS custom property — so the
+theme as data: every colour, font and shape is a CSS custom property, so the
 whole page follows the editor your documentation is actually written in.
 
 ```typescript title="ThemeManager.ts"
@@ -51,7 +51,7 @@ Download the `.sppkg` from the
 upload it to your tenant App Catalog, and add **Markstrata Markdown** to a page.
 Nothing is fetched from a CDN at runtime.
 
-**[Full documentation →](docs/)** — every setting, the fence flags, the
+**[Full documentation →](docs/)**: every setting, the fence flags, the
 callout syntaxes and how to add a theme.
 
 Markstrata Markdown is free and MIT licensed. If it saved you an afternoon,

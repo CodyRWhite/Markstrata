@@ -32,7 +32,7 @@ and a keyboard shortcut like <kbd>Ctrl</kbd> + <kbd>K</kbd>.
 > Advises about risks or negative outcomes of certain actions.
 
 > [!question] Does it support Obsidian's types too?
-> Yes — abstract, todo, success, question, failure, danger, bug, example and quote.
+> Yes: abstract, todo, success, question, failure, danger, bug, example and quote.
 
 > [!bug] Known issue
 > Nested content works: lists, code, even other callouts.

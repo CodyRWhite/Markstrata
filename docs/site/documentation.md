@@ -11,7 +11,7 @@ Download `markstrata-<version>.sppkg` from the
 
 1. Upload it to your tenant **App Catalog** (`/sites/appcatalog`, the *Apps for
    SharePoint* library).
-2. When prompted, choose **Enable this app and add it to all sites** — or leave
+2. When prompted, choose **Enable this app and add it to all sites**, or leave
    it unticked and add it per site from *Site contents → New → App*.
 3. Edit a page, add a web part, and pick **Markstrata Markdown** from the
    **Content** group.
@@ -35,7 +35,7 @@ The **Content** page of the property pane offers three sources.
 | Source | What it does |
 |---|---|
 | **Typed in** | Markdown lives in the web part itself. Good for a page-specific note. |
-| **Library file** | Pick a `.md` file from a document library, with folder browsing. Optionally reload when it changes, and browse its version history — with preview and restore. |
+| **Library file** | Pick a `.md` file from a document library, with folder browsing. Optionally reload when it changes, and browse its version history, with preview and restore. |
 | **URL** | Any address that returns markdown. |
 
 A library file is usually the right answer: the markdown stays in SharePoint
@@ -44,16 +44,16 @@ the page.
 
 ## Appearance
 
-**Theme** — GitHub, Obsidian or VS Code.
+**Theme**: GitHub, Obsidian or VS Code.
 
-**Colour mode** — light, dark, or *follow the page*, which takes its cue from
+**Colour mode**: light, dark, or *follow the page*, which takes its cue from
 the SharePoint site theme so a dark intranet gets a dark web part.
 
-**Let readers switch theme** — adds a control to the rendered page. A reader's
+**Let readers switch theme**: adds a control to the rendered page. A reader's
 choice is remembered per web part in their own browser and never changes what
 anyone else sees.
 
-**Content width, spacing and text size** — independent of theme, so you can run
+**Content width, spacing and text size**: independent of theme, so you can run
 GitHub's look at a narrower measure or a larger size without editing anything.
 
 ## Code blocks
@@ -84,7 +84,7 @@ Any block can override the page setting on its fence:
 
 ## Callouts
 
-Three syntaxes, one rendering — so markdown written for GitHub, for Obsidian or
+Three syntaxes, one rendering, so markdown written for GitHub, for Obsidian or
 for an older SharePoint web part all render correctly without editing.
 
 ```markdown
@@ -126,7 +126,7 @@ Built from the headings, or placed inline with `[[toc]]`. It can sit in a left
 or right column, above the content, or be switched off, and its depth is
 configurable.
 
-It is a column of the layout or a block above the text — never an overlay — so
+It is a column of the layout or a block above the text, never an overlay, so
 it cannot cover the content or the page's own editing controls. In a narrow
 column it collapses to a single line you can expand, and while the page is being
 edited it stops sticking to the top of the screen. The entry for the heading you
@@ -136,7 +136,7 @@ are reading is highlighted as you scroll.
 
 Put the page in edit mode and the web part becomes a split editor: markdown on
 the left, live preview on the right, with **Edit / Split / Preview** layouts. If
-the content came from a library file, **Save to SharePoint** writes it back —
+the content came from a library file, **Save to SharePoint** writes it back,
 warning you first if someone else has saved it since you opened it. `Ctrl+S`
 saves.
 

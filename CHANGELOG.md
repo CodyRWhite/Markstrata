@@ -6,6 +6,8 @@ the same number with a fourth part appended (1.2.0 -> 1.2.0.0), stamped by
 `scripts/set-version.js` when a release is tagged.
 ## Unreleased
 
+- No em dashes in the site's prose, and a test that keeps them out.
+
 - Fixed the solution package being rejected by the App Catalog. SharePoint
   requires the app icon to be exactly 96x96 and refuses the upload otherwise
   ("The height of the app package icon does not meet the required size of '96'

@@ -130,7 +130,7 @@ ${pageId ? site.CHROME_CSS : ''}
 </head>
 <body>
 ${pageId ? site.header(pageId) : ''}
-${pageId ? '<p class="demo-intro">This is the web part itself, running its real renderer classes in this page &mdash; the same code a SharePoint page loads. Use the toolbar, fold a callout, copy a code block, or switch to the editor and type.</p>' : ''}
+${pageId ? '<p class="demo-intro">This is the web part itself, running its real renderer classes in this page, the same code a SharePoint page loads. Use the toolbar, fold a callout, copy a code block, or switch to the editor and type.</p>' : ''}
 <div class="page"><div class="canvas"><div id="host"></div></div></div>
 ${pageId ? site.footer(pageId) : ''}
 <div id="log"></div>

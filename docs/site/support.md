@@ -1,7 +1,7 @@
 # Support this project
 
 Markstrata Markdown is free, MIT licensed, and built in evenings and weekends. It
-will stay free — there is no paid tier, no telemetry and nothing held back.
+will stay free: there is no paid tier, no telemetry and nothing held back.
 
 If it saved you an afternoon, or replaced something you were about to pay for,
 you are very welcome to say thanks.
@@ -11,7 +11,7 @@ you are very welcome to say thanks.
   <a class="support-btn support-btn--sponsor" href="https://github.com/sponsors/CodyRWhite" rel="noopener">💜 Sponsor on GitHub</a>
 </div>
 
-**Buy me a coffee** is the one-off option — a few pounds, no account, done in
+**Buy me a coffee** is the one-off option: a few pounds, no account, done in
 thirty seconds. **GitHub Sponsors** is the recurring one, and it shows up on the
 repository, which quietly helps other people trust the project enough to try it.
 
@@ -21,7 +21,7 @@ Money is genuinely the least useful thing on this list.
 
 > [!TIP] Tell me it broke
 > A precise bug report is worth more than a coffee. The markdown that rendered
-> wrongly, the theme, the browser, and a screenshot — that is usually enough to
+> wrongly, the theme, the browser, and a screenshot. That is usually enough to
 > fix it the same day.
 > **[Open an issue →](https://github.com/CodyRWhite/Markstrata/issues/new)**
 
@@ -36,7 +36,7 @@ Money is genuinely the least useful thing on this list.
 
 > [!TIP] Send a pull request
 > Themes especially. A theme is one CSS file setting a documented list of
-> tokens, and the build fails if one is missing — so it is a genuinely small
+> tokens, and the build fails if one is missing, so it is a genuinely small
 > contribution to make.
 > **[CONTRIBUTING.md →](https://github.com/CodyRWhite/Markstrata/blob/main/CONTRIBUTING.md)**
 
@@ -48,4 +48,4 @@ your own tenant. There is no company. It buys the odd domain renewal, and it
 buys the thing that is actually scarce, which is the motivation to keep fixing
 small irritations in a documentation renderer on a Sunday.
 
-Thank you for reading this far — that already counts for something.
+Thank you for reading this far; that already counts for something.
