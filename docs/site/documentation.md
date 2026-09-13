@@ -6,7 +6,7 @@ Everything the web part does, and how to configure it.
 
 ## Install
 
-Download `markstrata-<version>.sppkg` from the
+Download `markstrata.sppkg` from the
 [latest release](https://github.com/CodyRWhite/Markstrata/releases/latest).
 
 1. Upload it to your tenant **App Catalog** (`/sites/appcatalog`, the *Apps for
@@ -20,6 +20,12 @@ Download `markstrata-<version>.sppkg` from the
 > Upload the newer `.sppkg` over the old one and choose **Replace**. The
 > solution and web part IDs never change between versions, so a tenant sees an
 > upgrade rather than a second app, and pages keep their settings.
+>
+> Every release ships the file under the same name for this reason: the App
+> Catalog matches an upload to the solution it replaces by file name, and a
+> version in the name gets it refused with *"A solution with the same product
+> ID already exists."* The version lives in the release tag and inside the
+> package, which is where SharePoint reads it.
 
 To build the package yourself you need Node.js 22:
 

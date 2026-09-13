@@ -61,14 +61,18 @@ jobs:
       - name: Build the solution package
         run: npm run package
 
-      - name: Name the package with its version
+      # The asset keeps one name for every release. The App Catalog matches an
+      # upload to the solution it replaces by FILE NAME, so a version in the
+      # name means the upload is refused: "A solution with the same product ID
+      # already exists. Please upload the file with the same name and replace
+      # the existing solution." The version is in the tag, the release title,
+      # and inside the package itself, which is where SharePoint reads it.
+      - name: Check the package was built
         id: package
         run: |
-          SOURCE=sharepoint/solution/markstrata.sppkg
-          TARGET=sharepoint/solution/markstrata-${{ steps.version.outputs.version }}.sppkg
-          test -f "$SOURCE"
-          mv "$SOURCE" "$TARGET"
-          echo "path=$TARGET" >> "$GITHUB_OUTPUT"
+          PATH_TO_PACKAGE=sharepoint/solution/markstrata.sppkg
+          test -f "$PATH_TO_PACKAGE"
+          echo "path=$PATH_TO_PACKAGE" >> "$GITHUB_OUTPUT"
 
       - name: Publish the release
         env:

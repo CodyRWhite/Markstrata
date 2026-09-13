@@ -6,7 +6,12 @@ the same number with a fourth part appended (1.2.0 -> 1.2.0.0), stamped by
 `scripts/set-version.js` when a release is tagged.
 ## Unreleased
 
-Nothing yet.
+- Released packages keep one file name, `markstrata.sppkg`, instead of
+  carrying the version. The App Catalog matches an upload to the solution it
+  replaces by file name, so a versioned name was refused with "A solution with
+  the same product ID already exists. Please upload the file with the same name
+  and replace the existing solution." The version is still in the tag, the
+  release title and the package itself, which is where SharePoint reads it.
 
 ## 1.0.2
 

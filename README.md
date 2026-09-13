@@ -134,7 +134,10 @@ it per site), then add **Markstrata Markdown** to a page from the Content group 
 the web part picker.
 
 Once a version is tagged, the same `.sppkg` is attached to the
-[latest release](../../releases/latest) and you can skip the build.
+[latest release](../../releases/latest) and you can skip the build. Every
+release ships it under the same name, `markstrata.sppkg`: the App Catalog
+matches an upload to the solution it replaces by file name, so a version in the
+name gets the upload refused. The version is in the tag and inside the package.
 
 For local development against the hosted workbench:
 
