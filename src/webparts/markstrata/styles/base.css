@@ -42,6 +42,11 @@
      rather than written in em, because an em inside an h1 resolves against
      the heading and the gutter would no longer match the anchor. */
   --ink-anchor-gutter: calc(var(--ink-font-size) * var(--ink-font-scale) * 1.35);
+  /* Breathing room at the top and bottom of the web part. SharePoint gives its
+     own web parts a generous amount, and without it the first heading sits
+     almost on the edge of the panel. Follows the spacing setting, so compact
+     gets less of it than relaxed. */
+  --ink-root-padding-block: calc(26px * var(--ink-density-scale));
 
   /* Code defaults that themes rarely need to change. */
   --ink-code-font-size: 0.875em;
@@ -75,6 +80,7 @@
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
   overflow-wrap: break-word;
+  padding-block: var(--ink-root-padding-block);
 }
 
 .ink-root *,
@@ -94,7 +100,6 @@
      full-width web part does not read as part of the page. */
   justify-content: center;
   gap: 32px;
-  padding: 4px 0 8px;
 }
 
 /* The contents sidebar is a column of the flex row, never an overlay: it

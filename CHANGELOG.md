@@ -6,7 +6,10 @@ the same number with a fourth part appended (1.2.0 -> 1.2.0.0), stamped by
 `scripts/set-version.js` when a release is tagged.
 ## Unreleased
 
-Nothing yet.
+- Room at the top and bottom of the web part. The first heading sat almost on
+  the edge of the panel, which reads as cramped next to the spacing SharePoint
+  gives its own web parts. It follows the spacing setting, so compact gets 23px
+  and relaxed 29px rather than one fixed value.
 
 ## 1.0.4
 
