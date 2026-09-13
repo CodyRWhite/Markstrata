@@ -6,6 +6,10 @@ the same number with a fourth part appended (1.2.0 -> 1.2.0.0), stamped by
 `scripts/set-version.js` when a release is tagged.
 ## Unreleased
 
+Nothing yet.
+
+## 1.0.4
+
 - The web part has a tile of its own: a markdown document open in an editor, at
   an angle, in VS Code's Dark+ palette. SharePoint shows it in the toolbox and
   on the full-page apps picker, where the alternatives were a Fluent glyph and a
