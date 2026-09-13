@@ -6,6 +6,10 @@ the same number with a fourth part appended (1.2.0 -> 1.2.0.0), stamped by
 `scripts/set-version.js` when a release is tagged.
 ## Unreleased
 
+Nothing yet.
+
+## 1.0.2
+
 - Fixed dark mode showing as dark text on a white background once a page was
   published, while edit mode looked right. The themed root was the web part's
   own element, which SharePoint also styles when `supportsThemeVariants` is on;
@@ -25,12 +29,6 @@ the same number with a fourth part appended (1.2.0 -> 1.2.0.0), stamped by
 
 - No em dashes in the site's prose, and a test that keeps them out.
 
-- Fixed the solution package being rejected by the App Catalog. SharePoint
-  requires the app icon to be exactly 96x96 and refuses the upload otherwise
-  ("The height of the app package icon does not meet the required size of '96'
-  pixels"); the tile had been copied from the 192px icon. `npm run brand` now
-  generates it at the right size, and a test asserts it, since the only other
-  thing that checks is a tenant rejecting the upload.
 
 - The documentation site has pages: home, demo, themes, documentation, about and
   support, with a shared header and footer. The pages, their order and the
@@ -46,6 +44,15 @@ the same number with a fourth part appended (1.2.0 -> 1.2.0.0), stamped by
   value aligns horizontally and shrink-wrapped the content column to its widest
   line, pushing it outside the web part. At 400px the content column came out
   748px wide.
+
+## 1.0.1
+
+- Fixed the solution package being rejected by the App Catalog. SharePoint
+  requires the app icon to be exactly 96x96 and refuses the upload otherwise
+  ("The height of the app package icon does not meet the required size of '96'
+  pixels"); the tile had been copied from the 192px icon. `npm run brand` now
+  generates it at the right size, and a test asserts it, since the only other
+  thing that checks is a tenant rejecting the upload.
 
 ## 1.0.0
 
