@@ -29,6 +29,16 @@ const GENERATED = [
 const read = (file) => fs.readFileSync(path.join(ASSETS, file), 'utf8');
 const svgs = GENERATED.filter((file) => file.endsWith('.svg'));
 
+/* A PNG's dimensions are in the IHDR chunk, at a fixed offset - enough to
+ * check a size without pulling in an image library. */
+function pngSize(file) {
+  const buf = fs.readFileSync(file);
+  if (buf.toString('ascii', 1, 4) !== 'PNG') {
+    throw new Error(`${file} is not a PNG`);
+  }
+  return { width: buf.readUInt32BE(16), height: buf.readUInt32BE(20) };
+}
+
 test('the logo master is present', () => {
   assert.ok(fs.existsSync(path.join(ASSETS, 'mark.svg')),
     'assets/mark.svg is the source every other asset is cut from');
@@ -77,5 +87,31 @@ test('brand.md documents every generated file', () => {
   for (const file of GENERATED) {
     const name = file.startsWith('icons/') ? 'icons/*.png' : file;
     assert.ok(guide.includes(name), `assets/brand.md does not mention ${name}`);
+  }
+});
+
+/*
+ * SharePoint validates the app catalog tile and refuses the whole package if it
+ * is the wrong size: "The height of the app package icon does not meet the
+ * required size of '96' pixels". Nothing else in the build catches that, and
+ * the only other place it shows up is an upload failing in a tenant.
+ */
+test('the app catalog tile is exactly 96x96', () => {
+  const icon = path.join(__dirname, '..', 'sharepoint', 'assets', 'icon.png');
+  assert.ok(fs.existsSync(icon), 'sharepoint/assets/icon.png is missing');
+  assert.deepEqual(pngSize(icon), { width: 96, height: 96 });
+});
+
+test('the solution points at that tile', () => {
+  const solution = JSON.parse(
+    fs.readFileSync(path.join(__dirname, '..', 'config', 'package-solution.json'), 'utf8')
+  );
+  assert.equal(solution.solution.iconPath, 'assets/icon.png');
+});
+
+test('the icon PNGs are the sizes their names claim', () => {
+  for (const file of GENERATED.filter((name) => /icons\/.*-(\d+)\.png$/.test(name))) {
+    const expected = Number(/-(\d+)\.png$/.exec(file)[1]);
+    assert.deepEqual(pngSize(path.join(ASSETS, file)), { width: expected, height: expected }, file);
   }
 });

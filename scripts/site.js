@@ -14,7 +14,7 @@
  * repository page - keep the two in step.
  */
 const COFFEE_HANDLE = 'codyrwhite';
-const COFFEE_URL = `https://www.buymeacoffee.com/${COFFEE_HANDLE}`;
+const COFFEE_URL = `https://buymeacoffee.com/${COFFEE_HANDLE}`;
 const SPONSORS_USER = 'CodyRWhite';
 const SPONSORS_URL = `https://github.com/sponsors/${SPONSORS_USER}`;
 

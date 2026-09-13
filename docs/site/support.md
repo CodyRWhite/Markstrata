@@ -7,7 +7,7 @@ If it saved you an afternoon, or replaced something you were about to pay for,
 you are very welcome to say thanks.
 
 <div class="support-buttons">
-  <a class="support-btn support-btn--coffee" href="https://www.buymeacoffee.com/codyrwhite" rel="noopener">☕ Buy me a coffee</a>
+  <a class="support-btn support-btn--coffee" href="https://buymeacoffee.com/codyrwhite" rel="noopener">☕ Buy me a coffee</a>
   <a class="support-btn support-btn--sponsor" href="https://github.com/sponsors/CodyRWhite" rel="noopener">💜 Sponsor on GitHub</a>
 </div>
 

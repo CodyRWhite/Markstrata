@@ -6,6 +6,13 @@ the same number with a fourth part appended (1.2.0 -> 1.2.0.0), stamped by
 `scripts/set-version.js` when a release is tagged.
 ## Unreleased
 
+- Fixed the solution package being rejected by the App Catalog. SharePoint
+  requires the app icon to be exactly 96x96 and refuses the upload otherwise
+  ("The height of the app package icon does not meet the required size of '96'
+  pixels"); the tile had been copied from the 192px icon. `npm run brand` now
+  generates it at the right size, and a test asserts it, since the only other
+  thing that checks is a tenant rejecting the upload.
+
 - The documentation site has pages: home, demo, themes, documentation, about and
   support, with a shared header and footer. The pages, their order and the
   navigation between them are declared once in `scripts/site.js`, so adding one

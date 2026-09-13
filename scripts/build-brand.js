@@ -60,6 +60,20 @@ const PNGS = [
   { file: 'icons/apple-touch-icon.png', size: 180, pad: 0.14, source: 'mark.svg', background: '#ffffff' }
 ];
 
+/*
+ * The app catalog tile, which lives with the solution rather than the brand
+ * assets. SharePoint validates the size and rejects the package outright if it
+ * is not exactly this - "The height of the app package icon does not meet the
+ * required size of '96' pixels" - so it is generated rather than copied from
+ * whichever icon happened to be nearest.
+ */
+const APP_CATALOG_ICON = {
+  file: path.join(root, 'sharepoint', 'assets', 'icon.png'),
+  size: 96,
+  pad: 0.06,
+  source: 'mark.svg'
+};
+
 function trim(value) {
   return Number(value.toFixed(2)).toString();
 }
@@ -198,7 +212,7 @@ async function rasterise(page, { file, size, pad, source, background }) {
     + `background:${background || 'transparent'};display:flex;align-items:center;justify-content:center">`
     + `<img src="${uri}" style="width:${size - inset * 2}px;height:${size - inset * 2}px"></body>`);
   await page.waitForFunction(() => [...document.images].every((i) => i.complete && i.naturalWidth));
-  const dest = path.join(outDir, file);
+  const dest = path.isAbsolute(file) ? file : path.join(outDir, file);
   fs.mkdirSync(path.dirname(dest), { recursive: true });
   await page.screenshot({ path: dest, omitBackground: !background });
   return dest;
@@ -254,9 +268,10 @@ async function build() {
       console.log(name.padEnd(22), String(markup.length).padStart(6), 'bytes');
     }
 
-    for (const spec of PNGS) {
+    for (const spec of PNGS.concat(APP_CATALOG_ICON)) {
       const dest = await rasterise(page, spec);
-      console.log(spec.file.padEnd(22), String(fs.statSync(dest).size).padStart(6), 'bytes');
+      const label = path.isAbsolute(spec.file) ? path.relative(root, dest) : spec.file;
+      console.log(`${label} (${spec.size}px)`.padEnd(34), String(fs.statSync(dest).size).padStart(6), 'bytes');
     }
 
     /* Social preview, at the 1.91:1 GitHub, Slack and Teams all crop to. */
