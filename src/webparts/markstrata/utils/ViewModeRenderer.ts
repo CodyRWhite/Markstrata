@@ -53,7 +53,7 @@ export class ViewModeRenderer {
   private enhancer: ContentEnhancer;
   private callbacks: IViewCallbacks;
   /** Ids have to be unique across the whole page, not just this web part. */
-  private readonly uid: string = `ink-${Math.random().toString(36).substring(2, 8)}`;
+  private readonly uid: string = `strata-${Math.random().toString(36).substring(2, 8)}`;
 
   constructor(
     processor: MarkdownProcessor,
@@ -70,24 +70,24 @@ export class ViewModeRenderer {
   public render(container: HTMLElement, markdown: string, options: IViewOptions): void {
     this.enhancer.stopTracking();
     const host: HTMLElement = ThemeManager.mount(container, options.settings, options.resolvedMode);
-    host.setAttribute('data-ink-editing', String(options.isPageEditing));
+    host.setAttribute('data-strata-editing', String(options.isPageEditing));
 
     if (options.showToolbar) {
       host.appendChild(this.buildToolbar(options));
     }
 
     const layout: HTMLElement = document.createElement('div');
-    layout.className = 'ink-layout';
+    layout.className = 'strata-layout';
     if (options.tocPosition === 'left' || options.tocPosition === 'right') {
-      layout.setAttribute('data-ink-toc', options.tocPosition);
+      layout.setAttribute('data-strata-toc', options.tocPosition);
     }
 
     const article: HTMLElement = document.createElement('article');
-    article.className = 'ink-content';
+    article.className = 'strata-content';
 
     if (!markdown || markdown.trim().length === 0) {
       const empty: HTMLElement = document.createElement('div');
-      empty.className = 'ink-empty';
+      empty.className = 'strata-empty';
       empty.textContent = 'No markdown to show yet. Edit this web part to pick a file or type some content.';
       article.appendChild(empty);
     } else {
@@ -130,14 +130,14 @@ export class ViewModeRenderer {
     }
 
     const panel: HTMLDetailsElement = document.createElement('details');
-    panel.className = options.tocPosition === 'inline' ? 'ink-toc-inline' : 'ink-toc-sidebar';
+    panel.className = options.tocPosition === 'inline' ? 'strata-toc-inline' : 'strata-toc-sidebar';
 
     // Collapsed to start with only where it would otherwise crowd the text.
     const width: number = host.clientWidth || 0;
     panel.open = options.tocPosition === 'inline' || width === 0 || width > NARROW_WIDTH;
 
     const summary: HTMLElement = document.createElement('summary');
-    summary.className = 'ink-toc-heading';
+    summary.className = 'strata-toc-heading';
     summary.textContent = 'On this page';
     panel.appendChild(summary);
     panel.appendChild(nav);
@@ -153,14 +153,14 @@ export class ViewModeRenderer {
 
   private buildToolbar(options: IViewOptions): HTMLElement {
     const toolbar: HTMLElement = document.createElement('div');
-    toolbar.className = 'ink-toolbar';
+    toolbar.className = 'strata-toolbar';
 
     if (options.showThemeSwitcher) {
       toolbar.appendChild(this.buildThemeSwitcher(options));
     }
 
     const spacer: HTMLElement = document.createElement('div');
-    spacer.className = 'ink-toolbar-spacer';
+    spacer.className = 'strata-toolbar-spacer';
     toolbar.appendChild(spacer);
 
     if (options.canReload) {
@@ -183,7 +183,7 @@ export class ViewModeRenderer {
   /** Reader-side override of the author's theme choice. */
   private buildThemeSwitcher(options: IViewOptions): HTMLElement {
     const wrapper: HTMLElement = document.createElement('div');
-    wrapper.className = 'ink-switcher';
+    wrapper.className = 'strata-switcher';
 
     const label: HTMLLabelElement = document.createElement('label');
     label.textContent = 'Theme';
@@ -191,7 +191,7 @@ export class ViewModeRenderer {
     wrapper.appendChild(label);
 
     const select: HTMLSelectElement = document.createElement('select');
-    select.className = 'ink-select';
+    select.className = 'strata-select';
     select.id = `${this.uid}-theme`;
     THEME_FAMILIES.forEach((choice: IThemeChoice) => {
       const option: HTMLOptionElement = document.createElement('option');
@@ -221,7 +221,7 @@ export class ViewModeRenderer {
 
   private buildSourceInfo(metadata: IFileMetadata): HTMLElement {
     const info: HTMLElement = document.createElement('div');
-    info.className = 'ink-meta';
+    info.className = 'strata-meta';
 
     const name: HTMLElement = document.createElement('span');
     name.textContent = metadata.name;
@@ -245,7 +245,7 @@ export class ViewModeRenderer {
   private button(text: string, title: string, onClick: () => void): HTMLButtonElement {
     const button: HTMLButtonElement = document.createElement('button');
     button.type = 'button';
-    button.className = 'ink-btn';
+    button.className = 'strata-btn';
     button.textContent = text;
     button.title = title;
     button.addEventListener('click', onClick);

@@ -28,5 +28,5 @@ function section() {
 const notes = section();
 process.stdout.write(
   notes ||
-    `Markstrata Markdown ${version}.\n\nDownload the .sppkg below and upload it to your tenant App Catalog.`
+    `Markstrata ${version}.\n\nDownload the .sppkg below and upload it to your tenant App Catalog.`
 );

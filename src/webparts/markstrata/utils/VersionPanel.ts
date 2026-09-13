@@ -37,27 +37,27 @@ export class VersionPanel {
     this.close();
 
     const panel: HTMLElement = document.createElement('div');
-    panel.className = 'ink-panel';
+    panel.className = 'strata-panel';
 
     const head: HTMLElement = document.createElement('div');
-    head.className = 'ink-panel-head';
+    head.className = 'strata-panel-head';
     head.appendChild(this.text('span', 'Version history'));
 
     const spacer: HTMLElement = document.createElement('div');
-    spacer.className = 'ink-toolbar-spacer';
+    spacer.className = 'strata-toolbar-spacer';
     head.appendChild(spacer);
 
     const close: HTMLButtonElement = document.createElement('button');
     close.type = 'button';
-    close.className = 'ink-btn';
+    close.className = 'strata-btn';
     close.textContent = 'Close';
     close.addEventListener('click', () => this.close());
     head.appendChild(close);
 
     const body: HTMLElement = document.createElement('div');
-    body.appendChild(this.text('div', 'Loading versions...', 'ink-version'));
+    body.appendChild(this.text('div', 'Loading versions...', 'strata-version'));
 
-    body.className = 'ink-panel-body';
+    body.className = 'strata-panel-body';
     panel.appendChild(head);
     panel.appendChild(body);
     host.insertBefore(panel, host.firstChild);
@@ -70,10 +70,10 @@ export class VersionPanel {
     }
 
     const list: HTMLElement = document.createElement('div');
-    list.className = 'ink-panel-body';
+    list.className = 'strata-panel-body';
     if (versions.length === 0) {
       list.appendChild(
-        this.text('div', 'No previous versions. Versioning may be switched off for this library.', 'ink-version')
+        this.text('div', 'No previous versions. Versioning may be switched off for this library.', 'strata-version')
       );
     } else {
       versions.forEach((version: IVersionInfo) => list.appendChild(this.buildRow(version, fileUrl)));
@@ -84,15 +84,15 @@ export class VersionPanel {
 
   private buildRow(version: IVersionInfo, fileUrl: string): HTMLElement {
     const row: HTMLElement = document.createElement('div');
-    row.className = 'ink-version';
+    row.className = 'strata-version';
 
-    row.appendChild(this.text('span', version.versionLabel, 'ink-version-label'));
+    row.appendChild(this.text('span', version.versionLabel, 'strata-version-label'));
 
     const created: string = version.created ? new Date(version.created).toLocaleString() : '';
-    row.appendChild(this.text('span', `${created} - ${version.createdBy}`, 'ink-version-meta'));
+    row.appendChild(this.text('span', `${created} - ${version.createdBy}`, 'strata-version-meta'));
 
     if (version.isCurrentVersion) {
-      row.appendChild(this.text('span', 'Current', 'ink-version-current'));
+      row.appendChild(this.text('span', 'Current', 'strata-version-current'));
       return row;
     }
 
@@ -122,7 +122,7 @@ export class VersionPanel {
   private button(label: string, action: () => Promise<void>): HTMLButtonElement {
     const button: HTMLButtonElement = document.createElement('button');
     button.type = 'button';
-    button.className = 'ink-btn';
+    button.className = 'strata-btn';
     button.textContent = label;
     button.addEventListener('click', () => {
       button.disabled = true;

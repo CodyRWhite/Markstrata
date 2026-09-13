@@ -1,15 +1,16 @@
 /*
- * Builds the brand asset set from the logo master.
+ * Puts the brand package to work.
  *
- *   node scripts/build-brand.js [master.svg] [--out <directory>]
+ *   node scripts/build-brand.js
  *
- * The master (assets/mark.svg) is one artboard: the drop mark above the
- * MARKSTRATA / MARKDOWN lockup. Everything published - the mark on its own, the
- * wordmark on its own, the dark and single-colour variants, the icon PNGs and
- * the social card - is cut from that one file here, so no asset can drift away
- * from the artwork it came from. Re-run it after changing the master.
+ * assets/markstrata-brand-v1/ is the delivered brand system and is never
+ * edited here: the icons, lockups and tokens in it are the masters. This script
+ * only does the things the repository needs that the package does not already
+ * contain - it copies the right file into each place the build expects, and
+ * renders the two composites (the social card and the web part tile) that are
+ * made from brand artwork rather than shipped with it.
  *
- * Needs Playwright, which measures the real geometry and rasterises the PNGs:
+ * Needs Playwright, for the composites:
  *   npm install --no-save playwright && npx playwright install chromium
  */
 const fs = require('fs');
@@ -25,232 +26,65 @@ try {
 }
 
 const root = path.join(__dirname, '..');
-const args = process.argv.slice(2);
-const outIndex = args.indexOf('--out');
-const master = path.resolve(args.find((a, i) => a.indexOf('--') !== 0 && args[i - 1] !== '--out') || path.join(root, 'assets', 'mark.svg'));
-const outDir = path.resolve(outIndex === -1 ? path.join(root, 'assets') : args[outIndex + 1]);
+const BRAND = path.join(root, 'assets', 'markstrata-brand-v1');
+const assets = path.join(root, 'assets');
 
-/* The palette, taken from the master's own fills. */
-const NAVY = '#013463';
-const CYAN = '#36a7ca';
-const SLATE = '#a7bcd0';
 /*
- * Navy sits at about 1.4:1 on a dark surface, well under the 3:1 a graphic
- * needs to stay legible, so the dark variants lift it and lighten the fold to
- * match. Cyan already clears 4.5:1 either way and is left alone.
+ * Where each delivered file is needed. The brand guide names a specific icon
+ * for each size band - the 16px one drops a stratum, the 32px one thickens the
+ * weights - so these pick the drawn file rather than downscaling the master.
  */
-const NAVY_DARK = '#2f7fc4';
-const SLATE_DARK = '#c3d4e4';
-
-const LIGHT = { [NAVY]: NAVY, [SLATE]: SLATE, [CYAN]: CYAN };
-const DARK = { [NAVY]: NAVY_DARK, [SLATE]: SLATE_DARK, [CYAN]: CYAN };
-/* A single-colour mark inherits `color` from whatever it is placed in. */
-const MONO = { [NAVY]: 'currentColor', [SLATE]: 'currentColor', [CYAN]: 'currentColor' };
-
-/* Rows further apart than this belong to different parts of the lockup. */
-const ROW_GAP = 100;
-
-const PNGS = [
-  /* Tabs crop tightly, so the favicons run nearly edge to edge. */
-  { file: 'icons/favicon-16.png', size: 16, pad: 0.02, source: 'mark-small.svg' },
-  { file: 'icons/favicon-32.png', size: 32, pad: 0.02, source: 'mark-small.svg' },
-  { file: 'icons/favicon-48.png', size: 48, pad: 0.02, source: 'mark-small.svg' },
-  { file: 'icons/icon-192.png', size: 192, pad: 0.06, source: 'mark.svg' },
-  { file: 'icons/icon-512.png', size: 512, pad: 0.06, source: 'mark.svg' },
-  /* iOS fills transparency with black, so this one carries its own plate. */
-  { file: 'icons/apple-touch-icon.png', size: 180, pad: 0.14, source: 'mark.svg', background: '#ffffff' }
+const COPIES = [
+  ['export/markstrata-icon-16.png', 'icons/favicon-16.png'],
+  ['export/markstrata-icon-32.png', 'icons/favicon-32.png'],
+  ['export/markstrata-icon-48.png', 'icons/favicon-48.png'],
+  ['export/markstrata-icon-180.png', 'icons/apple-touch-icon.png'],
+  ['export/markstrata-icon-192.png', 'icons/icon-192.png'],
+  ['export/markstrata-icon-512.png', 'icons/icon-512.png'],
+  ['lockup/markstrata-lockup-horizontal.svg', 'lockup-horizontal.svg'],
+  ['lockup/markstrata-lockup-horizontal-reversed.svg', 'lockup-horizontal-dark.svg'],
+  ['lockup/markstrata-lockup-stacked.svg', 'lockup.svg'],
+  ['lockup/markstrata-lockup-tagline.svg', 'lockup-tagline.svg'],
+  ['icon/markstrata-glyph.svg', 'mark.svg'],
+  ['icon/markstrata-glyph-mono-light.svg', 'mark-mono-light.svg'],
+  ['icon/markstrata-glyph-mono-dark.svg', 'mark-mono-dark.svg'],
+  ['icon/markstrata-icon-16.svg', 'mark-small.svg']
 ];
 
 /*
- * The app catalog tile, which lives with the solution rather than the brand
- * assets. SharePoint validates the size and rejects the package outright if it
- * is not exactly this - "The height of the app package icon does not meet the
- * required size of '96' pixels" - so it is generated rather than copied from
- * whichever icon happened to be nearest.
+ * The app catalog tile. SharePoint validates it and refuses the package if it
+ * is not exactly 96x96 - "The height of the app package icon does not meet the
+ * required size of '96' pixels" - and the brand package draws one at that size.
  */
-const APP_CATALOG_ICON = {
-  file: path.join(root, 'sharepoint', 'assets', 'icon.png'),
-  size: 96,
-  pad: 0.06,
-  source: 'mark.svg'
-};
+const APP_CATALOG_ICON = ['export/markstrata-icon-96.png',
+  path.join(root, 'sharepoint', 'assets', 'icon.png')];
 
-function trim(value) {
-  return Number(value.toFixed(2)).toString();
-}
+/* The manifest icon, as the brand guide supplies it: an SVG data URI. */
+const MANIFEST_ICON = 'export/spfx-iconImageUrl.txt';
 
-function dataUri(file) {
-  return 'data:image/svg+xml;base64,' + fs.readFileSync(file).toString('base64');
-}
-
-/*
- * Reads every shape out of the master: its path data, the fill that actually
- * paints it, and where it sits. The master carries stale `fill` attributes
- * from an earlier colourway that a `style` overrides, so the style wins here
- * the same way it wins in a browser.
- */
-async function readMaster(page, file) {
-  await page.setContent('<body style="margin:0">'
-    + fs.readFileSync(file, 'utf8').replace(/<\?xml[^>]*\?>/, '')
-    + '</body>');
-  return page.evaluate(() => {
-    const svg = document.querySelector('svg');
-    const hex = (value) => {
-      const rgb = value.match(/^rgba?\(([^)]+)\)$/);
-      if (!rgb) { return value.trim(); }
-      const parts = rgb[1].split(/[,\s/]+/).slice(0, 3).map(Number);
-      return '#' + parts.map((n) => n.toString(16).padStart(2, '0')).join('');
-    };
-    const shapes = [...svg.querySelectorAll('path')].map((el) => {
-      const style = el.getAttribute('style') || '';
-      const styled = /fill:\s*([^;]+)/.exec(style);
-      const box = el.getBBox();
-      return {
-        d: el.getAttribute('d'),
-        fill: hex((styled ? styled[1] : el.getAttribute('fill') || '').trim()),
-        x: box.x, y: box.y, width: box.width, height: box.height
-      };
-    });
-    const defs = svg.querySelector('defs');
-    return { shapes, defs: defs ? defs.outerHTML : '' };
+function copyDelivered() {
+  COPIES.forEach(([from, to]) => {
+    const dest = path.join(assets, to);
+    fs.mkdirSync(path.dirname(dest), { recursive: true });
+    fs.copyFileSync(path.join(BRAND, from), dest);
   });
-}
-
-/*
- * Splits the artboard into its stacked rows - the mark, then the lines of the
- * wordmark - by looking for vertical gaps no shape crosses.
- */
-function rows(shapes) {
-  const sorted = [...shapes].sort((a, b) => a.y - b.y);
-  const out = [];
-  let current = [];
-  let bottom = -Infinity;
-  for (const shape of sorted) {
-    if (current.length && shape.y - bottom > ROW_GAP) {
-      out.push(current);
-      current = [];
-    }
-    current.push(shape);
-    bottom = Math.max(bottom, shape.y + shape.height);
-  }
-  if (current.length) { out.push(current); }
-  return out;
-}
-
-function bounds(shapes) {
-  return {
-    x: Math.min(...shapes.map((s) => s.x)),
-    y: Math.min(...shapes.map((s) => s.y)),
-    right: Math.max(...shapes.map((s) => s.x + s.width)),
-    bottom: Math.max(...shapes.map((s) => s.y + s.height))
-  };
-}
-
-/*
- * One asset: the given shapes, recoloured, cropped by the viewBox. Path data
- * keeps the master's coordinates, so a shape is never rewritten to be reused;
- * a `transform` on the wrapping group is what moves a piece somewhere else.
- */
-function paint(shapes, palette, gradients) {
-  return shapes
-    .map((shape) => {
-      if (shape.fill.startsWith('url(')) {
-        /* Gradients are lighting details; a single-colour asset has no use
-         * for one, and dropping it takes the <defs> with it. */
-        return gradients ? `<path fill="${shape.fill}" d="${shape.d}"/>` : '';
-      }
-      const fill = palette[shape.fill];
-      if (fill === undefined) {
-        throw new Error(`no colour mapped for ${shape.fill}`);
-      }
-      return `<path fill="${fill}" d="${shape.d}"/>`;
-    })
-    .join('');
-}
-
-function svg(viewBox, body, defs) {
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${viewBox.map(trim).join(' ')}"`
-    + ` role="img" aria-label="Markstrata Markdown">${body.includes('url(#') ? defs : ''}${body}</svg>\n`;
-}
-
-function compose(shapes, palette, defs, gradients = true) {
-  const painted = paint(shapes, palette, gradients);
-  const box = bounds(shapes);
-  return svg([box.x, box.y, box.right - box.x, box.bottom - box.y], painted, defs);
-}
-
-/*
- * The horizontal lockup: the mark to the left of the type, sized so the two
- * read as one unit. It is laid out here rather than in the master because the
- * master stacks them, and a nav bar has height to spare but not width.
- */
-const MARK_TO_TYPE = 1.5;   /* mark height, as a multiple of the type block's */
-const GAP = 0.25;           /* space between them, as a share of the mark's width */
-
-function composeHorizontal(mark, wordmark, palette, defs, gradients = true) {
-  const markBox = bounds(mark);
-  const typeBox = bounds(wordmark);
-  const typeHeight = typeBox.bottom - typeBox.y;
-  const scale = (typeHeight * MARK_TO_TYPE) / (markBox.bottom - markBox.y);
-  const markWidth = (markBox.right - markBox.x) * scale;
-  const height = typeHeight * MARK_TO_TYPE;
-  const gap = markWidth * GAP;
-
-  const place = (shapes, dx, dy, s) =>
-    `<g transform="translate(${trim(dx)},${trim(dy)}) scale(${trim(s)})">`
-    + paint(shapes, palette, gradients) + '</g>';
-
-  const body = place(mark, -markBox.x * scale, -markBox.y * scale, scale)
-    + place(wordmark, markWidth + gap - typeBox.x, (height - typeHeight) / 2 - typeBox.y, 1);
-  return svg([0, 0, markWidth + gap + (typeBox.right - typeBox.x), height], body, defs);
-}
-
-async function rasterise(page, { file, size, pad, source, background }) {
-  const inset = Math.round(size * pad);
-  const uri = dataUri(path.join(outDir, source));
-  await page.setViewportSize({ width: size, height: size });
-  await page.setContent(`<body style="margin:0;width:${size}px;height:${size}px;`
-    + `background:${background || 'transparent'};display:flex;align-items:center;justify-content:center">`
-    + `<img src="${uri}" style="width:${size - inset * 2}px;height:${size - inset * 2}px"></body>`);
-  await page.waitForFunction(() => [...document.images].every((i) => i.complete && i.naturalWidth));
-  const dest = path.isAbsolute(file) ? file : path.join(outDir, file);
+  const [from, dest] = APP_CATALOG_ICON;
   fs.mkdirSync(path.dirname(dest), { recursive: true });
-  await page.screenshot({ path: dest, omitBackground: !background });
-  return dest;
+  fs.copyFileSync(path.join(BRAND, from), dest);
+  console.log(`copied ${COPIES.length + 1} files out of the brand package`);
 }
 
 /*
- * Renders the tile above its final size and scales it down: the perspective
- * transform resamples the text, so the extra pixels are what keep the
- * receding edge tight rather than mushy.
- *
- * JPEG, not PNG. The image is photographic - gradients, a glow, antialiased
- * type at an angle - and it has to survive as a data URI inside the manifest:
- * 14 KB as JPEG against 90 KB as PNG.
+ * Writes the manifest's icon. The brand package supplies the data URI, so this
+ * copies it rather than encoding one: the SVG is 691 characters against 16 KB
+ * for a raster of the same mark, and it rides along in every page that loads
+ * the web part.
  */
-async function renderTile(page) {
-  const { WIDTH, HEIGHT, SUPERSAMPLE } = tile;
-  const dest = path.join(outDir, 'webpart-tile.jpg');
-  await page.setViewportSize({ width: WIDTH, height: HEIGHT });
-  await page.emulateMedia({ reducedMotion: 'reduce' });
-  await page.setContent('<body>' + tile.tileHtml(dataUri(path.join(outDir, 'mark-dark.svg'))) + '</body>');
-  await page.waitForFunction(() => [...document.images].every((i) => i.complete && i.naturalWidth));
-  await page.screenshot({ path: dest, type: 'jpeg', quality: 82, scale: 'css' });
-  console.log('webpart-tile.jpg'.padEnd(34), String(fs.statSync(dest).size).padStart(6), 'bytes');
-  return dest;
-}
-
-/*
- * Writes the tile into the web part manifest. It is generated rather than
- * pasted for the same reason the tile itself is: a hand-copied image is one
- * that quietly stops matching.
- */
-function stampManifestIcon(iconFile) {
+function stampManifestIcon() {
   const manifest = path.join(root, 'src', 'webparts', 'markstrata',
     'MarkstrataWebPart.manifest.json');
   const json = JSON.parse(fs.readFileSync(manifest, 'utf8'));
-  const type = iconFile.endsWith('.jpg') ? 'jpeg' : 'png';
-  const uri = `data:image/${type};base64,` + fs.readFileSync(iconFile).toString('base64');
+  const uri = fs.readFileSync(path.join(BRAND, MANIFEST_ICON), 'utf8').trim();
   let changed = false;
   json.preconfiguredEntries.forEach((entry) => {
     if (entry.iconImageUrl !== uri) {
@@ -261,88 +95,56 @@ function stampManifestIcon(iconFile) {
   if (changed) {
     fs.writeFileSync(manifest, JSON.stringify(json, null, 2) + '\n');
   }
-  console.log('manifest iconImageUrl'.padEnd(34), String(uri.length).padStart(6), 'chars',
+  console.log('manifest iconImageUrl'.padEnd(30), String(uri.length).padStart(6), 'chars',
     changed ? '(updated)' : '(unchanged)');
 }
 
+function dataUri(file) {
+  const type = file.endsWith('.svg') ? 'svg+xml' : path.extname(file).slice(1);
+  return `data:image/${type};base64,` + fs.readFileSync(file).toString('base64');
+}
+
+/*
+ * The web part tile: markdown source at an angle, with the mono-light glyph in
+ * the corner. Rendered above its final size and scaled down, because the
+ * perspective transform resamples the text and the extra pixels are what keep
+ * the receding edge tight. JPEG, because it is photographic.
+ */
+async function renderTile(browser) {
+  const page = await browser.newPage({ deviceScaleFactor: tile.SUPERSAMPLE });
+  const dest = path.join(assets, 'webpart-tile.jpg');
+  await page.setViewportSize({ width: tile.WIDTH, height: tile.HEIGHT });
+  await page.setContent('<body>'
+    + tile.tileHtml(dataUri(path.join(assets, 'mark-mono-light.svg'))) + '</body>');
+  await page.waitForFunction(() => [...document.images].every((i) => i.complete && i.naturalWidth));
+  await page.screenshot({ path: dest, type: 'jpeg', quality: 82, scale: 'css' });
+  await page.close();
+  console.log('webpart-tile.jpg'.padEnd(30), String(fs.statSync(dest).size).padStart(6), 'bytes');
+}
+
+/* Social preview, at the 1.91:1 GitHub, Slack and Teams all crop to. */
+async function renderSocialCard(browser) {
+  const page = await browser.newPage({ deviceScaleFactor: 1 });
+  const dest = path.join(assets, 'social-card.png');
+  await page.setViewportSize({ width: 1200, height: 630 });
+  await page.setContent('<body style="margin:0;width:1200px;height:630px;background:#F7FAFA;'
+    + 'display:flex;align-items:center;justify-content:center">'
+    + `<img src="${dataUri(path.join(assets, 'lockup-tagline.svg'))}" style="width:760px"></body>`);
+  await page.waitForFunction(() => [...document.images].every((i) => i.complete && i.naturalWidth));
+  await page.screenshot({ path: dest });
+  await page.close();
+  console.log('social-card.png'.padEnd(30), String(fs.statSync(dest).size).padStart(6), 'bytes');
+}
+
 async function build() {
+  copyDelivered();
+  stampManifestIcon();
   const browser = await chromium.launch(
     process.env.PLAYWRIGHT_CHROMIUM ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM } : {}
   );
-  const page = await browser.newPage({ deviceScaleFactor: 1 });
-  /* A second page just for the tile, which needs the extra pixels. */
-  const tilePage = await browser.newPage({ deviceScaleFactor: tile.SUPERSAMPLE });
   try {
-    const { shapes, defs } = await readMaster(page, master);
-    const banded = rows(shapes);
-    if (banded.length < 2) {
-      throw new Error(`expected the mark and the wordmark on separate rows, found ${banded.length} row(s)`);
-    }
-    const mark = banded[0];
-    const wordmark = banded.slice(1).flat();
-
-    /*
-     * Below about 40px the turned corner and the falling droplet break up into
-     * stray pixels, so the small mark keeps the drop and the hash only - the
-     * two largest shapes on the row.
-     */
-    const bySize = [...mark].sort((a, b) => b.width * b.height - a.width * a.height);
-    const markSmall = mark.filter((shape) => bySize.indexOf(shape) < 2);
-
-    const files = {
-      'mark.svg': [mark, LIGHT],
-      'mark-dark.svg': [mark, DARK],
-      'mark-mono.svg': [mark, MONO, false],
-      'mark-small.svg': [markSmall, LIGHT],
-      'wordmark.svg': [wordmark, LIGHT],
-      'wordmark-dark.svg': [wordmark, DARK],
-      'lockup.svg': [shapes, LIGHT],
-      'lockup-dark.svg': [shapes, DARK]
-    };
-    const horizontal = {
-      'lockup-horizontal.svg': LIGHT,
-      'lockup-horizontal-dark.svg': DARK
-    };
-
-    fs.mkdirSync(outDir, { recursive: true });
-    for (const [name, [selection, palette, gradients]] of Object.entries(files)) {
-      const svg = compose(selection, palette, defs, gradients !== false);
-      fs.writeFileSync(path.join(outDir, name), svg);
-      console.log(name.padEnd(22), String(svg.length).padStart(6), 'bytes');
-    }
-
-    for (const [name, palette] of Object.entries(horizontal)) {
-      const markup = composeHorizontal(mark, wordmark, palette, defs);
-      fs.writeFileSync(path.join(outDir, name), markup);
-      console.log(name.padEnd(22), String(markup.length).padStart(6), 'bytes');
-    }
-
-    for (const spec of PNGS.concat(APP_CATALOG_ICON)) {
-      const dest = await rasterise(page, spec);
-      const label = path.isAbsolute(spec.file) ? path.relative(root, dest) : spec.file;
-      console.log(`${label} (${spec.size}px)`.padEnd(34), String(fs.statSync(dest).size).padStart(6), 'bytes');
-    }
-
-    /*
-     * The web part's own tile, as a data URI in its manifest. Without one
-     * SharePoint falls back to a Fluent glyph in the toolbox and to a grey
-     * gradient placeholder on the full-page apps picker.
-     */
-    const tileFile = await renderTile(tilePage);
-    stampManifestIcon(tileFile);
-
-    /* Social preview, at the 1.91:1 GitHub, Slack and Teams all crop to. */
-    await page.setViewportSize({ width: 1200, height: 630 });
-    await page.setContent('<body style="margin:0;width:1200px;height:630px;background:#f6f8fa;'
-      + 'display:flex;flex-direction:column;gap:34px;align-items:center;justify-content:center;'
-      + 'font:400 30px/1.4 -apple-system,BlinkMacSystemFont,\'Segoe UI\',sans-serif">'
-      + `<img src="${dataUri(path.join(outDir, 'lockup.svg'))}" style="height:370px">`
-      + `<p style="margin:0;color:${NAVY}">Markdown for SharePoint, themed like the editors you write it in</p>`
-      + '</body>');
-    await page.waitForFunction(() => [...document.images].every((i) => i.complete && i.naturalWidth));
-    const card = path.join(outDir, 'social-card.png');
-    await page.screenshot({ path: card });
-    console.log('social-card.png'.padEnd(22), String(fs.statSync(card).size).padStart(6), 'bytes');
+    await renderSocialCard(browser);
+    await renderTile(browser);
   } finally {
     await browser.close();
   }

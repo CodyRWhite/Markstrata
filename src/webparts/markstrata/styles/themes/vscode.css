@@ -9,201 +9,201 @@
  * comments, #DCDCAA functions, #4EC9B0 types, #9CDCFE variables.
  */
 
-.ink-root[data-ink-theme='vscode'] {
-  --ink-font-body: 'Segoe WPC', 'Segoe UI', system-ui, -apple-system, 'Ubuntu', 'Droid Sans', sans-serif;
-  --ink-font-heading: var(--ink-font-body);
-  --ink-font-mono: Consolas, 'Droid Sans Mono', 'Courier New', Menlo, monospace;
-  --ink-font-size: 15px;
-  --ink-line-height-base: 1.6;
-  --ink-block-gap-base: 14px;
+.strata-root[data-strata-theme='vscode'] {
+  --strata-font-body: 'Segoe WPC', 'Segoe UI', system-ui, -apple-system, 'Ubuntu', 'Droid Sans', sans-serif;
+  --strata-font-heading: var(--strata-font-body);
+  --strata-font-mono: Consolas, 'Droid Sans Mono', 'Courier New', Menlo, monospace;
+  --strata-font-size: 15px;
+  --strata-line-height-base: 1.6;
+  --strata-block-gap-base: 14px;
 
-  --ink-h1-size: 2em;
-  --ink-h2-size: 1.5em;
-  --ink-h3-size: 1.25em;
-  --ink-h4-size: 1em;
-  --ink-h5-size: 0.875em;
-  --ink-h6-size: 0.85em;
-  --ink-heading-weight: 600;
-  --ink-h1-weight: 600;
-  --ink-heading-color: var(--ink-text);
-  --ink-h1-rule-width: 1px;
-  --ink-h1-rule-space: 0.3em;
-  --ink-h2-rule-width: 0;
-  --ink-h2-rule-space: 0;
+  --strata-h1-size: 2em;
+  --strata-h2-size: 1.5em;
+  --strata-h3-size: 1.25em;
+  --strata-h4-size: 1em;
+  --strata-h5-size: 0.875em;
+  --strata-h6-size: 0.85em;
+  --strata-heading-weight: 600;
+  --strata-h1-weight: 600;
+  --strata-heading-color: var(--strata-text);
+  --strata-h1-rule-width: 1px;
+  --strata-h1-rule-space: 0.3em;
+  --strata-h2-rule-width: 0;
+  --strata-h2-rule-space: 0;
 
-  --ink-radius-sm: 2px;
-  --ink-radius-md: 3px;
-  --ink-radius-lg: 4px;
-  --ink-list-indent: 2em;
-  --ink-list-item-gap: 3px;
+  --strata-radius-sm: 2px;
+  --strata-radius-md: 3px;
+  --strata-radius-lg: 4px;
+  --strata-list-indent: 2em;
+  --strata-list-item-gap: 3px;
 
   /* Code: bordered block on the editor background, tight radius. */
-  --ink-code-radius: 3px;
-  --ink-code-padding: 12px 14px;
-  --ink-code-line-height: 1.5;
-  --ink-code-font-size: 0.9em;
+  --strata-code-radius: 3px;
+  --strata-code-padding: 12px 14px;
+  --strata-code-line-height: 1.5;
+  --strata-code-font-size: 0.9em;
 
   /* Callouts read like VS Code's inline notices: tinted, 3px accent, square. */
-  --ink-callout-bg-alpha: 0.1;
-  --ink-callout-title-bg-alpha: 0.04;
-  --ink-callout-border-width: 0px;
-  --ink-callout-accent-width: 3px;
-  --ink-callout-radius: 2px;
-  --ink-callout-title-padding: 8px 12px 2px;
-  --ink-callout-content-padding: 0 12px 10px;
-  --ink-callout-title-weight: 600;
-  --ink-callout-fold-closed-pad: 8px;
+  --strata-callout-bg-alpha: 0.1;
+  --strata-callout-title-bg-alpha: 0.04;
+  --strata-callout-border-width: 0px;
+  --strata-callout-accent-width: 3px;
+  --strata-callout-radius: 2px;
+  --strata-callout-title-padding: 8px 12px 2px;
+  --strata-callout-content-padding: 0 12px 10px;
+  --strata-callout-title-weight: 600;
+  --strata-callout-fold-closed-pad: 8px;
 
-  --ink-quote-padding: 8px 12px;
-  --ink-quote-border-width: 5px;
-  --ink-quote-radius: 2px;
+  --strata-quote-padding: 8px 12px;
+  --strata-quote-border-width: 5px;
+  --strata-quote-radius: 2px;
 }
 
 /* ------------------------------------------------------------ VS Code dark */
 
-.ink-root[data-ink-theme='vscode'][data-ink-mode='dark'] {
-  --ink-bg: #1f1f1f;
-  --ink-bg-elevated: #252526;
-  --ink-bg-hover: #2a2d2e;
-  --ink-text: #cccccc;
-  --ink-text-muted: #9d9d9d;
-  --ink-text-faint: #7a7a7a;
-  --ink-border: #3c3c3c;
-  --ink-border-strong: #4d4d4d;
-  --ink-link: #4daafc;
-  --ink-link-hover: #6cb8ff;
-  --ink-on-accent: #ffffff;
+.strata-root[data-strata-theme='vscode'][data-strata-mode='dark'] {
+  --strata-bg: #1f1f1f;
+  --strata-bg-elevated: #252526;
+  --strata-bg-hover: #2a2d2e;
+  --strata-text: #cccccc;
+  --strata-text-muted: #9d9d9d;
+  --strata-text-faint: #7a7a7a;
+  --strata-border: #3c3c3c;
+  --strata-border-strong: #4d4d4d;
+  --strata-link: #4daafc;
+  --strata-link-hover: #6cb8ff;
+  --strata-on-accent: #ffffff;
 
-  --ink-color-blue: 55, 148, 255;
-  --ink-color-cyan: 41, 184, 219;
-  --ink-color-green: 137, 209, 133;
-  --ink-color-yellow: 204, 167, 0;
-  --ink-color-orange: 204, 102, 51;
-  --ink-color-red: 241, 76, 76;
-  --ink-color-purple: 177, 128, 215;
-  --ink-color-pink: 214, 112, 214;
-  --ink-color-gray: 157, 157, 157;
+  --strata-color-blue: 55, 148, 255;
+  --strata-color-cyan: 41, 184, 219;
+  --strata-color-green: 137, 209, 133;
+  --strata-color-yellow: 204, 167, 0;
+  --strata-color-orange: 204, 102, 51;
+  --strata-color-red: 241, 76, 76;
+  --strata-color-purple: 177, 128, 215;
+  --strata-color-pink: 214, 112, 214;
+  --strata-color-gray: 157, 157, 157;
 
-  --ink-code-bg: #181818;
-  --ink-code-text: #d4d4d4;
-  --ink-code-border: #3c3c3c;
-  --ink-code-header-bg: #212121;
-  --ink-code-header-border: #3c3c3c;
-  --ink-code-gutter-text: #6e7681;
-  --ink-code-gutter-border: #303030;
-  --ink-code-line-hover: rgba(255, 255, 255, 0.04);
+  --strata-code-bg: #181818;
+  --strata-code-text: #d4d4d4;
+  --strata-code-border: #3c3c3c;
+  --strata-code-header-bg: #212121;
+  --strata-code-header-border: #3c3c3c;
+  --strata-code-gutter-text: #6e7681;
+  --strata-code-gutter-border: #303030;
+  --strata-code-line-hover: rgba(255, 255, 255, 0.04);
   /* textPreformat.foreground */
-  --ink-code-inline-bg: rgba(255, 255, 255, 0.08);
-  --ink-code-inline-text: #d7ba7d;
-  --ink-code-inline-border: transparent;
+  --strata-code-inline-bg: rgba(255, 255, 255, 0.08);
+  --strata-code-inline-text: #d7ba7d;
+  --strata-code-inline-border: transparent;
 
-  --ink-quote-bg: rgba(255, 255, 255, 0.05);
-  --ink-quote-border-color: rgba(0, 122, 204, 0.6);
-  --ink-quote-text: #cccccc;
+  --strata-quote-bg: rgba(255, 255, 255, 0.05);
+  --strata-quote-border-color: rgba(0, 122, 204, 0.6);
+  --strata-quote-text: #cccccc;
 
-  --ink-table-border: #3c3c3c;
-  --ink-table-header-bg: #252526;
-  --ink-table-stripe-bg: rgba(255, 255, 255, 0.02);
-  --ink-table-hover-bg: transparent;
+  --strata-table-border: #3c3c3c;
+  --strata-table-header-bg: #252526;
+  --strata-table-stripe-bg: rgba(255, 255, 255, 0.02);
+  --strata-table-hover-bg: transparent;
 
-  --ink-scrollbar-thumb: #4f4f4f;
-  --ink-mark-alpha: 0.3;
-  --ink-mermaid-bg: #1f1f1f;
+  --strata-scrollbar-thumb: #4f4f4f;
+  --strata-mark-alpha: 0.3;
+  --strata-mermaid-bg: #1f1f1f;
 
   /* Dark+ token colours */
-  --ink-syn-comment: #6a9955;
-  --ink-syn-keyword: #569cd6;
-  --ink-syn-type: #4ec9b0;
-  --ink-syn-entity: #dcdcaa;
-  --ink-syn-constant: #b5cea8;
-  --ink-syn-attr: #9cdcfe;
-  --ink-syn-operator: #d4d4d4;
-  --ink-syn-string: #ce9178;
-  --ink-syn-regexp: #d16969;
-  --ink-syn-variable: #9cdcfe;
-  --ink-syn-builtin: #4ec9b0;
-  --ink-syn-tag: #569cd6;
-  --ink-syn-property: #9cdcfe;
-  --ink-syn-punctuation: #d4d4d4;
-  --ink-syn-section: #569cd6;
-  --ink-syn-bullet: #6796e6;
-  --ink-syn-link: #4daafc;
-  --ink-syn-addition: #b5cea8;
-  --ink-syn-addition-bg: rgba(155, 185, 85, 0.2);
-  --ink-syn-deletion: #ce9178;
-  --ink-syn-deletion-bg: rgba(255, 0, 0, 0.2);
+  --strata-syn-comment: #6a9955;
+  --strata-syn-keyword: #569cd6;
+  --strata-syn-type: #4ec9b0;
+  --strata-syn-entity: #dcdcaa;
+  --strata-syn-constant: #b5cea8;
+  --strata-syn-attr: #9cdcfe;
+  --strata-syn-operator: #d4d4d4;
+  --strata-syn-string: #ce9178;
+  --strata-syn-regexp: #d16969;
+  --strata-syn-variable: #9cdcfe;
+  --strata-syn-builtin: #4ec9b0;
+  --strata-syn-tag: #569cd6;
+  --strata-syn-property: #9cdcfe;
+  --strata-syn-punctuation: #d4d4d4;
+  --strata-syn-section: #569cd6;
+  --strata-syn-bullet: #6796e6;
+  --strata-syn-link: #4daafc;
+  --strata-syn-addition: #b5cea8;
+  --strata-syn-addition-bg: rgba(155, 185, 85, 0.2);
+  --strata-syn-deletion: #ce9178;
+  --strata-syn-deletion-bg: rgba(255, 0, 0, 0.2);
 }
 
 /* ----------------------------------------------------------- VS Code light */
 
-.ink-root[data-ink-theme='vscode'][data-ink-mode='light'] {
-  --ink-bg: #ffffff;
-  --ink-bg-elevated: #f8f8f8;
-  --ink-bg-hover: #f0f0f0;
-  --ink-text: #3b3b3b;
-  --ink-text-muted: #616161;
-  --ink-text-faint: #8b8b8b;
-  --ink-border: #e5e5e5;
-  --ink-border-strong: #cecece;
-  --ink-link: #005fb8;
-  --ink-link-hover: #0f4a85;
-  --ink-on-accent: #ffffff;
+.strata-root[data-strata-theme='vscode'][data-strata-mode='light'] {
+  --strata-bg: #ffffff;
+  --strata-bg-elevated: #f8f8f8;
+  --strata-bg-hover: #f0f0f0;
+  --strata-text: #3b3b3b;
+  --strata-text-muted: #616161;
+  --strata-text-faint: #8b8b8b;
+  --strata-border: #e5e5e5;
+  --strata-border-strong: #cecece;
+  --strata-link: #005fb8;
+  --strata-link-hover: #0f4a85;
+  --strata-on-accent: #ffffff;
 
-  --ink-color-blue: 0, 95, 184;
-  --ink-color-cyan: 0, 115, 119;
-  --ink-color-green: 56, 138, 52;
-  --ink-color-yellow: 166, 124, 0;
-  --ink-color-orange: 175, 82, 0;
-  --ink-color-red: 205, 49, 49;
-  --ink-color-purple: 101, 45, 144;
-  --ink-color-pink: 175, 0, 219;
-  --ink-color-gray: 97, 97, 97;
+  --strata-color-blue: 0, 95, 184;
+  --strata-color-cyan: 0, 115, 119;
+  --strata-color-green: 56, 138, 52;
+  --strata-color-yellow: 166, 124, 0;
+  --strata-color-orange: 175, 82, 0;
+  --strata-color-red: 205, 49, 49;
+  --strata-color-purple: 101, 45, 144;
+  --strata-color-pink: 175, 0, 219;
+  --strata-color-gray: 97, 97, 97;
 
-  --ink-code-bg: #f5f5f5;
-  --ink-code-text: #3b3b3b;
-  --ink-code-border: #e5e5e5;
-  --ink-code-header-bg: #ececec;
-  --ink-code-header-border: #e5e5e5;
-  --ink-code-gutter-text: #9b9b9b;
-  --ink-code-gutter-border: #e0e0e0;
-  --ink-code-line-hover: rgba(0, 0, 0, 0.03);
-  --ink-code-inline-bg: rgba(0, 0, 0, 0.06);
-  --ink-code-inline-text: #b5200d;
-  --ink-code-inline-border: transparent;
+  --strata-code-bg: #f5f5f5;
+  --strata-code-text: #3b3b3b;
+  --strata-code-border: #e5e5e5;
+  --strata-code-header-bg: #ececec;
+  --strata-code-header-border: #e5e5e5;
+  --strata-code-gutter-text: #9b9b9b;
+  --strata-code-gutter-border: #e0e0e0;
+  --strata-code-line-hover: rgba(0, 0, 0, 0.03);
+  --strata-code-inline-bg: rgba(0, 0, 0, 0.06);
+  --strata-code-inline-text: #b5200d;
+  --strata-code-inline-border: transparent;
 
-  --ink-quote-bg: rgba(0, 0, 0, 0.04);
-  --ink-quote-border-color: rgba(0, 95, 184, 0.5);
-  --ink-quote-text: #3b3b3b;
+  --strata-quote-bg: rgba(0, 0, 0, 0.04);
+  --strata-quote-border-color: rgba(0, 95, 184, 0.5);
+  --strata-quote-text: #3b3b3b;
 
-  --ink-table-border: #e5e5e5;
-  --ink-table-header-bg: #f8f8f8;
-  --ink-table-stripe-bg: rgba(0, 0, 0, 0.015);
-  --ink-table-hover-bg: transparent;
+  --strata-table-border: #e5e5e5;
+  --strata-table-header-bg: #f8f8f8;
+  --strata-table-stripe-bg: rgba(0, 0, 0, 0.015);
+  --strata-table-hover-bg: transparent;
 
-  --ink-scrollbar-thumb: #c8c8c8;
-  --ink-mark-alpha: 0.4;
-  --ink-mermaid-bg: #ffffff;
+  --strata-scrollbar-thumb: #c8c8c8;
+  --strata-mark-alpha: 0.4;
+  --strata-mermaid-bg: #ffffff;
 
   /* Light+ token colours */
-  --ink-syn-comment: #008000;
-  --ink-syn-keyword: #0000ff;
-  --ink-syn-type: #267f99;
-  --ink-syn-entity: #795e26;
-  --ink-syn-constant: #098658;
-  --ink-syn-attr: #e50000;
-  --ink-syn-operator: #000000;
-  --ink-syn-string: #a31515;
-  --ink-syn-regexp: #811f3f;
-  --ink-syn-variable: #001080;
-  --ink-syn-builtin: #267f99;
-  --ink-syn-tag: #800000;
-  --ink-syn-property: #0451a5;
-  --ink-syn-punctuation: #3b3b3b;
-  --ink-syn-section: #0000ff;
-  --ink-syn-bullet: #0451a5;
-  --ink-syn-link: #005fb8;
-  --ink-syn-addition: #0a7f2c;
-  --ink-syn-addition-bg: rgba(155, 185, 85, 0.25);
-  --ink-syn-deletion: #a31515;
-  --ink-syn-deletion-bg: rgba(255, 0, 0, 0.14);
+  --strata-syn-comment: #008000;
+  --strata-syn-keyword: #0000ff;
+  --strata-syn-type: #267f99;
+  --strata-syn-entity: #795e26;
+  --strata-syn-constant: #098658;
+  --strata-syn-attr: #e50000;
+  --strata-syn-operator: #000000;
+  --strata-syn-string: #a31515;
+  --strata-syn-regexp: #811f3f;
+  --strata-syn-variable: #001080;
+  --strata-syn-builtin: #267f99;
+  --strata-syn-tag: #800000;
+  --strata-syn-property: #0451a5;
+  --strata-syn-punctuation: #3b3b3b;
+  --strata-syn-section: #0000ff;
+  --strata-syn-bullet: #0451a5;
+  --strata-syn-link: #005fb8;
+  --strata-syn-addition: #0a7f2c;
+  --strata-syn-addition-bg: rgba(155, 185, 85, 0.25);
+  --strata-syn-deletion: #a31515;
+  --strata-syn-deletion-bg: rgba(255, 0, 0, 0.14);
 }

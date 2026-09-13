@@ -81,7 +81,7 @@ export class MarkdownProcessor {
       return this.unwrapToc(this.md.render(markdown || ''));
     } catch (error) {
       const message: string = (error as Error).message || 'Unknown error';
-      return `<div class="ink-error">Could not render this markdown: ${escapeHtml(message)}</div>`;
+      return `<div class="strata-error">Could not render this markdown: ${escapeHtml(message)}</div>`;
     }
   }
 
@@ -91,7 +91,7 @@ export class MarkdownProcessor {
    * before the container div and leave an empty one behind.
    */
   private unwrapToc(html: string): string {
-    return html.replace(/<p>\s*(<div class="ink-toc">[\s\S]*?<\/div>)\s*<\/p>/g, '$1');
+    return html.replace(/<p>\s*(<div class="strata-toc">[\s\S]*?<\/div>)\s*<\/p>/g, '$1');
   }
 
   // ----------------------------------------------------------------- build
@@ -167,7 +167,7 @@ export class MarkdownProcessor {
           ? anchor.permalink.linkInsideHeader({
               symbol: '#',
               placement: 'before',
-              class: 'ink-anchor',
+              class: 'strata-anchor',
               ariaHidden: true,
               // No separator text token, otherwise the space leaks into the
               // table of contents entry for the heading.
@@ -180,7 +180,7 @@ export class MarkdownProcessor {
     if (this.options.enableToc) {
       use('table of contents', markdownItTOC, {
         includeLevel: [2, 3],
-        containerClass: 'ink-toc',
+        containerClass: 'strata-toc',
         listType: 'ul'
       });
     }
@@ -225,7 +225,7 @@ export class MarkdownProcessor {
       options: unknown,
       env: unknown,
       self: IRenderer
-    ): string => '<div class="ink-table-scroll">' + defaultOpen(tokens, idx, options, env, self);
+    ): string => '<div class="strata-table-scroll">' + defaultOpen(tokens, idx, options, env, self);
 
     this.md.renderer.rules.table_close = (
       tokens: IToken[],
@@ -335,7 +335,7 @@ export class MarkdownProcessor {
       try {
         return katex.renderToString(tokens[idx].content, { throwOnError: false, output: 'html' });
       } catch {
-        return `<span class="ink-math-error-inline">${escapeHtml(tokens[idx].content)}</span>`;
+        return `<span class="strata-math-error-inline">${escapeHtml(tokens[idx].content)}</span>`;
       }
     };
 
@@ -346,9 +346,9 @@ export class MarkdownProcessor {
           displayMode: true,
           output: 'html'
         });
-        return `<div class="ink-math-block">${html}</div>`;
+        return `<div class="strata-math-block">${html}</div>`;
       } catch {
-        return `<div class="ink-math-error">${escapeHtml(tokens[idx].content)}</div>`;
+        return `<div class="strata-math-error">${escapeHtml(tokens[idx].content)}</div>`;
       }
     };
   }
@@ -368,9 +368,9 @@ export class MarkdownProcessor {
       const token: IToken = tokens[idx];
       if (this.fenceInfo(token).trim().toLowerCase() === 'mermaid') {
         this.mermaidCounter += 1;
-        const id: string = `ink-mermaid-${Date.now().toString(36)}-${this.mermaidCounter}`;
+        const id: string = `strata-mermaid-${Date.now().toString(36)}-${this.mermaidCounter}`;
         return (
-          `<div class="ink-mermaid" data-mermaid-container="true">` +
+          `<div class="strata-mermaid" data-mermaid-container="true">` +
           `<pre class="mermaid" id="${id}">${escapeHtml(token.content)}</pre></div>`
         );
       }

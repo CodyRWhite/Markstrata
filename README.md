@@ -1,9 +1,11 @@
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="assets/lockup-dark.svg">
-  <img src="assets/lockup.svg" alt="Markstrata Markdown" width="260">
+  <source media="(prefers-color-scheme: dark)" srcset="assets/lockup-horizontal-dark.svg">
+  <img src="assets/lockup-horizontal.svg" alt="Markstrata" width="320">
 </picture>
 
-# Markstrata Markdown
+# Markstrata
+
+*Markdown for SharePoint.*
 
 <!-- The CI and Release badges read the repository through GitHub's public
      endpoints, so they only render once the repository is public: while it is
@@ -130,7 +132,7 @@ npm run package          # gulp bundle --ship && gulp package-solution --ship
 
 That writes `sharepoint/solution/markstrata.sppkg`. Upload it to your
 tenant App Catalog, choose **Enable this app and add it to all sites** (or add
-it per site), then add **Markstrata Markdown** to a page from the Content group of
+it per site), then add **Markstrata** to a page from the Content group of
 the web part picker.
 
 Once a version is tagged, the same `.sppkg` is attached to the
@@ -290,7 +292,7 @@ release conventions.
 src/webparts/markstrata/
   MarkstrataWebPart.ts     web part, property pane, content loading
   styles/
-    base.css                      the --ink-* token contract and layout
+    base.css                      the --strata-* token contract and layout
     typography.css code.css syntax.css callouts.css tables-lists.css extras.css
     chrome.css                    toolbar, editor, version panel
     modifiers.css                 width / spacing / text size options
@@ -335,10 +337,16 @@ redistributed.
 
 ## Brand
 
-The logo, its variants and the icon set live in [`assets/`](./assets), built
-from one master artboard by `npm run brand`. See
-[assets/brand.md](./assets/brand.md) for the palette and where each file is
-meant to be used.
+The brand system is delivered in
+[`assets/markstrata-brand-v1/`](./assets/markstrata-brand-v1) and is the master
+for everything visual: palette, icons drawn for each size band, lockups, tokens
+and the type licensing. Read its
+[BRAND-GUIDE.md](./assets/markstrata-brand-v1/BRAND-GUIDE.md) before using any
+of it, and do not edit anything inside it.
+
+`npm run brand` copies the right file out of that package into each place the
+build expects and renders the two composites made from brand artwork. See
+[assets/brand.md](./assets/brand.md) for what lands where.
 
 ## License
 

@@ -1,0 +1,160 @@
+{
+  "color": {
+    "palette": {
+      "strata": {
+        "50": "#E9F5F6",
+        "100": "#C9E8EA",
+        "200": "#9BD6DA",
+        "300": "#62BEC5",
+        "400": "#2AA3AC",
+        "500": "#0F7B86",
+        "600": "#0C666F",
+        "700": "#0A4048",
+        "800": "#072830",
+        "900": "#04181D"
+      },
+      "sediment": {
+        "100": "#FBEFD9",
+        "300": "#F5C06A",
+        "400": "#F0B24A",
+        "500": "#E2A03F",
+        "600": "#D9922B",
+        "700": "#9A6314"
+      },
+      "slate": {
+        "50": "#F6F9F9",
+        "100": "#EDF2F3",
+        "200": "#DCE5E7",
+        "300": "#C1CFD3",
+        "400": "#94A8AE",
+        "500": "#6B848C",
+        "600": "#4E6870",
+        "700": "#3A5259",
+        "800": "#24383E",
+        "900": "#14252A"
+      }
+    },
+    "semantic": {
+      "brand": "#0F7B86",
+      "brand-hover": "#0C666F",
+      "brand-pressed": "#0A4048",
+      "accent": "#E2A03F",
+      "ink": "#072830",
+      "ink-muted": "#3E6570",
+      "surface": "#FFFFFF",
+      "surface-sunken": "#F2F6F6",
+      "surface-inverse": "#0A2A33",
+      "border": "#DCE5E7",
+      "border-strong": "#C1CFD3",
+      "success": "#1E7A52",
+      "warning": "#9A6314",
+      "danger": "#B5322E",
+      "info": "#0F7B86",
+      "focus-ring": "#2AA3AC"
+    }
+  },
+  "radius": {
+    "tile": "23.05%",
+    "lg": "12px",
+    "md": "6px",
+    "pill": "999px"
+  },
+  "contrast": [
+    {
+      "pair": "Strata 500 text",
+      "fg": "#0F7B86",
+      "bg": "#FFFFFF",
+      "ratio": 5.0
+    },
+    {
+      "pair": "Strata 600 text",
+      "fg": "#0C666F",
+      "bg": "#FFFFFF",
+      "ratio": 6.68
+    },
+    {
+      "pair": "Bedrock text",
+      "fg": "#072830",
+      "bg": "#FFFFFF",
+      "ratio": 15.5
+    },
+    {
+      "pair": "Muted text",
+      "fg": "#3E6570",
+      "bg": "#FFFFFF",
+      "ratio": 6.36
+    },
+    {
+      "pair": "White on Strata 500",
+      "fg": "#FFFFFF",
+      "bg": "#0F7B86",
+      "ratio": 5.0
+    },
+    {
+      "pair": "White on Strata 700",
+      "fg": "#FFFFFF",
+      "bg": "#0A4048",
+      "ratio": 11.41
+    },
+    {
+      "pair": "Sediment 500 on white",
+      "fg": "#E2A03F",
+      "bg": "#FFFFFF",
+      "ratio": 2.25
+    },
+    {
+      "pair": "Sediment 700 on white",
+      "fg": "#9A6314",
+      "bg": "#FFFFFF",
+      "ratio": 5.04
+    },
+    {
+      "pair": "Sediment 500 on Bedrock",
+      "fg": "#E2A03F",
+      "bg": "#072830",
+      "ratio": 6.89
+    },
+    {
+      "pair": "Sediment 400 on Strata 700",
+      "fg": "#F0B24A",
+      "bg": "#0A4048",
+      "ratio": 6.07
+    },
+    {
+      "pair": "Focus ring on white",
+      "fg": "#2AA3AC",
+      "bg": "#FFFFFF",
+      "ratio": 3.03
+    },
+    {
+      "pair": "Border on white",
+      "fg": "#DCE5E7",
+      "bg": "#FFFFFF",
+      "ratio": 1.28
+    },
+    {
+      "pair": "Danger on white",
+      "fg": "#B5322E",
+      "bg": "#FFFFFF",
+      "ratio": 6.07
+    },
+    {
+      "pair": "Success on white",
+      "fg": "#1E7A52",
+      "bg": "#FFFFFF",
+      "ratio": 5.3
+    },
+    {
+      "pair": "Warning on white",
+      "fg": "#9A6314",
+      "bg": "#FFFFFF",
+      "ratio": 5.04
+    },
+    {
+      "pair": "Strata 300 on Strata 800",
+      "fg": "#62BEC5",
+      "bg": "#072830",
+      "ratio": 7.15
+    }
+  ]
+}

@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 292 236" width="292" height="236" role="img" aria-label="Markstrata">
+  <title>Markstrata</title>
+  <g fill="#FFFFFF" stroke="#FFFFFF">
+    <rect x="0" y="0" width="292" height="44" rx="22" stroke="none"/>
+    <rect x="0" y="64" width="220" height="44" rx="22" stroke="none"/>
+    <path d="M22 150 L146 214 L270 150" fill="none" stroke-width="44" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+</svg>

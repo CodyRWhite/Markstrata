@@ -6,8 +6,8 @@ const md = new MarkdownProcessor();
 
 test('GitHub alert syntax becomes a callout', () => {
   const html = md.render('> [!NOTE]\n> Something worth knowing.');
-  assert.match(html, /<div class="ink-callout" data-callout="note">/);
-  assert.match(html, /<span class="ink-callout-title-text">Note<\/span>/);
+  assert.match(html, /<div class="strata-callout" data-callout="note">/);
+  assert.match(html, /<span class="strata-callout-title-text">Note<\/span>/);
   assert.match(html, /Something worth knowing\./);
   assert.doesNotMatch(html, /\[!NOTE\]/);
 });
@@ -22,7 +22,7 @@ test('all five GitHub alert types resolve', () => {
 test('Obsidian syntax keeps a custom title', () => {
   const html = md.render('> [!tip] Try this instead\n> body text');
   assert.match(html, /data-callout="tip"/);
-  assert.match(html, /<span class="ink-callout-title-text">Try this instead<\/span>/);
+  assert.match(html, /<span class="strata-callout-title-text">Try this instead<\/span>/);
 });
 
 test('aliases map to their canonical type', () => {
@@ -33,7 +33,7 @@ test('aliases map to their canonical type', () => {
 
 test('foldable callouts render as details, - closed and + open', () => {
   const closed = md.render('> [!warning]- Hidden\n> body');
-  assert.match(closed, /<details class="ink-callout ink-callout--foldable" data-callout="warning">/);
+  assert.match(closed, /<details class="strata-callout strata-callout--foldable" data-callout="warning">/);
   assert.doesNotMatch(closed, /<details[^>]* open>/);
   assert.match(closed, /<\/details>/);
 
@@ -44,13 +44,13 @@ test('foldable callouts render as details, - closed and + open', () => {
 test('an unknown type stays an ordinary blockquote', () => {
   const html = md.render('> [!notathing]\n> body');
   assert.match(html, /<blockquote>/);
-  assert.doesNotMatch(html, /ink-callout/);
+  assert.doesNotMatch(html, /strata-callout/);
 });
 
 test('a plain blockquote is left alone', () => {
   const html = md.render('> just a quote');
   assert.match(html, /<blockquote>/);
-  assert.doesNotMatch(html, /ink-callout/);
+  assert.doesNotMatch(html, /strata-callout/);
 });
 
 test('Wiki.js classes still render as callouts', () => {
@@ -61,13 +61,13 @@ test('Wiki.js classes still render as callouts', () => {
 
 test('a title-only callout leaves no empty paragraph', () => {
   const html = md.render('> [!note] Just a heading');
-  assert.match(html, /<div class="ink-callout-content"><\/div>/);
+  assert.match(html, /<div class="strata-callout-content"><\/div>/);
 });
 
 test('callouts carry nested block content', () => {
   const html = md.render('> [!bug] Broken\n>\n> - one\n> - two\n>\n> ```js\n> go();\n> ```');
   assert.match(html, /<ul>/);
-  assert.match(html, /ink-code/);
+  assert.match(html, /strata-code/);
 });
 
 test('callout titles are escaped, not injected', () => {

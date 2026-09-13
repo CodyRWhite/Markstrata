@@ -8,7 +8,7 @@
  *   - [ ] not done
  *   - [x] done
  *
- * becomes a list marked `ink-task-list` whose items carry `data-checked`, with
+ * becomes a list marked `strata-task-list` whose items carry `data-checked`, with
  * a disabled checkbox that screen readers still announce as checked or not.
  */
 
@@ -68,7 +68,7 @@ function taskListRule(state: IStateCore): void {
     checkbox.meta = { checked: checked };
     inline.children.unshift(checkbox);
 
-    token.attrJoin('class', 'ink-task-item');
+    token.attrJoin('class', 'strata-task-item');
     token.attrSet('data-checked', String(checked));
 
     const parent: IToken | undefined = openLists[openLists.length - 1];
@@ -77,7 +77,7 @@ function taskListRule(state: IStateCore): void {
     }
   }
 
-  taskLists.forEach((list: IToken) => list.attrJoin('class', 'ink-task-list'));
+  taskLists.forEach((list: IToken) => list.attrJoin('class', 'strata-task-list'));
 }
 
 export function taskListPlugin(md: IMarkdownIt): void {
@@ -86,7 +86,7 @@ export function taskListPlugin(md: IMarkdownIt): void {
   md.renderer.rules.mdf_task_checkbox = (tokens: IToken[], idx: number): string => {
     const checked: boolean = !!(tokens[idx].meta as { checked?: boolean } | undefined)?.checked;
     return (
-      '<input class="ink-task-checkbox" type="checkbox" disabled' +
+      '<input class="strata-task-checkbox" type="checkbox" disabled' +
       (checked ? ' checked' : '') +
       ' /> '
     );

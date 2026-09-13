@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="Publish to page">
+  <title>Publish to page</title>
+  <rect x="3.5" y="2.5" width="13" height="15" rx="2.25"/>
+  <path d="M6.75 6 H13.25"/>
+  <path d="M6.75 9.75 L10 12.5 L13.25 9.75"/>
+</svg>

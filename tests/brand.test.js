@@ -10,16 +10,14 @@ const ASSETS = path.join(__dirname, '..', 'assets');
  * from it: a stray colour means something was hand-edited instead of rebuilt
  * from the master, and the next `npm run brand` would silently undo it.
  */
-const PALETTE = new Set([
-  '#013463', '#36a7ca', '#a7bcd0',   // light
-  '#2f7fc4', '#c3d4e4',              // navy and slate, lifted for dark surfaces
-  'currentColor'                      // the single-colour mark
-]);
+/* The brand package is the master and is not edited here, so the check is that
+ * what the build copies out of it is present and the right shape, rather than
+ * a palette audit of artwork somebody else drew. */
+const BRAND = path.join(ASSETS, 'markstrata-brand-v1');
 
 const GENERATED = [
-  'mark.svg', 'mark-dark.svg', 'mark-mono.svg', 'mark-small.svg',
-  'wordmark.svg', 'wordmark-dark.svg',
-  'lockup.svg', 'lockup-dark.svg',
+  'mark.svg', 'mark-mono-light.svg', 'mark-mono-dark.svg', 'mark-small.svg',
+  'lockup.svg', 'lockup-tagline.svg',
   'lockup-horizontal.svg', 'lockup-horizontal-dark.svg',
   'social-card.png', 'webpart-tile.jpg',
   'icons/favicon-16.png', 'icons/favicon-32.png', 'icons/favicon-48.png',
@@ -39,9 +37,12 @@ function pngSize(file) {
   return { width: buf.readUInt32BE(16), height: buf.readUInt32BE(20) };
 }
 
-test('the logo master is present', () => {
-  assert.ok(fs.existsSync(path.join(ASSETS, 'mark.svg')),
-    'assets/mark.svg is the source every other asset is cut from');
+test('the brand package is present', () => {
+  for (const file of ['BRAND-GUIDE.md', 'icon/markstrata-icon-512.svg',
+    'lockup/markstrata-lockup-horizontal.svg', 'export/markstrata-icon-96.png',
+    'export/spfx-iconImageUrl.txt', 'tokens/markstrata-tokens.css']) {
+    assert.ok(fs.existsSync(path.join(BRAND, file)), `the brand package is missing ${file}`);
+  }
 });
 
 test('every generated asset exists', () => {
@@ -49,45 +50,41 @@ test('every generated asset exists', () => {
   assert.deepEqual(missing, [], 'run `npm run brand` to rebuild these');
 });
 
-test('generated SVGs paint only from the documented palette', () => {
+/* Each copy has to match the file it came from, or the build has not been run
+ * since the brand package changed. */
+test('what the build copied still matches the brand package', () => {
+  const pairs = [
+    ['icon/markstrata-glyph.svg', 'mark.svg'],
+    ['lockup/markstrata-lockup-horizontal.svg', 'lockup-horizontal.svg'],
+    ['lockup/markstrata-lockup-horizontal-reversed.svg', 'lockup-horizontal-dark.svg'],
+    ['export/markstrata-icon-96.png', '../sharepoint/assets/icon.png']
+  ];
+  for (const [source, copy] of pairs) {
+    assert.deepEqual(fs.readFileSync(path.join(ASSETS, copy)), fs.readFileSync(path.join(BRAND, source)),
+      `${copy} is out of step with the brand package; run \`npm run brand\``);
+  }
+});
+
+/* A viewBox is what lets a mark scale; the rest of each file's internals are
+ * the brand package's business, not this build's. */
+test('every SVG the build publishes can scale', () => {
   for (const file of svgs) {
-    const fills = [...read(file).matchAll(/fill="([^"]+)"/g)].map((m) => m[1]);
-    assert.ok(fills.length > 0, `${file} has no fills`);
-    const strays = fills.filter((fill) => !PALETTE.has(fill) && !fill.startsWith('url(#'));
-    assert.deepEqual(strays, [], `${file} paints with colours outside the palette`);
+    assert.match(read(file), /viewBox="[-\d. ]+"/, `${file} needs a viewBox`);
   }
 });
 
-test('the dark variants lift navy off the dark surface', () => {
-  for (const file of svgs.filter((name) => name.includes('-dark'))) {
-    const body = read(file);
-    assert.ok(body.includes('#2f7fc4'), `${file} should use the lifted navy`);
-    assert.ok(!body.includes('#013463'), `${file} still has ink navy in it`);
-  }
-});
-
-test('the single-colour mark inherits its colour', () => {
-  const mono = read('mark-mono.svg');
-  assert.ok(mono.includes('currentColor'));
-  assert.ok(!/fill="#/.test(mono), 'mark-mono.svg should have no fixed colours');
-  assert.ok(!mono.includes('url(#'),
-    'a gradient cannot follow currentColor, so the mono mark drops it');
-});
-
-test('every generated SVG carries a viewBox and a label', () => {
-  for (const file of svgs) {
-    const body = read(file);
-    assert.match(body, /viewBox="[-\d. ]+"/, `${file} needs a viewBox to scale`);
-    assert.match(body, /aria-label="Markstrata Markdown"/, `${file} needs an accessible name`);
-  }
-});
-
-test('brand.md documents every generated file', () => {
+test('brand.md accounts for every file the build produces', () => {
   const guide = read('brand.md');
   for (const file of GENERATED) {
     const name = file.startsWith('icons/') ? 'icons/*.png' : file;
     assert.ok(guide.includes(name), `assets/brand.md does not mention ${name}`);
   }
+});
+
+test('brand.md sends people to the delivered guide rather than restating it', () => {
+  const guide = read('brand.md');
+  assert.ok(guide.includes('BRAND-GUIDE.md'), 'link the delivered guide');
+  assert.ok(/do not edit/i.test(guide), 'say that the package is not edited here');
 });
 
 /*
@@ -128,13 +125,15 @@ test('the web part tile is a JPEG at its intended size', () => {
   assert.ok(buf.length < 40 * 1024, `tile is ${buf.length} bytes; it is inlined into the manifest`);
 });
 
-test('the manifest carries the tile, with the glyph still there as a fallback', () => {
+test('the manifest carries the brand icon, with a glyph still there as a fallback', () => {
   const manifest = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'src', 'webparts',
     'markstrata', 'MarkstrataWebPart.manifest.json'), 'utf8'));
-  const tile = fs.readFileSync(path.join(ASSETS, 'webpart-tile.jpg')).toString('base64');
+  const supplied = fs.readFileSync(path.join(BRAND, 'export/spfx-iconImageUrl.txt'), 'utf8').trim();
   for (const entry of manifest.preconfiguredEntries) {
-    assert.equal(entry.iconImageUrl, `data:image/jpeg;base64,${tile}`,
-      'the manifest icon is out of step with assets/webpart-tile.jpg; run `npm run brand`');
+    assert.equal(entry.iconImageUrl, supplied,
+      'the manifest icon is out of step with the brand package; run `npm run brand`');
+    assert.ok(entry.iconImageUrl.startsWith('data:image/svg+xml'),
+      'the brand package supplies an SVG data URI, which is a fraction of a raster');
     assert.ok(entry.officeFabricIconFontName, 'keep a glyph for surfaces that ignore the image');
   }
 });

@@ -328,7 +328,7 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
    * markdown syntax, code fences and HTML never reach the index.
    */
   private updateSearchText(): void {
-    const article: HTMLElement | null = this.domElement.querySelector('.ink-content');
+    const article: HTMLElement | null = this.domElement.querySelector('.strata-content');
     if (!article) {
       return;
     }
@@ -338,13 +338,13 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
 
   private showBanner(message: string, tone: string): void {
     const banner: HTMLElement = document.createElement('div');
-    banner.className = 'ink-status';
+    banner.className = 'strata-status';
     banner.setAttribute('data-tone', tone);
     banner.style.display = 'block';
     banner.style.marginBottom = '12px';
     banner.textContent = message;
     // Inside the themed root, or it renders unstyled beside the web part.
-    const root: HTMLElement = this.domElement.querySelector('.ink-root') || this.domElement;
+    const root: HTMLElement = this.domElement.querySelector('.strata-root') || this.domElement;
     root.insertBefore(banner, root.firstChild);
   }
 
@@ -381,7 +381,7 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
   // ------------------------------------------------------------ reader theme
 
   private overrideStorageKey(): string {
-    return `ink-theme-${this.context.instanceId}`;
+    return `strata-theme-${this.context.instanceId}`;
   }
 
   private readThemeOverride(): void {

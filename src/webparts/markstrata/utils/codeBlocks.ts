@@ -217,32 +217,32 @@ export function renderCodeBlock(code: string, info: string, options: ICodeBlockO
   const lines: string = splitHighlightedLines(highlighted.html)
     .map(
       (line: string) =>
-        `<span class="ink-code-line"><span class="ink-code-ln" aria-hidden="true"></span>` +
-        `<span class="ink-code-line-text">${line}</span></span>`
+        `<span class="strata-code-line"><span class="strata-code-ln" aria-hidden="true"></span>` +
+        `<span class="strata-code-line-text">${line}</span></span>`
     )
     .join('');
 
-  const classes: string[] = ['ink-code'];
+  const classes: string[] = ['strata-code'];
   if (options.showHeader) {
-    classes.push('ink-code--has-header');
+    classes.push('strata-code--has-header');
   }
   if (lineNumbers) {
-    classes.push('ink-code--numbered');
+    classes.push('strata-code--numbered');
   }
   if (wrap) {
-    classes.push('ink-code--wrap');
+    classes.push('strata-code--wrap');
   }
 
   const copyButton: string =
-    '<div class="ink-code-actions">' +
-    '<button type="button" class="ink-code-btn ink-code-copy" aria-label="Copy code to clipboard">' +
+    '<div class="strata-code-actions">' +
+    '<button type="button" class="strata-code-btn strata-code-copy" aria-label="Copy code to clipboard">' +
     COPY_ICON +
-    '<span class="ink-code-btn-label">Copy</span></button></div>';
+    '<span class="strata-code-btn-label">Copy</span></button></div>';
 
   const header: string = options.showHeader
-    ? '<div class="ink-code-header">' +
-      `<span class="ink-code-lang">${escapeHtml(languageLabel(parsed.lang))}</span>` +
-      (parsed.filename ? `<span class="ink-code-filename">${escapeHtml(parsed.filename)}</span>` : '') +
+    ? '<div class="strata-code-header">' +
+      `<span class="strata-code-lang">${escapeHtml(languageLabel(parsed.lang))}</span>` +
+      (parsed.filename ? `<span class="strata-code-filename">${escapeHtml(parsed.filename)}</span>` : '') +
       copyButton +
       '</div>'
     : copyButton;
@@ -252,7 +252,7 @@ export function renderCodeBlock(code: string, info: string, options: ICodeBlockO
   return (
     `<div class="${classes.join(' ')}"${parsed.lang ? ` data-lang="${escapeHtml(parsed.lang)}"` : ''}>` +
     header +
-    `<pre class="ink-code-pre"><code class="${codeClass}">${lines}</code></pre>` +
+    `<pre class="strata-code-pre"><code class="${codeClass}">${lines}</code></pre>` +
     '</div>'
   );
 }

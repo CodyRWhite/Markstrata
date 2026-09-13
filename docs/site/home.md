@@ -1,4 +1,4 @@
-# Markstrata Markdown
+# Markstrata
 
 A SharePoint Framework web part that renders markdown with themes modelled on
 **GitHub**, **Obsidian** and **VS Code**, in light and dark.
@@ -48,13 +48,13 @@ export function resolveMode(mode: ColorMode, isInverted?: boolean): ResolvedMode
 
 Download the `.sppkg` from the
 [latest release](https://github.com/CodyRWhite/Markstrata/releases/latest),
-upload it to your tenant App Catalog, and add **Markstrata Markdown** to a page.
+upload it to your tenant App Catalog, and add **Markstrata** to a page.
 Nothing is fetched from a CDN at runtime.
 
 **[Full documentation →](docs/)**: every setting, the fence flags, the
 callout syntaxes and how to add a theme.
 
-Markstrata Markdown is free and MIT licensed. If it saved you an afternoon,
+Markstrata is free and MIT licensed. If it saved you an afternoon,
 [you can buy me a coffee](support/).
 
 ```mermaid

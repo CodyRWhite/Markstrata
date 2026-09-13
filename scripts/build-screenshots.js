@@ -9,7 +9,7 @@
  *
  * The capture covers the callouts and a code block, the two things the themes
  * differ on most. The demo chrome is hidden and the padding moves onto
- * .ink-root, which paints the theme background: anything outside it would be
+ * .strata-root, which paints the theme background: anything outside it would be
  * the page's own white, which is what put a white strip down the left of the
  * dark shots before.
  *
@@ -66,7 +66,7 @@ async function capture() {
     content: `.demo-bar { display: none !important; }
       .demo-stage { padding: 0 !important; }
       body { margin: 0; }
-      .ink-root { padding: 18px 22px; }`
+      .strata-root { padding: 18px 22px; }`
   });
   /* The controls are set through their own change events rather than clicked:
      the bar they live in is hidden for the capture, and a hidden control
@@ -101,7 +101,7 @@ async function capture() {
       }
       await page.waitForTimeout(700);            // diagrams re-render on theme change
       await page.evaluate((text) => {
-        const heading = [...document.querySelectorAll('.ink-content h2')]
+        const heading = [...document.querySelectorAll('.strata-content h2')]
           .find((h) => h.textContent.indexOf(text) !== -1);
         if (!heading) { throw new Error('no heading matching ' + text); }
         window.scrollTo(0, heading.getBoundingClientRect().top + window.scrollY - 18);

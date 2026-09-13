@@ -22,19 +22,19 @@ export class ContentEnhancer {
 
   /** Wires every copy button inside `container` exactly once. */
   public attachCopyButtons(container: HTMLElement): void {
-    const buttons: HTMLElement[] = Array.prototype.slice.call(container.querySelectorAll('.ink-code-copy'));
+    const buttons: HTMLElement[] = Array.prototype.slice.call(container.querySelectorAll('.strata-code-copy'));
 
     buttons.forEach((button: HTMLElement) => {
-      if (button.getAttribute('data-ink-wired') === 'true') {
+      if (button.getAttribute('data-strata-wired') === 'true') {
         return;
       }
-      button.setAttribute('data-ink-wired', 'true');
+      button.setAttribute('data-strata-wired', 'true');
 
       button.addEventListener('click', (event: Event) => {
         event.preventDefault();
         event.stopPropagation();
 
-        const block: HTMLElement | null = button.closest('.ink-code') as HTMLElement;
+        const block: HTMLElement | null = button.closest('.strata-code') as HTMLElement;
         if (!block) {
           return;
         }
@@ -49,7 +49,7 @@ export class ContentEnhancer {
    * source - each line element just needs its newline put back.
    */
   private readCode(block: HTMLElement): string {
-    const lines: HTMLElement[] = Array.prototype.slice.call(block.querySelectorAll('.ink-code-line-text'));
+    const lines: HTMLElement[] = Array.prototype.slice.call(block.querySelectorAll('.strata-code-line-text'));
     if (lines.length > 0) {
       return lines.map((line: HTMLElement) => line.textContent || '').join('\n');
     }
@@ -89,7 +89,7 @@ export class ContentEnhancer {
   }
 
   private showResult(button: HTMLButtonElement, success: boolean): void {
-    const label: HTMLElement | null = button.querySelector('.ink-code-btn-label');
+    const label: HTMLElement | null = button.querySelector('.strata-code-btn-label');
     const icon: string = button.innerHTML;
 
     button.setAttribute('data-state', success ? 'done' : 'error');
@@ -139,7 +139,7 @@ export class ContentEnhancer {
       .filter((heading: HTMLElement) => !!heading.id)
       .map((heading: HTMLElement) => {
         const clone: HTMLElement = heading.cloneNode(true) as HTMLElement;
-        const anchor: Element | null = clone.querySelector('.ink-anchor');
+        const anchor: Element | null = clone.querySelector('.strata-anchor');
         if (anchor) {
           anchor.remove();
         }
@@ -159,7 +159,7 @@ export class ContentEnhancer {
     }
 
     const nav: HTMLElement = document.createElement('nav');
-    nav.className = 'ink-toc';
+    nav.className = 'strata-toc';
     nav.setAttribute('aria-label', 'Table of contents');
 
     const baseLevel: number = Math.min.apply(

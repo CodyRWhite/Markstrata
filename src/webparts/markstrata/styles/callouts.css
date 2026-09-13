@@ -2,36 +2,36 @@
  * callouts.css - GitHub alerts, Obsidian callouts and legacy Wiki.js
  * blockquote classes, all rendered from one markup shape.
  *
- * Colour comes from --ink-callout-rgb, an "R, G, B" triple set per callout
+ * Colour comes from --strata-callout-rgb, an "R, G, B" triple set per callout
  * type below, so backgrounds can be a low-alpha tint of the same hue used for
  * the icon and title. Shape (tint strength, accent bar, radius, padding) is
  * supplied by the theme, which is how the same callout reads as a GitHub
  * alert, an Obsidian callout or a VS Code notice.
  */
 
-.ink-callout {
+.strata-callout {
   display: block;
-  margin: 0 0 var(--ink-block-gap);
-  border: var(--ink-callout-border-width) solid rgba(var(--ink-callout-rgb), var(--ink-callout-border-alpha, 0.25));
-  border-left: var(--ink-callout-accent-width, 0) solid rgb(var(--ink-callout-rgb));
-  border-radius: var(--ink-callout-radius);
-  background-color: rgba(var(--ink-callout-rgb), var(--ink-callout-bg-alpha));
-  color: var(--ink-text);
+  margin: 0 0 var(--strata-block-gap);
+  border: var(--strata-callout-border-width) solid rgba(var(--strata-callout-rgb), var(--strata-callout-border-alpha, 0.25));
+  border-left: var(--strata-callout-accent-width, 0) solid rgb(var(--strata-callout-rgb));
+  border-radius: var(--strata-callout-radius);
+  background-color: rgba(var(--strata-callout-rgb), var(--strata-callout-bg-alpha));
+  color: var(--strata-text);
   overflow: hidden;
 }
 
-.ink-callout-title {
+.strata-callout-title {
   display: flex;
   align-items: flex-start;
   gap: 8px;
-  padding: var(--ink-callout-title-padding, 8px 16px 0);
-  background-color: rgba(var(--ink-callout-rgb), var(--ink-callout-title-bg-alpha));
-  color: rgb(var(--ink-callout-rgb));
-  font-weight: var(--ink-callout-title-weight);
+  padding: var(--strata-callout-title-padding, 8px 16px 0);
+  background-color: rgba(var(--strata-callout-rgb), var(--strata-callout-title-bg-alpha));
+  color: rgb(var(--strata-callout-rgb));
+  font-weight: var(--strata-callout-title-weight);
   line-height: 1.4;
 }
 
-.ink-callout-icon {
+.strata-callout-icon {
   display: inline-flex;
   flex: 0 0 auto;
   align-items: center;
@@ -39,7 +39,7 @@
   height: calc(1.4em);
 }
 
-.ink-callout-icon svg {
+.strata-callout-icon svg {
   width: 1.05em;
   height: 1.05em;
   fill: none;
@@ -50,51 +50,51 @@
 }
 
 /* Filled icons (GitHub uses solid Octicons) opt in with this attribute. */
-.ink-callout-icon[data-icon-style='filled'] svg {
+.strata-callout-icon[data-icon-style='filled'] svg {
   fill: currentColor;
   stroke: none;
 }
 
-.ink-callout-title-text {
+.strata-callout-title-text {
   flex: 1 1 auto;
   min-width: 0;
 }
 
-.ink-callout-content {
-  padding: var(--ink-callout-content-padding, 4px 16px 8px);
+.strata-callout-content {
+  padding: var(--strata-callout-content-padding, 4px 16px 8px);
 }
 
-.ink-callout-content > :last-child {
+.strata-callout-content > :last-child {
   margin-bottom: 0;
 }
 
-.ink-callout-content > :first-child {
+.strata-callout-content > :first-child {
   margin-top: 0;
 }
 
 /* A callout whose body is empty (title-only) should not leave a gap. */
-.ink-callout-content:empty {
+.strata-callout-content:empty {
   display: none;
 }
 
 /* Nested content inherits the tint, so keep inner blocks readable. */
-.ink-callout blockquote {
-  border-left-color: rgba(var(--ink-callout-rgb), 0.45);
+.strata-callout blockquote {
+  border-left-color: rgba(var(--strata-callout-rgb), 0.45);
 }
 
 /* ------------------------------------------------------- foldable callouts */
 
-details.ink-callout > summary.ink-callout-title {
+details.strata-callout > summary.strata-callout-title {
   cursor: pointer;
   list-style: none;
   user-select: none;
 }
 
-details.ink-callout > summary.ink-callout-title::-webkit-details-marker {
+details.strata-callout > summary.strata-callout-title::-webkit-details-marker {
   display: none;
 }
 
-.ink-callout-fold {
+.strata-callout-fold {
   display: inline-flex;
   flex: 0 0 auto;
   align-items: center;
@@ -103,7 +103,7 @@ details.ink-callout > summary.ink-callout-title::-webkit-details-marker {
   transition: transform 0.15s ease-in-out;
 }
 
-.ink-callout-fold svg {
+.strata-callout-fold svg {
   width: 0.9em;
   height: 0.9em;
   fill: none;
@@ -113,52 +113,52 @@ details.ink-callout > summary.ink-callout-title::-webkit-details-marker {
   stroke-linejoin: round;
 }
 
-details.ink-callout:not([open]) .ink-callout-fold {
+details.strata-callout:not([open]) .strata-callout-fold {
   transform: rotate(-90deg);
 }
 
-details.ink-callout:not([open]) > summary.ink-callout-title {
-  padding-bottom: var(--ink-callout-fold-closed-pad, 8px);
+details.strata-callout:not([open]) > summary.strata-callout-title {
+  padding-bottom: var(--strata-callout-fold-closed-pad, 8px);
 }
 
 /* ------------------------------------------------------------ type palette */
 
-.ink-callout[data-callout='note'],
-.ink-callout[data-callout='info'],
-.ink-callout[data-callout='todo'] {
-  --ink-callout-rgb: var(--ink-color-blue);
+.strata-callout[data-callout='note'],
+.strata-callout[data-callout='info'],
+.strata-callout[data-callout='todo'] {
+  --strata-callout-rgb: var(--strata-color-blue);
 }
 
-.ink-callout[data-callout='abstract'],
-.ink-callout[data-callout='hint'] {
-  --ink-callout-rgb: var(--ink-color-cyan);
+.strata-callout[data-callout='abstract'],
+.strata-callout[data-callout='hint'] {
+  --strata-callout-rgb: var(--strata-color-cyan);
 }
 
-.ink-callout[data-callout='tip'],
-.ink-callout[data-callout='success'] {
-  --ink-callout-rgb: var(--ink-color-green);
+.strata-callout[data-callout='tip'],
+.strata-callout[data-callout='success'] {
+  --strata-callout-rgb: var(--strata-color-green);
 }
 
-.ink-callout[data-callout='important'],
-.ink-callout[data-callout='example'] {
-  --ink-callout-rgb: var(--ink-color-purple);
+.strata-callout[data-callout='important'],
+.strata-callout[data-callout='example'] {
+  --strata-callout-rgb: var(--strata-color-purple);
 }
 
-.ink-callout[data-callout='question'] {
-  --ink-callout-rgb: var(--ink-color-yellow);
+.strata-callout[data-callout='question'] {
+  --strata-callout-rgb: var(--strata-color-yellow);
 }
 
-.ink-callout[data-callout='warning'] {
-  --ink-callout-rgb: var(--ink-color-orange);
+.strata-callout[data-callout='warning'] {
+  --strata-callout-rgb: var(--strata-color-orange);
 }
 
-.ink-callout[data-callout='caution'],
-.ink-callout[data-callout='failure'],
-.ink-callout[data-callout='danger'],
-.ink-callout[data-callout='bug'] {
-  --ink-callout-rgb: var(--ink-color-red);
+.strata-callout[data-callout='caution'],
+.strata-callout[data-callout='failure'],
+.strata-callout[data-callout='danger'],
+.strata-callout[data-callout='bug'] {
+  --strata-callout-rgb: var(--strata-color-red);
 }
 
-.ink-callout[data-callout='quote'] {
-  --ink-callout-rgb: var(--ink-color-gray);
+.strata-callout[data-callout='quote'] {
+  --strata-callout-rgb: var(--strata-color-gray);
 }

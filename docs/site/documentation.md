@@ -13,7 +13,7 @@ Download `markstrata.sppkg` from the
    SharePoint* library).
 2. When prompted, choose **Enable this app and add it to all sites**, or leave
    it unticked and add it per site from *Site contents → New → App*.
-3. Edit a page, add a web part, and pick **Markstrata Markdown** from the
+3. Edit a page, add a web part, and pick **Markstrata** from the
    **Content** group.
 
 > [!TIP] Upgrading
@@ -120,7 +120,7 @@ and KaTeX maths.
 
 ```mermaid
 flowchart LR
-  A[Markdown in a library] --> B[Markstrata Markdown]
+  A[Markdown in a library] --> B[Markstrata]
   B --> C[GitHub]
   B --> D[Obsidian]
   B --> E[VS Code]

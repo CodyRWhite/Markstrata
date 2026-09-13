@@ -27,33 +27,33 @@ const REPO = 'https://github.com/CodyRWhite/Markstrata';
  */
 const PAGES = [
   {
-    id: 'home', dir: '', label: 'Home', title: 'Markstrata Markdown',
+    id: 'home', dir: '', label: 'Home', title: 'Markstrata',
     source: 'docs/site/home.md',
     description: 'Markdown for SharePoint, themed like the editors you write it in - GitHub, Obsidian and VS Code, in light and dark.'
   },
   {
-    id: 'demo', dir: 'demo', label: 'Demo', title: 'Demo - Markstrata Markdown',
+    id: 'demo', dir: 'demo', label: 'Demo', title: 'Demo - Markstrata',
     description: 'The web part itself, running in your browser: toolbar, contents, copy buttons, theme switcher and the split editor.'
   },
   {
-    id: 'themes', dir: 'themes', label: 'Themes', title: 'Themes - Markstrata Markdown',
+    id: 'themes', dir: 'themes', label: 'Themes', title: 'Themes - Markstrata',
     source: 'samples/kitchen-sink.md',
     description: 'Every feature at once - callouts, code, tables, diagrams and maths - in each theme, so you can judge one at a glance.'
   },
   {
-    id: 'docs', dir: 'docs', label: 'Documentation', title: 'Documentation - Markstrata Markdown',
+    id: 'docs', dir: 'docs', label: 'Documentation', title: 'Documentation - Markstrata',
     source: 'docs/site/documentation.md',
     description: 'Install, content sources, themes, code block flags, callout syntaxes, the table of contents and editing in the page.'
   },
   {
-    id: 'about', dir: 'about', label: 'About', title: 'About - Markstrata Markdown',
+    id: 'about', dir: 'about', label: 'About', title: 'About - Markstrata',
     source: 'docs/site/about.md',
-    description: 'Why Markstrata Markdown exists, how it is built, and what it borrows from the web part that prompted it.'
+    description: 'Why Markstrata exists, how it is built, and what it borrows from the web part that prompted it.'
   },
   {
-    id: 'support', dir: 'support', label: 'Support', title: 'Support - Markstrata Markdown',
+    id: 'support', dir: 'support', label: 'Support', title: 'Support - Markstrata',
     source: 'docs/site/support.md',
-    description: 'Markstrata Markdown is free and MIT licensed. Ways to help - most of which cost nothing.'
+    description: 'Markstrata is free and MIT licensed. Ways to help - most of which cost nothing.'
   }
 ];
 
@@ -86,12 +86,12 @@ function header(currentId) {
         + `${current ? ' aria-current="page"' : ''}>${entry.label}</a>`;
     })
     .join('');
+  /* The reversed lockup unconditionally: this bar is dark whatever the reader's
+     colour scheme is, and keying the choice off prefers-color-scheme put the
+     dark wordmark on the dark bar for anyone browsing in light mode. */
   return `<header class="site-header">
-  <a class="site-brand" href="${linkTo(currentId, 'home')}" aria-label="Markstrata Markdown">
-    <picture>
-      <source media="(prefers-color-scheme: dark)" srcset="${up}brand/lockup-horizontal-dark.svg">
-      <img src="${up}brand/lockup-horizontal.svg" alt="Markstrata Markdown">
-    </picture>
+  <a class="site-brand" href="${linkTo(currentId, 'home')}" aria-label="Markstrata">
+    <img src="${up}brand/lockup-horizontal-dark.svg" alt="Markstrata">
   </a>
   <nav class="site-nav" aria-label="Site">${links}</nav>
   <a class="site-cta" href="${REPO}/releases/latest">Download</a>
@@ -100,7 +100,7 @@ function header(currentId) {
 
 function footer(currentId) {
   return `<footer class="site-footer">
-  <p>Markstrata Markdown: a SharePoint web part that renders markdown the way you write it.</p>
+  <p>Markstrata: a SharePoint web part that renders markdown the way you write it.</p>
   <p>
     <a href="${REPO}">GitHub</a> ·
     <a href="${REPO}/releases/latest">Releases</a> ·
@@ -114,44 +114,44 @@ function footer(currentId) {
 const CHROME_CSS = `
 .site-header {
   display: flex; flex-wrap: wrap; gap: 10px 22px; align-items: center;
-  padding: 14px 22px; background: #012039; color: #e8eef5;
+  padding: 14px 22px; background: #072830; color: #EAF2F2;
   font: 15px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 .site-brand { margin-right: auto; display: flex; align-items: center; }
 .site-brand img { height: 30px; display: block; }
 .site-nav { display: flex; flex-wrap: wrap; gap: 4px; }
 .site-nav-link {
-  padding: 6px 11px; border-radius: 6px; color: #c6d6e6; text-decoration: none;
+  padding: 6px 11px; border-radius: 6px; color: #C9E8EA; text-decoration: none;
 }
 .site-nav-link:hover { background: rgba(255, 255, 255, .1); color: #fff; }
-.site-nav-link.is-current { background: rgba(54, 167, 202, .2); color: #8fd3ea; }
+.site-nav-link.is-current { background: rgba(98, 190, 197, .18); color: #62BEC5; }
 .site-cta {
-  padding: 7px 15px; border-radius: 6px; background: #36a7ca; color: #012039;
+  padding: 7px 15px; border-radius: 6px; background: #0F7B86; color: #FFFFFF;
   font-weight: 600; text-decoration: none;
 }
-.site-cta:hover { background: #58bcdb; }
+.site-cta:hover { background: #0C666F; }
 .site-footer {
-  padding: 30px 22px 44px; background: #012039; color: #9fb6cc;
+  padding: 30px 22px 44px; background: #072830; color: #9FBCBE;
   font: 14px/1.7 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   text-align: center;
 }
 .site-footer p { margin: 0 0 6px; }
-.site-footer a { color: #8fd3ea; }
+.site-footer a { color: #62BEC5; }
 
 /* The support page's two buttons. They sit inside rendered markdown, so they
    are styled here rather than in the web part's own stylesheets - nothing on a
    SharePoint page has any use for them. */
 .support-buttons { display: flex; flex-wrap: wrap; gap: 12px; margin: 22px 0 28px; }
-/* Scoped through .ink-content so these beat the theme's own link colour -
+/* Scoped through .strata-content so these beat the theme's own link colour -
    without it a button reads as a blue hyperlink on a yellow slab. */
-.ink-content a.support-btn {
+.strata-content a.support-btn {
   display: inline-block; padding: 12px 22px; border-radius: 8px;
   font-weight: 600; text-decoration: none; border: 1px solid transparent;
 }
-.ink-content a.support-btn--coffee { background: #ffdd00; color: #17120a; }
-.ink-content a.support-btn--coffee:hover { background: #ffe74d; color: #17120a; }
-.ink-content a.support-btn--sponsor { background: transparent; border-color: #a371f7; color: #a371f7; }
-.ink-content a.support-btn--sponsor:hover { background: rgba(163, 113, 247, .14); color: #a371f7; }
+.strata-content a.support-btn--coffee { background: #ffdd00; color: #17120a; }
+.strata-content a.support-btn--coffee:hover { background: #ffe74d; color: #17120a; }
+.strata-content a.support-btn--sponsor { background: transparent; border-color: #a371f7; color: #a371f7; }
+.strata-content a.support-btn--sponsor:hover { background: rgba(163, 113, 247, .14); color: #a371f7; }
 @media (max-width: 620px) {
   .site-header { gap: 10px 12px; }
   .site-brand { margin-right: 0; width: 100%; }

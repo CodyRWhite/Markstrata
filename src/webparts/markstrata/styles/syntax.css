@@ -3,141 +3,141 @@
  *
  * highlight.js ships one stylesheet per theme with the colours baked in, which
  * is why the original web part could only ever look like atom-one-dark. Here
- * every token resolves to a --ink-syn-* variable, so switching theme or light/
+ * every token resolves to a --strata-syn-* variable, so switching theme or light/
  * dark switches the highlighting with it and nothing has to be re-imported.
  *
  * Class groupings follow highlight.js 11's own themes so language coverage
  * matches what the library actually emits.
  */
 
-.ink-code .hljs {
-  color: var(--ink-code-text);
+.strata-code .hljs {
+  color: var(--strata-code-text);
   background: transparent;
 }
 
-.ink-code .hljs-doctag,
-.ink-code .hljs-keyword,
-.ink-code .hljs-meta .hljs-keyword,
-.ink-code .hljs-template-tag,
-.ink-code .hljs-template-variable,
-.ink-code .hljs-variable.language_ {
-  color: var(--ink-syn-keyword);
+.strata-code .hljs-doctag,
+.strata-code .hljs-keyword,
+.strata-code .hljs-meta .hljs-keyword,
+.strata-code .hljs-template-tag,
+.strata-code .hljs-template-variable,
+.strata-code .hljs-variable.language_ {
+  color: var(--strata-syn-keyword);
 }
 
-.ink-code .hljs-type,
-.ink-code .hljs-class .hljs-title {
-  color: var(--ink-syn-type, var(--ink-syn-keyword));
+.strata-code .hljs-type,
+.strata-code .hljs-class .hljs-title {
+  color: var(--strata-syn-type, var(--strata-syn-keyword));
 }
 
-.ink-code .hljs-title,
-.ink-code .hljs-title.class_,
-.ink-code .hljs-title.class_.inherited__,
-.ink-code .hljs-title.function_ {
-  color: var(--ink-syn-entity);
+.strata-code .hljs-title,
+.strata-code .hljs-title.class_,
+.strata-code .hljs-title.class_.inherited__,
+.strata-code .hljs-title.function_ {
+  color: var(--strata-syn-entity);
 }
 
-.ink-code .hljs-attr,
-.ink-code .hljs-attribute,
-.ink-code .hljs-selector-attr,
-.ink-code .hljs-selector-class,
-.ink-code .hljs-selector-id {
-  color: var(--ink-syn-attr, var(--ink-syn-constant));
+.strata-code .hljs-attr,
+.strata-code .hljs-attribute,
+.strata-code .hljs-selector-attr,
+.strata-code .hljs-selector-class,
+.strata-code .hljs-selector-id {
+  color: var(--strata-syn-attr, var(--strata-syn-constant));
 }
 
-.ink-code .hljs-literal,
-.ink-code .hljs-number,
-.ink-code .hljs-meta {
-  color: var(--ink-syn-constant);
+.strata-code .hljs-literal,
+.strata-code .hljs-number,
+.strata-code .hljs-meta {
+  color: var(--strata-syn-constant);
 }
 
-.ink-code .hljs-operator {
-  color: var(--ink-syn-operator, var(--ink-syn-constant));
+.strata-code .hljs-operator {
+  color: var(--strata-syn-operator, var(--strata-syn-constant));
 }
 
-.ink-code .hljs-variable {
-  color: var(--ink-syn-variable);
+.strata-code .hljs-variable {
+  color: var(--strata-syn-variable);
 }
 
-.ink-code .hljs-regexp {
-  color: var(--ink-syn-regexp, var(--ink-syn-string));
+.strata-code .hljs-regexp {
+  color: var(--strata-syn-regexp, var(--strata-syn-string));
 }
 
-.ink-code .hljs-string,
-.ink-code .hljs-meta .hljs-string,
-.ink-code .hljs-char.escape_ {
-  color: var(--ink-syn-string);
+.strata-code .hljs-string,
+.strata-code .hljs-meta .hljs-string,
+.strata-code .hljs-char.escape_ {
+  color: var(--strata-syn-string);
 }
 
-.ink-code .hljs-built_in,
-.ink-code .hljs-symbol {
-  color: var(--ink-syn-builtin);
+.strata-code .hljs-built_in,
+.strata-code .hljs-symbol {
+  color: var(--strata-syn-builtin);
 }
 
-.ink-code .hljs-comment,
-.ink-code .hljs-code,
-.ink-code .hljs-formula {
-  color: var(--ink-syn-comment);
-  font-style: var(--ink-syn-comment-style, normal);
+.strata-code .hljs-comment,
+.strata-code .hljs-code,
+.strata-code .hljs-formula {
+  color: var(--strata-syn-comment);
+  font-style: var(--strata-syn-comment-style, normal);
 }
 
-.ink-code .hljs-name,
-.ink-code .hljs-quote,
-.ink-code .hljs-selector-tag,
-.ink-code .hljs-selector-pseudo {
-  color: var(--ink-syn-tag);
+.strata-code .hljs-name,
+.strata-code .hljs-quote,
+.strata-code .hljs-selector-tag,
+.strata-code .hljs-selector-pseudo {
+  color: var(--strata-syn-tag);
 }
 
-.ink-code .hljs-property {
-  color: var(--ink-syn-property, var(--ink-code-text));
+.strata-code .hljs-property {
+  color: var(--strata-syn-property, var(--strata-code-text));
 }
 
-.ink-code .hljs-punctuation,
-.ink-code .hljs-params {
-  color: var(--ink-syn-punctuation, var(--ink-code-text));
+.strata-code .hljs-punctuation,
+.strata-code .hljs-params {
+  color: var(--strata-syn-punctuation, var(--strata-code-text));
 }
 
-.ink-code .hljs-tag {
-  color: var(--ink-syn-punctuation, var(--ink-code-text));
+.strata-code .hljs-tag {
+  color: var(--strata-syn-punctuation, var(--strata-code-text));
 }
 
-.ink-code .hljs-subst {
-  color: var(--ink-code-text);
+.strata-code .hljs-subst {
+  color: var(--strata-code-text);
 }
 
-.ink-code .hljs-section {
-  color: var(--ink-syn-section, var(--ink-syn-constant));
+.strata-code .hljs-section {
+  color: var(--strata-syn-section, var(--strata-syn-constant));
   font-weight: 700;
 }
 
-.ink-code .hljs-bullet {
-  color: var(--ink-syn-bullet, var(--ink-syn-variable));
+.strata-code .hljs-bullet {
+  color: var(--strata-syn-bullet, var(--strata-syn-variable));
 }
 
-.ink-code .hljs-link {
-  color: var(--ink-syn-link, var(--ink-link));
+.strata-code .hljs-link {
+  color: var(--strata-syn-link, var(--strata-link));
   text-decoration: underline;
 }
 
-.ink-code .hljs-emphasis {
+.strata-code .hljs-emphasis {
   font-style: italic;
 }
 
-.ink-code .hljs-strong {
+.strata-code .hljs-strong {
   font-weight: 700;
 }
 
 /* Diff blocks: tint the whole line so additions and deletions stay legible
    even when the foreground colour is close to the body text. */
-.ink-code .hljs-addition {
+.strata-code .hljs-addition {
   display: inline-block;
   width: 100%;
-  color: var(--ink-syn-addition);
-  background-color: var(--ink-syn-addition-bg);
+  color: var(--strata-syn-addition);
+  background-color: var(--strata-syn-addition-bg);
 }
 
-.ink-code .hljs-deletion {
+.strata-code .hljs-deletion {
   display: inline-block;
   width: 100%;
-  color: var(--ink-syn-deletion);
-  background-color: var(--ink-syn-deletion-bg);
+  color: var(--strata-syn-deletion);
+  background-color: var(--strata-syn-deletion-bg);
 }

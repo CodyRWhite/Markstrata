@@ -8,62 +8,62 @@
  * VS Code" a data change rather than a fork of the stylesheet.
  *
  * Token groups
- *   --ink-bg / -elevated / -hover ....... surfaces
- *   --ink-text / -muted / -faint ........ foreground text
- *   --ink-border / -strong .............. rules and dividers
- *   --ink-link / -hover ................. anchors
- *   --ink-color-<hue> ................... accent palette, stored as an "R, G, B"
+ *   --strata-bg / -elevated / -hover ....... surfaces
+ *   --strata-text / -muted / -faint ........ foreground text
+ *   --strata-border / -strong .............. rules and dividers
+ *   --strata-link / -hover ................. anchors
+ *   --strata-color-<hue> ................... accent palette, stored as an "R, G, B"
  *                                         triple so rules can do
- *                                         rgba(var(--ink-color-blue), .12)
- *   --ink-font-* / --ink-*-size ......... typography
- *   --ink-code-* ........................ code surfaces and gutter
- *   --ink-syn-* ......................... syntax highlighting tokens
- *   --ink-callout-* ..................... callout shape (colour comes from the
- *                                         per-type --ink-callout-rgb)
+ *                                         rgba(var(--strata-color-blue), .12)
+ *   --strata-font-* / --strata-*-size ......... typography
+ *   --strata-code-* ........................ code surfaces and gutter
+ *   --strata-syn-* ......................... syntax highlighting tokens
+ *   --strata-callout-* ..................... callout shape (colour comes from the
+ *                                         per-type --strata-callout-rgb)
  */
 
-.ink-root {
+.strata-root {
   /* Shape defaults - themes may override. */
-  --ink-radius-sm: 3px;
-  --ink-radius-md: 6px;
-  --ink-radius-lg: 8px;
+  --strata-radius-sm: 3px;
+  --strata-radius-md: 6px;
+  --strata-radius-lg: 8px;
 
   /* Rhythm. Themes set the *-base values; the density and font-size options in
      modifiers.css scale them, so neither side has to win a specificity fight. */
-  --ink-block-gap-base: 16px;
-  --ink-density-scale: 1;
-  --ink-font-scale: 1;
-  --ink-line-height-base: 1.6;
-  --ink-block-gap: calc(var(--ink-block-gap-base) * var(--ink-density-scale));
-  --ink-line-height: calc(var(--ink-line-height-base) * var(--ink-density-scale));
-  --ink-content-max-width: 860px;
+  --strata-block-gap-base: 16px;
+  --strata-density-scale: 1;
+  --strata-font-scale: 1;
+  --strata-line-height-base: 1.6;
+  --strata-block-gap: calc(var(--strata-block-gap-base) * var(--strata-density-scale));
+  --strata-line-height: calc(var(--strata-line-height-base) * var(--strata-density-scale));
+  --strata-content-max-width: 860px;
   /* Heading anchors hang to the left of the text, so the content column
      reserves a gutter to hang them in. It is computed from the body size
      rather than written in em, because an em inside an h1 resolves against
      the heading and the gutter would no longer match the anchor. */
-  --ink-anchor-gutter: calc(var(--ink-font-size) * var(--ink-font-scale) * 1.35);
+  --strata-anchor-gutter: calc(var(--strata-font-size) * var(--strata-font-scale) * 1.35);
   /* Breathing room at the top and bottom of the web part. SharePoint gives its
      own web parts a generous amount, and without it the first heading sits
      almost on the edge of the panel. Follows the spacing setting, so compact
      gets less of it than relaxed. */
-  --ink-root-padding-block: calc(26px * var(--ink-density-scale));
+  --strata-root-padding-block: calc(26px * var(--strata-density-scale));
 
   /* Code defaults that themes rarely need to change. */
-  --ink-code-font-size: 0.875em;
-  --ink-code-line-height: 1.55;
-  --ink-code-padding: 14px 16px;
-  --ink-code-radius: var(--ink-radius-md);
-  --ink-code-border: transparent;
-  --ink-code-header-bg: transparent;
+  --strata-code-font-size: 0.875em;
+  --strata-code-line-height: 1.55;
+  --strata-code-padding: 14px 16px;
+  --strata-code-radius: var(--strata-radius-md);
+  --strata-code-border: transparent;
+  --strata-code-header-bg: transparent;
 
   /* Callout shape defaults; each theme restyles these. */
-  --ink-callout-radius: var(--ink-radius-md);
-  --ink-callout-bg-alpha: 0.1;
-  --ink-callout-title-bg-alpha: 0.1;
-  --ink-callout-border-width: 0px;
-  --ink-callout-accent-width: 0px;
-  --ink-callout-title-weight: 600;
-  --ink-callout-rgb: var(--ink-color-gray);
+  --strata-callout-radius: var(--strata-radius-md);
+  --strata-callout-bg-alpha: 0.1;
+  --strata-callout-title-bg-alpha: 0.1;
+  --strata-callout-border-width: 0px;
+  --strata-callout-accent-width: 0px;
+  --strata-callout-title-weight: 600;
+  --strata-callout-rgb: var(--strata-color-gray);
 
   box-sizing: border-box;
   position: relative;
@@ -72,26 +72,26 @@
      to behave like a narrow layout, which a media query cannot see. */
   container-type: inline-size;
   container-name: mdf;
-  background-color: var(--ink-bg);
-  color: var(--ink-text);
-  font-family: var(--ink-font-body);
-  font-size: calc(var(--ink-font-size) * var(--ink-font-scale));
-  line-height: var(--ink-line-height);
+  background-color: var(--strata-bg);
+  color: var(--strata-text);
+  font-family: var(--strata-font-body);
+  font-size: calc(var(--strata-font-size) * var(--strata-font-scale));
+  line-height: var(--strata-line-height);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
   overflow-wrap: break-word;
-  padding-block: var(--ink-root-padding-block);
+  padding-block: var(--strata-root-padding-block);
 }
 
-.ink-root *,
-.ink-root *::before,
-.ink-root *::after {
+.strata-root *,
+.strata-root *::before,
+.strata-root *::after {
   box-sizing: inherit;
 }
 
 /* ------------------------------------------------------------------ layout */
 
-.ink-layout {
+.strata-layout {
   display: flex;
   align-items: flex-start;
   /* The content column stops at its width setting, so on a wider web part
@@ -109,33 +109,33 @@
    Right placement reorders rather than reversing the row: row-reverse packs
    both columns against the right edge when the content is narrower than the
    web part, which leaves an odd gap on the left. */
-.ink-layout[data-ink-toc='right'] > .ink-toc-sidebar {
+.strata-layout[data-strata-toc='right'] > .strata-toc-sidebar {
   order: 2;
 }
 
-.ink-content {
+.strata-content {
   flex: 1 1 auto;
   min-width: 0;
-  max-width: var(--ink-content-max-width);
+  max-width: var(--strata-content-max-width);
   /* Room for the heading anchors. Without it they sit outside the web part
      and the page canvas clips them - which only showed up with the contents
      anywhere but on the left, where the sidebar happened to provide the gap. */
-  padding-left: var(--ink-anchor-gutter);
+  padding-left: var(--strata-anchor-gutter);
 }
 
 /* Blocks own their bottom margin only, so spacing never doubles up. */
-.ink-content > * {
+.strata-content > * {
   margin-top: 0;
-  margin-bottom: var(--ink-block-gap);
+  margin-bottom: var(--strata-block-gap);
 }
 
-.ink-content > *:last-child {
+.strata-content > *:last-child {
   margin-bottom: 0;
 }
 
 /* ------------------------------------------------------- table of contents */
 
-.ink-toc-sidebar {
+.strata-toc-sidebar {
   flex: 0 0 240px;
   align-self: flex-start;
   position: sticky;
@@ -143,20 +143,20 @@
   max-height: calc(100vh - 140px);
   overflow-y: auto;
   padding: 10px 14px;
-  border: 1px solid var(--ink-border);
-  border-radius: var(--ink-radius-md);
-  background-color: var(--ink-bg-elevated);
+  border: 1px solid var(--strata-border);
+  border-radius: var(--strata-radius-md);
+  background-color: var(--strata-bg-elevated);
   font-size: 0.875em;
 }
 
 /* While the page is being edited, sticky positioning fights the page canvas,
    so the contents simply scroll away with everything else. */
-.ink-root[data-ink-editing='true'] .ink-toc-sidebar {
+.strata-root[data-strata-editing='true'] .strata-toc-sidebar {
   position: static;
   max-height: none;
 }
 
-.ink-toc-heading {
+.strata-toc-heading {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -166,16 +166,16 @@
   font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--ink-text-muted);
+  color: var(--strata-text-muted);
   cursor: pointer;
   list-style: none;
 }
 
-.ink-toc-heading::-webkit-details-marker {
+.strata-toc-heading::-webkit-details-marker {
   display: none;
 }
 
-.ink-toc-heading::before {
+.strata-toc-heading::before {
   content: '';
   width: 0;
   height: 0;
@@ -186,68 +186,68 @@
   transition: transform 0.15s ease-in-out;
 }
 
-.ink-toc-sidebar:not([open]) .ink-toc-heading::before {
+.strata-toc-sidebar:not([open]) .strata-toc-heading::before {
   transform: none;
 }
 
-.ink-toc {
+.strata-toc {
   margin-top: 8px;
 }
 
-.ink-toc ul {
+.strata-toc ul {
   margin: 0;
   padding-left: 14px;
   list-style: none;
 }
 
-.ink-toc > ul {
+.strata-toc > ul {
   padding-left: 0;
 }
 
-.ink-toc li {
+.strata-toc li {
   margin: 2px 0;
 }
 
-.ink-toc a {
+.strata-toc a {
   display: block;
   padding: 3px 6px;
   border-left: 2px solid transparent;
-  border-radius: var(--ink-radius-sm);
-  color: var(--ink-text-muted);
+  border-radius: var(--strata-radius-sm);
+  color: var(--strata-text-muted);
   text-decoration: none;
   line-height: 1.35;
 }
 
-.ink-toc a:hover {
-  background-color: var(--ink-bg-hover);
-  color: var(--ink-link);
+.strata-toc a:hover {
+  background-color: var(--strata-bg-hover);
+  color: var(--strata-link);
 }
 
 /* Marks the heading currently in view. */
-.ink-toc a[aria-current='true'] {
-  border-left-color: var(--ink-link);
-  color: var(--ink-link);
+.strata-toc a[aria-current='true'] {
+  border-left-color: var(--strata-link);
+  color: var(--strata-link);
   font-weight: 600;
 }
 
 /* The `[[toc]]` marker's own container, and the inline panel. The child
-   combinator matters: the inline panel holds a .ink-toc of its own, which must
+   combinator matters: the inline panel holds a .strata-toc of its own, which must
    not pick up a second border. */
-.ink-content > .ink-toc,
-.ink-toc-inline {
+.strata-content > .strata-toc,
+.strata-toc-inline {
   padding: 12px 16px;
-  border: 1px solid var(--ink-border);
-  border-radius: var(--ink-radius-md);
-  background-color: var(--ink-bg-elevated);
+  border: 1px solid var(--strata-border);
+  border-radius: var(--strata-radius-md);
+  background-color: var(--strata-bg-elevated);
 }
 
-.ink-toc-inline {
-  margin-bottom: var(--ink-block-gap);
+.strata-toc-inline {
+  margin-bottom: var(--strata-block-gap);
 }
 
 /* Narrow web part: stack, and let the contents collapse out of the way. */
 @container mdf (max-width: 720px) {
-  .ink-layout {
+  .strata-layout {
     flex-direction: column;
     gap: 16px;
     /* align-items is flex-start in the row layout so a short contents sidebar
@@ -261,11 +261,11 @@
   }
 
   /* Stacked, the contents belong above the text whichever side they were on. */
-  .ink-layout[data-ink-toc='right'] > .ink-toc-sidebar {
+  .strata-layout[data-strata-toc='right'] > .strata-toc-sidebar {
     order: 0;
   }
 
-  .ink-toc-sidebar {
+  .strata-toc-sidebar {
     position: static;
     flex: 1 1 auto;
     width: 100%;
@@ -276,16 +276,16 @@
 /* Fallback for browsers without container queries. */
 @supports not (container-type: inline-size) {
   @media (max-width: 900px) {
-    .ink-layout {
+    .strata-layout {
       flex-direction: column;
       gap: 16px;
     }
 
-    .ink-layout[data-ink-toc='right'] > .ink-toc-sidebar {
+    .strata-layout[data-strata-toc='right'] > .strata-toc-sidebar {
       order: 0;
     }
 
-    .ink-toc-sidebar {
+    .strata-toc-sidebar {
       position: static;
       flex: 1 1 auto;
       width: 100%;
@@ -296,22 +296,22 @@
 
 /* ------------------------------------------------------------------ states */
 
-.ink-empty,
-.ink-error {
+.strata-empty,
+.strata-error {
   padding: 16px;
-  border-radius: var(--ink-radius-md);
-  border: 1px solid var(--ink-border);
-  color: var(--ink-text-muted);
+  border-radius: var(--strata-radius-md);
+  border: 1px solid var(--strata-border);
+  color: var(--strata-text-muted);
   font-size: 0.95em;
 }
 
-.ink-error {
-  border-color: rgb(var(--ink-color-red));
-  background-color: rgba(var(--ink-color-red), 0.1);
-  color: var(--ink-text);
+.strata-error {
+  border-color: rgb(var(--strata-color-red));
+  background-color: rgba(var(--strata-color-red), 0.1);
+  color: var(--strata-text);
 }
 
-.ink-root :focus-visible {
-  outline: 2px solid var(--ink-link);
+.strata-root :focus-visible {
+  outline: 2px solid var(--strata-link);
   outline-offset: 2px;
 }

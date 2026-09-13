@@ -140,7 +140,7 @@ function buildToc(html) {
     const text = match[3]
       // Drop the heading's anchor link, or its "#" ends up in the entry - the
       // web part removes the same element when it builds the list from the DOM.
-      .replace(/<a class="ink-anchor"[\s\S]*?<\/a>/g, '')
+      .replace(/<a class="strata-anchor"[\s\S]*?<\/a>/g, '')
       .replace(/<[^>]+>/g, '')
       .trim();
     if (text) {
@@ -156,9 +156,9 @@ function buildToc(html) {
         `<li style="padding-left:${(item.level - 2) * 12}px"><a href="#${item.id}">${item.text}</a></li>`
     )
     .join('\n');
-  return `<details class="ink-toc-sidebar" open>
-      <summary class="ink-toc-heading">On this page</summary>
-      <nav class="ink-toc" aria-label="Table of contents"><ul>${links}</ul></nav>
+  return `<details class="strata-toc-sidebar" open>
+      <summary class="strata-toc-heading">On this page</summary>
+      <nav class="strata-toc" aria-label="Table of contents"><ul>${links}</ul></nav>
     </details>`;
 }
 
@@ -169,13 +169,13 @@ function buildToc(html) {
 function pageTitle(html) {
   const match = /<h1[^>]*>([\s\S]*?)<\/h1>/.exec(html);
   if (!match) {
-    return 'Markstrata Markdown';
+    return 'Markstrata';
   }
   const text = match[1]
-    .replace(/<a class="ink-anchor"[\s\S]*?<\/a>/g, '')
+    .replace(/<a class="strata-anchor"[\s\S]*?<\/a>/g, '')
     .replace(/<[^>]+>/g, '')
     .trim();
-  return text || 'Markstrata Markdown';
+  return text || 'Markstrata';
 }
 
 function template(css, content, toc, mermaidThemes, title) {
@@ -250,11 +250,11 @@ ${header}
   <label><input type="checkbox" id="wrap"> Wrap code</label>
 </div>
 <div class="demo-stage">
-  <div class="ink-root" id="root" data-ink-theme="vscode" data-ink-mode="light"
-       data-ink-width="comfortable" data-ink-density="compact" data-ink-size="normal" data-ink-code-size="normal">
-    <div class="ink-layout" id="layout" data-ink-toc="inline">
+  <div class="strata-root" id="root" data-strata-theme="vscode" data-strata-mode="light"
+       data-strata-width="comfortable" data-strata-density="compact" data-strata-size="normal" data-strata-code-size="normal">
+    <div class="strata-layout" id="layout" data-strata-toc="inline">
       ${toc}
-      <article class="ink-content" id="content">
+      <article class="strata-content" id="content">
 ${content}
       </article>
     </div>
@@ -274,11 +274,11 @@ var MERMAID_THEMES = ${JSON.stringify(mermaidThemes)};
   var layout = document.getElementById('layout');
   var content = document.getElementById('content');
   function placeToc() {
-    var panel = document.querySelector('.ink-toc-sidebar, .ink-toc-inline');
+    var panel = document.querySelector('.strata-toc-sidebar, .strata-toc-inline');
     var placement = tocSelect.value;
     panel.hidden = placement === 'off';
-    layout.setAttribute('data-ink-toc', placement === 'off' ? 'left' : placement);
-    panel.className = placement === 'inline' ? 'ink-toc-inline' : 'ink-toc-sidebar';
+    layout.setAttribute('data-strata-toc', placement === 'off' ? 'left' : placement);
+    panel.className = placement === 'inline' ? 'strata-toc-inline' : 'strata-toc-sidebar';
     if (placement === 'inline') {
       content.insertBefore(panel, content.firstChild);
     } else {
@@ -293,7 +293,7 @@ var MERMAID_THEMES = ${JSON.stringify(mermaidThemes)};
   // Mirror the web part: a contents sidebar starts collapsed when the column
   // is too narrow to sit it beside the text. Above the content it always
   // starts open, which is what the web part does too.
-  var toc = document.querySelector('.ink-toc-sidebar');
+  var toc = document.querySelector('.strata-toc-sidebar');
   if (toc && root.clientWidth <= 720) {
     toc.open = false;
   }
@@ -305,29 +305,29 @@ var MERMAID_THEMES = ${JSON.stringify(mermaidThemes)};
       renderDiagrams();
     });
   }
-  bind('theme', 'data-ink-theme');
-  bind('mode', 'data-ink-mode');
-  bind('width', 'data-ink-width');
-  bind('density', 'data-ink-density');
+  bind('theme', 'data-strata-theme');
+  bind('mode', 'data-strata-mode');
+  bind('width', 'data-strata-width');
+  bind('density', 'data-strata-density');
 
   function toggleClass(id, className) {
     var input = document.getElementById(id);
     input.addEventListener('change', function () {
-      var blocks = document.querySelectorAll('.ink-code');
+      var blocks = document.querySelectorAll('.strata-code');
       for (var i = 0; i < blocks.length; i++) {
         blocks[i].classList.toggle(className, input.checked);
       }
     });
   }
-  toggleClass('numbers', 'ink-code--numbered');
-  toggleClass('wrap', 'ink-code--wrap');
+  toggleClass('numbers', 'strata-code--numbered');
+  toggleClass('wrap', 'strata-code--wrap');
 
   // Copy buttons, same behaviour as the web part.
   document.addEventListener('click', function (event) {
-    var button = event.target.closest ? event.target.closest('.ink-code-copy') : null;
+    var button = event.target.closest ? event.target.closest('.strata-code-copy') : null;
     if (!button) { return; }
-    var block = button.closest('.ink-code');
-    var lines = block.querySelectorAll('.ink-code-line-text');
+    var block = button.closest('.strata-code');
+    var lines = block.querySelectorAll('.strata-code-line-text');
     var text = [];
     for (var i = 0; i < lines.length; i++) { text.push(lines[i].textContent); }
     navigator.clipboard.writeText(text.join('\\n'));
@@ -339,7 +339,7 @@ var MERMAID_THEMES = ${JSON.stringify(mermaidThemes)};
   var sources = [];
   function renderDiagrams() {
     if (typeof mermaid === 'undefined') { return; }
-    var hosts = document.querySelectorAll('.ink-mermaid');
+    var hosts = document.querySelectorAll('.strata-mermaid');
     for (var i = 0; i < hosts.length; i++) {
       if (sources[i] === undefined) {
         var pre = hosts[i].querySelector('pre.mermaid');

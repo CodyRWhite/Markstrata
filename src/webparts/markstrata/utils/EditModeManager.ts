@@ -62,20 +62,20 @@ export class EditModeManager {
 
   public render(container: HTMLElement, markdown: string, options: IEditOptions): void {
     const host: HTMLElement = ThemeManager.mount(container, options.settings, options.resolvedMode);
-    host.setAttribute('data-ink-editing', 'true');
+    host.setAttribute('data-strata-editing', 'true');
 
     const editor: HTMLElement = document.createElement('div');
-    editor.className = 'ink-editor';
+    editor.className = 'strata-editor';
     editor.setAttribute('data-layout', this.layout);
 
     host.appendChild(this.buildToolbar(editor, options));
 
     const editorPane: HTMLElement = document.createElement('div');
-    editorPane.className = 'ink-editor-pane';
+    editorPane.className = 'strata-editor-pane';
     editorPane.appendChild(this.paneLabel('Markdown'));
 
     this.textarea = document.createElement('textarea');
-    this.textarea.className = 'ink-editor-input';
+    this.textarea.className = 'strata-editor-input';
     this.textarea.value = markdown || '';
     this.textarea.spellcheck = false;
     this.textarea.setAttribute('aria-label', 'Markdown source');
@@ -85,11 +85,11 @@ export class EditModeManager {
     editorPane.appendChild(this.textarea);
 
     const previewPane: HTMLElement = document.createElement('div');
-    previewPane.className = 'ink-preview-pane';
+    previewPane.className = 'strata-preview-pane';
     previewPane.appendChild(this.paneLabel('Preview'));
 
     this.preview = document.createElement('div');
-    this.preview.className = 'ink-content';
+    this.preview.className = 'strata-content';
     previewPane.appendChild(this.preview);
 
     editor.appendChild(editorPane);
@@ -101,7 +101,7 @@ export class EditModeManager {
 
   private buildToolbar(editor: HTMLElement, options: IEditOptions): HTMLElement {
     const toolbar: HTMLElement = document.createElement('div');
-    toolbar.className = 'ink-toolbar';
+    toolbar.className = 'strata-toolbar';
 
     const layouts: { key: EditorLayout; label: string }[] = [
       { key: 'edit', label: 'Edit' },
@@ -112,14 +112,14 @@ export class EditModeManager {
     layouts.forEach((entry) => {
       const button: HTMLButtonElement = document.createElement('button');
       button.type = 'button';
-      button.className = 'ink-btn';
+      button.className = 'strata-btn';
       button.textContent = entry.label;
       button.setAttribute('aria-pressed', String(this.layout === entry.key));
       button.addEventListener('click', () => {
         this.layout = entry.key;
         editor.setAttribute('data-layout', entry.key);
         Array.prototype.slice
-          .call(toolbar.querySelectorAll('.ink-btn[aria-pressed]'))
+          .call(toolbar.querySelectorAll('.strata-btn[aria-pressed]'))
           .forEach((other: HTMLElement) =>
             other.setAttribute('aria-pressed', String(other.textContent === entry.label))
           );
@@ -128,11 +128,11 @@ export class EditModeManager {
     });
 
     const spacer: HTMLElement = document.createElement('div');
-    spacer.className = 'ink-toolbar-spacer';
+    spacer.className = 'strata-toolbar-spacer';
     toolbar.appendChild(spacer);
 
     this.status = document.createElement('span');
-    this.status.className = 'ink-status';
+    this.status.className = 'strata-status';
     // Announce save results to screen readers without stealing focus.
     this.status.setAttribute('role', 'status');
     this.status.setAttribute('aria-live', 'polite');
@@ -142,7 +142,7 @@ export class EditModeManager {
     if (options.canSave) {
       const save: HTMLButtonElement = document.createElement('button');
       save.type = 'button';
-      save.className = 'ink-btn ink-btn-primary';
+      save.className = 'strata-btn strata-btn-primary';
       save.textContent = 'Save to SharePoint';
       save.addEventListener('click', () => void this.save(save));
       toolbar.appendChild(save);
@@ -246,7 +246,7 @@ export class EditModeManager {
 
   private paneLabel(text: string): HTMLElement {
     const label: HTMLElement = document.createElement('div');
-    label.className = 'ink-pane-label';
+    label.className = 'strata-pane-label';
     label.textContent = text;
     return label;
   }

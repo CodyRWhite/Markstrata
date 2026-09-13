@@ -197,13 +197,13 @@ export class ThemeManager {
 
   /** Stamps the root element with the attributes the stylesheets key off. */
   public static apply(element: HTMLElement, settings: IThemeSettings, resolved: ResolvedMode): void {
-    element.classList.add('ink-root');
-    element.setAttribute('data-ink-theme', settings.themeFamily);
-    element.setAttribute('data-ink-mode', resolved);
-    element.setAttribute('data-ink-width', settings.contentWidth);
-    element.setAttribute('data-ink-density', settings.density);
-    element.setAttribute('data-ink-size', settings.textSize);
-    element.setAttribute('data-ink-code-size', settings.codeSize);
+    element.classList.add('strata-root');
+    element.setAttribute('data-strata-theme', settings.themeFamily);
+    element.setAttribute('data-strata-mode', resolved);
+    element.setAttribute('data-strata-width', settings.contentWidth);
+    element.setAttribute('data-strata-density', settings.density);
+    element.setAttribute('data-strata-size', settings.textSize);
+    element.setAttribute('data-strata-code-size', settings.codeSize);
     // Lets the browser pick matching form controls and scrollbars.
     element.style.colorScheme = resolved;
   }

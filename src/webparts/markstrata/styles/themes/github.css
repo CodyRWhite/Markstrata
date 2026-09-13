@@ -7,201 +7,201 @@
  * no fill) and its heading rules under h1/h2.
  */
 
-.ink-root[data-ink-theme='github'] {
-  --ink-font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif,
+.strata-root[data-strata-theme='github'] {
+  --strata-font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif,
     'Apple Color Emoji', 'Segoe UI Emoji';
-  --ink-font-heading: var(--ink-font-body);
-  --ink-font-mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
-  --ink-font-size: 16px;
-  --ink-line-height-base: 1.5;
-  --ink-block-gap-base: 16px;
+  --strata-font-heading: var(--strata-font-body);
+  --strata-font-mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
+  --strata-font-size: 16px;
+  --strata-line-height-base: 1.5;
+  --strata-block-gap-base: 16px;
 
-  --ink-h1-size: 2em;
-  --ink-h2-size: 1.5em;
-  --ink-h3-size: 1.25em;
-  --ink-h4-size: 1em;
-  --ink-h5-size: 0.875em;
-  --ink-h6-size: 0.85em;
-  --ink-heading-weight: 600;
-  --ink-h1-weight: 600;
-  --ink-heading-color: var(--ink-text);
-  --ink-h1-rule-width: 1px;
-  --ink-h1-rule-space: 0.3em;
-  --ink-h2-rule-width: 1px;
-  --ink-h2-rule-space: 0.3em;
+  --strata-h1-size: 2em;
+  --strata-h2-size: 1.5em;
+  --strata-h3-size: 1.25em;
+  --strata-h4-size: 1em;
+  --strata-h5-size: 0.875em;
+  --strata-h6-size: 0.85em;
+  --strata-heading-weight: 600;
+  --strata-h1-weight: 600;
+  --strata-heading-color: var(--strata-text);
+  --strata-h1-rule-width: 1px;
+  --strata-h1-rule-space: 0.3em;
+  --strata-h2-rule-width: 1px;
+  --strata-h2-rule-space: 0.3em;
 
-  --ink-radius-sm: 4px;
-  --ink-radius-md: 6px;
-  --ink-radius-lg: 8px;
-  --ink-list-indent: 2em;
-  --ink-list-item-gap: 4px;
+  --strata-radius-sm: 4px;
+  --strata-radius-md: 6px;
+  --strata-radius-lg: 8px;
+  --strata-list-indent: 2em;
+  --strata-list-item-gap: 4px;
 
   /* Code: flat fill, no border, rounded 6px - the github.com block. */
-  --ink-code-radius: 6px;
-  --ink-code-padding: 16px;
-  --ink-code-line-height: 1.45;
-  --ink-code-font-size: 0.85em;
+  --strata-code-radius: 6px;
+  --strata-code-padding: 16px;
+  --strata-code-line-height: 1.45;
+  --strata-code-font-size: 0.85em;
 
   /* Alerts: 4px accent bar, no fill, square. */
-  --ink-callout-bg-alpha: 0;
-  --ink-callout-title-bg-alpha: 0;
-  --ink-callout-border-width: 0px;
-  --ink-callout-accent-width: 4px;
-  --ink-callout-radius: 0;
-  --ink-callout-title-padding: 8px 16px 2px;
-  --ink-callout-content-padding: 0 16px 8px;
-  --ink-callout-title-weight: 600;
-  --ink-callout-fold-closed-pad: 8px;
+  --strata-callout-bg-alpha: 0;
+  --strata-callout-title-bg-alpha: 0;
+  --strata-callout-border-width: 0px;
+  --strata-callout-accent-width: 4px;
+  --strata-callout-radius: 0;
+  --strata-callout-title-padding: 8px 16px 2px;
+  --strata-callout-content-padding: 0 16px 8px;
+  --strata-callout-title-weight: 600;
+  --strata-callout-fold-closed-pad: 8px;
 
-  --ink-quote-padding: 0 1em;
-  --ink-quote-border-width: 4px;
-  --ink-quote-radius: 0;
+  --strata-quote-padding: 0 1em;
+  --strata-quote-border-width: 4px;
+  --strata-quote-radius: 0;
 }
 
 /* ------------------------------------------------------------ GitHub light */
 
-.ink-root[data-ink-theme='github'][data-ink-mode='light'] {
-  --ink-bg: #ffffff;
-  --ink-bg-elevated: #f6f8fa;
-  --ink-bg-hover: #eef1f4;
-  --ink-text: #1f2328;
-  --ink-text-muted: #59636e;
-  --ink-text-faint: #818b98;
-  --ink-border: #d1d9e0;
-  --ink-border-strong: #afb8c1;
-  --ink-link: #0969da;
-  --ink-link-hover: #0550ae;
-  --ink-on-accent: #ffffff;
+.strata-root[data-strata-theme='github'][data-strata-mode='light'] {
+  --strata-bg: #ffffff;
+  --strata-bg-elevated: #f6f8fa;
+  --strata-bg-hover: #eef1f4;
+  --strata-text: #1f2328;
+  --strata-text-muted: #59636e;
+  --strata-text-faint: #818b98;
+  --strata-border: #d1d9e0;
+  --strata-border-strong: #afb8c1;
+  --strata-link: #0969da;
+  --strata-link-hover: #0550ae;
+  --strata-on-accent: #ffffff;
 
-  --ink-color-blue: 9, 105, 218;
-  --ink-color-cyan: 27, 124, 131;
-  --ink-color-green: 26, 127, 55;
-  --ink-color-yellow: 154, 103, 0;
-  --ink-color-orange: 188, 76, 0;
-  --ink-color-red: 207, 34, 46;
-  --ink-color-purple: 130, 80, 223;
-  --ink-color-pink: 191, 57, 137;
-  --ink-color-gray: 89, 99, 110;
+  --strata-color-blue: 9, 105, 218;
+  --strata-color-cyan: 27, 124, 131;
+  --strata-color-green: 26, 127, 55;
+  --strata-color-yellow: 154, 103, 0;
+  --strata-color-orange: 188, 76, 0;
+  --strata-color-red: 207, 34, 46;
+  --strata-color-purple: 130, 80, 223;
+  --strata-color-pink: 191, 57, 137;
+  --strata-color-gray: 89, 99, 110;
 
-  --ink-code-bg: #f6f8fa;
-  --ink-code-text: #1f2328;
-  --ink-code-border: transparent;
-  --ink-code-header-bg: #eaeef2;
-  --ink-code-header-border: #d1d9e0;
-  --ink-code-gutter-text: #8c959f;
-  --ink-code-gutter-border: #d8dee4;
-  --ink-code-line-hover: rgba(175, 184, 193, 0.15);
-  --ink-code-inline-bg: rgba(129, 139, 152, 0.12);
-  --ink-code-inline-text: #1f2328;
-  --ink-code-inline-border: transparent;
+  --strata-code-bg: #f6f8fa;
+  --strata-code-text: #1f2328;
+  --strata-code-border: transparent;
+  --strata-code-header-bg: #eaeef2;
+  --strata-code-header-border: #d1d9e0;
+  --strata-code-gutter-text: #8c959f;
+  --strata-code-gutter-border: #d8dee4;
+  --strata-code-line-hover: rgba(175, 184, 193, 0.15);
+  --strata-code-inline-bg: rgba(129, 139, 152, 0.12);
+  --strata-code-inline-text: #1f2328;
+  --strata-code-inline-border: transparent;
 
-  --ink-quote-bg: transparent;
-  --ink-quote-border-color: #d1d9e0;
-  --ink-quote-text: #59636e;
+  --strata-quote-bg: transparent;
+  --strata-quote-border-color: #d1d9e0;
+  --strata-quote-text: #59636e;
 
-  --ink-table-border: #d1d9e0;
-  --ink-table-header-bg: transparent;
-  --ink-table-stripe-bg: #f6f8fa;
-  --ink-table-hover-bg: transparent;
+  --strata-table-border: #d1d9e0;
+  --strata-table-header-bg: transparent;
+  --strata-table-stripe-bg: #f6f8fa;
+  --strata-table-hover-bg: transparent;
 
-  --ink-scrollbar-thumb: #c8d1da;
-  --ink-mermaid-bg: var(--ink-bg-elevated);
-  --ink-mark-alpha: 0.35;
+  --strata-scrollbar-thumb: #c8d1da;
+  --strata-mermaid-bg: var(--strata-bg-elevated);
+  --strata-mark-alpha: 0.35;
 
   /* prettylights-syntax-* (light) */
-  --ink-syn-comment: #59636e;
-  --ink-syn-keyword: #cf222e;
-  --ink-syn-type: #cf222e;
-  --ink-syn-entity: #8250df;
-  --ink-syn-constant: #0550ae;
-  --ink-syn-attr: #0550ae;
-  --ink-syn-operator: #0550ae;
-  --ink-syn-string: #0a3069;
-  --ink-syn-regexp: #0a3069;
-  --ink-syn-variable: #953800;
-  --ink-syn-builtin: #953800;
-  --ink-syn-tag: #116329;
-  --ink-syn-property: #1f2328;
-  --ink-syn-punctuation: #1f2328;
-  --ink-syn-section: #0550ae;
-  --ink-syn-bullet: #7d4e00;
-  --ink-syn-link: #0969da;
-  --ink-syn-addition: #116329;
-  --ink-syn-addition-bg: #dafbe1;
-  --ink-syn-deletion: #82071e;
-  --ink-syn-deletion-bg: #ffebe9;
+  --strata-syn-comment: #59636e;
+  --strata-syn-keyword: #cf222e;
+  --strata-syn-type: #cf222e;
+  --strata-syn-entity: #8250df;
+  --strata-syn-constant: #0550ae;
+  --strata-syn-attr: #0550ae;
+  --strata-syn-operator: #0550ae;
+  --strata-syn-string: #0a3069;
+  --strata-syn-regexp: #0a3069;
+  --strata-syn-variable: #953800;
+  --strata-syn-builtin: #953800;
+  --strata-syn-tag: #116329;
+  --strata-syn-property: #1f2328;
+  --strata-syn-punctuation: #1f2328;
+  --strata-syn-section: #0550ae;
+  --strata-syn-bullet: #7d4e00;
+  --strata-syn-link: #0969da;
+  --strata-syn-addition: #116329;
+  --strata-syn-addition-bg: #dafbe1;
+  --strata-syn-deletion: #82071e;
+  --strata-syn-deletion-bg: #ffebe9;
 }
 
 /* ------------------------------------------------------------- GitHub dark */
 
-.ink-root[data-ink-theme='github'][data-ink-mode='dark'] {
-  --ink-bg: #0d1117;
-  --ink-bg-elevated: #151b23;
-  --ink-bg-hover: #1c2128;
-  --ink-text: #e6edf3;
-  --ink-text-muted: #9198a1;
-  --ink-text-faint: #6e7681;
-  --ink-border: #3d444d;
-  --ink-border-strong: #56606b;
-  --ink-link: #4493f8;
-  --ink-link-hover: #6cb6ff;
-  --ink-on-accent: #ffffff;
+.strata-root[data-strata-theme='github'][data-strata-mode='dark'] {
+  --strata-bg: #0d1117;
+  --strata-bg-elevated: #151b23;
+  --strata-bg-hover: #1c2128;
+  --strata-text: #e6edf3;
+  --strata-text-muted: #9198a1;
+  --strata-text-faint: #6e7681;
+  --strata-border: #3d444d;
+  --strata-border-strong: #56606b;
+  --strata-link: #4493f8;
+  --strata-link-hover: #6cb6ff;
+  --strata-on-accent: #ffffff;
 
-  --ink-color-blue: 68, 147, 248;
-  --ink-color-cyan: 57, 197, 207;
-  --ink-color-green: 63, 185, 80;
-  --ink-color-yellow: 210, 153, 34;
-  --ink-color-orange: 219, 109, 40;
-  --ink-color-red: 248, 81, 73;
-  --ink-color-purple: 171, 125, 248;
-  --ink-color-pink: 247, 120, 186;
-  --ink-color-gray: 145, 152, 161;
+  --strata-color-blue: 68, 147, 248;
+  --strata-color-cyan: 57, 197, 207;
+  --strata-color-green: 63, 185, 80;
+  --strata-color-yellow: 210, 153, 34;
+  --strata-color-orange: 219, 109, 40;
+  --strata-color-red: 248, 81, 73;
+  --strata-color-purple: 171, 125, 248;
+  --strata-color-pink: 247, 120, 186;
+  --strata-color-gray: 145, 152, 161;
 
-  --ink-code-bg: #151b23;
-  --ink-code-text: #e6edf3;
-  --ink-code-border: #2a313c;
-  --ink-code-header-bg: #1c2128;
-  --ink-code-header-border: #3d444d;
-  --ink-code-gutter-text: #6e7681;
-  --ink-code-gutter-border: #30363d;
-  --ink-code-line-hover: rgba(110, 118, 129, 0.1);
-  --ink-code-inline-bg: rgba(101, 108, 118, 0.2);
-  --ink-code-inline-text: #e6edf3;
-  --ink-code-inline-border: transparent;
+  --strata-code-bg: #151b23;
+  --strata-code-text: #e6edf3;
+  --strata-code-border: #2a313c;
+  --strata-code-header-bg: #1c2128;
+  --strata-code-header-border: #3d444d;
+  --strata-code-gutter-text: #6e7681;
+  --strata-code-gutter-border: #30363d;
+  --strata-code-line-hover: rgba(110, 118, 129, 0.1);
+  --strata-code-inline-bg: rgba(101, 108, 118, 0.2);
+  --strata-code-inline-text: #e6edf3;
+  --strata-code-inline-border: transparent;
 
-  --ink-quote-bg: transparent;
-  --ink-quote-border-color: #3d444d;
-  --ink-quote-text: #9198a1;
+  --strata-quote-bg: transparent;
+  --strata-quote-border-color: #3d444d;
+  --strata-quote-text: #9198a1;
 
-  --ink-table-border: #3d444d;
-  --ink-table-header-bg: transparent;
-  --ink-table-stripe-bg: #151b23;
-  --ink-table-hover-bg: transparent;
+  --strata-table-border: #3d444d;
+  --strata-table-header-bg: transparent;
+  --strata-table-stripe-bg: #151b23;
+  --strata-table-hover-bg: transparent;
 
-  --ink-scrollbar-thumb: #484f58;
-  --ink-mermaid-bg: var(--ink-bg-elevated);
-  --ink-mark-alpha: 0.3;
+  --strata-scrollbar-thumb: #484f58;
+  --strata-mermaid-bg: var(--strata-bg-elevated);
+  --strata-mark-alpha: 0.3;
 
   /* prettylights-syntax-* (dark) */
-  --ink-syn-comment: #9198a1;
-  --ink-syn-keyword: #ff7b72;
-  --ink-syn-type: #ff7b72;
-  --ink-syn-entity: #d2a8ff;
-  --ink-syn-constant: #79c0ff;
-  --ink-syn-attr: #79c0ff;
-  --ink-syn-operator: #79c0ff;
-  --ink-syn-string: #a5d6ff;
-  --ink-syn-regexp: #a5d6ff;
-  --ink-syn-variable: #ffa657;
-  --ink-syn-builtin: #ffa657;
-  --ink-syn-tag: #7ee787;
-  --ink-syn-property: #e6edf3;
-  --ink-syn-punctuation: #e6edf3;
-  --ink-syn-section: #79c0ff;
-  --ink-syn-bullet: #f2cc60;
-  --ink-syn-link: #a5d6ff;
-  --ink-syn-addition: #aff5b4;
-  --ink-syn-addition-bg: #033a16;
-  --ink-syn-deletion: #ffdcd7;
-  --ink-syn-deletion-bg: #67060c;
+  --strata-syn-comment: #9198a1;
+  --strata-syn-keyword: #ff7b72;
+  --strata-syn-type: #ff7b72;
+  --strata-syn-entity: #d2a8ff;
+  --strata-syn-constant: #79c0ff;
+  --strata-syn-attr: #79c0ff;
+  --strata-syn-operator: #79c0ff;
+  --strata-syn-string: #a5d6ff;
+  --strata-syn-regexp: #a5d6ff;
+  --strata-syn-variable: #ffa657;
+  --strata-syn-builtin: #ffa657;
+  --strata-syn-tag: #7ee787;
+  --strata-syn-property: #e6edf3;
+  --strata-syn-punctuation: #e6edf3;
+  --strata-syn-section: #79c0ff;
+  --strata-syn-bullet: #f2cc60;
+  --strata-syn-link: #a5d6ff;
+  --strata-syn-addition: #aff5b4;
+  --strata-syn-addition-bg: #033a16;
+  --strata-syn-deletion: #ffdcd7;
+  --strata-syn-deletion-bg: #67060c;
 }

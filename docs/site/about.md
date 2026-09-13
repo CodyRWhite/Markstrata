@@ -1,6 +1,6 @@
-# About Markstrata Markdown
+# About Markstrata
 
-Markstrata Markdown is a SharePoint Framework web part that renders markdown on a
+Markstrata is a SharePoint Framework web part that renders markdown on a
 SharePoint page, with themes that match the editors your documentation is
 actually written in.
 

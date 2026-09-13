@@ -1,6 +1,6 @@
 # Support this project
 
-Markstrata Markdown is free, MIT licensed, and built in evenings and weekends. It
+Markstrata is free, MIT licensed, and built in evenings and weekends. It
 will stay free: there is no paid tier, no telemetry and nothing held back.
 
 If it saved you an afternoon, or replaced something you were about to pay for,

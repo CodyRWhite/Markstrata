@@ -7,12 +7,12 @@ const md = new MarkdownProcessor();
 test('two adjacent tables stay two tables', () => {
   const html = md.render('| a | b |\n|---|---|\n| 1 | 2 |\n\n| c | d |\n|---|---|\n| 3 | 4 |');
   assert.equal((html.match(/<table>/g) || []).length, 2);
-  assert.equal((html.match(/ink-table-scroll/g) || []).length, 2);
+  assert.equal((html.match(/strata-table-scroll/g) || []).length, 2);
 });
 
 test('tables are wrapped so wide ones scroll instead of stretching the page', () => {
   const html = md.render('| a |\n|---|\n| 1 |');
-  assert.match(html, /<div class="ink-table-scroll"><table>/);
+  assert.match(html, /<div class="strata-table-scroll"><table>/);
   assert.match(html, /<\/table>\s*<\/div>/);
 });
 
@@ -30,10 +30,10 @@ test('column alignment is honoured', () => {
 
 test('task lists render checkboxes and mark their state', () => {
   const html = md.render('- [ ] todo\n- [x] done');
-  assert.match(html, /class="ink-task-list"/);
-  assert.equal((html.match(/ink-task-checkbox/g) || []).length, 2);
+  assert.match(html, /class="strata-task-list"/);
+  assert.equal((html.match(/strata-task-checkbox/g) || []).length, 2);
   assert.match(html, /data-checked="false"[^>]*>.*todo/s);
-  assert.match(html, /<input class="ink-task-checkbox" type="checkbox" disabled checked \/>/);
+  assert.match(html, /<input class="strata-task-checkbox" type="checkbox" disabled checked \/>/);
   assert.doesNotMatch(html, /\[x\]/);
 });
 
@@ -41,7 +41,7 @@ test('a list mixing tasks and plain bullets keeps the plain markers', () => {
   const html = md.render('- plain item\n- [x] task item');
   const items = html.match(/<li[^>]*>/g) || [];
   assert.equal(items.length, 2);
-  assert.equal(items.filter((item) => item.indexOf('ink-task-item') !== -1).length, 1);
+  assert.equal(items.filter((item) => item.indexOf('strata-task-item') !== -1).length, 1);
 });
 
 test('inline math renders but prices do not', () => {
@@ -55,7 +55,7 @@ test('inline math renders but prices do not', () => {
 
 test('block math renders in its own container', () => {
   const html = md.render('$$\n\\int_0^1 x^2 dx\n$$');
-  assert.match(html, /<div class="ink-math-block">/);
+  assert.match(html, /<div class="strata-math-block">/);
   assert.match(html, /katex/);
 });
 
@@ -67,7 +67,7 @@ test('math can be switched off', () => {
 
 test('mermaid fences become a diagram container with arrows intact', () => {
   const html = md.render('```mermaid\ngraph LR\nA-->B\n```');
-  assert.match(html, /<div class="ink-mermaid" data-mermaid-container="true">/);
+  assert.match(html, /<div class="strata-mermaid" data-mermaid-container="true">/);
   // The source must survive as escaped text: reading it back with textContent
   // has to give "A-->B" again, which is what broke diagrams on refresh.
   assert.match(html, /A--&gt;B/);
@@ -77,21 +77,21 @@ test('mermaid fences become a diagram container with arrows intact', () => {
 test('mermaid fences are left as code when diagrams are off', () => {
   const off = new MarkdownProcessor({ enableMermaid: false });
   const html = off.render('```mermaid\ngraph LR\nA-->B\n```');
-  assert.doesNotMatch(html, /ink-mermaid/);
-  assert.match(html, /ink-code/);
+  assert.doesNotMatch(html, /strata-mermaid/);
+  assert.match(html, /strata-code/);
 });
 
 test('the inline table of contents is not left inside a paragraph', () => {
   const html = md.render('# Title\n\n[[toc]]\n\n## One\n\n## Two');
-  assert.match(html, /<div class="ink-toc">/);
-  assert.doesNotMatch(html, /<p>\s*<div class="ink-toc">/);
+  assert.match(html, /<div class="strata-toc">/);
+  assert.doesNotMatch(html, /<p>\s*<div class="strata-toc">/);
   assert.doesNotMatch(html, /<p><\/p>/);
 });
 
 test('headings get ids and anchors', () => {
   const html = md.render('## A heading here');
   assert.match(html, /<h2 id="a-heading-here">/);
-  assert.match(html, /class="ink-anchor" href="#a-heading-here"/);
+  assert.match(html, /class="strata-anchor" href="#a-heading-here"/);
   // The anchor must not leak a stray space into the heading text.
   assert.doesNotMatch(html, />\s+A heading here/);
 });
@@ -100,7 +100,7 @@ test('anchors can be switched off', () => {
   const plain = new MarkdownProcessor({ enableAnchors: false });
   const html = plain.render('## Heading');
   assert.match(html, /id="heading"/);
-  assert.doesNotMatch(html, /ink-anchor/);
+  assert.doesNotMatch(html, /strata-anchor/);
 });
 
 test('raw HTML is escaped by default and rendered when allowed', () => {
@@ -128,7 +128,7 @@ test('rendering never throws on malformed input', () => {
 
 test('options can be changed after construction', () => {
   const processor = new MarkdownProcessor({ showLineNumbers: false });
-  assert.doesNotMatch(processor.render('```js\nx\n```'), /ink-code--numbered/);
+  assert.doesNotMatch(processor.render('```js\nx\n```'), /strata-code--numbered/);
   processor.updateOptions({ showLineNumbers: true });
-  assert.match(processor.render('```js\nx\n```'), /ink-code--numbered/);
+  assert.match(processor.render('```js\nx\n```'), /strata-code--numbered/);
 });

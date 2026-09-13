@@ -153,19 +153,19 @@ export function calloutPlugin(md: IMarkdownIt): void {
     const parts: string[] = [];
     parts.push(
       foldable
-        ? `<details class="ink-callout ink-callout--foldable" data-callout="${meta.type}"${
+        ? `<details class="strata-callout strata-callout--foldable" data-callout="${meta.type}"${
             meta.fold === '+' ? ' open' : ''
           }>`
-        : `<div class="ink-callout" data-callout="${meta.type}">`
+        : `<div class="strata-callout" data-callout="${meta.type}">`
     );
-    parts.push(`<${foldable ? 'summary' : 'div'} class="ink-callout-title">`);
-    parts.push(`<span class="ink-callout-icon">${buildIcon(meta.icon)}</span>`);
-    parts.push(`<span class="ink-callout-title-text">${title}</span>`);
+    parts.push(`<${foldable ? 'summary' : 'div'} class="strata-callout-title">`);
+    parts.push(`<span class="strata-callout-icon">${buildIcon(meta.icon)}</span>`);
+    parts.push(`<span class="strata-callout-title-text">${title}</span>`);
     if (foldable) {
-      parts.push(`<span class="ink-callout-fold">${FOLD_ICON}</span>`);
+      parts.push(`<span class="strata-callout-fold">${FOLD_ICON}</span>`);
     }
     parts.push(`</${foldable ? 'summary' : 'div'}>`);
-    parts.push('<div class="ink-callout-content">');
+    parts.push('<div class="strata-callout-content">');
 
     return parts.join('');
   };

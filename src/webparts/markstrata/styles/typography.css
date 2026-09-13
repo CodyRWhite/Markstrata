@@ -1,161 +1,161 @@
 /* typography.css - headings, text, links, quotes, rules, images */
 
-.ink-content h1,
-.ink-content h2,
-.ink-content h3,
-.ink-content h4,
-.ink-content h5,
-.ink-content h6 {
-  margin-top: calc(var(--ink-block-gap) * 1.5);
-  margin-bottom: calc(var(--ink-block-gap) * 0.5);
-  font-family: var(--ink-font-heading);
-  font-weight: var(--ink-heading-weight);
+.strata-content h1,
+.strata-content h2,
+.strata-content h3,
+.strata-content h4,
+.strata-content h5,
+.strata-content h6 {
+  margin-top: calc(var(--strata-block-gap) * 1.5);
+  margin-bottom: calc(var(--strata-block-gap) * 0.5);
+  font-family: var(--strata-font-heading);
+  font-weight: var(--strata-heading-weight);
   line-height: 1.25;
-  color: var(--ink-heading-color);
+  color: var(--strata-heading-color);
   scroll-margin-top: 24px;
 }
 
-.ink-content > h1:first-child,
-.ink-content > h2:first-child,
-.ink-content > h3:first-child {
+.strata-content > h1:first-child,
+.strata-content > h2:first-child,
+.strata-content > h3:first-child {
   margin-top: 0;
 }
 
-.ink-content h1 { font-size: var(--ink-h1-size); font-weight: var(--ink-h1-weight); }
-.ink-content h2 { font-size: var(--ink-h2-size); }
-.ink-content h3 { font-size: var(--ink-h3-size); }
-.ink-content h4 { font-size: var(--ink-h4-size); }
-.ink-content h5 { font-size: var(--ink-h5-size); }
-.ink-content h6 { font-size: var(--ink-h6-size); color: var(--ink-text-muted); }
+.strata-content h1 { font-size: var(--strata-h1-size); font-weight: var(--strata-h1-weight); }
+.strata-content h2 { font-size: var(--strata-h2-size); }
+.strata-content h3 { font-size: var(--strata-h3-size); }
+.strata-content h4 { font-size: var(--strata-h4-size); }
+.strata-content h5 { font-size: var(--strata-h5-size); }
+.strata-content h6 { font-size: var(--strata-h6-size); color: var(--strata-text-muted); }
 
-/* Themes opt in to underlined headings by setting --ink-heading-rule-* to a
+/* Themes opt in to underlined headings by setting --strata-heading-rule-* to a
    colour; GitHub rules h1+h2, VS Code rules h1 only, Obsidian rules neither. */
-.ink-content h1 {
-  padding-bottom: var(--ink-h1-rule-space, 0);
-  border-bottom: var(--ink-h1-rule-width, 0) solid var(--ink-h1-rule-color, transparent);
+.strata-content h1 {
+  padding-bottom: var(--strata-h1-rule-space, 0);
+  border-bottom: var(--strata-h1-rule-width, 0) solid var(--strata-h1-rule-color, transparent);
 }
 
-.ink-content h2 {
-  padding-bottom: var(--ink-h2-rule-space, 0);
-  border-bottom: var(--ink-h2-rule-width, 0) solid var(--ink-h2-rule-color, transparent);
+.strata-content h2 {
+  padding-bottom: var(--strata-h2-rule-space, 0);
+  border-bottom: var(--strata-h2-rule-width, 0) solid var(--strata-h2-rule-color, transparent);
 }
 
-.ink-content p {
-  margin: 0 0 var(--ink-block-gap);
+.strata-content p {
+  margin: 0 0 var(--strata-block-gap);
 }
 
-.ink-content a {
-  color: var(--ink-link);
-  text-decoration: var(--ink-link-decoration, none);
+.strata-content a {
+  color: var(--strata-link);
+  text-decoration: var(--strata-link-decoration, none);
   text-underline-offset: 0.2em;
 }
 
-.ink-content a:hover {
-  color: var(--ink-link-hover);
+.strata-content a:hover {
+  color: var(--strata-link-hover);
   text-decoration: underline;
 }
 
-.ink-content strong { font-weight: 600; color: var(--ink-text-strong, inherit); }
-.ink-content em { font-style: italic; }
-.ink-content del { color: var(--ink-text-muted); }
-.ink-content mark {
+.strata-content strong { font-weight: 600; color: var(--strata-text-strong, inherit); }
+.strata-content em { font-style: italic; }
+.strata-content del { color: var(--strata-text-muted); }
+.strata-content mark {
   padding: 0.1em 0.2em;
-  border-radius: var(--ink-radius-sm);
-  background-color: rgba(var(--ink-color-yellow), var(--ink-mark-alpha, 0.3));
+  border-radius: var(--strata-radius-sm);
+  background-color: rgba(var(--strata-color-yellow), var(--strata-mark-alpha, 0.3));
   color: inherit;
 }
 
-.ink-content hr {
+.strata-content hr {
   height: 1px;
-  margin: calc(var(--ink-block-gap) * 1.75) 0;
+  margin: calc(var(--strata-block-gap) * 1.75) 0;
   border: 0;
-  background-color: var(--ink-border);
+  background-color: var(--strata-border);
 }
 
-.ink-content img {
+.strata-content img {
   max-width: 100%;
   height: auto;
-  border-radius: var(--ink-radius-sm);
+  border-radius: var(--strata-radius-sm);
 }
 
-.ink-content kbd {
+.strata-content kbd {
   display: inline-block;
   padding: 2px 5px;
-  border: 1px solid var(--ink-border-strong);
+  border: 1px solid var(--strata-border-strong);
   border-bottom-width: 2px;
-  border-radius: var(--ink-radius-sm);
-  background-color: var(--ink-bg-elevated);
-  font-family: var(--ink-font-mono);
+  border-radius: var(--strata-radius-sm);
+  background-color: var(--strata-bg-elevated);
+  font-family: var(--strata-font-mono);
   font-size: 0.8em;
   line-height: 1.2;
-  color: var(--ink-text);
+  color: var(--strata-text);
 }
 
-.ink-content abbr[title] {
+.strata-content abbr[title] {
   text-decoration: underline dotted;
   cursor: help;
 }
 
 /* Plain blockquote (a blockquote that is not a callout). */
-.ink-content blockquote {
-  margin: 0 0 var(--ink-block-gap);
-  padding: var(--ink-quote-padding, 2px 0 2px 16px);
-  border-left: var(--ink-quote-border-width, 4px) solid var(--ink-quote-border-color, var(--ink-border-strong));
-  border-radius: var(--ink-quote-radius, 0);
-  background-color: var(--ink-quote-bg, transparent);
-  color: var(--ink-quote-text, var(--ink-text-muted));
+.strata-content blockquote {
+  margin: 0 0 var(--strata-block-gap);
+  padding: var(--strata-quote-padding, 2px 0 2px 16px);
+  border-left: var(--strata-quote-border-width, 4px) solid var(--strata-quote-border-color, var(--strata-border-strong));
+  border-radius: var(--strata-quote-radius, 0);
+  background-color: var(--strata-quote-bg, transparent);
+  color: var(--strata-quote-text, var(--strata-text-muted));
 }
 
-.ink-content blockquote > :last-child {
+.strata-content blockquote > :last-child {
   margin-bottom: 0;
 }
 
 /* Heading anchor links: hidden until the heading is hovered or focused, which
    keeps the reading surface clean but leaves the link keyboard reachable. */
-.ink-content .ink-anchor {
+.strata-content .strata-anchor {
   float: left;
   /* Sized from the same gutter the column reserves, and held at body size so
      every heading level gets the same anchor rather than one that grows with
      the heading. */
-  width: var(--ink-anchor-gutter);
-  margin-left: calc(var(--ink-anchor-gutter) * -1);
+  width: var(--strata-anchor-gutter);
+  margin-left: calc(var(--strata-anchor-gutter) * -1);
   padding-right: 0.2em;
-  font-size: calc(var(--ink-font-size) * var(--ink-font-scale));
+  font-size: calc(var(--strata-font-size) * var(--strata-font-scale));
   line-height: inherit;
-  color: var(--ink-text-faint);
+  color: var(--strata-text-faint);
   text-decoration: none;
   opacity: 0;
   transition: opacity 0.12s ease-in-out;
 }
 
-.ink-content h1:hover .ink-anchor,
-.ink-content h2:hover .ink-anchor,
-.ink-content h3:hover .ink-anchor,
-.ink-content h4:hover .ink-anchor,
-.ink-content h5:hover .ink-anchor,
-.ink-content h6:hover .ink-anchor,
-.ink-content .ink-anchor:focus {
+.strata-content h1:hover .strata-anchor,
+.strata-content h2:hover .strata-anchor,
+.strata-content h3:hover .strata-anchor,
+.strata-content h4:hover .strata-anchor,
+.strata-content h5:hover .strata-anchor,
+.strata-content h6:hover .strata-anchor,
+.strata-content .strata-anchor:focus {
   opacity: 1;
 }
 
 /* Footnotes */
-.ink-content .footnotes {
-  margin-top: calc(var(--ink-block-gap) * 2);
-  padding-top: var(--ink-block-gap);
-  border-top: 1px solid var(--ink-border);
+.strata-content .footnotes {
+  margin-top: calc(var(--strata-block-gap) * 2);
+  padding-top: var(--strata-block-gap);
+  border-top: 1px solid var(--strata-border);
   font-size: 0.9em;
-  color: var(--ink-text-muted);
+  color: var(--strata-text-muted);
 }
 
-.ink-content .footnotes ol {
+.strata-content .footnotes ol {
   padding-left: 20px;
 }
 
-.ink-content .footnote-backref {
+.strata-content .footnote-backref {
   text-decoration: none;
 }
 
 /* Definition lists (markdown-it-deflist) */
-.ink-content dl { margin: 0 0 var(--ink-block-gap); }
-.ink-content dt { font-weight: 600; margin-top: 8px; }
-.ink-content dd { margin: 2px 0 0 20px; color: var(--ink-text-muted); }
+.strata-content dl { margin: 0 0 var(--strata-block-gap); }
+.strata-content dt { font-weight: 600; margin-top: 8px; }
+.strata-content dd { margin: 2px 0 0 20px; color: var(--strata-text-muted); }

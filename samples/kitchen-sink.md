@@ -96,9 +96,9 @@ Get-PnPApp | Where-Object { $_.Title -like "*markdown*" } | Format-Table Title, 
 ```
 
 ```diff
-- --ink-code-bg: #212121;
+- --strata-code-bg: #212121;
 - text-shadow: 0 -0.1em 0.2em #000;
-+ --ink-code-bg: var(--ink-code-bg);
++ --strata-code-bg: var(--strata-code-bg);
 + /* contrast comes from the theme, not from a shadow */
 ```
 

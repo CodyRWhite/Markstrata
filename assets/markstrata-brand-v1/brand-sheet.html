@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Markstrata — brand sheet</title>
+<style>
+  :root{
+    --bedrock:#072830; --shale:#0A4048; --strata:#0F7B86; --strata600:#0C666F;
+    --strata300:#62BEC5; --strata100:#C9E8EA; --strata50:#E9F5F6;
+    --sediment:#E2A03F; --sediment400:#F0B24A; --sediment700:#9A6314;
+    --chalk:#F2F6F6; --paper:#fff; --muted:#3E6570; --line:#DCE5E7;
+    --ui:"Segoe UI Variable Text","Segoe UI",system-ui,-apple-system,sans-serif;
+    --mono:"Cascadia Mono","Cascadia Code",Consolas,ui-monospace,monospace;
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{margin:0;font-family:var(--ui);color:var(--bedrock);background:var(--paper);
+       font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased}
+
+  .band{border-bottom:2px solid var(--sediment);padding:56px 32px}
+  .band:last-child{border-bottom:0}
+  .band--chalk{background:var(--chalk)}
+  .band--dark{background:var(--bedrock);color:#EDF2F3}
+  .band--shale{background:var(--shale);color:#EDF2F3}
+  .inner{max-width:1060px;margin:0 auto;display:flex;gap:40px;align-items:flex-start}
+  .gutter{flex:0 0 150px;font-size:13px;line-height:1.4;color:var(--muted);padding-top:4px}
+  .band--dark .gutter,.band--shale .gutter{color:var(--strata300)}
+  .gutter b{display:block;font-weight:600;font-size:14px;color:var(--bedrock)}
+  .band--dark .gutter b,.band--shale .gutter b{color:#EDF2F3}
+  .body{flex:1 1 auto;min-width:0}
+  h1{font-size:clamp(30px,5vw,46px);line-height:1.1;margin:0 0 8px;font-weight:600;letter-spacing:-.01em}
+  h2{font-size:21px;font-weight:600;margin:0 0 10px;letter-spacing:-.005em}
+  h3{font-size:15px;font-weight:600;margin:28px 0 8px}
+  p{margin:0 0 14px;max-width:68ch}
+  .lede{font-size:17px;color:#C9E8EA;max-width:56ch}
+  code,.hex{font-family:var(--mono);font-size:12.5px}
+
+  /* hero */
+  .hero{display:flex;gap:36px;align-items:center;flex-wrap:wrap}
+  .hero svg{width:132px;height:132px;flex:none}
+
+  /* mark grid */
+  .sizes{display:flex;align-items:flex-end;gap:26px;flex-wrap:wrap;margin:6px 0 4px}
+  .sizes figure{margin:0;text-align:center}
+  .sizes figcaption{font-size:11.5px;color:var(--muted);margin-top:8px;font-family:var(--mono)}
+  .variants{display:flex;gap:14px;flex-wrap:wrap;margin-top:8px}
+  .variants div{width:84px;text-align:center}
+  .variants .chip{height:84px;display:grid;place-items:center;border-radius:10px;padding:14px}
+  .chip--light{background:var(--paper);border:1px solid var(--line)}
+  .chip--dark{background:var(--bedrock)}
+  .chip--chalk{background:var(--strata100)}
+  .variants svg{width:100%;height:auto;max-height:56px}
+  .variants span{display:block;font-size:11px;color:var(--muted);margin-top:6px;line-height:1.35}
+  .band--dark .variants span{color:var(--strata300)}
+
+  /* diagrams */
+  .diagrams{display:flex;gap:28px;flex-wrap:wrap}
+  .diagrams figure{margin:0;flex:1 1 260px;min-width:220px;max-width:340px}
+  .diagrams svg{width:100%;height:auto;display:block}
+  .diagrams figcaption{font-size:13px;color:var(--muted);margin-top:10px;max-width:36ch}
+
+  /* lockups */
+  .lockup{padding:22px 0;border-bottom:1px solid var(--line)}
+  .lockup:last-of-type{border-bottom:0}
+  .lockup svg{max-width:min(100%,380px);height:auto;display:block}
+  .lockup--rev{background:var(--bedrock);padding:22px;border-radius:12px;border-bottom:0;margin:10px 0}
+  .lockup p{font-size:13px;color:var(--muted);margin:10px 0 0}
+  .lockup--rev p{color:var(--strata300)}
+
+  /* colour */
+  .ramp{display:flex;border-radius:10px;overflow:hidden;margin:0 0 8px;border:1px solid var(--line)}
+  .ramp div{flex:1;height:64px;display:flex;align-items:flex-end;padding:6px;font-size:10.5px;
+            font-family:var(--mono);line-height:1.2}
+  .swatches{width:100%;border-collapse:collapse;margin-top:6px;font-size:13.5px}
+  .swatches th{text-align:left;font-weight:600;padding:6px 10px 6px 0;border-bottom:1px solid var(--line);font-size:12.5px;color:var(--muted)}
+  .swatches td{padding:7px 10px 7px 0;border-bottom:1px solid var(--line);vertical-align:middle}
+  .dot{width:15px;height:15px;border-radius:4px;display:inline-block;vertical-align:-2px;margin-right:8px;border:1px solid rgba(7,40,48,.12)}
+  .pass{color:#1E7A52;font-weight:600}
+  .fail{color:#B5322E;font-weight:600}
+
+  /* type */
+  .spec{display:grid;grid-template-columns:auto 1fr;gap:4px 22px;align-items:baseline;margin:0}
+  .spec dt{font-family:var(--mono);font-size:12px;color:var(--muted);white-space:nowrap}
+  .spec dd{margin:0}
+  .sample{font-size:26px;font-weight:600;letter-spacing:-.01em;margin:0 0 2px}
+  .sample--mono{font-family:var(--mono);font-size:14px;font-weight:400;
+                background:var(--chalk);padding:12px 14px;border-left:3px solid var(--sediment);
+                border-radius:0 6px 6px 0;white-space:pre;overflow-x:auto}
+
+  /* ui icons */
+  .icons{display:flex;gap:12px;flex-wrap:wrap;margin-top:6px}
+  .icons figure{margin:0;width:112px;text-align:center;padding:14px 6px;border:1px solid var(--line);border-radius:10px;background:var(--paper)}
+  .icons svg{width:26px;height:26px;color:var(--strata600)}
+  .icons figcaption{font-size:11.5px;color:var(--muted);margin-top:8px;line-height:1.3}
+
+  /* rules */
+  .rules{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:28px}
+  .rules ul{margin:0;padding-left:18px}
+  .rules li{margin-bottom:7px}
+  .rules h3{margin-top:0}
+  .yes{color:#1E7A52}.no{color:#B5322E}
+
+  /* files */
+  .tree{font-family:var(--mono);font-size:12.5px;line-height:1.75;white-space:pre;overflow-x:auto;
+        color:#C9E8EA;margin:0}
+  .tree b{color:var(--sediment400);font-weight:400}
+  .snippet{font-family:var(--mono);font-size:12px;line-height:1.7;background:rgba(255,255,255,.06);
+           padding:14px 16px;border-radius:8px;border-left:3px solid var(--sediment);
+           white-space:pre;overflow-x:auto;margin:12px 0 0}
+  a{color:var(--strata600)}
+  .band--dark a{color:var(--strata300)}
+  @media (max-width:720px){
+    .inner{flex-direction:column;gap:14px}
+    .band{padding:38px 20px}
+    .gutter{padding-top:0}
+  }
+</style>
+</head>
+<body>
+
+<section class="band band--dark">
+  <div class="inner">
+    <div class="gutter"><b>Markstrata</b>brand sheet<br>v1.0</div>
+    <div class="body">
+      <div class="hero">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="132" height="132" role="img" aria-label="Markstrata">
+  <title>Markstrata</title>
+  <defs>
+    <linearGradient id="msTile-hero" x1="0" y1="0" x2="0.85" y2="1">
+      <stop offset="0" stop-color="#1A99A5"/>
+      <stop offset="0.52" stop-color="#0F7B86"/>
+      <stop offset="1" stop-color="#0A4048"/>
+    </linearGradient>
+    <radialGradient id="msSheen-hero" cx="0.24" cy="0.18" r="0.82">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.16"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="msSeam-hero" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F5C06A"/>
+      <stop offset="1" stop-color="#E2A03F"/>
+    </linearGradient>
+    <clipPath id="msClip-hero"><rect width="512" height="512" rx="118"/></clipPath>
+  </defs>
+  <g clip-path="url(#msClip-hero)">
+    <rect width="512" height="512" fill="url(#msTile-hero)"/>
+    <rect width="512" height="512" fill="url(#msSheen-hero)"/>
+  </g>
+  <g>
+    <rect x="110" y="138" width="292" height="44" rx="22" fill="#FFFFFF"/>
+    <rect x="110" y="202" width="220" height="44" rx="22" fill="#FFFFFF" opacity="0.60"/>
+    <path d="M132 288 L256 352 L380 288" fill="none" stroke="url(#msSeam-hero)" stroke-width="44" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+</svg>
+        <div>
+          <h1>Markstrata</h1>
+          <p class="lede">Markdown for SharePoint. Layers laid down in order — which is what a
+          Markdown document is, and what a document library is.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="band">
+  <div class="inner">
+    <div class="gutter"><b>The mark</b>Two strata and a chevron</div>
+    <div class="body">
+      <p>Two horizontal bars of decreasing width read as a heading hierarchy and as sediment layers.
+      The wide descending chevron is the <code>↓</code> Markdown has always carried, and the
+      direction everything in the product moves: source above, rendered page beneath. Everything is
+      built from one unit — a 44&nbsp;px bar weight with a 22&nbsp;px radius on every terminal.</p>
+
+      <h3>Drawn for each size, not scaled down</h3>
+      <div class="sizes">
+        <figure><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="96" height="96" role="img" aria-label="Markstrata">
+  <title>Markstrata</title>
+  <defs>
+    <linearGradient id="msTile-s96" x1="0" y1="0" x2="0.85" y2="1">
+      <stop offset="0" stop-color="#1A99A5"/>
+      <stop offset="0.52" stop-color="#0F7B86"/>
+      <stop offset="1" stop-color="#0A4048"/>
+    </linearGradient>
+    <radialGradient id="msSheen-s96" cx="0.24" cy="0.18" r="0.82">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.16"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="msSeam-s96" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F5C06A"/>
+      <stop offset="1" stop-color="#E2A03F"/>
+    </linearGradient>
+    <clipPath id="msClip-s96"><rect width="512" height="512" rx="118"/></clipPath>
+  </defs>
+  <g clip-path="url(#msClip-s96)">
+    <rect width="512" height="512" fill="url(#msTile-s96)"/>
+    <rect width="512" height="512" fill="url(#msSheen-s96)"/>
+  </g>
+  <g>
+    <rect x="110" y="138" width="292" height="44" rx="22" fill="#FFFFFF"/>
+    <rect x="110" y="202" width="220" height="44" rx="22" fill="#FFFFFF" opacity="0.60"/>
+    <path d="M132 288 L256 352 L380 288" fill="none" stroke="url(#msSeam-s96)" stroke-width="44" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+</svg><figcaption>96+ master</figcaption></figure>
+        <figure><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="48" height="48" role="img" aria-label="Markstrata">
+  <title>Markstrata</title>
+  <rect width="32" height="32" rx="7.2" fill="#0F7B86"/>
+  <rect x="6.5" y="6.5" width="19" height="3" rx="1.5" fill="#FFFFFF"/>
+  <rect x="6.5" y="11.5" width="13" height="3" rx="1.5" fill="#FFFFFF" opacity="0.62"/>
+  <path d="M8 18 L16 24 L24 18" fill="none" stroke="#F0B24A" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+</svg><figcaption>32–64</figcaption></figure>
+        <figure><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16" role="img" aria-label="Markstrata">
+  <title>Markstrata</title>
+  <rect width="16" height="16" rx="3.6" fill="#0F7B86"/>
+  <rect x="3.5" y="3.75" width="9" height="2" rx="1" fill="#FFFFFF"/>
+  <path d="M4.5 8.25 L8 11.25 L11.5 8.25" fill="none" stroke="#F0B24A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg><figcaption>16–24</figcaption></figure>
+      </div>
+      <p style="font-size:13px;color:var(--muted)">At 16&nbsp;px the second stratum is removed and the
+      remaining weights thicken. Below 32&nbsp;px the gradient tile is replaced by flat teal.</p>
+
+      <h3>Variants</h3>
+      <div class="variants">
+        <div><div class="chip chip--light"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 292 236" width="56" height="45" role="img" aria-label="Markstrata">
+  <title>Markstrata</title>
+  <rect x="0" y="0" width="292" height="44" rx="22" fill="#072830"/>
+  <rect x="0" y="64" width="220" height="44" rx="22" fill="#0F7B86"/>
+  <path d="M22 150 L146 214 L270 150" fill="none" stroke="#D9922B" stroke-width="44" stroke-linecap="round" stroke-linejoin="round"/>
+</svg></div><span>Glyph, light background</span></div>
+        <div><div class="chip chip--dark"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 292 236" width="56" height="45" role="img" aria-label="Markstrata">
+  <title>Markstrata</title>
+  <g fill="#FFFFFF" stroke="#FFFFFF">
+    <rect x="0" y="0" width="292" height="44" rx="22" stroke="none"/>
+    <rect x="0" y="64" width="220" height="44" rx="22" stroke="none"/>
+    <path d="M22 150 L146 214 L270 150" fill="none" stroke-width="44" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+</svg></div><span>Mono, reversed</span></div>
+        <div><div class="chip chip--chalk"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 292 236" width="56" height="45" role="img" aria-label="Markstrata">
+  <title>Markstrata</title>
+  <g fill="#072830" stroke="#072830">
+    <rect x="0" y="0" width="292" height="44" rx="22" stroke="none"/>
+    <rect x="0" y="64" width="220" height="44" rx="22" stroke="none"/>
+    <path d="M22 150 L146 214 L270 150" fill="none" stroke-width="44" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+</svg></div><span>Mono, one colour</span></div>
+        <div><div class="chip chip--light"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="56" height="56" role="img" aria-label="Markstrata">
+  <title>Markstrata</title>
+  <rect width="512" height="512" rx="118" fill="#0F7B86"/>
+  <rect x="110" y="138" width="292" height="44" rx="22" fill="#FFFFFF"/>
+  <rect x="110" y="202" width="220" height="44" rx="22" fill="#FFFFFF" opacity="0.60"/>
+  <path d="M132 288 L256 352 L380 288" fill="none" stroke="#E2A03F" stroke-width="44" stroke-linecap="round" stroke-linejoin="round"/>
+</svg></div><span>Flat, no gradient</span></div>
+        <div><div class="chip chip--light"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="56" height="56" role="img" aria-label="Markstrata">
+  <title>Markstrata (maskable)</title>
+  <defs>
+    <linearGradient id="msTileM-mk" x1="0" y1="0" x2="0.85" y2="1">
+      <stop offset="0" stop-color="#1A99A5"/>
+      <stop offset="0.52" stop-color="#0F7B86"/>
+      <stop offset="1" stop-color="#0A4048"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" fill="url(#msTileM-mk)"/>
+  <g transform="translate(256 256) scale(0.8) translate(-256 -256)">
+    <rect x="110" y="138" width="292" height="44" rx="22" fill="#FFFFFF"/>
+    <rect x="110" y="202" width="220" height="44" rx="22" fill="#FFFFFF" opacity="0.60"/>
+    <path d="M132 288 L256 352 L380 288" fill="none" stroke="#F0B24A" stroke-width="44" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+</svg></div><span>Maskable, PWA</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="band band--chalk">
+  <div class="inner">
+    <div class="gutter"><b>Geometry</b>Construction and clear space</div>
+    <div class="body">
+      <div class="diagrams">
+        <figure><svg xmlns="http://www.w3.org/2000/svg" viewBox="-8 -8 528 528" width="528" height="528" role="img" aria-label="Markstrata icon construction">
+  <title>Markstrata icon construction grid</title>
+  <defs>
+    <linearGradient id="cnTile-cn" x1="0" y1="0" x2="0.85" y2="1">
+      <stop offset="0" stop-color="#1A99A5"/><stop offset="0.52" stop-color="#0F7B86"/><stop offset="1" stop-color="#0A4048"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="118" fill="url(#cnTile-cn)"/>
+  <g opacity="0.28">
+    <rect x="110" y="138" width="292" height="44" rx="22" fill="#FFFFFF"/>
+    <rect x="110" y="202" width="220" height="44" rx="22" fill="#FFFFFF"/>
+    <path d="M132 288 L256 352 L380 288" fill="none" stroke="#FFFFFF" stroke-width="44" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+  <g stroke="#9BD6DA" stroke-width="1" opacity="0.55">
+    <path d="M-8 138 H520 M-8 182 H520 M-8 202 H520 M-8 246 H520 M-8 266 H520 M-8 374 H520"/>
+    <path d="M110 -8 V520 M330 -8 V520 M402 -8 V520"/>
+  </g>
+  <g stroke="#F0B24A" stroke-width="1.5" fill="none" opacity="0.9">
+    <path d="M256 -8 V520" stroke-dasharray="6 8"/>
+    <circle cx="256" cy="352" r="22"/>
+    <circle cx="132" cy="288" r="22"/>
+    <circle cx="380" cy="288" r="22"/>
+    <circle cx="132" cy="160" r="22"/>
+    <path d="M256 -8 L256 520" stroke-dasharray="6 8"/>
+  </g>
+  <rect width="512" height="512" rx="118" fill="none" stroke="#FFFFFF" stroke-width="2" opacity="0.7"/>
+</svg><figcaption>Strata at y&nbsp;138 and 202, 44 tall, 20 apart.
+        Chevron 132,288 → 256,352 → 380,288, stroke 44, round join. Tile radius 118.</figcaption></figure>
+        <figure><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 768 768" width="768" height="768" role="img" aria-label="Markstrata icon clear space">
+  <title>Markstrata clear space: one quarter of the tile height on every side</title>
+  <defs>
+    <linearGradient id="csTile-cs" x1="0" y1="0" x2="0.85" y2="1">
+      <stop offset="0" stop-color="#1A99A5"/><stop offset="0.52" stop-color="#0F7B86"/><stop offset="1" stop-color="#0A4048"/>
+    </linearGradient>
+    <clipPath id="csClip-cs"><rect x="128" y="128" width="512" height="512" rx="118"/></clipPath>
+  </defs>
+  <rect width="768" height="768" fill="#F2F6F6"/>
+  <g fill="#C9E8EA" opacity="0.75">
+    <rect x="0" y="0" width="128" height="128"/><rect x="640" y="0" width="128" height="128"/>
+    <rect x="0" y="640" width="128" height="128"/><rect x="640" y="640" width="128" height="128"/>
+  </g>
+  <g clip-path="url(#csClip-cs)"><rect x="128" y="128" width="512" height="512" fill="url(#csTile-cs)"/></g>
+  <g transform="translate(128 128)">
+    <rect x="110" y="138" width="292" height="44" rx="22" fill="#FFFFFF"/>
+    <rect x="110" y="202" width="220" height="44" rx="22" fill="#FFFFFF" opacity="0.60"/>
+    <path d="M132 288 L256 352 L380 288" fill="none" stroke="#F0B24A" stroke-width="44" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+  <rect x="2" y="2" width="764" height="764" fill="none" stroke="#0F7B86" stroke-width="3" stroke-dasharray="14 12" opacity="0.8"/>
+</svg><figcaption>Clear space on every side is one quarter of the tile
+        height. Nothing enters that band — not type, rules, or web part chrome.</figcaption></figure>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="band">
+  <div class="inner">
+    <div class="gutter"><b>Lockups</b>Fixed proportions</div>
+    <div class="body">
+      <p>Wordmark cap height is 46% of the tile height, set one quarter of a tile away from it. In
+      the tagline lockup it drops to 40%. The wordmark is outlined Selawik Bold, tracked −1.3% —
+      metrically identical to Segoe UI, and licensed for logo use where Segoe UI is not.</p>
+      <div class="lockup"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 577.31 128.0" width="577.31" height="128.0" role="img" aria-label="Markstrata">
+  <title>Markstrata</title>
+  <defs>
+    <linearGradient id="lk-lh" x1="0" y1="0" x2="0.85" y2="1">
+      <stop offset="0" stop-color="#1A99A5"/><stop offset="0.52" stop-color="#0F7B86"/><stop offset="1" stop-color="#0A4048"/>
+    </linearGradient>
+    <clipPath id="cliplk-lh"><rect width="128" height="128" rx="29.5"/></clipPath>
+  </defs>
+  <g clip-path="url(#cliplk-lh)"><rect width="128" height="128" fill="url(#lk-lh)"/></g>
+  <g transform="scale(0.250000)">
+    <rect x="110" y="138" width="292" height="44" rx="22" fill="#FFFFFF"/>
+    <rect x="110" y="202" width="220" height="44" rx="22" fill="#FFFFFF" opacity="0.60"/>
+    <path d="M132 288 L256 352 L380 288" fill="none" stroke="#F0B24A" stroke-width="44" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+  <g fill="#072830" transform="translate(163.8400 93.4400) scale(0.041060 -0.041060)">
+      <path transform="translate(-165.0000 0)" d="M 445 0 L 445 832 C 445 932 445 1111 440 1164 L 444 1164 C 454 1099 464 1047 473 1023 L 837 0 L 1102 0 L 1459 1024 C 1476 1074 1483 1113 1493 1173 L 1497 1173 C 1496 1050 1496 933 1496 833 L 1496 0 L 1799 0 L 1799 1434 L 1317 1434 L 1051 663 C 1029 576 1007 488 985 401 L 979 401 C 956 488 933 574 910 661 L 657 1434 L 165 1434 L 165 0 L 445 0 Z"/>
+      <path transform="translate(1751.9920 0)" d="M 1057 28 C 1017 122 991 223 990 330 L 988 618 C 986 872 828 1000 527 1000 C 444 1000 325 982 149 954 L 177 710 C 298 738 450 754 514 754 C 624 754 686 710 686 604 L 686 328 C 686 198 720 75 772 -39 L 1057 28 Z M 717 226 L 686 369 C 686 279 606 200 485 200 C 407 200 353 231 353 275 C 352 339 411 377 508 377 C 617 377 725 357 793 328 L 790 498 C 690 568 584 603 483 603 C 221 603 56 476 56 266 C 56 64 218 -23 418 -23 C 566 -23 717 101 717 226 Z"/>
+      <path transform="translate(2827.3680 0)" d="M 449 0 L 451 739 L 408 974 L 135 974 L 133 0 L 449 0 Z M 793 684 L 821 990 C 613 1052 480 947 420 670 L 420 517 C 502 642 625 701 793 684 Z"/>
+      <path transform="translate(3615.7440 0)" d="M 1119 974 L 804 1000 L 562 757 C 468 663 412 422 392 369 L 384 228 L 403 174 L 1119 974 Z M 450 0 L 450 1516 L 133 1516 L 133 0 L 450 0 Z M 1142 -2 L 767 624 L 542 439 L 810 -2 L 1142 -2 Z"/>
+      <path transform="translate(4734.1200 0)" d="M 852 318 C 850 650 404 576 402 689 C 405 730 439 737 508 738 C 588 738 676 720 771 683 L 828 936 C 727 979 611 999 478 999 C 225 999 98 893 96 679 C 98 326 551 463 554 308 C 553 254 508 227 415 226 C 340 227 249 251 140 300 L 66 53 C 187 2 303 -24 415 -25 C 707 -25 852 89 852 318 Z"/>
+      <path transform="translate(5608.4960 0)" d="M 752 -18 L 752 259 C 723 255 684 252 661 252 C 537 252 515 343 515 422 L 515 1323 L 208 1323 L 208 273 C 208 84 325 -24 620 -24 C 643 -24 709 -22 752 -18 Z M 750 742 L 752 974 C 752 974 43 973 43 973 L 41 741 C 41 741 750 742 750 742 Z"/>
+      <path transform="translate(6378.8720 0)" d="M 449 0 L 451 739 L 408 974 L 135 974 L 133 0 L 449 0 Z M 793 684 L 821 990 C 613 1052 480 947 420 670 L 420 517 C 502 642 625 701 793 684 Z"/>
+      <path transform="translate(7167.2480 0)" d="M 1057 28 C 1017 122 991 223 990 330 L 988 618 C 986 872 828 1000 527 1000 C 444 1000 325 982 149 954 L 177 710 C 298 738 450 754 514 754 C 624 754 686 710 686 604 L 686 328 C 686 198 720 75 772 -39 L 1057 28 Z M 717 226 L 686 369 C 686 279 606 200 485 200 C 407 200 353 231 353 275 C 352 339 411 377 508 377 C 617 377 725 357 793 328 L 790 498 C 690 568 584 603 483 603 C 221 603 56 476 56 266 C 56 64 218 -23 418 -23 C 566 -23 717 101 717 226 Z"/>
+      <path transform="translate(8242.6240 0)" d="M 752 -18 L 752 259 C 723 255 684 252 661 252 C 537 252 515 343 515 422 L 515 1323 L 208 1323 L 208 273 C 208 84 325 -24 620 -24 C 643 -24 709 -22 752 -18 Z M 750 742 L 752 974 C 752 974 43 973 43 973 L 41 741 C 41 741 750 742 750 742 Z"/>
+      <path transform="translate(9013.0000 0)" d="M 1057 28 C 1017 122 991 223 990 330 L 988 618 C 986 872 828 1000 527 1000 C 444 1000 325 982 149 954 L 177 710 C 298 738 450 754 514 754 C 624 754 686 710 686 604 L 686 328 C 686 198 720 75 772 -39 L 1057 28 Z M 717 226 L 686 369 C 686 279 606 200 485 200 C 407 200 353 231 353 275 C 352 339 411 377 508 377 C 617 377 725 357 793 328 L 790 498 C 690 568 584 603 483 603 C 221 603 56 476 56 266 C 56 64 218 -23 418 -23 C 566 -23 717 101 717 226 Z"/>
+  </g>
+</svg><p>Default. Site headers, docs, slides.</p></div>
+      <div class="lockup"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 523.38 128.0" width="523.38" height="128.0" role="img" aria-label="Markstrata — Markdown for SharePoint">
+  <title>Markstrata — Markdown for SharePoint</title>
+  <defs>
+    <linearGradient id="tg-lt" x1="0" y1="0" x2="0.85" y2="1">
+      <stop offset="0" stop-color="#1A99A5"/><stop offset="0.52" stop-color="#0F7B86"/><stop offset="1" stop-color="#0A4048"/>
+    </linearGradient>
+    <clipPath id="cliptg-lt"><rect width="128" height="128" rx="29.5"/></clipPath>
+  </defs>
+  <g clip-path="url(#cliptg-lt)"><rect width="128" height="128" fill="url(#tg-lt)"/></g>
+  <g transform="scale(0.250000)">
+    <rect x="110" y="138" width="292" height="44" rx="22" fill="#FFFFFF"/>
+    <rect x="110" y="202" width="220" height="44" rx="22" fill="#FFFFFF" opacity="0.60"/>
+    <path d="M132 288 L256 352 L380 288" fill="none" stroke="#F0B24A" stroke-width="44" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+  <g fill="#072830" transform="translate(163.8400 70.4000) scale(0.035704 -0.035704)">
+      <path transform="translate(-165.0000 0)" d="M 445 0 L 445 832 C 445 932 445 1111 440 1164 L 444 1164 C 454 1099 464 1047 473 1023 L 837 0 L 1102 0 L 1459 1024 C 1476 1074 1483 1113 1493 1173 L 1497 1173 C 1496 1050 1496 933 1496 833 L 1496 0 L 1799 0 L 1799 1434 L 1317 1434 L 1051 663 C 1029 576 1007 488 985 401 L 979 401 C 956 488 933 574 910 661 L 657 1434 L 165 1434 L 165 0 L 445 0 Z"/>
+      <path transform="translate(1751.9920 0)" d="M 1057 28 C 1017 122 991 223 990 330 L 988 618 C 986 872 828 1000 527 1000 C 444 1000 325 982 149 954 L 177 710 C 298 738 450 754 514 754 C 624 754 686 710 686 604 L 686 328 C 686 198 720 75 772 -39 L 1057 28 Z M 717 226 L 686 369 C 686 279 606 200 485 200 C 407 200 353 231 353 275 C 352 339 411 377 508 377 C 617 377 725 357 793 328 L 790 498 C 690 568 584 603 483 603 C 221 603 56 476 56 266 C 56 64 218 -23 418 -23 C 566 -23 717 101 717 226 Z"/>
+      <path transform="translate(2827.3680 0)" d="M 449 0 L 451 739 L 408 974 L 135 974 L 133 0 L 449 0 Z M 793 684 L 821 990 C 613 1052 480 947 420 670 L 420 517 C 502 642 625 701 793 684 Z"/>
+      <path transform="translate(3615.7440 0)" d="M 1119 974 L 804 1000 L 562 757 C 468 663 412 422 392 369 L 384 228 L 403 174 L 1119 974 Z M 450 0 L 450 1516 L 133 1516 L 133 0 L 450 0 Z M 1142 -2 L 767 624 L 542 439 L 810 -2 L 1142 -2 Z"/>
+      <path transform="translate(4734.1200 0)" d="M 852 318 C 850 650 404 576 402 689 C 405 730 439 737 508 738 C 588 738 676 720 771 683 L 828 936 C 727 979 611 999 478 999 C 225 999 98 893 96 679 C 98 326 551 463 554 308 C 553 254 508 227 415 226 C 340 227 249 251 140 300 L 66 53 C 187 2 303 -24 415 -25 C 707 -25 852 89 852 318 Z"/>
+      <path transform="translate(5608.4960 0)" d="M 752 -18 L 752 259 C 723 255 684 252 661 252 C 537 252 515 343 515 422 L 515 1323 L 208 1323 L 208 273 C 208 84 325 -24 620 -24 C 643 -24 709 -22 752 -18 Z M 750 742 L 752 974 C 752 974 43 973 43 973 L 41 741 C 41 741 750 742 750 742 Z"/>
+      <path transform="translate(6378.8720 0)" d="M 449 0 L 451 739 L 408 974 L 135 974 L 133 0 L 449 0 Z M 793 684 L 821 990 C 613 1052 480 947 420 670 L 420 517 C 502 642 625 701 793 684 Z"/>
+      <path transform="translate(7167.2480 0)" d="M 1057 28 C 1017 122 991 223 990 330 L 988 618 C 986 872 828 1000 527 1000 C 444 1000 325 982 149 954 L 177 710 C 298 738 450 754 514 754 C 624 754 686 710 686 604 L 686 328 C 686 198 720 75 772 -39 L 1057 28 Z M 717 226 L 686 369 C 686 279 606 200 485 200 C 407 200 353 231 353 275 C 352 339 411 377 508 377 C 617 377 725 357 793 328 L 790 498 C 690 568 584 603 483 603 C 221 603 56 476 56 266 C 56 64 218 -23 418 -23 C 566 -23 717 101 717 226 Z"/>
+      <path transform="translate(8242.6240 0)" d="M 752 -18 L 752 259 C 723 255 684 252 661 252 C 537 252 515 343 515 422 L 515 1323 L 208 1323 L 208 273 C 208 84 325 -24 620 -24 C 643 -24 709 -22 752 -18 Z M 750 742 L 752 974 C 752 974 43 973 43 973 L 41 741 C 41 741 750 742 750 742 Z"/>
+      <path transform="translate(9013.0000 0)" d="M 1057 28 C 1017 122 991 223 990 330 L 988 618 C 986 872 828 1000 527 1000 C 444 1000 325 982 149 954 L 177 710 C 298 738 450 754 514 754 C 624 754 686 710 686 604 L 686 328 C 686 198 720 75 772 -39 L 1057 28 Z M 717 226 L 686 369 C 686 279 606 200 485 200 C 407 200 353 231 353 275 C 352 339 411 377 508 377 C 617 377 725 357 793 328 L 790 498 C 690 568 584 603 483 603 C 221 603 56 476 56 266 C 56 64 218 -23 418 -23 C 566 -23 717 101 717 226 Z"/>
+  </g>
+  <g fill="#3E6570" transform="translate(165.8400 108.8000) scale(0.013389 -0.013389)">
+      <path transform="translate(-188.0000 0)" d="M 347 0 L 347 902 C 347 981 347 1151 342 1214 L 346 1214 C 356 1170 368 1135 388 1096 L 877 0 L 959 0 L 1449 1104 C 1467 1148 1480 1181 1493 1233 L 1497 1233 C 1488 1139 1486 1014 1486 923 L 1486 0 L 1650 0 L 1650 1434 L 1440 1434 L 991 443 C 971 399 941 311 922 259 L 916 259 C 905 303 868 399 850 441 L 410 1434 L 188 1434 L 188 0 L 347 0 Z"/>
+      <path transform="translate(1659.1920 0)" d="M 987 28 C 935 122 901 223 900 330 L 898 618 C 896 872 769 1000 527 1000 C 459 1000 362 990 219 974 L 247 810 C 343 825 463 834 514 834 C 656 834 736 768 736 604 L 736 328 C 736 198 778 75 842 -39 L 987 28 Z M 767 206 L 736 349 C 736 217 632 130 475 130 C 349 130 264 189 263 275 C 262 364 357 417 498 417 C 617 417 725 377 793 318 L 790 468 C 691 538 585 573 473 573 C 242 573 91 457 91 266 C 91 64 247 -23 438 -23 C 601 -23 767 81 767 206 Z"/>
+      <path transform="translate(2709.3840 0)" d="M 331 0 L 331 804 L 291 974 L 167 974 L 167 0 L 331 0 Z M 643 834 L 671 990 C 493 1023 360 967 270 820 L 270 667 C 352 792 475 851 643 834 Z"/>
+      <path transform="translate(3429.5760 0)" d="M 949 974 L 784 1000 L 400 594 C 348 540 307 461 285 427 L 285 336 L 304 262 L 949 974 Z M 330 0 L 330 1516 L 166 1516 L 166 0 L 330 0 Z M 992 -2 L 617 624 L 506 507 L 810 -2 L 992 -2 Z"/>
+      <path transform="translate(4455.7680 0)" d="M 936 360 L 876 453 C 876 252 773 134 577 134 C 361 134 275 323 275 483 C 275 712 401 851 604 851 C 686 851 816 826 912 717 L 929 850 C 825 950 713 1000 591 1000 C 294 1000 99 789 99 472 C 99 173 273 -23 537 -23 C 802 -23 936 110 936 360 Z M 1127 28 C 1075 122 1041 223 1040 330 L 876 328 C 876 198 918 75 982 -39 L 1127 28 Z M 1040 1517 L 876 1517 L 876 214 L 1040 211 L 1040 1517 Z"/>
+      <path transform="translate(5669.9600 0)" d="M 1101 483 C 1104 793 907 998 605 998 C 298 998 95 793 95 483 C 95 177 298 -25 605 -25 C 904 -25 1101 177 1101 483 Z M 269 483 C 270 698 404 840 605 840 C 794 840 922 698 927 483 C 923 272 795 133 605 133 C 401 133 268 272 269 483 Z"/>
+      <path transform="translate(6878.1520 0)" d="M 498 -5 L 722 654 C 728 672 743 734 744 746 L 748 746 C 749 734 762 673 768 653 L 980 -5 L 1150 -5 L 1457 974 L 1289 974 L 1081 277 C 1076 260 1064 200 1063 187 L 1055 187 C 1054 206 1044 267 1040 279 L 824 975 L 674 975 L 442 283 C 436 266 425 203 424 188 L 416 188 C 415 207 406 267 403 278 L 191 974 L 24 974 L 334 -5 L 498 -5 Z"/>
+      <path transform="translate(8366.3440 0)" d="M 1016 0 L 1016 610 C 1016 833 890 1000 627 1000 C 469 1000 351 938 270 814 L 270 657 C 346 767 474 843 626 844 C 799 843 852 710 852 564 L 852 0 L 1016 0 Z M 329 0 L 331 839 L 288 974 L 167 974 L 165 0 L 329 0 Z"/>
+      <path transform="translate(10102.7280 0)" d="M 391 2 L 391 1141 C 391 1291 415 1371 527 1371 C 559 1371 599 1364 648 1359 L 684 1519 C 619 1526 563 1534 514 1534 C 283 1534 227 1353 227 1131 L 227 2 L 391 2 Z M 630 831 L 630 976 L 52 974 L 52 831 C 52 831 630 831 630 831 Z"/>
+      <path transform="translate(10751.9200 0)" d="M 1101 483 C 1104 793 907 998 605 998 C 298 998 95 793 95 483 C 95 177 298 -25 605 -25 C 904 -25 1101 177 1101 483 Z M 269 483 C 270 698 404 840 605 840 C 794 840 922 698 927 483 C 923 272 795 133 605 133 C 401 133 268 272 269 483 Z"/>
+      <path transform="translate(11960.1120 0)" d="M 331 0 L 331 804 L 291 974 L 167 974 L 167 0 L 331 0 Z M 643 834 L 671 990 C 493 1023 360 967 270 820 L 270 667 C 352 792 475 851 643 834 Z"/>
+      <path transform="translate(13249.4960 0)" d="M 980 384 C 982 874 303 783 306 1090 C 307 1234 449 1282 602 1282 C 733 1282 807 1247 873 1223 L 938 1380 C 840 1419 731 1447 599 1447 C 336 1447 138 1340 136 1080 C 134 602 801 749 801 386 C 801 252 723 144 501 144 C 399 144 302 167 145 247 L 80 98 C 240 21 356 -12 501 -11 C 805 -10 979 141 980 384 Z"/>
+      <path transform="translate(14345.6880 0)" d="M 1016 0 L 1016 610 C 1016 833 890 1000 627 1000 C 469 1000 351 938 270 814 L 270 661 C 346 767 474 843 626 843 C 799 843 852 710 852 564 L 852 0 L 1016 0 Z M 329 0 L 329 1517 L 165 1517 L 165 0 L 329 0 Z"/>
+      <path transform="translate(15512.8800 0)" d="M 987 28 C 935 122 901 223 900 330 L 898 618 C 896 872 769 1000 527 1000 C 459 1000 362 990 219 974 L 247 810 C 343 825 463 834 514 834 C 656 834 736 768 736 604 L 736 328 C 736 198 778 75 842 -39 L 987 28 Z M 767 206 L 736 349 C 736 217 632 130 475 130 C 349 130 264 189 263 275 C 262 364 357 417 498 417 C 617 417 725 377 793 318 L 790 468 C 691 538 585 573 473 573 C 242 573 91 457 91 266 C 91 64 247 -23 438 -23 C 601 -23 767 81 767 206 Z"/>
+      <path transform="translate(16563.0720 0)" d="M 331 0 L 331 804 L 291 974 L 167 974 L 167 0 L 331 0 Z M 643 834 L 671 990 C 493 1023 360 967 270 820 L 270 667 C 352 792 475 851 643 834 Z"/>
+      <path transform="translate(17283.2640 0)" d="M 970 47 L 919 187 C 817 147 714 128 627 128 C 386 128 262 252 262 492 C 262 692 342 849 565 847 C 761 845 818 682 805 549 L 195 543 L 186 399 L 965 405 C 1036 656 937 1004 582 1004 C 277 1004 96 825 96 493 C 96 132 289 -23 592 -23 C 710 -23 875 7 970 47 Z"/>
+      <path transform="translate(18362.4560 0)" d="M 358 0 L 358 542 L 545 542 C 848 542 1066 718 1066 1006 C 1066 1286 881 1434 584 1434 L 190 1434 L 190 0 L 358 0 Z M 357 1281 L 555 1282 C 767 1282 891 1199 891 998 C 891 792 751 693 533 693 L 357 693 L 357 1281 Z"/>
+      <path transform="translate(19517.6480 0)" d="M 1101 483 C 1104 793 907 998 605 998 C 298 998 95 793 95 483 C 95 177 298 -25 605 -25 C 904 -25 1101 177 1101 483 Z M 269 483 C 270 698 404 840 605 840 C 794 840 922 698 927 483 C 923 272 795 133 605 133 C 401 133 268 272 269 483 Z"/>
+      <path transform="translate(20725.8400 0)" d="M 362 1391 C 362 1454 314 1502 251 1502 C 187 1502 139 1454 139 1391 C 139 1327 187 1279 251 1279 C 314 1279 362 1327 362 1391 Z M 330 0 L 330 974 L 166 974 L 166 0 L 330 0 Z"/>
+      <path transform="translate(21230.0320 0)" d="M 1016 0 L 1016 610 C 1016 833 890 1000 627 1000 C 469 1000 351 938 270 814 L 270 657 C 346 767 474 843 626 844 C 799 843 852 710 852 564 L 852 0 L 1016 0 Z M 329 0 L 331 839 L 288 974 L 167 974 L 165 0 L 329 0 Z"/>
+      <path transform="translate(22397.2240 0)" d="M 640 -18 L 640 129 C 611 125 572 122 549 122 C 428 122 373 218 373 302 L 373 1323 L 219 1323 L 219 273 C 219 114 315 -24 508 -24 C 531 -24 597 -22 640 -18 Z M 641 828 L 641 973 C 641 973 43 973 43 973 L 43 828 C 43 828 641 828 641 828 Z"/>
+  </g>
+</svg><p>First contact: store listing, landing page, deck cover.</p></div>
+      <div class="lockup lockup--rev"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 577.31 128.0" width="577.31" height="128.0" role="img" aria-label="Markstrata">
+  <title>Markstrata</title>
+  <rect width="128" height="128" rx="29.5" fill="#FFFFFF"/>
+  <g transform="scale(0.250000)">
+    <rect x="110" y="138" width="292" height="44" rx="22" fill="#072830"/>
+    <rect x="110" y="202" width="220" height="44" rx="22" fill="#0F7B86" opacity="1"/>
+    <path d="M132 288 L256 352 L380 288" fill="none" stroke="#D9922B" stroke-width="44" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+  <g fill="#FFFFFF" transform="translate(163.8400 93.4400) scale(0.041060 -0.041060)">
+      <path transform="translate(-165.0000 0)" d="M 445 0 L 445 832 C 445 932 445 1111 440 1164 L 444 1164 C 454 1099 464 1047 473 1023 L 837 0 L 1102 0 L 1459 1024 C 1476 1074 1483 1113 1493 1173 L 1497 1173 C 1496 1050 1496 933 1496 833 L 1496 0 L 1799 0 L 1799 1434 L 1317 1434 L 1051 663 C 1029 576 1007 488 985 401 L 979 401 C 956 488 933 574 910 661 L 657 1434 L 165 1434 L 165 0 L 445 0 Z"/>
+      <path transform="translate(1751.9920 0)" d="M 1057 28 C 1017 122 991 223 990 330 L 988 618 C 986 872 828 1000 527 1000 C 444 1000 325 982 149 954 L 177 710 C 298 738 450 754 514 754 C 624 754 686 710 686 604 L 686 328 C 686 198 720 75 772 -39 L 1057 28 Z M 717 226 L 686 369 C 686 279 606 200 485 200 C 407 200 353 231 353 275 C 352 339 411 377 508 377 C 617 377 725 357 793 328 L 790 498 C 690 568 584 603 483 603 C 221 603 56 476 56 266 C 56 64 218 -23 418 -23 C 566 -23 717 101 717 226 Z"/>
+      <path transform="translate(2827.3680 0)" d="M 449 0 L 451 739 L 408 974 L 135 974 L 133 0 L 449 0 Z M 793 684 L 821 990 C 613 1052 480 947 420 670 L 420 517 C 502 642 625 701 793 684 Z"/>
+      <path transform="translate(3615.7440 0)" d="M 1119 974 L 804 1000 L 562 757 C 468 663 412 422 392 369 L 384 228 L 403 174 L 1119 974 Z M 450 0 L 450 1516 L 133 1516 L 133 0 L 450 0 Z M 1142 -2 L 767 624 L 542 439 L 810 -2 L 1142 -2 Z"/>
+      <path transform="translate(4734.1200 0)" d="M 852 318 C 850 650 404 576 402 689 C 405 730 439 737 508 738 C 588 738 676 720 771 683 L 828 936 C 727 979 611 999 478 999 C 225 999 98 893 96 679 C 98 326 551 463 554 308 C 553 254 508 227 415 226 C 340 227 249 251 140 300 L 66 53 C 187 2 303 -24 415 -25 C 707 -25 852 89 852 318 Z"/>
+      <path transform="translate(5608.4960 0)" d="M 752 -18 L 752 259 C 723 255 684 252 661 252 C 537 252 515 343 515 422 L 515 1323 L 208 1323 L 208 273 C 208 84 325 -24 620 -24 C 643 -24 709 -22 752 -18 Z M 750 742 L 752 974 C 752 974 43 973 43 973 L 41 741 C 41 741 750 742 750 742 Z"/>
+      <path transform="translate(6378.8720 0)" d="M 449 0 L 451 739 L 408 974 L 135 974 L 133 0 L 449 0 Z M 793 684 L 821 990 C 613 1052 480 947 420 670 L 420 517 C 502 642 625 701 793 684 Z"/>
+      <path transform="translate(7167.2480 0)" d="M 1057 28 C 1017 122 991 223 990 330 L 988 618 C 986 872 828 1000 527 1000 C 444 1000 325 982 149 954 L 177 710 C 298 738 450 754 514 754 C 624 754 686 710 686 604 L 686 328 C 686 198 720 75 772 -39 L 1057 28 Z M 717 226 L 686 369 C 686 279 606 200 485 200 C 407 200 353 231 353 275 C 352 339 411 377 508 377 C 617 377 725 357 793 328 L 790 498 C 690 568 584 603 483 603 C 221 603 56 476 56 266 C 56 64 218 -23 418 -23 C 566 -23 717 101 717 226 Z"/>
+      <path transform="translate(8242.6240 0)" d="M 752 -18 L 752 259 C 723 255 684 252 661 252 C 537 252 515 343 515 422 L 515 1323 L 208 1323 L 208 273 C 208 84 325 -24 620 -24 C 643 -24 709 -22 752 -18 Z M 750 742 L 752 974 C 752 974 43 973 43 973 L 41 741 C 41 741 750 742 750 742 Z"/>
+      <path transform="translate(9013.0000 0)" d="M 1057 28 C 1017 122 991 223 990 330 L 988 618 C 986 872 828 1000 527 1000 C 444 1000 325 982 149 954 L 177 710 C 298 738 450 754 514 754 C 624 754 686 710 686 604 L 686 328 C 686 198 720 75 772 -39 L 1057 28 Z M 717 226 L 686 369 C 686 279 606 200 485 200 C 407 200 353 231 353 275 C 352 339 411 377 508 377 C 617 377 725 357 793 328 L 790 498 C 690 568 584 603 483 603 C 221 603 56 476 56 266 C 56 64 218 -23 418 -23 C 566 -23 717 101 717 226 Z"/>
+  </g>
+</svg><p>On Bedrock or Shale surfaces, and on SharePoint
+      sections set to strong.</p></div>
+      <div class="lockup"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 237.57" width="320" height="237.57" role="img" aria-label="Markstrata">
+  <title>Markstrata</title>
+  <defs>
+    <linearGradient id="sk-ls" x1="0" y1="0" x2="0.85" y2="1">
+      <stop offset="0" stop-color="#1A99A5"/><stop offset="0.52" stop-color="#0F7B86"/><stop offset="1" stop-color="#0A4048"/>
+    </linearGradient>
+    <clipPath id="clipsk-ls"><rect width="160" height="160" rx="36.9"/></clipPath>
+  </defs>
+  <g transform="translate(80 0)">
+  <g clip-path="url(#clipsk-ls)"><rect width="160" height="160" fill="url(#sk-ls)"/></g>
+  <g transform="scale(0.312500)">
+    <rect x="110" y="138" width="292" height="44" rx="22" fill="#FFFFFF"/>
+    <rect x="110" y="202" width="220" height="44" rx="22" fill="#FFFFFF" opacity="0.60"/>
+    <path d="M132 288 L256 352 L380 288" fill="none" stroke="#F0B24A" stroke-width="44" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+  </g>
+  <g fill="#072830" transform="translate(0.0000 237.5690) scale(0.031778 -0.031778)">
+      <path transform="translate(-165.0000 0)" d="M 445 0 L 445 832 C 445 932 445 1111 440 1164 L 444 1164 C 454 1099 464 1047 473 1023 L 837 0 L 1102 0 L 1459 1024 C 1476 1074 1483 1113 1493 1173 L 1497 1173 C 1496 1050 1496 933 1496 833 L 1496 0 L 1799 0 L 1799 1434 L 1317 1434 L 1051 663 C 1029 576 1007 488 985 401 L 979 401 C 956 488 933 574 910 661 L 657 1434 L 165 1434 L 165 0 L 445 0 Z"/>
+      <path transform="translate(1751.9920 0)" d="M 1057 28 C 1017 122 991 223 990 330 L 988 618 C 986 872 828 1000 527 1000 C 444 1000 325 982 149 954 L 177 710 C 298 738 450 754 514 754 C 624 754 686 710 686 604 L 686 328 C 686 198 720 75 772 -39 L 1057 28 Z M 717 226 L 686 369 C 686 279 606 200 485 200 C 407 200 353 231 353 275 C 352 339 411 377 508 377 C 617 377 725 357 793 328 L 790 498 C 690 568 584 603 483 603 C 221 603 56 476 56 266 C 56 64 218 -23 418 -23 C 566 -23 717 101 717 226 Z"/>
+      <path transform="translate(2827.3680 0)" d="M 449 0 L 451 739 L 408 974 L 135 974 L 133 0 L 449 0 Z M 793 684 L 821 990 C 613 1052 480 947 420 670 L 420 517 C 502 642 625 701 793 684 Z"/>
+      <path transform="translate(3615.7440 0)" d="M 1119 974 L 804 1000 L 562 757 C 468 663 412 422 392 369 L 384 228 L 403 174 L 1119 974 Z M 450 0 L 450 1516 L 133 1516 L 133 0 L 450 0 Z M 1142 -2 L 767 624 L 542 439 L 810 -2 L 1142 -2 Z"/>
+      <path transform="translate(4734.1200 0)" d="M 852 318 C 850 650 404 576 402 689 C 405 730 439 737 508 738 C 588 738 676 720 771 683 L 828 936 C 727 979 611 999 478 999 C 225 999 98 893 96 679 C 98 326 551 463 554 308 C 553 254 508 227 415 226 C 340 227 249 251 140 300 L 66 53 C 187 2 303 -24 415 -25 C 707 -25 852 89 852 318 Z"/>
+      <path transform="translate(5608.4960 0)" d="M 752 -18 L 752 259 C 723 255 684 252 661 252 C 537 252 515 343 515 422 L 515 1323 L 208 1323 L 208 273 C 208 84 325 -24 620 -24 C 643 -24 709 -22 752 -18 Z M 750 742 L 752 974 C 752 974 43 973 43 973 L 41 741 C 41 741 750 742 750 742 Z"/>
+      <path transform="translate(6378.8720 0)" d="M 449 0 L 451 739 L 408 974 L 135 974 L 133 0 L 449 0 Z M 793 684 L 821 990 C 613 1052 480 947 420 670 L 420 517 C 502 642 625 701 793 684 Z"/>
+      <path transform="translate(7167.2480 0)" d="M 1057 28 C 1017 122 991 223 990 330 L 988 618 C 986 872 828 1000 527 1000 C 444 1000 325 982 149 954 L 177 710 C 298 738 450 754 514 754 C 624 754 686 710 686 604 L 686 328 C 686 198 720 75 772 -39 L 1057 28 Z M 717 226 L 686 369 C 686 279 606 200 485 200 C 407 200 353 231 353 275 C 352 339 411 377 508 377 C 617 377 725 357 793 328 L 790 498 C 690 568 584 603 483 603 C 221 603 56 476 56 266 C 56 64 218 -23 418 -23 C 566 -23 717 101 717 226 Z"/>
+      <path transform="translate(8242.6240 0)" d="M 752 -18 L 752 259 C 723 255 684 252 661 252 C 537 252 515 343 515 422 L 515 1323 L 208 1323 L 208 273 C 208 84 325 -24 620 -24 C 643 -24 709 -22 752 -18 Z M 750 742 L 752 974 C 752 974 43 973 43 973 L 41 741 C 41 741 750 742 750 742 Z"/>
+      <path transform="translate(9013.0000 0)" d="M 1057 28 C 1017 122 991 223 990 330 L 988 618 C 986 872 828 1000 527 1000 C 444 1000 325 982 149 954 L 177 710 C 298 738 450 754 514 754 C 624 754 686 710 686 604 L 686 328 C 686 198 720 75 772 -39 L 1057 28 Z M 717 226 L 686 369 C 686 279 606 200 485 200 C 407 200 353 231 353 275 C 352 339 411 377 508 377 C 617 377 725 357 793 328 L 790 498 C 690 568 584 603 483 603 C 221 603 56 476 56 266 C 56 64 218 -23 418 -23 C 566 -23 717 101 717 226 Z"/>
+  </g>
+</svg><p>Narrow columns and square placements.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="band band--chalk">
+  <div class="inner">
+    <div class="gutter"><b>Colour</b>Strata and Sediment</div>
+    <div class="body">
+      <p>Strata is the brand teal, close enough to SharePoint's own teal to sit in the suite without
+      looking borrowed. Sediment is the amber of the chevron — the one warm thing in the system,
+      reserved for the Markdown source side of the product. One amber element per screen.</p>
+
+      <h3>Strata</h3>
+      <div class="ramp"><div style="background:#E9F5F6;color:#072830">50<br>#E9F5F6</div><div style="background:#C9E8EA;color:#072830">100<br>#C9E8EA</div><div style="background:#9BD6DA;color:#072830">200<br>#9BD6DA</div><div style="background:#62BEC5;color:#072830">300<br>#62BEC5</div><div style="background:#2AA3AC;color:#fff">400<br>#2AA3AC</div><div style="background:#0F7B86;color:#fff">500<br>#0F7B86</div><div style="background:#0C666F;color:#fff">600<br>#0C666F</div><div style="background:#0A4048;color:#fff">700<br>#0A4048</div><div style="background:#072830;color:#fff">800<br>#072830</div><div style="background:#04181D;color:#fff">900<br>#04181D</div></div>
+      <h3>Sediment</h3>
+      <div class="ramp"><div style="background:#FBEFD9;color:#072830">100<br>#FBEFD9</div><div style="background:#F5C06A;color:#072830">300<br>#F5C06A</div><div style="background:#F0B24A;color:#072830">400<br>#F0B24A</div><div style="background:#E2A03F;color:#072830">500<br>#E2A03F</div><div style="background:#D9922B;color:#072830">600<br>#D9922B</div><div style="background:#9A6314;color:#fff">700<br>#9A6314</div></div>
+      <h3>Slate</h3>
+      <div class="ramp"><div style="background:#F6F9F9;color:#072830">50<br>#F6F9F9</div><div style="background:#EDF2F3;color:#072830">100<br>#EDF2F3</div><div style="background:#DCE5E7;color:#072830">200<br>#DCE5E7</div><div style="background:#C1CFD3;color:#072830">300<br>#C1CFD3</div><div style="background:#94A8AE;color:#072830">400<br>#94A8AE</div><div style="background:#6B848C;color:#fff">500<br>#6B848C</div><div style="background:#4E6870;color:#fff">600<br>#4E6870</div><div style="background:#3A5259;color:#fff">700<br>#3A5259</div><div style="background:#24383E;color:#fff">800<br>#24383E</div><div style="background:#14252A;color:#fff">900<br>#14252A</div></div>
+
+      <h3>Contrast audit</h3>
+      <table class="swatches">
+        <tr><th>Pairing</th><th>Value</th><th>Ratio</th><th>Verdict</th></tr>
+        <tr><td><span class="dot" style="background:#0F7B86"></span>Strata 500 text</td><td class="hex">#0F7B86 on #FFFFFF</td><td class="hex">5.00:1</td><td class="pass">AA text</td></tr>
+        <tr><td><span class="dot" style="background:#0C666F"></span>Strata 600 text</td><td class="hex">#0C666F on #FFFFFF</td><td class="hex">6.68:1</td><td class="pass">AA text</td></tr>
+        <tr><td><span class="dot" style="background:#072830"></span>Bedrock text</td><td class="hex">#072830 on #FFFFFF</td><td class="hex">15.50:1</td><td class="pass">AA text</td></tr>
+        <tr><td><span class="dot" style="background:#3E6570"></span>Muted text</td><td class="hex">#3E6570 on #FFFFFF</td><td class="hex">6.36:1</td><td class="pass">AA text</td></tr>
+        <tr><td><span class="dot" style="background:#FFFFFF"></span>White on Strata 500</td><td class="hex">#FFFFFF on #0F7B86</td><td class="hex">5.00:1</td><td class="pass">AA text</td></tr>
+        <tr><td><span class="dot" style="background:#FFFFFF"></span>White on Strata 700</td><td class="hex">#FFFFFF on #0A4048</td><td class="hex">11.41:1</td><td class="pass">AA text</td></tr>
+        <tr><td><span class="dot" style="background:#E2A03F"></span>Sediment 500 on white</td><td class="hex">#E2A03F on #FFFFFF</td><td class="hex">2.25:1</td><td class="fail">decorative only</td></tr>
+        <tr><td><span class="dot" style="background:#9A6314"></span>Sediment 700 on white</td><td class="hex">#9A6314 on #FFFFFF</td><td class="hex">5.04:1</td><td class="pass">AA text</td></tr>
+        <tr><td><span class="dot" style="background:#E2A03F"></span>Sediment 500 on Bedrock</td><td class="hex">#E2A03F on #072830</td><td class="hex">6.89:1</td><td class="pass">AA text</td></tr>
+        <tr><td><span class="dot" style="background:#F0B24A"></span>Sediment 400 on Strata 700</td><td class="hex">#F0B24A on #0A4048</td><td class="hex">6.07:1</td><td class="pass">AA text</td></tr>
+        <tr><td><span class="dot" style="background:#2AA3AC"></span>Focus ring on white</td><td class="hex">#2AA3AC on #FFFFFF</td><td class="hex">3.03:1</td><td class="fail">graphics only</td></tr>
+        <tr><td><span class="dot" style="background:#DCE5E7"></span>Border on white</td><td class="hex">#DCE5E7 on #FFFFFF</td><td class="hex">1.28:1</td><td class="fail">decorative only</td></tr>
+        <tr><td><span class="dot" style="background:#B5322E"></span>Danger on white</td><td class="hex">#B5322E on #FFFFFF</td><td class="hex">6.07:1</td><td class="pass">AA text</td></tr>
+        <tr><td><span class="dot" style="background:#1E7A52"></span>Success on white</td><td class="hex">#1E7A52 on #FFFFFF</td><td class="hex">5.30:1</td><td class="pass">AA text</td></tr>
+        <tr><td><span class="dot" style="background:#9A6314"></span>Warning on white</td><td class="hex">#9A6314 on #FFFFFF</td><td class="hex">5.04:1</td><td class="pass">AA text</td></tr>
+        <tr><td><span class="dot" style="background:#62BEC5"></span>Strata 300 on Strata 800</td><td class="hex">#62BEC5 on #072830</td><td class="hex">7.15:1</td><td class="pass">AA text</td></tr>
+      </table>
+      <p style="font-size:13px;color:var(--muted);margin-top:12px">Sediment 500 fails text contrast
+      on white. It is a graphics colour; for amber text use Sediment 700. The tile gradient
+      (#1A99A5 → #0F7B86 → #0A4048) belongs to the app tile only — never behind buttons or sections.</p>
+    </div>
+  </div>
+</section>
+
+<section class="band">
+  <div class="inner">
+    <div class="gutter"><b>Type</b>Segoe UI and Cascadia Mono</div>
+    <div class="body">
+      <p>SharePoint already serves Segoe UI. Loading a webfont for UI type costs a request and breaks
+      the illusion that Markstrata is part of the page. The editor pane is the one place the product
+      shows its own character.</p>
+      <p class="sample">Publish to page</p>
+      <dl class="spec">
+        <dt>Headings</dt><dd>Segoe UI Variable Display / Semibold — 20/28, 16/22, sentence case</dd>
+        <dt>Body</dt><dd>Segoe UI Variable Text — 14/20; secondary 12/16</dd>
+        <dt>Source</dt><dd>Cascadia Mono, Consolas fallback — 13/20, tabular figures</dd>
+      </dl>
+      <div class="sample--mono">## Quarterly rollout
+Owner: <span style="color:#9A6314">@hannah</span>
+- [x] Draft in the library
+- [ ] Publish to the team page</div>
+    </div>
+  </div>
+</section>
+
+<section class="band band--chalk">
+  <div class="inner">
+    <div class="gutter"><b>Product icons</b>20 px, currentColor</div>
+    <div class="body">
+      <p>A 1.6 stroke on a 20 grid, matching Fluent's optical weight, so they inherit SharePoint's
+      theme colours for free. The line version of the mark is the only correct icon for a Markstrata
+      command — never shrink the gradient tile into a toolbar.</p>
+      <div class="icons">
+        <figure><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="Markstrata">
+  <title>Markstrata</title>
+  <path d="M3.5 4.5 H16.5"/>
+  <path d="M3.5 8.5 H11.5"/>
+  <path d="M5 12 L10 15.75 L15 12"/>
+</svg><figcaption>Markstrata</figcaption></figure>
+        <figure><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="Side-by-side preview">
+  <title>Side-by-side preview</title>
+  <rect x="2" y="3.25" width="16" height="13.5" rx="2.25"/>
+  <path d="M10 3.25 V16.75"/>
+  <path d="M4.25 7 H7.75"/>
+  <path d="M4.25 10 H6.75"/>
+  <path d="M12.25 7 H15.75"/>
+  <path d="M12.25 10 H14.5"/>
+</svg><figcaption>Side-by-side preview</figcaption></figure>
+        <figure><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="Publish to page">
+  <title>Publish to page</title>
+  <rect x="3.5" y="2.5" width="13" height="15" rx="2.25"/>
+  <path d="M6.75 6 H13.25"/>
+  <path d="M6.75 9.75 L10 12.5 L13.25 9.75"/>
+</svg><figcaption>Publish to page</figcaption></figure>
+        <figure><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="Page properties">
+  <title>Page properties</title>
+  <path d="M3.5 4.25 H16.5"/>
+  <path d="M3.5 7.5 H16.5"/>
+  <path d="M3.5 12 H10"/>
+  <path d="M3.5 15.25 H12.5"/>
+  <path d="M13.5 12 H16.5"/>
+</svg><figcaption>Page properties</figcaption></figure>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="band">
+  <div class="inner">
+    <div class="gutter"><b>Use</b>What holds the mark together</div>
+    <div class="body">
+      <div class="rules">
+        <div>
+          <h3 class="yes">Do</h3>
+          <ul>
+            <li>Scale the SVG; take rasters from <code>export/</code>.</li>
+            <li>Use the size-specific files rather than downscaling the master.</li>
+            <li>Keep the tile square with its own radius — the rounding is part of the artwork.</li>
+            <li>Put the mono-light glyph on photographs.</li>
+            <li>Read the site theme for UI chrome; keep the tile, lockup and amber ours.</li>
+          </ul>
+        </div>
+        <div>
+          <h3 class="no">Don't</h3>
+          <ul>
+            <li>Recolour the tile, outline it, or drop a shadow behind it.</li>
+            <li>Rotate, skew or flip the chevron. It points down, always.</li>
+            <li>Rebuild a lockup by placing the wordmark next to the tile by hand.</li>
+            <li>Set the wordmark as live text and call it the logo.</li>
+            <li>Add "for SharePoint" to the wordmark; that lives in the tagline lockup.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="band band--dark">
+  <div class="inner">
+    <div class="gutter"><b>Files</b>and SharePoint notes</div>
+    <div class="body">
+      <p class="tree"><b>markstrata/</b>
+├─ BRAND-GUIDE.md      geometry, colour, voice, trademarks
+├─ brand-sheet.html    this page
+├─ <b>icon/</b>              9 SVGs + construction and clear-space diagrams
+├─ <b>lockup/</b>            wordmark and 4 lockups, outlined, + type notice
+├─ <b>ui/</b>                4 currentColor 20 px product icons
+├─ <b>tokens/</b>            CSS, SCSS, JSON (JSON carries the contrast audit)
+└─ <b>export/</b>            PNG 16–512, maskable, .ico, SPFx data URI</p>
+
+      <h3 style="color:#EDF2F3">SPFx manifest</h3>
+      <p style="color:#C9E8EA">The base64 of the 32&nbsp;px icon is in
+      <code>export/spfx-iconImageUrl.txt</code>. Use <code>officeFabricIconFontName</code> only as a
+      fallback — the Fluent icon font has nothing that reads as Markstrata.</p>
+      <div class="snippet">"preconfiguredEntries": [{
+  "title": { "default": "Markstrata" },
+  "description": { "default": "Render Markdown from a document library on this page." },
+  "iconImageUrl": "data:image/svg+xml;base64,…"
+}]</div>
+      <p style="color:#C9E8EA;margin-top:18px;font-size:13px">SharePoint, Microsoft 365, Segoe UI and
+      Cascadia are trademarks of Microsoft. Markstrata is an independent product — describe it as
+      "for Microsoft SharePoint", never beside a Microsoft logo in a way that implies endorsement.
+      Wordmark outlines derive from Selawik, © Microsoft Corporation, SIL OFL 1.1.</p>
+    </div>
+  </div>
+</section>
+
+</body>
+</html>

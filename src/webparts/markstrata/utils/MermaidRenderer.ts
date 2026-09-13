@@ -3,7 +3,7 @@
  *
  * Mermaid draws to SVG with the colours baked in at render time, so a theme
  * change means re-rendering rather than restyling. The diagram source is kept
- * on the container in `data-ink-source` so that second pass has something to
+ * on the container in `data-strata-source` so that second pass has something to
  * re-render from after the <pre> has been replaced by the SVG.
  */
 
@@ -25,10 +25,10 @@ export class MermaidRenderer {
   private mermaid: IMermaidApi | undefined;
   private renderCount: number = 0;
   /** Ids must be unique across every web part on the page, not just this one. */
-  private idPrefix: string = `ink-mermaid-${Math.random().toString(36).substring(2, 8)}`;
+  private idPrefix: string = `strata-mermaid-${Math.random().toString(36).substring(2, 8)}`;
 
   public async render(container: HTMLElement, family: ThemeFamily, mode: ResolvedMode): Promise<void> {
-    const hosts: HTMLElement[] = Array.prototype.slice.call(container.querySelectorAll('.ink-mermaid'));
+    const hosts: HTMLElement[] = Array.prototype.slice.call(container.querySelectorAll('.strata-mermaid'));
     if (hosts.length === 0) {
       return;
     }
@@ -36,11 +36,11 @@ export class MermaidRenderer {
     // Capture sources before anything is replaced.
     const jobs: { host: HTMLElement; source: string }[] = [];
     hosts.forEach((host: HTMLElement) => {
-      const stored: string | null = host.getAttribute('data-ink-source');
+      const stored: string | null = host.getAttribute('data-strata-source');
       const block: HTMLElement | null = host.querySelector('pre.mermaid');
       const source: string = stored || (block ? block.textContent || '' : '');
       if (source.trim().length > 0) {
-        host.setAttribute('data-ink-source', source);
+        host.setAttribute('data-strata-source', source);
         jobs.push({ host: host, source: source });
       }
     });
@@ -77,7 +77,7 @@ export class MermaidRenderer {
           `${this.idPrefix}-${this.renderCount}`,
           job.source
         );
-        job.host.classList.remove('ink-mermaid-error');
+        job.host.classList.remove('strata-mermaid-error');
         job.host.innerHTML = result.svg;
       } catch (error) {
         this.showError(job.host, job.source, (error as Error).message || 'Diagram could not be rendered.');
@@ -87,12 +87,12 @@ export class MermaidRenderer {
 
   /** Falls back to showing the diagram source, which beats showing nothing. */
   private showError(host: HTMLElement, source: string, message: string): void {
-    host.classList.add('ink-mermaid-error');
+    host.classList.add('strata-mermaid-error');
     const pre: HTMLElement = document.createElement('pre');
     pre.className = 'mermaid';
     pre.textContent = source;
     const note: HTMLElement = document.createElement('div');
-    note.className = 'ink-mermaid-message';
+    note.className = 'strata-mermaid-message';
     note.textContent = message;
     host.innerHTML = '';
     host.appendChild(note);

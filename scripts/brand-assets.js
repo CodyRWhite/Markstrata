@@ -25,6 +25,7 @@ const COPIES = [
   ['icons/favicon-48.png', 'brand/favicon-48.png'],
   ['icons/apple-touch-icon.png', 'brand/apple-touch-icon.png'],
   ['mark.svg', 'brand/mark.svg'],
+  ['lockup-tagline.svg', 'brand/lockup-tagline.svg'],
   ['lockup-horizontal.svg', 'brand/lockup-horizontal.svg'],
   ['lockup-horizontal-dark.svg', 'brand/lockup-horizontal-dark.svg'],
   ['social-card.png', 'brand/social-card.png']
@@ -69,7 +70,7 @@ function brandHead(title, description) {
  */
 function brandLogo(height, surface = 'auto') {
   const img = (file) =>
-    `<img src="brand/${file}" alt="Markstrata Markdown" style="height:${height}px;display:block">`;
+    `<img src="brand/${file}" alt="Markstrata" style="height:${height}px;display:block">`;
   if (surface === 'dark') { return img('lockup-horizontal-dark.svg'); }
   if (surface === 'light') { return img('lockup-horizontal.svg'); }
   return '<picture>'

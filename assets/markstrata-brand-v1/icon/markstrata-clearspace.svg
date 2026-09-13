@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 768 768" width="768" height="768" role="img" aria-label="Markstrata icon clear space">
+  <title>Markstrata clear space: one quarter of the tile height on every side</title>
+  <defs>
+    <linearGradient id="csTile" x1="0" y1="0" x2="0.85" y2="1">
+      <stop offset="0" stop-color="#1A99A5"/><stop offset="0.52" stop-color="#0F7B86"/><stop offset="1" stop-color="#0A4048"/>
+    </linearGradient>
+    <clipPath id="csClip"><rect x="128" y="128" width="512" height="512" rx="118"/></clipPath>
+  </defs>
+  <rect width="768" height="768" fill="#F2F6F6"/>
+  <g fill="#C9E8EA" opacity="0.75">
+    <rect x="0" y="0" width="128" height="128"/><rect x="640" y="0" width="128" height="128"/>
+    <rect x="0" y="640" width="128" height="128"/><rect x="640" y="640" width="128" height="128"/>
+  </g>
+  <g clip-path="url(#csClip)"><rect x="128" y="128" width="512" height="512" fill="url(#csTile)"/></g>
+  <g transform="translate(128 128)">
+    <rect x="110" y="138" width="292" height="44" rx="22" fill="#FFFFFF"/>
+    <rect x="110" y="202" width="220" height="44" rx="22" fill="#FFFFFF" opacity="0.60"/>
+    <path d="M132 288 L256 352 L380 288" fill="none" stroke="#F0B24A" stroke-width="44" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+  <rect x="2" y="2" width="764" height="764" fill="none" stroke="#0F7B86" stroke-width="3" stroke-dasharray="14 12" opacity="0.8"/>
+</svg>

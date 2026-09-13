@@ -1,80 +1,46 @@
-# Markstrata Markdown brand assets
+# Brand assets
 
-Everything in this folder except `mark.svg` is generated. `mark.svg` is the
-master artboard — the ink-drop mark above the MARKSTRATA / MARKDOWN lockup — and
-`scripts/build-brand.js` cuts every other asset out of it:
+`markstrata-brand-v1/` is the delivered brand system and the master for
+everything visual. **Do not edit anything inside it**, and read
+[`markstrata-brand-v1/BRAND-GUIDE.md`](./markstrata-brand-v1/BRAND-GUIDE.md)
+before using any of it: it covers the palette, the minimum sizes, the clear
+space rule, which icon is drawn for which size band, and the type licensing.
+
+Everything else in this folder is produced by `npm run brand`, which copies the
+right file out of the package into each place the build expects and renders the
+two composites that are made from brand artwork rather than shipped with it.
+Nothing here should be edited by hand; the next build overwrites it.
 
 ```
 npm install --no-save playwright && npx playwright install chromium
 npm run brand
 ```
 
-Change the logo by changing `mark.svg` and re-running that. Never hand-edit a
-generated file; the next build overwrites it.
+## Copied out of the package
 
-## Palette
+| File | Comes from | Used by |
+|---|---|---|
+| `mark.svg` | `icon/markstrata-glyph.svg` | Page headers, the site |
+| `mark-small.svg` | `icon/markstrata-icon-16.svg` | Below 24px, where the second stratum is dropped |
+| `mark-mono-light.svg` / `mark-mono-dark.svg` | `icon/markstrata-glyph-mono-*.svg` | One colour, on photographs or coloured surfaces |
+| `lockup-horizontal.svg` | `lockup/markstrata-lockup-horizontal.svg` | The site header, the README |
+| `lockup-horizontal-dark.svg` | the reversed lockup | The same, on dark surfaces |
+| `lockup.svg` | the stacked lockup | Narrow columns |
+| `lockup-tagline.svg` | the tagline lockup | First contact: the social card |
+| `icons/*.png` | `export/markstrata-icon-*.png` | Favicons and app icons |
+| `../sharepoint/assets/icon.png` | `export/markstrata-icon-96.png` | The app catalog tile, which SharePoint validates at exactly 96×96 |
 
-| | Hex | RGB | Used for |
-|---|---|---|---|
-| Ink navy | `#013463` | 1, 52, 99 | The drop, the MARKSTRATA wordmark, the rules |
-| Signal cyan | `#36a7ca` | 54, 167, 202 | The hash, the falling droplet, MARKDOWN |
-| Page slate | `#a7bcd0` | 167, 188, 208 | The turned corner of the page |
-| Navy on dark | `#2f7fc4` | 47, 127, 196 | Navy, lifted for dark surfaces |
-| Slate on dark | `#c3d4e4` | 195, 212, 228 | Slate, lifted for dark surfaces |
+The web part manifest's `iconImageUrl` is also written from the package's own
+`export/spfx-iconImageUrl.txt`. It is an SVG data URI at 690 characters, which
+matters because it travels inside the manifest into every page that loads the
+web part.
 
-Ink navy sits at about 1.4:1 against a dark UI surface — well under the 3:1 a
-graphic needs to stay legible — which is the whole reason the `-dark` variants
-exist. Signal cyan clears 4.5:1 against both a white page and a dark surface,
-so it is the same colour in both.
+## Rendered here
 
-The document page inside the drop is **not painted**: the drop's outline winds
-around it, so the page takes the colour of whatever is behind the mark. That is
-deliberate — the mark sits on a white page in light mode and on the surface
-colour in dark mode — but it does mean the mark wants a plain background, not a
-photograph or a busy gradient.
-
-## Which file to use
-
-| File | Use it for |
+| File | What it is |
 |---|---|
-| `lockup.svg` | The stacked logo on a light background: READMEs, title slides, anywhere with height to spare |
-| `lockup-dark.svg` | The same, on a dark background |
-| `lockup-horizontal.svg` | The logo in a row — nav bars, page headers, toolbars |
-| `lockup-horizontal-dark.svg` | The same, on a dark background |
-| `mark.svg` | The drop on its own, at 40px and up — app tiles, avatars, a page header |
-| `mark-dark.svg` | The same, on a dark background |
-| `mark-small.svg` | The drop below 40px. The turned corner and the falling droplet break into stray pixels at that size, so this one drops them |
-| `mark-mono.svg` | One colour, inherited from `color`. See the note below |
-| `wordmark.svg` / `wordmark-dark.svg` | Type only, where the mark already appears nearby |
-| `icons/*.png` | Favicons and app icons, rasterised from the marks above |
-| `social-card.png` | The 1200×630 preview GitHub, Slack and Teams crop to |
-| `webpart-tile.jpg` | The web part's tile in the SharePoint toolbox and the full-page apps picker. Inlined into the manifest, so it is a JPEG rather than a PNG |
+| `social-card.png` | 1200×630, the tagline lockup on Chalk. The ratio GitHub, Slack and Teams all crop to |
+| `webpart-tile.jpg` | The web part's tile: markdown source at an angle, with the mono-light glyph. Content and styling live in `scripts/webpart-tile.js` |
 
-`mark-mono.svg` paints with `currentColor`, which only resolves when the SVG is
-**inlined** in the page. Loaded through `<img src="mark-mono.svg">` it has no
-`color` to inherit and renders black. Inline it, or use one of the colour marks.
-
-## The web part tile
-
-`webpart-tile.jpg` is a markdown document open in an editor, at an angle, in VS
-Code's Dark+ palette. The document is invented: a fictional service with
-made-up commands, chosen to exercise a heading, bold, a callout, a fenced
-block, a task list and a table, so the tile doubles as a list of what the web
-part renders. Change it in `scripts/webpart-tile.js` and re-run `npm run brand`,
-which re-renders it and rewrites the copy inside the manifest.
-
-## Clear space and minimum size
-
-Keep clear space around the logo of at least the width of the `I` in MARKSTRATA —
-roughly 3% of the lockup's width.
-
-The stacked lockup needs about **160px of width** before MARKDOWN stops being
-readable; the horizontal one gets there at about **24px of height**. Below
-either, use the mark on its own.
-
-## Don't
-
-- Recolour the artwork outside the palette above, or add effects to it
-- Stretch it — every asset has a fixed `viewBox`, so keep the aspect ratio
-- Rebuild the wordmark in a font; the letterforms are outlines, not live text
-- Place the colour marks on a photograph, or on a background close to `#013463`
+`webpart-tile.jpg` is a JPEG because it is photographic; the same image as a
+PNG is six times the size.

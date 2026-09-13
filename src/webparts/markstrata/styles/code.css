@@ -12,80 +12,80 @@
 
 /* ------------------------------------------------------------ inline code */
 
-.ink-content code {
+.strata-content code {
   padding: 0.15em 0.35em;
-  border: 1px solid var(--ink-code-inline-border, transparent);
-  border-radius: var(--ink-radius-sm);
-  background-color: var(--ink-code-inline-bg);
-  color: var(--ink-code-inline-text);
-  font-family: var(--ink-font-mono);
-  font-size: var(--ink-code-font-size);
+  border: 1px solid var(--strata-code-inline-border, transparent);
+  border-radius: var(--strata-radius-sm);
+  background-color: var(--strata-code-inline-bg);
+  color: var(--strata-code-inline-text);
+  font-family: var(--strata-font-mono);
+  font-size: var(--strata-code-font-size);
   font-variant-ligatures: none;
 }
 
 /* Links and headings keep their own colour for inline code. */
-.ink-content a code { color: inherit; }
-.ink-content h1 code,
-.ink-content h2 code,
-.ink-content h3 code,
-.ink-content h4 code { font-size: 0.9em; }
+.strata-content a code { color: inherit; }
+.strata-content h1 code,
+.strata-content h2 code,
+.strata-content h3 code,
+.strata-content h4 code { font-size: 0.9em; }
 
 /* ------------------------------------------------------------ code blocks */
 
-.ink-code {
+.strata-code {
   position: relative;
-  margin: 0 0 var(--ink-block-gap);
-  border: 1px solid var(--ink-code-border);
-  border-radius: var(--ink-code-radius);
-  background-color: var(--ink-code-bg);
+  margin: 0 0 var(--strata-block-gap);
+  border: 1px solid var(--strata-code-border);
+  border-radius: var(--strata-code-radius);
+  background-color: var(--strata-code-bg);
   overflow: hidden;
 }
 
-.ink-code-header {
+.strata-code-header {
   display: flex;
   align-items: center;
   gap: 8px;
   padding: 6px 10px 6px 14px;
-  border-bottom: 1px solid var(--ink-code-header-border, var(--ink-border));
-  background-color: var(--ink-code-header-bg);
-  font-family: var(--ink-font-mono);
+  border-bottom: 1px solid var(--strata-code-header-border, var(--strata-border));
+  background-color: var(--strata-code-header-bg);
+  font-family: var(--strata-font-mono);
   font-size: 0.75em;
   line-height: 1.4;
-  color: var(--ink-text-muted);
+  color: var(--strata-text-muted);
 }
 
-.ink-code-lang {
+.strata-code-lang {
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
 
-.ink-code-filename {
-  color: var(--ink-text);
+.strata-code-filename {
+  color: var(--strata-text);
   font-weight: 600;
 }
 
-.ink-code-lang + .ink-code-filename::before {
+.strata-code-lang + .strata-code-filename::before {
   content: '\00b7';
   margin-right: 8px;
-  color: var(--ink-text-faint);
+  color: var(--strata-text-faint);
 }
 
-.ink-code-actions {
+.strata-code-actions {
   margin-left: auto;
   display: flex;
   align-items: center;
   gap: 4px;
 }
 
-.ink-code-btn {
+.strata-code-btn {
   display: inline-flex;
   align-items: center;
   gap: 5px;
   padding: 3px 8px;
-  border: 1px solid var(--ink-border);
-  border-radius: var(--ink-radius-sm);
-  background-color: var(--ink-bg-elevated);
-  color: var(--ink-text-muted);
+  border: 1px solid var(--strata-border);
+  border-radius: var(--strata-radius-sm);
+  background-color: var(--strata-bg-elevated);
+  color: var(--strata-text-muted);
   font-family: inherit;
   font-size: 1em;
   line-height: 1.4;
@@ -93,23 +93,23 @@
   transition: color 0.12s ease, background-color 0.12s ease, border-color 0.12s ease;
 }
 
-.ink-code-btn:hover {
-  background-color: var(--ink-bg-hover);
-  border-color: var(--ink-border-strong);
-  color: var(--ink-text);
+.strata-code-btn:hover {
+  background-color: var(--strata-bg-hover);
+  border-color: var(--strata-border-strong);
+  color: var(--strata-text);
 }
 
-.ink-code-btn[data-state='done'] {
-  border-color: rgb(var(--ink-color-green));
-  color: rgb(var(--ink-color-green));
+.strata-code-btn[data-state='done'] {
+  border-color: rgb(var(--strata-color-green));
+  color: rgb(var(--strata-color-green));
 }
 
-.ink-code-btn[data-state='error'] {
-  border-color: rgb(var(--ink-color-red));
-  color: rgb(var(--ink-color-red));
+.strata-code-btn[data-state='error'] {
+  border-color: rgb(var(--strata-color-red));
+  color: rgb(var(--strata-color-red));
 }
 
-.ink-code-btn svg {
+.strata-code-btn svg {
   width: 12px;
   height: 12px;
   fill: none;
@@ -121,7 +121,7 @@
 
 /* With the header switched off the copy button floats over the block and only
    appears on hover or keyboard focus. */
-.ink-code:not(.ink-code--has-header) .ink-code-actions {
+.strata-code:not(.strata-code--has-header) .strata-code-actions {
   position: absolute;
   top: 8px;
   right: 8px;
@@ -130,25 +130,25 @@
   transition: opacity 0.12s ease-in-out;
 }
 
-.ink-code:not(.ink-code--has-header):hover .ink-code-actions,
-.ink-code:not(.ink-code--has-header):focus-within .ink-code-actions {
+.strata-code:not(.strata-code--has-header):hover .strata-code-actions,
+.strata-code:not(.strata-code--has-header):focus-within .strata-code-actions {
   opacity: 1;
 }
 
-.ink-code pre {
+.strata-code pre {
   margin: 0;
-  padding: var(--ink-code-padding);
+  padding: var(--strata-code-padding);
   overflow-x: auto;
   background-color: transparent;
-  counter-reset: ink-line;
-  color: var(--ink-code-text);
-  font-family: var(--ink-font-mono);
-  font-size: var(--ink-code-font-size);
-  line-height: var(--ink-code-line-height);
+  counter-reset: strata-line;
+  color: var(--strata-code-text);
+  font-family: var(--strata-font-mono);
+  font-size: var(--strata-code-font-size);
+  line-height: var(--strata-code-line-height);
   tab-size: 4;
 }
 
-.ink-code pre code {
+.strata-code pre code {
   display: block;
   padding: 0;
   border: 0;
@@ -162,57 +162,57 @@
 
 /* One block element per source line. width:max-content + min-width:100% lets
    the sticky gutter stay put while the line scrolls under it. */
-.ink-code-line {
+.strata-code-line {
   display: block;
   width: max-content;
   min-width: 100%;
-  counter-increment: ink-line;
+  counter-increment: strata-line;
 }
 
-.ink-code-ln {
+.strata-code-ln {
   display: none;
   position: sticky;
   left: 0;
   z-index: 1;
-  width: var(--ink-code-gutter-width, 2.5em);
+  width: var(--strata-code-gutter-width, 2.5em);
   margin-right: 1em;
   padding-right: 0.75em;
-  border-right: 1px solid var(--ink-code-gutter-border, var(--ink-border));
-  background-color: var(--ink-code-bg);
-  color: var(--ink-code-gutter-text);
+  border-right: 1px solid var(--strata-code-gutter-border, var(--strata-border));
+  background-color: var(--strata-code-bg);
+  color: var(--strata-code-gutter-text);
   text-align: right;
   user-select: none;
   -webkit-user-select: none;
 }
 
-.ink-code-ln::before {
-  content: counter(ink-line);
+.strata-code-ln::before {
+  content: counter(strata-line);
 }
 
-.ink-code--numbered .ink-code-ln {
+.strata-code--numbered .strata-code-ln {
   display: inline-block;
 }
 
-.ink-code--numbered pre {
+.strata-code--numbered pre {
   padding-left: 0;
 }
 
-.ink-code--numbered .ink-code-line:hover {
-  background-color: var(--ink-code-line-hover, transparent);
+.strata-code--numbered .strata-code-line:hover {
+  background-color: var(--strata-code-line-hover, transparent);
 }
 
 /* Soft wrap instead of horizontal scrolling. */
-.ink-code--wrap pre code,
-.ink-code--wrap .ink-code-line {
+.strata-code--wrap pre code,
+.strata-code--wrap .strata-code-line {
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
 
-.ink-code--wrap .ink-code-line {
+.strata-code--wrap .strata-code-line {
   width: auto;
 }
 
-.ink-code--wrap .ink-code-ln {
+.strata-code--wrap .strata-code-ln {
   vertical-align: top;
 }
 
@@ -222,35 +222,35 @@
    can stop being sticky here: a wrapped block has nothing scrolling under it.
    min-width on the text is what lets a long unbreakable token wrap instead of
    pushing the line wider than the block. */
-.ink-code--wrap.ink-code--numbered .ink-code-line {
+.strata-code--wrap.strata-code--numbered .strata-code-line {
   display: flex;
   align-items: flex-start;
 }
 
-.ink-code--wrap.ink-code--numbered .ink-code-ln {
+.strata-code--wrap.strata-code--numbered .strata-code-ln {
   position: static;
   flex: none;
 }
 
-.ink-code--wrap.ink-code--numbered .ink-code-line-text {
+.strata-code--wrap.strata-code--numbered .strata-code-line-text {
   flex: 1;
   min-width: 0;
   overflow-wrap: anywhere;
 }
 
 /* Scrollbars inside code blocks should read as part of the block. */
-.ink-code pre::-webkit-scrollbar {
+.strata-code pre::-webkit-scrollbar {
   height: 10px;
   width: 10px;
 }
 
-.ink-code pre::-webkit-scrollbar-thumb {
+.strata-code pre::-webkit-scrollbar-thumb {
   border: 3px solid transparent;
   border-radius: 6px;
   background-clip: content-box;
-  background-color: var(--ink-scrollbar-thumb, var(--ink-border-strong));
+  background-color: var(--strata-scrollbar-thumb, var(--strata-border-strong));
 }
 
-.ink-code pre::-webkit-scrollbar-track {
+.strata-code pre::-webkit-scrollbar-track {
   background-color: transparent;
 }

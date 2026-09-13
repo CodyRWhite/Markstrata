@@ -109,8 +109,8 @@ fs.writeFileSync(
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>${pageId ? site.page(pageId).title : 'Markstrata Markdown - runtime harness'}</title>
-${standalone ? brandHead(pageId ? site.page(pageId).title : 'Markstrata Markdown',
+<title>${pageId ? site.page(pageId).title : 'Markstrata - runtime harness'}</title>
+${standalone ? brandHead(pageId ? site.page(pageId).title : 'Markstrata',
     pageId ? site.page(pageId).description : 'The web part\'s own renderer, running in the page.') : ''}
 ${links}
 <style>

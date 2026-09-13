@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="Markstrata">
+  <title>Markstrata (maskable)</title>
+  <defs>
+    <linearGradient id="msTileM" x1="0" y1="0" x2="0.85" y2="1">
+      <stop offset="0" stop-color="#1A99A5"/>
+      <stop offset="0.52" stop-color="#0F7B86"/>
+      <stop offset="1" stop-color="#0A4048"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" fill="url(#msTileM)"/>
+  <g transform="translate(256 256) scale(0.8) translate(-256 -256)">
+    <rect x="110" y="138" width="292" height="44" rx="22" fill="#FFFFFF"/>
+    <rect x="110" y="202" width="220" height="44" rx="22" fill="#FFFFFF" opacity="0.60"/>
+    <path d="M132 288 L256 352 L380 288" fill="none" stroke="#F0B24A" stroke-width="44" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+</svg>

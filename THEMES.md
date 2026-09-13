@@ -10,13 +10,13 @@ file plus one dropdown entry.
 The root element carries the selection as attributes:
 
 ```html
-<div class="ink-root"
-     data-ink-theme="github|obsidian|vscode"
-     data-ink-mode="light|dark"
-     data-ink-width="narrow|comfortable|wide|full"
-     data-ink-density="compact|normal|relaxed"
-     data-ink-size="small|normal|large|xlarge"
-     data-ink-code-size="small|normal|large">
+<div class="strata-root"
+     data-strata-theme="github|obsidian|vscode"
+     data-strata-mode="light|dark"
+     data-strata-width="narrow|comfortable|wide|full"
+     data-strata-density="compact|normal|relaxed"
+     data-strata-size="small|normal|large|xlarge"
+     data-strata-code-size="small|normal|large">
 ```
 
 ## The token contract
@@ -25,15 +25,15 @@ The root element carries the selection as attributes:
 
 | Token | Used for |
 |-------|----------|
-| `--ink-bg` | Page background |
-| `--ink-bg-elevated` | Sidebar, table header, toolbar buttons, panels |
-| `--ink-bg-hover` | Hover state for the above |
-| `--ink-text` | Body text |
-| `--ink-text-muted` | Secondary text, plain blockquotes, list markers |
-| `--ink-text-faint` | Labels, footer metadata, heading anchors |
-| `--ink-border` / `--ink-border-strong` | Rules, dividers, control borders |
-| `--ink-link` / `--ink-link-hover` | Anchors |
-| `--ink-on-accent` | Text on a filled accent surface (the Save button) |
+| `--strata-bg` | Page background |
+| `--strata-bg-elevated` | Sidebar, table header, toolbar buttons, panels |
+| `--strata-bg-hover` | Hover state for the above |
+| `--strata-text` | Body text |
+| `--strata-text-muted` | Secondary text, plain blockquotes, list markers |
+| `--strata-text-faint` | Labels, footer metadata, heading anchors |
+| `--strata-border` / `--strata-border-strong` | Rules, dividers, control borders |
+| `--strata-link` / `--strata-link-hover` | Anchors |
+| `--strata-on-accent` | Text on a filled accent surface (the Save button) |
 
 ### Accent palette
 
@@ -41,34 +41,34 @@ Nine hues, each stored as an `R, G, B` triple so a rule can use both the solid
 colour and a tint of it:
 
 ```css
---ink-color-blue: 9, 105, 218;
-/* solid */  color: rgb(var(--ink-color-blue));
-/* tint  */  background: rgba(var(--ink-color-blue), 0.1);
+--strata-color-blue: 9, 105, 218;
+/* solid */  color: rgb(var(--strata-color-blue));
+/* tint  */  background: rgba(var(--strata-color-blue), 0.1);
 ```
 
 `blue`, `cyan`, `green`, `yellow`, `orange`, `red`, `purple`, `pink`, `gray`.
-Callouts pick one of these through `--ink-callout-rgb`, which is the same
+Callouts pick one of these through `--strata-callout-rgb`, which is the same
 technique Obsidian uses for its own callouts.
 
 ### Typography
 
-`--ink-font-body`, `--ink-font-heading`, `--ink-font-mono`, `--ink-font-size`,
-`--ink-line-height-base`, `--ink-block-gap-base`, `--ink-h1-size` … `--ink-h6-size`,
-`--ink-heading-weight`, `--ink-h1-weight`, `--ink-heading-color`, and the
-optional heading rules `--ink-h1-rule-width` / `-space` / `-color` (and the h2
+`--strata-font-body`, `--strata-font-heading`, `--strata-font-mono`, `--strata-font-size`,
+`--strata-line-height-base`, `--strata-block-gap-base`, `--strata-h1-size` … `--strata-h6-size`,
+`--strata-heading-weight`, `--strata-h1-weight`, `--strata-heading-color`, and the
+optional heading rules `--strata-h1-rule-width` / `-space` / `-color` (and the h2
 equivalents).
 
 Density and text size scale the base values rather than replacing them
-(`--ink-density-scale`, `--ink-font-scale`), so a theme never has to know which
+(`--strata-density-scale`, `--strata-font-scale`), so a theme never has to know which
 reading options are selected.
 
 ### Code
 
-`--ink-code-bg`, `--ink-code-text`, `--ink-code-border`, `--ink-code-radius`,
-`--ink-code-padding`, `--ink-code-font-size`, `--ink-code-line-height`,
-`--ink-code-header-bg`, `--ink-code-header-border`, `--ink-code-gutter-text`,
-`--ink-code-gutter-border`, `--ink-code-line-hover`, `--ink-code-inline-bg`,
-`--ink-code-inline-text`, `--ink-code-inline-border`.
+`--strata-code-bg`, `--strata-code-text`, `--strata-code-border`, `--strata-code-radius`,
+`--strata-code-padding`, `--strata-code-font-size`, `--strata-code-line-height`,
+`--strata-code-header-bg`, `--strata-code-header-border`, `--strata-code-gutter-text`,
+`--strata-code-gutter-border`, `--strata-code-line-hover`, `--strata-code-inline-bg`,
+`--strata-code-inline-text`, `--strata-code-inline-border`.
 
 ### Syntax tokens
 
@@ -77,27 +77,27 @@ grouping so language coverage matches what the library emits:
 
 | Token | highlight.js classes |
 |-------|----------------------|
-| `--ink-syn-comment` | `comment`, `code`, `formula` |
-| `--ink-syn-keyword` | `keyword`, `doctag`, `template-tag`, `template-variable`, `variable.language_` |
-| `--ink-syn-type` | `type`, `class .title` |
-| `--ink-syn-entity` | `title`, `title.function_`, `title.class_` |
-| `--ink-syn-constant` | `number`, `literal`, `meta` |
-| `--ink-syn-attr` | `attr`, `attribute`, `selector-attr/class/id` |
-| `--ink-syn-string` | `string`, `char.escape_` |
-| `--ink-syn-regexp` | `regexp` |
-| `--ink-syn-variable` | `variable` |
-| `--ink-syn-builtin` | `built_in`, `symbol` |
-| `--ink-syn-tag` | `name`, `quote`, `selector-tag`, `selector-pseudo` |
-| `--ink-syn-property`, `--ink-syn-punctuation`, `--ink-syn-operator` | `property`, `punctuation`/`params`/`tag`, `operator` |
-| `--ink-syn-section`, `--ink-syn-bullet`, `--ink-syn-link` | markdown structures |
-| `--ink-syn-addition` / `-bg`, `--ink-syn-deletion` / `-bg` | diff lines |
+| `--strata-syn-comment` | `comment`, `code`, `formula` |
+| `--strata-syn-keyword` | `keyword`, `doctag`, `template-tag`, `template-variable`, `variable.language_` |
+| `--strata-syn-type` | `type`, `class .title` |
+| `--strata-syn-entity` | `title`, `title.function_`, `title.class_` |
+| `--strata-syn-constant` | `number`, `literal`, `meta` |
+| `--strata-syn-attr` | `attr`, `attribute`, `selector-attr/class/id` |
+| `--strata-syn-string` | `string`, `char.escape_` |
+| `--strata-syn-regexp` | `regexp` |
+| `--strata-syn-variable` | `variable` |
+| `--strata-syn-builtin` | `built_in`, `symbol` |
+| `--strata-syn-tag` | `name`, `quote`, `selector-tag`, `selector-pseudo` |
+| `--strata-syn-property`, `--strata-syn-punctuation`, `--strata-syn-operator` | `property`, `punctuation`/`params`/`tag`, `operator` |
+| `--strata-syn-section`, `--strata-syn-bullet`, `--strata-syn-link` | markdown structures |
+| `--strata-syn-addition` / `-bg`, `--strata-syn-deletion` / `-bg` | diff lines |
 
 ### Callout shape
 
-`--ink-callout-bg-alpha`, `--ink-callout-title-bg-alpha`,
-`--ink-callout-border-width`, `--ink-callout-accent-width`,
-`--ink-callout-radius`, `--ink-callout-title-padding`,
-`--ink-callout-content-padding`, `--ink-callout-title-weight`.
+`--strata-callout-bg-alpha`, `--strata-callout-title-bg-alpha`,
+`--strata-callout-border-width`, `--strata-callout-accent-width`,
+`--strata-callout-radius`, `--strata-callout-title-padding`,
+`--strata-callout-content-padding`, `--strata-callout-title-weight`.
 
 A GitHub alert is `bg-alpha: 0` + `accent-width: 4px` + `radius: 0`; an Obsidian
 callout is `bg-alpha: .1` + `title-bg-alpha: .1` + `radius: 8px`; a VS Code

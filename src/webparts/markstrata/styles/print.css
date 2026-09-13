@@ -1,50 +1,50 @@
 /* print.css - printing the page or exporting it to PDF from the browser. */
 
 @media print {
-  .ink-root {
+  .strata-root {
     background: #ffffff !important;
     color: #000000 !important;
   }
 
-  .ink-toolbar,
-  .ink-code-actions,
-  .ink-panel,
-  .ink-editor-pane,
-  .ink-anchor {
+  .strata-toolbar,
+  .strata-code-actions,
+  .strata-panel,
+  .strata-editor-pane,
+  .strata-anchor {
     display: none !important;
   }
 
-  .ink-layout {
+  .strata-layout {
     display: block;
   }
 
-  .ink-toc-sidebar {
+  .strata-toc-sidebar {
     position: static;
     width: 100%;
     max-height: none;
     page-break-after: always;
   }
 
-  .ink-content {
+  .strata-content {
     max-width: none;
   }
 
   /* Code and callouts keep their fill in print - a bordered, tinted block is
      what makes them legible on paper too - but never split across pages. */
-  .ink-code,
-  .ink-callout,
-  .ink-mermaid,
+  .strata-code,
+  .strata-callout,
+  .strata-mermaid,
   table {
     break-inside: avoid;
     page-break-inside: avoid;
   }
 
-  .ink-code pre {
+  .strata-code pre {
     white-space: pre-wrap;
     overflow: visible;
   }
 
-  .ink-code-line {
+  .strata-code-line {
     width: auto;
   }
 
@@ -53,7 +53,7 @@
     page-break-after: avoid;
   }
 
-  details.ink-callout:not([open]) .ink-callout-content {
+  details.strata-callout:not([open]) .strata-callout-content {
     display: block;
   }
 
