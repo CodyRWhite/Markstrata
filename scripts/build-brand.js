@@ -14,6 +14,7 @@
  */
 const fs = require('fs');
 const path = require('path');
+const tile = require('./webpart-tile');
 
 let chromium;
 try {
@@ -219,6 +220,27 @@ async function rasterise(page, { file, size, pad, source, background }) {
 }
 
 /*
+ * Renders the tile above its final size and scales it down: the perspective
+ * transform resamples the text, so the extra pixels are what keep the
+ * receding edge tight rather than mushy.
+ *
+ * JPEG, not PNG. The image is photographic - gradients, a glow, antialiased
+ * type at an angle - and it has to survive as a data URI inside the manifest:
+ * 14 KB as JPEG against 90 KB as PNG.
+ */
+async function renderTile(page) {
+  const { WIDTH, HEIGHT, SUPERSAMPLE } = tile;
+  const dest = path.join(outDir, 'webpart-tile.jpg');
+  await page.setViewportSize({ width: WIDTH, height: HEIGHT });
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.setContent('<body>' + tile.tileHtml(dataUri(path.join(outDir, 'mark-dark.svg'))) + '</body>');
+  await page.waitForFunction(() => [...document.images].every((i) => i.complete && i.naturalWidth));
+  await page.screenshot({ path: dest, type: 'jpeg', quality: 82, scale: 'css' });
+  console.log('webpart-tile.jpg'.padEnd(34), String(fs.statSync(dest).size).padStart(6), 'bytes');
+  return dest;
+}
+
+/*
  * Writes the tile into the web part manifest. It is generated rather than
  * pasted for the same reason the tile itself is: a hand-copied image is one
  * that quietly stops matching.
@@ -227,7 +249,8 @@ function stampManifestIcon(iconFile) {
   const manifest = path.join(root, 'src', 'webparts', 'markstrata',
     'MarkstrataWebPart.manifest.json');
   const json = JSON.parse(fs.readFileSync(manifest, 'utf8'));
-  const uri = 'data:image/png;base64,' + fs.readFileSync(iconFile).toString('base64');
+  const type = iconFile.endsWith('.jpg') ? 'jpeg' : 'png';
+  const uri = `data:image/${type};base64,` + fs.readFileSync(iconFile).toString('base64');
   let changed = false;
   json.preconfiguredEntries.forEach((entry) => {
     if (entry.iconImageUrl !== uri) {
@@ -247,6 +270,8 @@ async function build() {
     process.env.PLAYWRIGHT_CHROMIUM ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM } : {}
   );
   const page = await browser.newPage({ deviceScaleFactor: 1 });
+  /* A second page just for the tile, which needs the extra pixels. */
+  const tilePage = await browser.newPage({ deviceScaleFactor: tile.SUPERSAMPLE });
   try {
     const { shapes, defs } = await readMaster(page, master);
     const banded = rows(shapes);
@@ -299,11 +324,12 @@ async function build() {
     }
 
     /*
-     * The web part's own icon, as a data URI in its manifest. Without one
+     * The web part's own tile, as a data URI in its manifest. Without one
      * SharePoint falls back to a Fluent glyph in the toolbox and to a grey
-     * gradient placeholder on the full-page apps tile.
+     * gradient placeholder on the full-page apps picker.
      */
-    stampManifestIcon(path.join(root, 'sharepoint', 'assets', 'icon.png'));
+    const tileFile = await renderTile(tilePage);
+    stampManifestIcon(tileFile);
 
     /* Social preview, at the 1.91:1 GitHub, Slack and Teams all crop to. */
     await page.setViewportSize({ width: 1200, height: 630 });

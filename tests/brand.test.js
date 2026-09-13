@@ -21,7 +21,7 @@ const GENERATED = [
   'wordmark.svg', 'wordmark-dark.svg',
   'lockup.svg', 'lockup-dark.svg',
   'lockup-horizontal.svg', 'lockup-horizontal-dark.svg',
-  'social-card.png',
+  'social-card.png', 'webpart-tile.jpg',
   'icons/favicon-16.png', 'icons/favicon-32.png', 'icons/favicon-48.png',
   'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png'
 ];
@@ -113,5 +113,28 @@ test('the icon PNGs are the sizes their names claim', () => {
   for (const file of GENERATED.filter((name) => /icons\/.*-(\d+)\.png$/.test(name))) {
     const expected = Number(/-(\d+)\.png$/.exec(file)[1]);
     assert.deepEqual(pngSize(path.join(ASSETS, file)), { width: expected, height: expected }, file);
+  }
+});
+
+/*
+ * The tile travels inside the manifest as a data URI, so its size is a build
+ * concern rather than only a visual one: a PNG of the same image is six times
+ * larger and rides along in every page that loads the web part.
+ */
+test('the web part tile is a JPEG at its intended size', () => {
+  const file = path.join(ASSETS, 'webpart-tile.jpg');
+  const buf = fs.readFileSync(file);
+  assert.equal(buf.readUInt16BE(0), 0xffd8, 'expected a JPEG');
+  assert.ok(buf.length < 40 * 1024, `tile is ${buf.length} bytes; it is inlined into the manifest`);
+});
+
+test('the manifest carries the tile, with the glyph still there as a fallback', () => {
+  const manifest = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'src', 'webparts',
+    'markstrata', 'MarkstrataWebPart.manifest.json'), 'utf8'));
+  const tile = fs.readFileSync(path.join(ASSETS, 'webpart-tile.jpg')).toString('base64');
+  for (const entry of manifest.preconfiguredEntries) {
+    assert.equal(entry.iconImageUrl, `data:image/jpeg;base64,${tile}`,
+      'the manifest icon is out of step with assets/webpart-tile.jpg; run `npm run brand`');
+    assert.ok(entry.officeFabricIconFontName, 'keep a glyph for surfaces that ignore the image');
   }
 });

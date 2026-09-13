@@ -48,10 +48,20 @@ photograph or a busy gradient.
 | `wordmark.svg` / `wordmark-dark.svg` | Type only, where the mark already appears nearby |
 | `icons/*.png` | Favicons and app icons, rasterised from the marks above |
 | `social-card.png` | The 1200×630 preview GitHub, Slack and Teams crop to |
+| `webpart-tile.jpg` | The web part's tile in the SharePoint toolbox and the full-page apps picker. Inlined into the manifest, so it is a JPEG rather than a PNG |
 
 `mark-mono.svg` paints with `currentColor`, which only resolves when the SVG is
 **inlined** in the page. Loaded through `<img src="mark-mono.svg">` it has no
 `color` to inherit and renders black. Inline it, or use one of the colour marks.
+
+## The web part tile
+
+`webpart-tile.jpg` is a markdown document open in an editor, at an angle, in VS
+Code's Dark+ palette. The document is invented: a fictional service with
+made-up commands, chosen to exercise a heading, bold, a callout, a fenced
+block, a task list and a table, so the tile doubles as a list of what the web
+part renders. Change it in `scripts/webpart-tile.js` and re-run `npm run brand`,
+which re-renders it and rewrites the copy inside the manifest.
 
 ## Clear space and minimum size
 
