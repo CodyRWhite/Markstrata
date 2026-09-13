@@ -6,6 +6,19 @@ the same number with a fourth part appended (1.2.0 -> 1.2.0.0), stamped by
 `scripts/set-version.js` when a release is tagged.
 ## Unreleased
 
+- Fixed dark mode showing as dark text on a white background once a page was
+  published, while edit mode looked right. The themed root was the web part's
+  own element, which SharePoint also styles when `supportsThemeVariants` is on;
+  in display mode its background won. The web part now renders into an element
+  of its own one level in, so nothing SharePoint does to its container reaches
+  the theme.
+- The content column is centred rather than stranded against the left edge when
+  it is narrower than the web part, which is how a SharePoint page lays out its
+  own content. With a contents sidebar the pair centre together.
+- The web part carries its own icon in the manifest, so the toolbox and the
+  full-page apps tile show the mark instead of a Fluent glyph and a grey
+  placeholder.
+
 - Badges in the README: CI, latest release, SPFx version, licence, live demo
   and Buy Me a Coffee. The first two read the repository through GitHub's
   public endpoints, so they render once the repository is public.

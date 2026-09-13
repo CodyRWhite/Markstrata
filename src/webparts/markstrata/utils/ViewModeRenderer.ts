@@ -67,10 +67,9 @@ export class ViewModeRenderer {
     this.callbacks = callbacks;
   }
 
-  public render(host: HTMLElement, markdown: string, options: IViewOptions): void {
+  public render(container: HTMLElement, markdown: string, options: IViewOptions): void {
     this.enhancer.stopTracking();
-    host.innerHTML = '';
-    ThemeManager.apply(host, options.settings, options.resolvedMode);
+    const host: HTMLElement = ThemeManager.mount(container, options.settings, options.resolvedMode);
     host.setAttribute('data-ink-editing', String(options.isPageEditing));
 
     if (options.showToolbar) {

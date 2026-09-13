@@ -177,6 +177,24 @@ export class ThemeManager {
     return 'light';
   }
 
+  /**
+   * Clears `host` and returns the element everything should be rendered into.
+   *
+   * The root is a child of the web part's element rather than the element
+   * itself. SharePoint owns that element: with supportsThemeVariants on, it
+   * styles the web part's container to match the section, and in display mode
+   * that beat our own background while edit mode left it alone - a page of
+   * dark-theme text on a white background. Rendering one level in means
+   * nothing SharePoint does to its container can fight the theme.
+   */
+  public static mount(host: HTMLElement, settings: IThemeSettings, resolved: ResolvedMode): HTMLElement {
+    host.innerHTML = '';
+    const root: HTMLElement = document.createElement('div');
+    host.appendChild(root);
+    ThemeManager.apply(root, settings, resolved);
+    return root;
+  }
+
   /** Stamps the root element with the attributes the stylesheets key off. */
   public static apply(element: HTMLElement, settings: IThemeSettings, resolved: ResolvedMode): void {
     element.classList.add('ink-root');

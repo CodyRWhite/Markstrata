@@ -128,6 +128,31 @@ const pageUrl = 'file://' + path.join(OUT, 'index.html');
     await page.waitForSelector('.ink-mermaid svg', { timeout: 15000 });
   });
 
+  /*
+   * The themed root has to be an element of ours inside the host, painting its
+   * own background. Stamped onto the host instead, SharePoint's own styling of
+   * the web part container beat it in display mode and the page came out as
+   * dark-theme text on a white background.
+   */
+  await step('the themed root is ours, and paints its background', async () => {
+    const state = await page.evaluate(() => {
+      const host = document.getElementById('host');
+      const root = host.querySelector('.ink-root');
+      if (!root) { return { error: 'no .ink-root inside the host' }; }
+      if (root === host) { return { error: '.ink-root is the host itself' }; }
+      const bg = getComputedStyle(root).backgroundColor;
+      const rgb = /(\d+), (\d+), (\d+)/.exec(bg);
+      return {
+        bg,
+        transparent: /rgba\(0, 0, 0, 0\)|transparent/.test(bg),
+        luminance: rgb ? (Number(rgb[1]) + Number(rgb[2]) + Number(rgb[3])) / 3 : null
+      };
+    });
+    if (state.error) { throw new Error(state.error); }
+    if (state.transparent) { throw new Error('the root paints no background, so the page shows through'); }
+    if (state.luminance > 128) { throw new Error('dark mode but the root is light: ' + state.bg); }
+  });
+
   await page.screenshot({ path: path.join(OUT, 'harness-view-obsidian-dark.png'), fullPage: false });
 
   await step('contents move to the right', async () => {

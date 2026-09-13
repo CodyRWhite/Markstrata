@@ -60,9 +60,8 @@ export class EditModeManager {
     return this.dirty;
   }
 
-  public render(host: HTMLElement, markdown: string, options: IEditOptions): void {
-    host.innerHTML = '';
-    ThemeManager.apply(host, options.settings, options.resolvedMode);
+  public render(container: HTMLElement, markdown: string, options: IEditOptions): void {
+    const host: HTMLElement = ThemeManager.mount(container, options.settings, options.resolvedMode);
     host.setAttribute('data-ink-editing', 'true');
 
     const editor: HTMLElement = document.createElement('div');

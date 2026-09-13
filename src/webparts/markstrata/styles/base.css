@@ -88,6 +88,11 @@
 .ink-layout {
   display: flex;
   align-items: flex-start;
+  /* The content column stops at its width setting, so on a wider web part
+     there is space left over. Centre what there is: a SharePoint page centres
+     its own content, and a column stranded against the left edge of a
+     full-width web part does not read as part of the page. */
+  justify-content: center;
   gap: 32px;
   padding: 4px 0 8px;
 }
@@ -245,6 +250,9 @@
        aligns horizontally, which shrink-wraps the content column to its widest
        line and pushes it out of the web part - so stretch it back. */
     align-items: stretch;
+    /* Centring is a horizontal idea; on this axis it would only push the
+       content down the page. */
+    justify-content: flex-start;
   }
 
   /* Stacked, the contents belong above the text whichever side they were on. */

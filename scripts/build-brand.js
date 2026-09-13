@@ -218,6 +218,30 @@ async function rasterise(page, { file, size, pad, source, background }) {
   return dest;
 }
 
+/*
+ * Writes the tile into the web part manifest. It is generated rather than
+ * pasted for the same reason the tile itself is: a hand-copied image is one
+ * that quietly stops matching.
+ */
+function stampManifestIcon(iconFile) {
+  const manifest = path.join(root, 'src', 'webparts', 'markstrata',
+    'MarkstrataWebPart.manifest.json');
+  const json = JSON.parse(fs.readFileSync(manifest, 'utf8'));
+  const uri = 'data:image/png;base64,' + fs.readFileSync(iconFile).toString('base64');
+  let changed = false;
+  json.preconfiguredEntries.forEach((entry) => {
+    if (entry.iconImageUrl !== uri) {
+      entry.iconImageUrl = uri;
+      changed = true;
+    }
+  });
+  if (changed) {
+    fs.writeFileSync(manifest, JSON.stringify(json, null, 2) + '\n');
+  }
+  console.log('manifest iconImageUrl'.padEnd(34), String(uri.length).padStart(6), 'chars',
+    changed ? '(updated)' : '(unchanged)');
+}
+
 async function build() {
   const browser = await chromium.launch(
     process.env.PLAYWRIGHT_CHROMIUM ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM } : {}
@@ -273,6 +297,13 @@ async function build() {
       const label = path.isAbsolute(spec.file) ? path.relative(root, dest) : spec.file;
       console.log(`${label} (${spec.size}px)`.padEnd(34), String(fs.statSync(dest).size).padStart(6), 'bytes');
     }
+
+    /*
+     * The web part's own icon, as a data URI in its manifest. Without one
+     * SharePoint falls back to a Fluent glyph in the toolbox and to a grey
+     * gradient placeholder on the full-page apps tile.
+     */
+    stampManifestIcon(path.join(root, 'sharepoint', 'assets', 'icon.png'));
 
     /* Social preview, at the 1.91:1 GitHub, Slack and Teams all crop to. */
     await page.setViewportSize({ width: 1200, height: 630 });

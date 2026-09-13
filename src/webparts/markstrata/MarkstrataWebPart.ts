@@ -343,7 +343,9 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
     banner.style.display = 'block';
     banner.style.marginBottom = '12px';
     banner.textContent = message;
-    this.domElement.insertBefore(banner, this.domElement.firstChild);
+    // Inside the themed root, or it renders unstyled beside the web part.
+    const root: HTMLElement = this.domElement.querySelector('.ink-root') || this.domElement;
+    root.insertBefore(banner, root.firstChild);
   }
 
   private themeSettings(): IThemeSettings {
