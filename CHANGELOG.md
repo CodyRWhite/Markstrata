@@ -6,6 +6,10 @@ the same number with a fourth part appended (1.2.0 -> 1.2.0.0), stamped by
 `scripts/set-version.js` when a release is tagged.
 ## Unreleased
 
+Nothing yet.
+
+## 1.0.3
+
 - Released packages keep one file name, `markstrata.sppkg`, instead of
   carrying the version. The App Catalog matches an upload to the solution it
   replaces by file name, so a versioned name was refused with "A solution with
