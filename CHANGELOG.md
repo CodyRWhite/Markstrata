@@ -2,9 +2,10 @@
 
 All notable changes to this project are recorded here. Versions follow
 [semantic versioning](https://semver.org/); the SharePoint solution version is
-the same number with a fourth part appended (1.2.0 -> 1.2.0.0), stamped by
+the same number with a fourth part appended (0.2.0 -> 0.2.0.0), stamped by
 `scripts/set-version.js` when a release is tagged.
-## Unreleased
+
+## 0.0.6
 
 - Markdown images render. A relative source is resolved against the folder the
   markdown came from rather than the page the web part sits on, which is what
@@ -16,22 +17,28 @@ the same number with a fourth part appended (1.2.0 -> 1.2.0.0), stamped by
 - Changing a processor option no longer rebuilds markdown-it when the value is
   the same as the one already set.
 - Renamed to **Markstrata**. The solution, web part and feature GUIDs are
-  unchanged, so a tenant sees an upgrade rather than a second app and pages keep
-  their settings; the package is now `markstrata.sppkg`, the CSS prefix is
-  `strata-` and the token prefix `--strata-`.
+  unchanged, so pages keep their settings; the package is now
+  `markstrata.sppkg`, the CSS prefix is `strata-` and the token prefix
+  `--strata-`.
 - The brand system is delivered in `assets/markstrata-brand-v1/` and is the
   master for everything visual. `npm run brand` no longer cuts assets from a
   single SVG: it copies the right file out of the package into each place the
   build expects, and renders only the two composites made from brand artwork.
+- Renumbered onto a pre-1.0 line. Nothing here has been released as final, so
+  the versions that read 1.0.0 to 1.0.5 are now 0.0.0 to 0.0.5 and this is
+  0.0.6. The first stable release will be 1.0.0. Because SharePoint compares
+  solution versions, a tenant already running the 1.0.5.0 package will not be
+  offered 0.0.6.0 as an upgrade: remove the old app from the App Catalog and
+  upload this one.
 
-## 1.0.5
+## 0.0.5
 
 - Room at the top and bottom of the web part. The first heading sat almost on
   the edge of the panel, which reads as cramped next to the spacing SharePoint
   gives its own web parts. It follows the spacing setting, so compact gets 23px
   and relaxed 29px rather than one fixed value.
 
-## 1.0.4
+## 0.0.4
 
 - The web part has a tile of its own: a markdown document open in an editor, at
   an angle, in VS Code's Dark+ palette. SharePoint shows it in the toolbox and
@@ -41,7 +48,7 @@ the same number with a fourth part appended (1.2.0 -> 1.2.0.0), stamped by
   six times smaller than the same image as a PNG and rides along in every page
   that loads the web part.
 
-## 1.0.3
+## 0.0.3
 
 - Released packages keep one file name, `markstrata.sppkg`, instead of
   carrying the version. The App Catalog matches an upload to the solution it
@@ -50,7 +57,7 @@ the same number with a fourth part appended (1.2.0 -> 1.2.0.0), stamped by
   and replace the existing solution." The version is still in the tag, the
   release title and the package itself, which is where SharePoint reads it.
 
-## 1.0.2
+## 0.0.2
 
 - Fixed dark mode showing as dark text on a white background once a page was
   published, while edit mode looked right. The themed root was the web part's
@@ -87,7 +94,7 @@ the same number with a fourth part appended (1.2.0 -> 1.2.0.0), stamped by
   line, pushing it outside the web part. At 400px the content column came out
   748px wide.
 
-## 1.0.1
+## 0.0.1
 
 - Fixed the solution package being rejected by the App Catalog. SharePoint
   requires the app icon to be exactly 96x96 and refuses the upload otherwise
@@ -96,9 +103,9 @@ the same number with a fourth part appended (1.2.0 -> 1.2.0.0), stamped by
   generates it at the right size, and a test asserts it, since the only other
   thing that checks is a tenant rejecting the upload.
 
-## 1.0.0
+## 0.0.0
 
-First release.
+First build, and the baseline the pre-releases are cut against.
 
 ### Toolchain, naming and assets
 

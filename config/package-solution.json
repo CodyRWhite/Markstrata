@@ -3,7 +3,7 @@
   "solution": {
     "name": "markstrata-client-side-solution",
     "id": "7160b942-6869-49d0-b3e9-db7b50ca5fdc",
-    "version": "1.0.0.0",
+    "version": "0.0.6.0",
     "includeClientSideAssets": true,
     "skipFeatureDeployment": true,
     "isDomainIsolated": false,
@@ -31,7 +31,7 @@
         "title": "markstrata Feature",
         "description": "The feature that activates elements of the markstrata solution.",
         "id": "d4f340af-99c8-4167-88ef-53b89003b7bc",
-        "version": "1.0.0.0"
+        "version": "0.0.6.0"
       }
     ]
   },
