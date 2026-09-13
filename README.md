@@ -121,6 +121,12 @@ anchors, a table of contents (built from the headings, or inline with
 `[[toc]]`), [Mermaid](https://mermaid.js.org/) diagrams themed to match, and
 KaTeX math.
 
+Images work as they do on GitHub. A relative source is resolved against the
+folder holding the markdown rather than the page the web part sits on, so
+`![Flow](images/flow.png)` next to a file in a document library finds its
+sibling folder. Absolute URLs, data URIs and server-relative paths are left
+alone, and every image is lazily loaded.
+
 ## Install
 
 Build the package — you need Node.js 22.x:

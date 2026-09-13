@@ -8,6 +8,7 @@
 import { calloutPlugin } from './markdownItCallouts';
 import { taskListPlugin } from './markdownItTaskLists';
 import { renderCodeBlock, ICodeBlockOptions, escapeHtml } from './codeBlocks';
+import { resolveAgainst } from './imagePaths';
 import {
   IMarkdownIt,
   IRenderer,
@@ -41,6 +42,17 @@ export interface IMarkdownProcessorOptions {
   showLineNumbers: boolean;
   wrapCodeLines: boolean;
   allowHtml: boolean;
+  /**
+   * The folder the markdown came from, as a server-relative path. Relative
+   * image sources are resolved against it: a file in a document library that
+   * says `![d](images/flow.png)` means a sibling folder of itself, but a
+   * browser resolves that against the page's URL instead, so without this
+   * every relative image on a SharePoint page is a 404.
+   *
+   * A plain string rather than anything SharePoint-shaped, so this file keeps
+   * no SharePoint imports and stays testable in plain Node.
+   */
+  imageBasePath?: string;
 }
 
 export const DEFAULT_PROCESSOR_OPTIONS: IMarkdownProcessorOptions = {
@@ -52,7 +64,8 @@ export const DEFAULT_PROCESSOR_OPTIONS: IMarkdownProcessorOptions = {
   showCodeHeader: true,
   showLineNumbers: false,
   wrapCodeLines: false,
-  allowHtml: false
+  allowHtml: false,
+  imageBasePath: undefined
 };
 
 /** Loads a plugin whether it is a CommonJS or ES default export. */
@@ -71,8 +84,18 @@ export class MarkdownProcessor {
     this.build();
   }
 
+  /**
+   * Applies new options, rebuilding markdown-it only when one actually
+   * changed. Callers pass the whole option set on every content load, and
+   * rebuilding means re-registering every plugin and render rule.
+   */
   public updateOptions(options: Partial<IMarkdownProcessorOptions>): void {
-    this.options = { ...this.options, ...options };
+    const merged: IMarkdownProcessorOptions = { ...this.options, ...options };
+    const keys = Object.keys(merged) as (keyof IMarkdownProcessorOptions)[];
+    if (keys.every((key) => merged[key] === this.options[key])) {
+      return;
+    }
+    this.options = merged;
     this.build();
   }
 
@@ -107,6 +130,7 @@ export class MarkdownProcessor {
     this.addPlugins();
     this.addCodeBlocks();
     this.addTableWrapper();
+    this.addImages();
 
     if (this.options.enableMath) {
       this.addMath();
@@ -207,6 +231,44 @@ export class MarkdownProcessor {
   /** The token's info string; markdown-it keeps it outside the typed surface. */
   private fenceInfo(token: IToken): string {
     return ((token as unknown) as { info?: string }).info || '';
+  }
+
+  /**
+   * Resolves relative image sources, and asks the browser to be lazy about
+   * fetching them.
+   */
+  private addImages(): void {
+    const previous: RenderRule | undefined = this.md.renderer.rules.image;
+    const base: string | undefined = this.options.imageBasePath;
+
+    this.md.renderer.rules.image = (
+      tokens: IToken[],
+      idx: number,
+      options: unknown,
+      env: unknown,
+      self: IRenderer
+    ): string => {
+      const token: IToken = tokens[idx];
+      const src: string | null = token.attrGet ? token.attrGet('src') : null;
+
+      if (src && base) {
+        const resolved: string | undefined = resolveAgainst(base, src);
+        if (resolved !== undefined && token.attrSet) {
+          token.attrSet('src', resolved);
+        }
+      }
+
+      // A long document should not fetch every image before the reader has
+      // scrolled to it.
+      if (token.attrSet) {
+        token.attrSet('loading', 'lazy');
+        token.attrSet('decoding', 'async');
+      }
+
+      return previous
+        ? previous(tokens, idx, options, env, self)
+        : self.renderToken(tokens, idx, options);
+    };
   }
 
   /** Wide tables scroll inside their own box instead of stretching the page. */

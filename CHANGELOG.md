@@ -6,6 +6,15 @@ the same number with a fourth part appended (1.2.0 -> 1.2.0.0), stamped by
 `scripts/set-version.js` when a release is tagged.
 ## Unreleased
 
+- Markdown images render. A relative source is resolved against the folder the
+  markdown came from rather than the page the web part sits on, which is what
+  `![Flow](images/flow.png)` means on GitHub and in every editor, and what a
+  browser gets wrong on a SharePoint page. Absolute URLs, protocol-relative
+  URLs, data URIs and server-relative paths pass through untouched, and paths
+  are encoded a segment at a time so a folder called `Q&A` survives. Images are
+  given `loading="lazy"` and `decoding="async"`.
+- Changing a processor option no longer rebuilds markdown-it when the value is
+  the same as the one already set.
 - Renamed to **Markstrata**. The solution, web part and feature GUIDs are
   unchanged, so a tenant sees an upgrade rather than a second app and pages keep
   their settings; the package is now `markstrata.sppkg`, the CSS prefix is

@@ -71,6 +71,18 @@ const pageUrl = 'file://' + path.join(OUT, 'index.html');
     await page.waitForSelector('.strata-math-block .katex', { timeout: 5000 });
   });
 
+  /* The sample links brand/mark.svg relatively, so this proves both that the
+     image survives rendering and that the browser could actually fetch it. */
+  await step('relative image loads', async () => {
+    await page.waitForSelector('.strata-content img', { timeout: 5000 });
+    const state = await page.evaluate(() => {
+      const img = document.querySelector('.strata-content img');
+      return { src: img.getAttribute('src'), loading: img.getAttribute('loading'), width: img.naturalWidth };
+    });
+    if (state.loading !== 'lazy') throw new Error('loading=' + state.loading);
+    if (!state.width) throw new Error('did not decode: ' + state.src);
+  });
+
   await step('copy button copies the code, without line numbers', async () => {
     await page.context().grantPermissions(['clipboard-read', 'clipboard-write']);
     const block = page.locator('.strata-code[data-lang="typescript"]').first();

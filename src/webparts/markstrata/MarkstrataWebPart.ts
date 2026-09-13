@@ -33,6 +33,7 @@ import './styles/modifiers.css';
 import './styles/print.css';
 
 import { MarkdownProcessor, IMarkdownProcessorOptions } from './utils/MarkdownProcessor';
+import { folderOf } from './utils/imagePaths';
 import { MermaidRenderer } from './utils/MermaidRenderer';
 import { ContentEnhancer } from './utils/ContentEnhancer';
 import { ViewModeRenderer, TocPosition } from './utils/ViewModeRenderer';
@@ -374,8 +375,25 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
       showCodeHeader: this.properties.showCodeHeader,
       showLineNumbers: this.properties.showLineNumbers,
       wrapCodeLines: this.properties.wrapCodeLines,
-      allowHtml: this.properties.allowHtml
+      allowHtml: this.properties.allowHtml,
+      imageBasePath: this.imageBasePath()
     };
+  }
+
+  /**
+   * The folder relative image sources are resolved against: the one holding
+   * the markdown, not the one holding the page. Content typed into the web
+   * part has no folder of its own, so it falls back to the site, which is what
+   * someone writing a path by hand in a web part most likely means.
+   */
+  private imageBasePath(): string | undefined {
+    if (this.properties.contentSource === 'library' && this.properties.selectedFile) {
+      return folderOf(this.properties.selectedFile);
+    }
+    if (this.properties.contentSource === 'url' && this.properties.fileUrl) {
+      return folderOf(this.properties.fileUrl);
+    }
+    return this.context.pageContext.web.serverRelativeUrl;
   }
 
   // ------------------------------------------------------------ reader theme
@@ -427,6 +445,13 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
     } catch (error) {
       this.loadError = `Could not load the markdown: ${(error as Error).message}`;
     }
+
+    // The image base path follows the chosen file, and the property list that
+    // rebuilds the processor does not include the properties that change it -
+    // so refresh it here, or a newly picked file goes on resolving its images
+    // against the folder of the previous one. Cheap when nothing moved:
+    // updateOptions only rebuilds when a value actually changed.
+    this.processor.updateOptions(this.processorOptions());
 
     if (userInitiated || this.contentLoadedOnce) {
       this.render();

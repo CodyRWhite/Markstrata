@@ -83,9 +83,13 @@ function copyInto(sourceDir, targetDir, filter) {
   });
 }
 
+// Both modes: the sample document references brand/mark.svg to exercise
+// relative image sources, and the development harness should show the same
+// page the published one does rather than a broken image.
+copyBrand(outDir);
+
 if (standalone) {
   copyInto(stylesDir, path.join(outDir, 'styles'), (name) => name.endsWith('.css'));
-  copyBrand(outDir);
   const katexSource = path.join(root, 'node_modules', 'katex', 'dist');
   fs.mkdirSync(path.join(outDir, 'katex', 'fonts'), { recursive: true });
   fs.copyFileSync(path.join(katexSource, 'katex.min.css'), path.join(outDir, 'katex', 'katex.min.css'));

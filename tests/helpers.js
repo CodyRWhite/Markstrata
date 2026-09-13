@@ -10,5 +10,6 @@ module.exports = {
   MarkdownProcessor: require(path.join(LIB, 'MarkdownProcessor')).MarkdownProcessor,
   ThemeManager: require(path.join(LIB, 'ThemeManager')).ThemeManager,
   codeBlocks: require(path.join(LIB, 'codeBlocks')),
+  imagePaths: require(path.join(LIB, 'imagePaths')),
   callouts: require(path.join(LIB, 'callouts'))
 };

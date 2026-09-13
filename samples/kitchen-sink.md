@@ -48,6 +48,15 @@ and a keyboard shortcut like <kbd>Ctrl</kbd> + <kbd>K</kbd>.
 > Legacy Wiki.js syntax from the older web part still renders.
 {.is-success}
 
+## Images
+
+A relative source resolves against the folder the markdown lives in, the way it
+does on GitHub, rather than against the page it is rendered on:
+
+![The Markstrata mark](brand/mark.svg "Resolved relative to this document")
+
+An absolute or external source is left exactly as written.
+
 ## Code
 
 ```typescript title="ThemeManager.ts"

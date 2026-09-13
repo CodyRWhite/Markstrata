@@ -126,6 +126,31 @@ flowchart LR
   B --> E[VS Code]
 ```
 
+## Images
+
+`![Alt text](path/to/image.png "Optional title")` works the way it does on
+GitHub. A relative path is resolved against the folder holding the markdown
+file, not the page the web part sits on, so a document library laid out like
+this renders as written:
+
+```text
+Shared Documents/runbooks/
+  deploy.md          <- ![Flow](images/flow.png)
+  images/flow.png
+```
+
+Absolute URLs, protocol-relative URLs, data URIs and paths that already start
+with `/` are left untouched. Content typed into the web part has no folder of
+its own, so its relative paths resolve against the site root.
+
+Images are given `loading="lazy"` and `decoding="async"`, so a long document
+fetches them as the reader reaches them rather than all at once.
+
+> [!NOTE]
+> Readers see only the images they have permission to open. A relative path
+> resolves to a real SharePoint URL, and SharePoint still applies the
+> library's permissions to it.
+
 ## Table of contents
 
 Built from the headings, or placed inline with `[[toc]]`. It can sit in a left
