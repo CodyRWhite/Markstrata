@@ -5,7 +5,7 @@ All notable changes to this project are recorded here. Versions follow
 the same number with a fourth part appended (0.2.0 -> 0.2.0.0), stamped by
 `scripts/set-version.js` when a release is tagged.
 
-## Unreleased
+## 0.0.7
 
 - No em dashes in anything this project ships. They were in the README, the
   contributing guide, the theme guide, the changelog, the sample documents and
