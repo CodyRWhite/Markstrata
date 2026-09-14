@@ -44,6 +44,41 @@ function copyBrand(outDir) {
  * The <head> tags that go with those files. `description` is optional; pass it
  * and the page also carries the link-preview card.
  */
+/*
+ * Google Analytics.
+ *
+ * Written as a guarded loader rather than the plain snippet Google hands out,
+ * because these pages are built and opened in more places than the published
+ * site: `npm run site` locally, the demo page the browser driver loads off
+ * disk in CI, and any checkout someone builds. The plain snippet fires in all
+ * of them, which reports test runs as traffic and puts a third-party request
+ * inside the driver's "no page errors" check.
+ *
+ * Gating on the hostname keeps the markup identical everywhere and lets only
+ * the real site measure anything. Both hosts are listed because the site
+ * answers on its own domain and on the Pages path that redirects to it.
+ */
+const ANALYTICS_ID = 'G-9S03B399TB';
+const ANALYTICS_HOSTS = ['markstrata.com', 'www.markstrata.com', 'codywhite.me'];
+
+function analyticsTag() {
+  return `<!-- Google tag (gtag.js) -->
+<script>
+  (function () {
+    if (${JSON.stringify(ANALYTICS_HOSTS)}.indexOf(location.hostname) === -1) { return; }
+    var tag = document.createElement('script');
+    tag.async = true;
+    tag.src = 'https://www.googletagmanager.com/gtag/js?id=${ANALYTICS_ID}';
+    document.head.appendChild(tag);
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    window.gtag = gtag;
+    gtag('js', new Date());
+    gtag('config', '${ANALYTICS_ID}');
+  })();
+</script>`;
+}
+
 function brandHead(title, description) {
   const tags = [
     '<link rel="icon" type="image/png" sizes="32x32" href="brand/favicon-32.png">',
@@ -59,6 +94,7 @@ function brandHead(title, description) {
       '<meta name="twitter:card" content="summary_large_image">'
     );
   }
+  tags.push(analyticsTag());
   return tags.join('\n');
 }
 
@@ -79,4 +115,4 @@ function brandLogo(height, surface = 'auto') {
     + '</picture>';
 }
 
-module.exports = { copyBrand, brandHead, brandLogo, SITE_ORIGIN };
+module.exports = { copyBrand, brandHead, brandLogo, SITE_ORIGIN, ANALYTICS_ID };
