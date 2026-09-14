@@ -41,8 +41,8 @@ The **Content** page of the property pane offers three sources.
 | Source | What it does |
 |---|---|
 | **Typed in** | Markdown lives in the web part itself. Good for a page-specific note. |
-| **Library file** | Pick a `.md` file from a document library, with folder browsing. Optionally reload when it changes, and browse its version history, with preview and restore. |
-| **URL** | Any address that returns markdown. |
+| **Library file** | **Markdown file** picks a `.md` file from a document library, with folder browsing. **Reload when the file changes** keeps the page in step with edits, and **Show version history button** lets a reader browse the file's versions, with preview and restore. |
+| **URL** | **File URL** takes any address that returns markdown. |
 
 A library file is usually the right answer: the markdown stays in SharePoint
 where it can be versioned, permissioned and edited by people who never touch
@@ -68,9 +68,10 @@ the only source with any of those to show. **Keep it in view while scrolling**
 pins it to the bottom of the web part rather than leaving it at the end of the
 document, which in a long one means a reader never reaches it.
 
-**Show toolbar** carries the reload, version history, theme and print controls.
-Set to *only while editing the page*, readers never see any of them, including
-the print button.
+**Show toolbar** carries the reload, version history, theme and print controls,
+and **Show print button** decides whether the print one is among them. Set the
+toolbar to *only while editing the page* and readers never see any of them, that
+button included.
 
 ## Code blocks
 
@@ -84,13 +85,16 @@ export function resolveMode(mode: ColorMode): ResolvedMode {
 
 - Syntax highlighting for around forty languages, including PowerShell,
   Dockerfile, batch and HTTP on top of the common set.
-- An optional header showing the language and, with `title="app.ts"`, a filename.
+- **Show language header** labels the block with its language and, with
+  `title="app.ts"`, a filename.
 - A copy button that copies the source and never the line numbers.
-- Optional line numbers in a gutter that stays put while a long line scrolls
-  under it, and that wrapped lines indent past rather than run under.
+- **Show line numbers** puts them in a gutter that stays put while a long line
+  scrolls under it, and that wrapped lines indent past rather than run under.
 - Diff blocks tint whole lines, so `+` and `-` read at a glance.
 
-Any block can override the page setting on its fence:
+**Long lines** decides what a line too wide for the column does: wrap, or scroll
+sideways. It applies to every block on the page, and any block can override it,
+or the line numbers, on its fence:
 
 | Flag | Effect |
 |---|---|
@@ -212,7 +216,8 @@ headings and no wrapping of long ones. It is floored and capped, so a document
 with three short headings still reads as a column and one deep heading cannot
 take the page.
 
-**Fixed** adds a unit and a width, as a slider and a box:
+**Fixed** adds **Measured in** for the unit and a **Width**, given as both a
+slider and a box:
 
 | Unit | What it measures | Worth knowing |
 |---|---|---|
@@ -242,8 +247,8 @@ on. Raw HTML is off. Every one of those is a setting.
 ## Security
 
 > [!IMPORTANT] Raw HTML is off by default
-> HTML in markdown is escaped unless you deliberately turn **Allow raw HTML** on.
-> Callout titles are escaped either way. Mermaid runs with
+> Unless you deliberately turn **Allow raw HTML in markdown** on, HTML in the
+> markdown is escaped. Callout titles are escaped either way. Mermaid runs with
 > `securityLevel: 'strict'` and HTML labels disabled, so diagram text can never
 > become markup.
 
