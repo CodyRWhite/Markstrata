@@ -5,6 +5,19 @@ All notable changes to this project are recorded here. Versions follow
 the same number with a fourth part appended (0.2.0 -> 0.2.0.0), stamped by
 `scripts/set-version.js` when a release is tagged.
 
+## Unreleased
+
+- The gantt fix reaches the documentation site. The site's static pages
+  initialise mermaid in an inline script rather than through the renderer
+  class, and carried their own copy of the configuration, so 0.0.8 fixed gantt
+  legibility on a deployed web part and left the site as it was. Both now read
+  `utils/mermaidConfig.ts`, and a test fails if either starts spelling the
+  options out for itself again.
+- Full width works on the demo page. The page caps the web part at 1100px the
+  way a SharePoint section caps it, which made full width identical to wide
+  there while working correctly on a real page. The cap now steps aside when
+  full width is chosen.
+
 ## 0.0.8
 
 - Room at the sides of the web part, matching the room already at the top and

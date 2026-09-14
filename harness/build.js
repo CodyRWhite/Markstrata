@@ -125,7 +125,12 @@ ${links}
   body { margin: 0; font-family: system-ui, sans-serif; background: var(--site-canvas); }
   /* Stands in for the SharePoint page canvas around the web part. */
   .page { padding: 24px; background: var(--site-canvas); min-height: 100vh; }
+  /* The canvas stands in for a SharePoint section, so it caps the web part the
+     way a section does. Full width means exactly that, though, and a cap here
+     made it identical to wide: the setting looked broken on this page while
+     working on a real page. */
   .canvas { margin: 0 auto; max-width: 1100px; }
+  body[data-demo-width="full"] .canvas { max-width: none; }
   .demo-intro { margin: 0; padding: 18px 22px 0; max-width: 1100px;
                 margin-inline: auto; color: var(--site-intro);
                 font: 15px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }

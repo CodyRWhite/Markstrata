@@ -111,6 +111,9 @@ function settings(): any {
 
 function draw(): void {
   const mode = ThemeManager.resolveMode(state.mode);
+  /* The page's own canvas caps the web part like a SharePoint section does, so
+     it has to step aside when the reader asks for full width. */
+  document.body.setAttribute('data-demo-width', state.contentWidth);
   if (state.editing) {
     editor.render(host, state.markdown, {
       settings: settings(),

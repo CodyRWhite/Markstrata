@@ -54,6 +54,7 @@ function compileProcessor() {
     [
       path.join(root, 'src', 'webparts', 'markstrata', 'utils', 'MarkdownProcessor.ts'),
       path.join(root, 'src', 'webparts', 'markstrata', 'utils', 'ThemeManager.ts'),
+      path.join(root, 'src', 'webparts', 'markstrata', 'utils', 'mermaidConfig.ts'),
       '--outDir', libDir,
       '--module', 'commonjs',
       '--target', 'es2017',
@@ -103,6 +104,9 @@ function build() {
 
   const { MarkdownProcessor } = require(path.join(libDir, 'MarkdownProcessor.js'));
   const { ThemeManager } = require(path.join(libDir, 'ThemeManager.js'));
+  /* The same object the web part initialises mermaid with, so the two cannot
+     drift: this page used to carry its own copy and missed the gantt fix. */
+  const { MERMAID_BASE_CONFIG } = require(path.join(libDir, 'mermaidConfig.js'));
   const processor = new MarkdownProcessor({ showLineNumbers: true, allowHtml: true });
 
   // Diagrams are themed from the same palettes the web part uses, so the
@@ -119,7 +123,7 @@ function build() {
     : fs.readFileSync(path.join(root, 'samples', 'kitchen-sink.md'), 'utf8');
 
   const html = processor.render(sample);
-  const page = template(readCss(), html, buildToc(html), mermaidThemes,
+  const page = template(readCss(), html, buildToc(html), mermaidThemes, MERMAID_BASE_CONFIG,
     pageId ? site.page(pageId).title : pageTitle(html));
 
   fs.mkdirSync(outDir, { recursive: true });
@@ -178,7 +182,7 @@ function pageTitle(html) {
   return text || 'Markstrata';
 }
 
-function template(css, content, toc, mermaidThemes, title) {
+function template(css, content, toc, mermaidThemes, mermaidBase, title) {
   const header = pageId ? site.header(pageId) : '';
   const footer = pageId ? site.footer(pageId) : '';
   return `<!DOCTYPE html>
@@ -271,6 +275,7 @@ ${footer}
 <script src="mermaid.min.js"></script>
 <script>
 var MERMAID_THEMES = ${JSON.stringify(mermaidThemes)};
+var MERMAID_BASE = ${JSON.stringify(mermaidBase)};
 </script>
 <script>
 (function () {
@@ -405,12 +410,7 @@ var MERMAID_THEMES = ${JSON.stringify(mermaidThemes)};
     }
     var key = document.getElementById('theme').value + '-' + document.getElementById('mode').value;
     var config = mermaidThemes[key];
-    mermaid.initialize(Object.assign({
-      startOnLoad: false,
-      securityLevel: 'strict',
-      htmlLabels: false,
-      flowchart: { htmlLabels: false, curve: 'basis', padding: 12, useMaxWidth: true, wrappingWidth: 220 }
-    }, config));
+    mermaid.initialize(Object.assign({}, MERMAID_BASE, config));
     for (var j = 0; j < hosts.length; j++) {
       (function (host, source, index) {
         mermaid.render('demo-mermaid-' + index + '-' + Date.now(), source).then(function (result) {

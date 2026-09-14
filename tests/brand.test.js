@@ -164,3 +164,31 @@ test('the manifest carries the web part tile, with a glyph still there as a fall
     assert.ok(entry.officeFabricIconFontName, 'keep a glyph for surfaces that ignore the image');
   }
 });
+
+/*
+ * Two places initialise mermaid: the web part through MermaidRenderer, and the
+ * site's static pages in an inline script. They used to hold separate copies of
+ * the config, so the gantt legibility fix reached a deployed web part and not
+ * the demo site. Both now read the same module, and neither may go back to
+ * spelling the options out for itself.
+ */
+test('mermaid is configured from one place', () => {
+  const renderer = fs.readFileSync(path.join(__dirname, '..', 'src', 'webparts',
+    'markstrata', 'utils', 'MermaidRenderer.ts'), 'utf8');
+  const builder = fs.readFileSync(path.join(__dirname, '..', 'demo', 'build-demo.js'), 'utf8');
+  for (const [name, body] of [['MermaidRenderer.ts', renderer], ['build-demo.js', builder]]) {
+    assert.ok(/MERMAID_BASE/.test(body), `${name} should use the shared mermaid config`);
+    assert.ok(!/securityLevel:\s*'strict'/.test(body),
+      `${name} spells out mermaid options again; they belong in utils/mermaidConfig.ts`);
+  }
+});
+
+test('the shared mermaid config lifts gantt text off its 10px default', () => {
+  const config = fs.readFileSync(path.join(__dirname, '..', 'src', 'webparts',
+    'markstrata', 'utils', 'mermaidConfig.ts'), 'utf8');
+  const sizes = (config.match(/font-size:\s*(\d+)px/g) || []).map((s) => parseInt(/\d+/.exec(s)[0], 10));
+  assert.ok(sizes.length >= 2, 'expected the gantt text rules');
+  for (const size of sizes) {
+    assert.ok(size >= 12, `gantt text set to ${size}px, which is back in unreadable territory`);
+  }
+});
