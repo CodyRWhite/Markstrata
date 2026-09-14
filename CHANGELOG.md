@@ -10,6 +10,17 @@ Entries below 0.0.10.0 were written before the switch and are three-part.
 
 ## Unreleased
 
+- The kitchen sink shows everything it is meant to. Seven documented features
+  were missing from it: spanning table cells, emoji, abbreviations, subscript
+  and superscript, the `wrap` and `numbers` fence flags, and an inline
+  `[[toc]]`. It is the document the theme screenshots, the demo and the themes
+  page are all built from, so a feature absent from it was invisible in all
+  three. A test now renders it and fails on anything documented that it does
+  not show.
+- Documented the settings that had never been written up: code text size, the
+  contents depth, heading link anchors, and the pinned file footer.
+
+
 - The contents sidebar no longer runs off the bottom of the page. Its height was
   capped at the viewport height less a fixed allowance for whatever sits above
   the web part, which is a guess, and on a SharePoint page it is the wrong one:

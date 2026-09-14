@@ -98,6 +98,9 @@ Any block can override the page setting on its fence:
 | `numbers` / `nonumbers` | Line numbers on or off for this block |
 | `title="name.ts"` | Filename in the header |
 
+**Code text size** sets code independently of body text, so a dense block can
+be brought down a notch without shrinking the prose around it.
+
 ## Callouts
 
 Three syntaxes, one rendering, so markdown written for GitHub, for Obsidian or
@@ -182,8 +185,15 @@ then:
 ## Table of contents
 
 Built from the headings, or placed inline with `[[toc]]`. It can sit in a left
-or right column, above the content, or be switched off, and its depth is
-configurable.
+or right column, above the content, or be switched off.
+
+**Deepest heading in the contents** decides how far down it goes, from top-level
+headings only through to every level. A long document with four levels of
+heading usually reads better listing two or three of them.
+
+**Heading link anchors** put a link beside each heading, so a section can be
+linked to directly. They are reserved a gutter of their own rather than sitting
+in the margin, where a SharePoint page canvas clips them.
 
 It is a column of the layout or a block above the text, never an overlay, so
 it cannot cover the content or the page's own editing controls. In a narrow

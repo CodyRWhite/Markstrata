@@ -3,11 +3,21 @@
 A page that exercises everything the web part renders, so a theme can be judged
 at a glance. Switch theme and colour mode with the controls above.
 
+[[toc]]
+
 ## Text
 
 Regular paragraph text with **bold**, *italic*, ~~strikethrough~~, `inline code`,
 a [link to SharePoint](https://www.microsoft.com/sharepoint), ==nothing exotic==,
 and a keyboard shortcut like <kbd>Ctrl</kbd> + <kbd>K</kbd>.
+
+Subscript and superscript are written H~2~O and 10^6^. Emoji render from their
+shortcodes: :rocket: :warning: :white_check_mark:. An
+abbreviation carries its meaning on hover, so HTML and CSS explain themselves the
+first time someone meets them.
+
+*[HTML]: HyperText Markup Language
+*[CSS]: Cascading Style Sheets
 
 > A plain blockquote, for quoting someone rather than flagging something.
 > It should read as quiet, not as an alert.
@@ -96,14 +106,19 @@ class Theme:
 print(Theme("Obsidian", dark=True).label())  # Obsidian (dark)
 ```
 
-```powershell
+A fence can override the page's own settings. This one wraps its long lines and
+turns the gutter off, whatever the web part is set to:
+
+```powershell wrap nonumbers
 # Deploy the package to the tenant app catalog
 $ctx = Connect-PnPOnline -Url "https://contoso.sharepoint.com/sites/apps" -Interactive
 Add-PnPApp -Path .\sharepoint\solution\markstrata.sppkg -Scope Tenant -Publish
 Get-PnPApp | Where-Object { $_.Title -like "*markdown*" } | Format-Table Title, Deployed
 ```
 
-```json
+And this one forces the gutter on and scrolls instead of wrapping:
+
+```json numbers nowrap
 {
   "themeFamily": "obsidian",
   "colorMode": "dark",
@@ -137,6 +152,16 @@ An indented code block, with no language:
 |:-------------|:--------:|------:|
 | one | two | 3 |
 | four | five | 60 |
+
+Cells can span. `^^` merges a cell with the one above it, and a doubled `||`
+lets a cell run across the column to its right:
+
+| Service   | Database   | Host             |
+|-----------|------------|------------------|
+| Orders    | orders-db  | db01.example.com |
+| Catalogue | catalog-db | db02.example.com |
+| ^^        | search-db  | db02.example.com |
+| Both catalogue databases share a host || db02.example.com |
 
 ## Lists
 
