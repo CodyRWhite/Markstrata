@@ -26,6 +26,7 @@ declare interface IMarkstrataWebPartStrings {
   ToolbarHint: string;
   PrintButtonLabel: string;
   ShowSourceInfoLabel: string;
+  PinMetaLabel: string;
   SourceInfoHint: string;
   CodeGroupName: string;
   SyntaxHighlightingLabel: string;

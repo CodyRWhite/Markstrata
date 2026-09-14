@@ -10,6 +10,20 @@ Entries below 0.0.10.0 were written before the switch and are three-part.
 
 ## Unreleased
 
+- The contents sidebar no longer runs off the bottom of the page. Its height was
+  capped at the viewport height less a fixed allowance for whatever sits above
+  the web part, which is a guess, and on a SharePoint page it is the wrong one:
+  the page scrolls an inner container under a header and a command bar, so the
+  sidebar was sized past the bottom of the visible area and its last entries
+  could not be reached until the page was scrolled to the end, when they
+  appeared all at once. The cap is now measured from where the sidebar actually
+  is and from the container that actually scrolls, and it is re-measured while
+  scrolling and on resize.
+- The file name and modified date can be kept in view. **Keep it in view while
+  scrolling** pins them to the bottom of the web part instead of leaving them at
+  the end of the document, where a long document means never seeing them.
+
+
 - The contents sidebar has a width setting. **Auto** fits it to its longest
   entry, floored so a short document still reads as a column and capped so one
   deep heading cannot take the page; that is the default. **Fixed** adds a unit

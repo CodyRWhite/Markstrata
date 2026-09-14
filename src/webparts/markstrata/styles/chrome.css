@@ -94,6 +94,24 @@
   font-size: 0.8125em;
 }
 
+/*
+ * Pinned, the file name and modified date stay in view for the whole document
+ * rather than only at the end of it. Sticky rather than fixed, so it belongs to
+ * the web part: it rides the bottom of the window while the web part is on
+ * screen and scrolls away with it, instead of sitting over the page.
+ *
+ * It needs its own background for that. Sticky leaves the element in the flow,
+ * so without one the text it is passing over shows through.
+ */
+.strata-root[data-strata-meta='pinned'] .strata-meta {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  margin-top: 16px;
+  padding-bottom: 10px;
+  background-color: var(--strata-bg);
+}
+
 .strata-status {
   padding: 4px 8px;
   border-radius: var(--strata-radius-sm);

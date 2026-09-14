@@ -12,6 +12,13 @@ export interface ITocEntry {
 /** Distance from the top of the viewport that counts as "being read". */
 const ACTIVE_HEADING_LINE: number = 120;
 
+/** Breathing room under a sticky contents sidebar, so it is not flush. */
+const SIDEBAR_BOTTOM_GAP: number = 24;
+
+/* Below this there is no useful contents left, and shrinking further only
+   makes the scrollbar the whole control. */
+const SIDEBAR_MIN_HEIGHT: number = 180;
+
 const CHECK_ICON: string =
   '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m20 6-11 11-5-5"/></svg>';
 
@@ -193,6 +200,32 @@ export class ContentEnhancer {
     done(this.legacyCopy(text));
   }
 
+  /**
+   * Where the visible area ends, in viewport coordinates.
+   *
+   * The window's own height is only right when the window is what scrolls. A
+   * SharePoint page scrolls an inner container that sits under a header and a
+   * command bar, so the bottom of that container is what bounds the sidebar,
+   * not the bottom of the window. Whichever is higher up the screen wins,
+   * which is correct either way round.
+   */
+  private static visibleBottom(element: HTMLElement): number {
+    let bottom: number = window.innerHeight;
+    let parent: HTMLElement | null = element.parentElement;
+
+    while (parent && parent !== document.body) {
+      const style: CSSStyleDeclaration = window.getComputedStyle(parent);
+      const scrolls: boolean = /(auto|scroll|overlay)/.test(style.overflowY)
+        && parent.scrollHeight > parent.clientHeight;
+      if (scrolls) {
+        bottom = Math.min(bottom, parent.getBoundingClientRect().bottom);
+      }
+      parent = parent.parentElement;
+    }
+
+    return bottom;
+  }
+
   private legacyCopy(text: string): boolean {
     try {
       const area: HTMLTextAreaElement = document.createElement('textarea');
@@ -353,12 +386,36 @@ export class ContentEnhancer {
       active.link.setAttribute('aria-current', 'true');
     };
 
+    /*
+     * How tall the sidebar may be, measured rather than assumed.
+     *
+     * The stylesheet can only guess: it caps at the viewport height less a
+     * fixed allowance for whatever sits above the web part. On a SharePoint
+     * page that allowance is wrong, because the page scrolls an inner
+     * container under a header and a command bar of its own, so the contents
+     * were cut off well short of the space actually available.
+     *
+     * The sidebar's own position tells the truth. Whatever chrome is above it,
+     * the room it has is the distance from its top edge to the bottom of the
+     * window, and that is true while it is sticky and while it is not.
+     */
+    const sidebar: HTMLElement | null = nav.closest('.strata-toc-sidebar');
+    const fitSidebar = (): void => {
+      if (!sidebar) {
+        return;
+      }
+      const top: number = sidebar.getBoundingClientRect().top;
+      const room: number = ContentEnhancer.visibleBottom(sidebar) - top - SIDEBAR_BOTTOM_GAP;
+      sidebar.style.maxHeight = `${Math.max(SIDEBAR_MIN_HEIGHT, Math.round(room))}px`;
+    };
+
     this.onScroll = (): void => {
       if (this.scrollFrame !== undefined) {
         return;
       }
       this.scrollFrame = window.requestAnimationFrame(() => {
         this.scrollFrame = undefined;
+        fitSidebar();
         update();
       });
     };
@@ -367,6 +424,7 @@ export class ContentEnhancer {
     // not the window, and scroll events do not bubble.
     document.addEventListener('scroll', this.onScroll, { capture: true, passive: true });
     window.addEventListener('resize', this.onScroll, { passive: true });
+    fitSidebar();
     update();
   }
 

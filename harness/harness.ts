@@ -43,6 +43,7 @@ const state: any = {
   showToolbar: true,
   showPrintButton: true,
   showSourceInfo: true,
+  pinMeta: false,
   // Code blocks
   enableSyntaxHighlighting: true,
   showCodeHeader: true,
@@ -111,7 +112,8 @@ function settings(): any {
     textSize: state.textSize,
     codeSize: state.codeSize,
     tocWidth: state.tocWidthMode === 'auto'
-      ? 'auto' : `${state.tocWidthValue}${state.tocWidthUnit}`
+      ? 'auto' : `${state.tocWidthValue}${state.tocWidthUnit}`,
+    pinMeta: state.pinMeta
   };
 }
 
@@ -259,7 +261,9 @@ const PANEL_PAGES: IPanelPage[] = [
             { value: 'xlarge', text: 'Extra large' }] },
           { key: 'showToolbar', label: 'Show toolbar', type: 'toggle' },
           { key: 'showPrintButton', label: 'Show print button', type: 'toggle' },
-          { key: 'showSourceInfo', label: 'Show file name and last updated', type: 'toggle' }
+          { key: 'showSourceInfo', label: 'Show file name and last updated', type: 'toggle' },
+          { key: 'pinMeta', label: 'Keep it in view while scrolling', type: 'toggle',
+            showIf: (state) => state.showSourceInfo === true }
         ]
       },
       {
@@ -385,7 +389,8 @@ if (panelHost && panelButton) {
         state.tocWidthValue = tocWidthForUnit(value as never, state.tocWidthValue as number);
       }
       /* These decide whether other fields apply, or what range they take. */
-      if (key === 'tocWidthMode' || key === 'tocWidthUnit' || key === 'toc') {
+      if (key === 'tocWidthMode' || key === 'tocWidthUnit' || key === 'toc'
+        || key === 'showSourceInfo') {
         panel.refresh();
       }
       if (PROCESSOR_KEYS.indexOf(key) !== -1) {

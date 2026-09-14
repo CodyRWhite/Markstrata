@@ -20,6 +20,8 @@ export interface IThemeSettings {
   codeSize: string;
   /** 'auto', or a CSS length for the contents sidebar: '240px', '15em', '22%'. */
   tocWidth?: string;
+  /** True to keep the file name and modified date in view while scrolling. */
+  pinMeta?: boolean;
 }
 
 export interface IThemeChoice {
@@ -218,6 +220,7 @@ export class ThemeManager {
     } else {
       element.style.setProperty('--strata-toc-width', tocWidth);
     }
+    element.setAttribute('data-strata-meta', settings.pinMeta ? 'pinned' : 'flow');
     // Lets the browser pick matching form controls and scrollbars.
     element.style.colorScheme = resolved;
   }

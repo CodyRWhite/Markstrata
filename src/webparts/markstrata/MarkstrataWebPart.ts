@@ -97,6 +97,7 @@ export interface IMarkstrataWebPartProps {
   toolbarVisibility: 'always' | 'editing' | 'never';
   showPrintButton: boolean;
   showSourceInfo: boolean;
+  pinMeta: boolean;
   enableVersionHistory: boolean;
   allowHtml: boolean;
 
@@ -259,6 +260,7 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
       toolbarVisibility: 'always',
       showPrintButton: true,
       showSourceInfo: true,
+      pinMeta: false,
       enableVersionHistory: true,
       allowHtml: false,
       searchablePlainText: ''
@@ -426,7 +428,8 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
       textSize: this.properties.textSize,
       codeSize: this.properties.codeSize,
       tocWidth: tocWidthCss(this.properties.tocWidthMode, this.properties.tocWidthUnit,
-        this.properties.tocWidthValue)
+        this.properties.tocWidthValue),
+      pinMeta: this.properties.pinMeta
     };
   }
 
@@ -654,6 +657,10 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
     }
 
     /* The width controls only mean anything with the contents in a sidebar. */
+    if (propertyPath === 'showSourceInfo') {
+      this.context.propertyPane.refresh();
+    }
+
     if (propertyPath === 'tocPosition') {
       this.context.propertyPane.refresh();
     }
@@ -844,6 +851,13 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
                   // The footer is built from the file's metadata, and only a
                   // library file has any.
                   disabled: this.properties.contentSource !== 'library'
+                }),
+                PropertyPaneToggle('pinMeta', {
+                  label: strings.PinMetaLabel,
+                  onText: 'On',
+                  offText: 'Off',
+                  disabled: this.properties.contentSource !== 'library'
+                    || !this.properties.showSourceInfo
                 }),
                 PropertyPaneLabel('sourceInfoHint', { text: strings.SourceInfoHint })
               ]

@@ -26,6 +26,7 @@ define([], function () {
     "TextSizeLabel": "Text size",
     "ToolbarVisibilityLabel": "Show toolbar",
     "ToolbarHint": "The reload, version history, theme and print controls all live in the toolbar. With \"Only while editing the page\", readers of the page never see them.",
+    "PinMetaLabel": "Keep it in view while scrolling",
     "SourceInfoHint": "Needs a file from a document library. Markdown typed into the web part, or fetched from a URL, has no file name or modified date to show.",
     "PrintButtonLabel": "Show print button",
     "ShowSourceInfoLabel": "Show file name and last updated",
