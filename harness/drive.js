@@ -67,20 +67,46 @@ const pageUrl = 'file://' + path.join(OUT, 'index.html');
     await page.waitForSelector('.strata-mermaid svg', { timeout: 15000 });
   });
 
+  /*
+   * Gantt labels come from mermaid's own stylesheet at 10-11px, and unlike a
+   * flowchart the chart re-lays out rather than scaling, so they stay that
+   * size however wide the column is. themeCSS is what lifts them; this fails
+   * if that override stops reaching the generated stylesheet.
+   */
+  await step('gantt labels are legible, not mermaid default 10px', async () => {
+    await page.waitForSelector('.strata-mermaid svg .taskText', { timeout: 15000 });
+    const sizes = await page.evaluate(() => {
+      const px = (sel) => {
+        const el = document.querySelector('.strata-mermaid ' + sel);
+        return el ? parseFloat(getComputedStyle(el).fontSize) : 0;
+      };
+      return { tick: px('.tick text'), task: px('.taskText'), section: px('.sectionTitle') };
+    });
+    for (const [name, size] of Object.entries(sizes)) {
+      if (size < 12) throw new Error(`${name} is ${size}px`);
+    }
+  });
+
   await step('katex rendered', async () => {
     await page.waitForSelector('.strata-math-block .katex', { timeout: 5000 });
   });
 
   /* The sample links brand/mark.svg relatively, so this proves both that the
      image survives rendering and that the browser could actually fetch it. */
-  await step('relative image loads', async () => {
+  await step('every image decodes: relative, data URI and reference style', async () => {
     await page.waitForSelector('.strata-content img', { timeout: 5000 });
-    const state = await page.evaluate(() => {
-      const img = document.querySelector('.strata-content img');
-      return { src: img.getAttribute('src'), loading: img.getAttribute('loading'), width: img.naturalWidth };
-    });
-    if (state.loading !== 'lazy') throw new Error('loading=' + state.loading);
-    if (!state.width) throw new Error('did not decode: ' + state.src);
+    const imgs = await page.evaluate(() => [...document.querySelectorAll('.strata-content img')]
+      .map((img) => ({ src: img.getAttribute('src'), loading: img.getAttribute('loading'),
+                       width: img.naturalWidth })));
+    if (imgs.length < 3) throw new Error('only ' + imgs.length + ' images');
+    for (const img of imgs) {
+      if (img.loading !== 'lazy') throw new Error('loading=' + img.loading + ' on ' + img.src.slice(0, 40));
+      if (!img.width) throw new Error('did not decode: ' + img.src.slice(0, 60));
+    }
+    /* The data URI must survive untouched; resolving it would corrupt it. */
+    if (!imgs.some((i) => i.src.indexOf('data:image/png;base64,') === 0)) {
+      throw new Error('the data URI was rewritten');
+    }
   });
 
   await step('copy button copies the code, without line numbers', async () => {

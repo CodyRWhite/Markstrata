@@ -55,7 +55,16 @@ does on GitHub, rather than against the page it is rendered on:
 
 ![The Markstrata mark](brand/mark.svg "Resolved relative to this document")
 
-An absolute or external source is left exactly as written.
+An absolute source is left exactly as written, so a data URI renders without
+fetching anything. Note that markdown-it accepts `data:` only for `png`, `gif`,
+`jpeg` and `webp`; an SVG data URI is refused, because an SVG can carry script: ![a tick](data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAcCAYAAAByDd+UAAAAuUlEQVR42u3WwQ2AIAwFUOkAjuCZQZyKeDROxSCeGcEF9ESihEKLfi/ai/HSJ22JNV0S/bTs3YOxzc6c3wmJ5XISEsvlJjSWouYNjO3hD9YiWP8eGLEaCilpsJ6FCVXKYR0xoAa7DUqGBN7D0ulEIHcKbSlFIDfqrVgR5JCWvonA3BdzmPR01ZJKEmkw0dCUEmox8bVoSXz7HkY0fWrjA3/8dG9ExjY7Q7llFYVdSopEz7mptJYjVv0DbXlUwgFqFAoAAAAASUVORK5CYII= "A data URI, passed through untouched") inline,
+in the middle of a sentence, sitting on the text baseline.
+
+Reference style works too, which keeps a long source out of the prose:
+
+![The mark again][mark-ref]
+
+[mark-ref]: brand/mark.svg "Declared once at the foot of the document"
 
 ## Code
 
@@ -171,6 +180,25 @@ flowchart TD
   C --> F[Rendered page]
   D --> F
   E --> F
+```
+
+A gantt chart, which mermaid lays out differently from a flowchart and which
+is the one that used to render its labels too small to read:
+
+```mermaid
+gantt
+    title A release week
+    dateFormat YYYY-MM-DD
+    axisFormat %d %b
+    todayMarker off
+
+    section Build
+    Cut the branch   :done, 2026-01-05, 1d
+    Review           :active, 2026-01-06, 2d
+
+    section Ship
+    Tag the release  :milestone, crit, 2026-01-08, 0d
+    Watch the deploy :2026-01-08, 2d
 ```
 
 ## Footnotes

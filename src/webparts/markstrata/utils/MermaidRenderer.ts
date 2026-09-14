@@ -10,6 +10,23 @@
 import { IMermaidApi, IMermaidRenderResult } from 'mermaid';
 import { ThemeManager, ThemeFamily, ResolvedMode } from './ThemeManager';
 
+/*
+ * Gantt charts draw their labels at 10px (the time axis) and 11px (task names
+ * and section titles). A flowchart scales its whole SVG to the container, so
+ * its text grows with the column; a gantt re-lays the chart out instead and
+ * keeps those sizes at any width, which leaves them close to unreadable on a
+ * SharePoint page.
+ *
+ * Mermaid's own `gantt.fontSize` does not reach these elements. Its generated
+ * stylesheet targets them by the diagram's id, so an id selector, which beats
+ * anything we can write in our own stylesheet. themeCSS is appended to that
+ * same generated stylesheet, which is why it is the one lever that works.
+ */
+const GANTT_TEXT_CSS: string = [
+  '.tick text { font-size: 13px; }',
+  '.taskText, .sectionTitle, text[class*="taskTextOutside"] { font-size: 13px; }'
+].join('\n');
+
 export class MermaidRenderer {
   /**
    * Mermaid is large, so it is a lazily imported chunk rather than part of the
@@ -62,7 +79,8 @@ export class MermaidRenderer {
         htmlLabels: false,
         flowchart: { htmlLabels: false, curve: 'basis', padding: 12, useMaxWidth: true, wrappingWidth: 220 },
         sequence: { useMaxWidth: true },
-        gantt: { useMaxWidth: true },
+        gantt: { useMaxWidth: true, barHeight: 22, barGap: 6 },
+        themeCSS: GANTT_TEXT_CSS,
         ...ThemeManager.getMermaidTheme(family, mode)
       });
     } catch {

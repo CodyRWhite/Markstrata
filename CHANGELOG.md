@@ -5,6 +5,29 @@ All notable changes to this project are recorded here. Versions follow
 the same number with a fourth part appended (0.2.0 -> 0.2.0.0), stamped by
 `scripts/set-version.js` when a release is tagged.
 
+## Unreleased
+
+- Gantt charts are legible. Mermaid draws their axis at 10px and their task and
+  section labels at 11px, and unlike a flowchart a gantt re-lays out to the
+  container rather than scaling, so the text stayed that size however wide the
+  column was. Mermaid's own `gantt.fontSize` does not reach those elements: its
+  generated stylesheet targets them by diagram id, which outranks our
+  stylesheet, so the override goes through `themeCSS` instead.
+- The demo page has a property pane. It mirrors the web part's own, three pages
+  with the same groups and the same labels, docked to the right the way
+  SharePoint docks it, and everything on the Appearance and Features pages
+  changes the web part as you would expect. The Content page is filled in for
+  appearance only, which the pane says on the page rather than leaving a
+  visitor to discover it. The reader's theme switcher starts off there, since
+  the pane already sets the theme; the bare development harness keeps it.
+- The demo page also has a way into the editor. The intro text had invited
+  people to "switch to the editor and type" since the page was written, but the
+  only way in was a console call.
+- The kitchen sink exercises images and a gantt chart: a relative source, a data
+  URI and a reference-style definition. Note that markdown-it allows `data:`
+  only for png, gif, jpeg and webp, so an SVG data URI is refused; an SVG can
+  carry script.
+
 ## 0.0.7
 
 - No em dashes in anything this project ships. They were in the README, the
