@@ -86,6 +86,16 @@ and **Show print button** decides whether the print one is among them. Set the
 toolbar to *only while editing the page* and readers never see any of them, that
 button included.
 
+**Show reading time** puts an estimate beside the theme control, from the text
+a reader actually reads: code blocks and diagram source are left out of the
+count, because neither is read at the speed of prose. It needs the toolbar.
+
+**Back to top button** floats a button above the page once the reader is a
+screenful or so past the top of the document, at the bottom **left** or bottom
+**right**, or **No button** to leave it out. It goes back to the top of the web
+part rather than the top of the page, which is what "back to top" means from
+inside a document that is one section of somebody's page.
+
 **Show file name and last updated**: a footer with the file's name, when it was
 last changed and by whom. It needs a file from a document library, since that is
 the only source with any of those to show. **Keep it in view while scrolling**

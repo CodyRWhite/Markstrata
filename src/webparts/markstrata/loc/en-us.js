@@ -54,6 +54,8 @@ define([], function () {
     "ToolbarVisibilityLabel": "Show toolbar",
     "ToolbarHint": "The reload, version history, theme and print controls all live in the toolbar. With \"Only while editing the page\", readers of the page never see them.",
     "PrintButtonLabel": "Show print button",
+    "ReadingTimeLabel": "Show reading time",
+    "BackToTopLabel": "Back to top button",
     "FileInfoGroupName": "File information",
     "ShowSourceInfoLabel": "Show file name and last updated",
     "PinMetaLabel": "Keep it in view while scrolling",

@@ -69,6 +69,11 @@ export class EditModeManager {
     host.setAttribute('data-strata-editing', 'true');
     // The editor sizes itself, and the root the fitter was measuring is gone.
     this.enhancer.stopFilling();
+    /* Editing is not reading: the button back to the top of the document has
+       nothing to go back to here, and left behind it kept the scroll listener
+       the view had attached, so it stayed on screen showing the state it was
+       last in. */
+    this.enhancer.stopBackToTop();
 
     const editor: HTMLElement = document.createElement('div');
     editor.className = 'strata-editor';

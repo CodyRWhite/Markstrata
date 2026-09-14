@@ -18,6 +18,8 @@
     "src/webparts/markstrata/utils/codeBlocks.ts",
     "src/webparts/markstrata/utils/callouts.ts",
     "src/webparts/markstrata/utils/mermaidConfig.ts",
-    "src/webparts/markstrata/utils/tocWidth.ts"
+    "src/webparts/markstrata/utils/tocWidth.ts",
+    "src/webparts/markstrata/utils/frontMatter.ts",
+    "src/webparts/markstrata/utils/readingTime.ts"
   ]
 }

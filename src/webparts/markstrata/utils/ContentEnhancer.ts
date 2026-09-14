@@ -1,7 +1,9 @@
 /**
- * Post-render DOM work: copy buttons, safe external links, and the sidebar
- * table of contents.
+ * Post-render DOM work: copy buttons, safe external links, images, the sidebar
+ * table of contents, reading time and the button back to the top.
  */
+import { countWords, readingTimeLabel } from './readingTime';
+import { BackToTop } from './backToTop';
 
 export interface ITocEntry {
   id: string;
@@ -23,6 +25,10 @@ const SIDEBAR_MIN_HEIGHT: number = 180;
    and forcing it would only push the document off the bottom of the screen. */
 const FILL_MIN_HEIGHT: number = 200;
 
+/* Roughly a screenful of reading scrolled past, so the button appears when
+   getting back has become a journey rather than a flick of the wheel. */
+const BACK_TO_TOP_AFTER: number = 600;
+
 const CHECK_ICON: string =
   '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m20 6-11 11-5-5"/></svg>';
 
@@ -42,6 +48,9 @@ export class ContentEnhancer {
   private zoomOverlay: HTMLElement | undefined;
   private zoomOpener: HTMLImageElement | undefined;
   private zoomKeydown: ((event: KeyboardEvent) => void) | undefined;
+  private backToTop: HTMLElement | undefined;
+  private onBackToTopScroll: (() => void) | undefined;
+  private backToTopFrame: number | undefined;
   private onResize: (() => void) | undefined;
   private resizeFrame: number | undefined;
 
@@ -794,11 +803,109 @@ export class ContentEnhancer {
     }
   }
 
+  /**
+   * How long the document takes to read, from the text a person actually
+   * reads: code is not read at prose speed, and a diagram's source is not read
+   * at all. Both are taken out before counting.
+   *
+   * Returns an empty string for a document with nothing to read, so the
+   * toolbar shows nothing rather than "1 min read" over an empty page.
+   */
+  public readingTime(article: HTMLElement): string {
+    const copy: HTMLElement = article.cloneNode(true) as HTMLElement;
+    const skip: HTMLElement[] = Array.prototype.slice.call(
+      copy.querySelectorAll('pre, code, .strata-mermaid, .strata-toc, figcaption')
+    );
+    skip.forEach((node: HTMLElement) => node.remove());
+    return readingTimeLabel(countWords(copy.textContent || ''));
+  }
+
+  /**
+   * A button back to the top of the document, once there is a top to go back
+   * to.
+   *
+   * It scrolls the web part into view rather than the page to its origin,
+   * because the web part is a section of somebody's page and may not be the
+   * first thing on it; scrolling to the top of the document is what "back to
+   * top" means from inside one. Using scrollIntoView also means the right
+   * thing moves whether the window scrolls or, as on a SharePoint page, an
+   * inner container does.
+   */
+  public attachBackToTop(root: HTMLElement, position: BackToTop): void {
+    this.stopBackToTop();
+    if (position === 'off') {
+      return;
+    }
+
+    const button: HTMLButtonElement = document.createElement('button');
+    button.type = 'button';
+    button.className = 'strata-to-top';
+    button.setAttribute('data-strata-side', position);
+    button.setAttribute('aria-label', 'Back to the top of the document');
+    button.title = 'Back to the top';
+    button.textContent = '\u2191';
+    /* Out of the tab order and out of the reading order until it can do
+       something, so a keyboard lands on it only when it is on screen. */
+    button.hidden = true;
+
+    button.addEventListener('click', () => {
+      root.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      /* Sending focus back to where reading restarts, rather than leaving it on
+         a button that is about to disappear. */
+      const first: HTMLElement | null = root.querySelector('.strata-content');
+      if (first) {
+        first.setAttribute('tabindex', '-1');
+        first.focus({ preventScroll: true });
+      }
+    });
+
+    root.appendChild(button);
+    this.backToTop = button;
+
+    const update = (): void => {
+      /* Above the top of the screen by more than a screenful of reading is
+         far enough that getting back matters. */
+      const above: number = -root.getBoundingClientRect().top;
+      button.hidden = above < BACK_TO_TOP_AFTER;
+    };
+
+    this.onBackToTopScroll = (): void => {
+      if (this.backToTopFrame !== undefined) {
+        return;
+      }
+      this.backToTopFrame = window.requestAnimationFrame(() => {
+        this.backToTopFrame = undefined;
+        update();
+      });
+    };
+
+    document.addEventListener('scroll', this.onBackToTopScroll, { capture: true, passive: true });
+    window.addEventListener('resize', this.onBackToTopScroll, { passive: true });
+    update();
+  }
+
+  public stopBackToTop(): void {
+    if (this.onBackToTopScroll) {
+      document.removeEventListener('scroll', this.onBackToTopScroll, true);
+      window.removeEventListener('resize', this.onBackToTopScroll);
+      this.onBackToTopScroll = undefined;
+    }
+    if (this.backToTopFrame !== undefined) {
+      window.cancelAnimationFrame(this.backToTopFrame);
+      this.backToTopFrame = undefined;
+    }
+    if (this.backToTop) {
+      this.backToTop.remove();
+      this.backToTop = undefined;
+    }
+  }
+
   public dispose(): void {
     this.copyResetTimers.forEach((timer: number) => window.clearTimeout(timer));
     this.copyResetTimers = [];
     this.stopTracking();
     this.stopFilling();
     this.closeZoom();
+    this.stopBackToTop();
   }
 }

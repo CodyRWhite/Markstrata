@@ -36,6 +36,7 @@ import './styles/print.css';
 import { MarkdownProcessor, IMarkdownProcessorOptions } from './utils/MarkdownProcessor';
 import { folderOf } from './utils/imagePaths';
 import { DiagramWidth } from './utils/mermaidConfig';
+import { BackToTop } from './utils/backToTop';
 import { TocWidthMode, TocWidthUnit, ITocWidthRange, TOC_WIDTH_RANGES, tocWidthCss,
   tocWidthForUnit } from './utils/tocWidth';
 import { MermaidRenderer } from './utils/MermaidRenderer';
@@ -89,6 +90,8 @@ export interface IMarkstrataWebPartProps {
   enableMermaid: boolean;
   diagramWidth: DiagramWidth;
   enableImageZoom: boolean;
+  showReadingTime: boolean;
+  backToTop: BackToTop;
   enableMath: boolean;
   enableAnchors: boolean;
   tocPosition: TocPosition;
@@ -253,6 +256,8 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
       enableMermaid: true,
       diagramWidth: 'fit',
       enableImageZoom: true,
+      showReadingTime: false,
+      backToTop: 'right',
       enableMath: true,
       enableAnchors: true,
       tocPosition: 'off',
@@ -296,8 +301,8 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
         settings: settings,
         resolvedMode: mode,
         enableMermaid: this.properties.enableMermaid,
-      diagramWidth: this.properties.diagramWidth,
-      enableImageZoom: this.properties.enableImageZoom,
+        diagramWidth: this.properties.diagramWidth,
+        enableImageZoom: this.properties.enableImageZoom,
         canSave: this.canSaveToSharePoint(),
         saveTargetName: this.properties.fileMetadata ? this.properties.fileMetadata.name : ''
       });
@@ -319,6 +324,8 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
       enableMermaid: this.properties.enableMermaid,
       diagramWidth: this.properties.diagramWidth,
       enableImageZoom: this.properties.enableImageZoom,
+      showReadingTime: this.properties.showReadingTime,
+      backToTop: this.properties.backToTop,
       canReload: this.properties.contentSource !== 'manual',
       canShowVersions: this.properties.enableVersionHistory && this.canSaveToSharePoint(),
       isPageEditing: this.displayMode === DisplayMode.Edit,
@@ -981,6 +988,21 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
                   onText: 'On',
                   offText: 'Off',
                   disabled: this.properties.toolbarVisibility !== 'always'
+                }),
+                PropertyPaneToggle('showReadingTime', {
+                  label: strings.ReadingTimeLabel,
+                  onText: 'On',
+                  offText: 'Off',
+                  disabled: this.properties.toolbarVisibility === 'never'
+                }),
+                PropertyPaneDropdown('backToTop', {
+                  label: strings.BackToTopLabel,
+                  options: [
+                    { key: 'off', text: 'No button' },
+                    { key: 'left', text: 'Bottom left' },
+                    { key: 'right', text: 'Bottom right' }
+                  ],
+                  selectedKey: this.properties.backToTop
                 })
               ]
             },

@@ -58,6 +58,8 @@ const state: any = {
   allowHtml: false,
   showToolbar: true,
   showPrintButton: true,
+  showReadingTime: true,
+  backToTop: 'right',
   showSourceInfo: true,
   pinMeta: false,
   fillHeight: false
@@ -151,6 +153,8 @@ function draw(): void {
     enableMermaid: state.enableMermaid,
     diagramWidth: state.diagramWidth,
     enableImageZoom: state.enableImageZoom,
+    showReadingTime: state.showReadingTime,
+    backToTop: state.backToTop,
     canReload: state.canReload,
     canShowVersions: state.canShowVersions,
     isPageEditing: false,
@@ -178,6 +182,10 @@ function log(message: string): void {
   },
   setToc: (position: any) => {
     state.toc = position;
+    draw();
+  },
+  setBackToTop: (position: any) => {
+    state.backToTop = position;
     draw();
   },
   toggleEdit: () => {
@@ -355,7 +363,13 @@ const PANEL_PAGES: IPanelPage[] = [
             hint: 'The reload, version history, theme and print controls all live in the '
               + 'toolbar, so turning it off takes the print button with it.' },
           { key: 'showPrintButton', label: 'Show print button', type: 'toggle',
-            showIf: (state) => state.showToolbar === true }
+            showIf: (state) => state.showToolbar === true },
+          { key: 'showReadingTime', label: 'Show reading time', type: 'toggle',
+            showIf: (state) => state.showToolbar === true },
+          { key: 'backToTop', label: 'Back to top button', type: 'dropdown', options: [
+            { value: 'off', text: 'No button' },
+            { value: 'left', text: 'Bottom left' },
+            { value: 'right', text: 'Bottom right' }] }
         ]
       },
       {

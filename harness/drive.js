@@ -207,6 +207,94 @@ const demoUrl = 'file://' + path.join(__dirname, '..', 'site', 'demo', 'index.ht
     }
   });
 
+  await step('reading time counts prose, not code or diagram source', async () => {
+    await page.setViewportSize({ width: 1200, height: 900 });
+    await page.evaluate(() => window.scrollTo(0, 0));
+    const shown = await page.locator('.strata-reading-time').textContent();
+    if (!/^\d+ min read$/.test((shown || '').trim())) {
+      throw new Error('toolbar reads "' + shown + '"');
+    }
+    /* The kitchen sink is mostly code and diagrams. Counting those as prose
+       roughly doubles it, so the two numbers have to differ. */
+    const counts = await page.evaluate(() => {
+      const article = document.querySelector('.strata-content');
+      const words = (text) => (text || '').trim().split(/\s+/).filter(Boolean).length;
+      const copy = article.cloneNode(true);
+      [...copy.querySelectorAll('pre, code, .strata-mermaid, .strata-toc, figcaption')]
+        .forEach((node) => node.remove());
+      return { everything: words(article.textContent), prose: words(copy.textContent) };
+    });
+    if (counts.prose >= counts.everything) {
+      throw new Error('nothing was excluded: ' + JSON.stringify(counts));
+    }
+    const claimed = parseInt((shown || '').trim(), 10);
+    if (claimed !== Math.max(1, Math.round(counts.prose / 220))) {
+      throw new Error('says ' + claimed + ' for ' + counts.prose + ' words of prose');
+    }
+  });
+
+  await step('back to top appears once scrolled, and goes back', async () => {
+    /* Reading, not editing, and started from the top: this checks the button
+       following the scroll position, so it must inherit neither a mode nor a
+       position from whatever ran before it. */
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await page.waitForTimeout(400);
+    await page.waitForTimeout(400);
+
+    const button = page.locator('.strata-to-top');
+    if (await button.count() !== 1) throw new Error('no button');
+    if (!(await button.isHidden())) {
+      const why = await page.evaluate(() => {
+        const btn = document.querySelector('.strata-to-top');
+        const root = document.querySelector('.strata-root');
+        return { scrollY: Math.round(window.scrollY),
+                 rootTop: root ? Math.round(root.getBoundingClientRect().top) : 'no root',
+                 hiddenAttr: btn.hidden, buttons: document.querySelectorAll('.strata-to-top').length,
+                 editing: !!document.querySelector('[data-strata-editing]') };
+      });
+      throw new Error('showing: ' + JSON.stringify(why));
+    }
+
+    await page.evaluate(() => window.scrollTo(0, 1400));
+    await page.waitForTimeout(400);
+    if (await button.isHidden()) {
+      const why = await page.evaluate(() => {
+        const root = document.querySelector('.strata-root');
+        return { scrollY: Math.round(window.scrollY),
+                 docHeight: document.documentElement.scrollHeight,
+                 viewport: window.innerHeight,
+                 rootTop: root ? Math.round(root.getBoundingClientRect().top) : 'none' };
+      });
+      throw new Error('still hidden: ' + JSON.stringify(why));
+    }
+
+    const side = await button.getAttribute('data-strata-side');
+    if (side !== 'right') throw new Error('sits on the ' + side);
+
+    await button.click();
+    await page.waitForTimeout(900);
+    const top = await page.evaluate(() =>
+      Math.round(document.querySelector('.strata-root').getBoundingClientRect().top));
+    if (top < -40) throw new Error('document top still ' + top + 'px above the screen');
+  });
+
+  await step('the button can be moved to the left, or turned off', async () => {
+    await page.evaluate(() => window.harness.setBackToTop('left'));
+    await page.evaluate(() => window.scrollTo(0, 1400));
+    await page.waitForTimeout(400);
+    const side = await page.locator('.strata-to-top').getAttribute('data-strata-side');
+    if (side !== 'left') throw new Error('sits on the ' + side);
+
+    await page.evaluate(() => window.harness.setBackToTop('off'));
+    await page.waitForTimeout(300);
+    if (await page.locator('.strata-to-top').count() !== 0) {
+      throw new Error('still there with the setting off');
+    }
+    await page.evaluate(() => window.harness.setBackToTop('right'));
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await page.waitForTimeout(300);
+  });
+
   /*
    * A diagram is the one thing on the page nobody can copy out by selecting it,
    * so the button hands over a raster. This checks the clipboard actually

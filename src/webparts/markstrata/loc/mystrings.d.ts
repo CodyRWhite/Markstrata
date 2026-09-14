@@ -55,6 +55,8 @@ declare interface IMarkstrataWebPartStrings {
   ToolbarVisibilityLabel: string;
   ToolbarHint: string;
   PrintButtonLabel: string;
+  ReadingTimeLabel: string;
+  BackToTopLabel: string;
 
   FileInfoGroupName: string;
   ShowSourceInfoLabel: string;

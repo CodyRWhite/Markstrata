@@ -10,6 +10,17 @@ Entries below 0.0.10.0 were written before the switch and are three-part.
 
 ## Unreleased
 
+- **Back to top button** floats above the page once the reader is a screenful
+  past the top of the document, at the bottom left or bottom right, or off. It
+  goes back to the top of the web part rather than the top of the page, which
+  is what back to top means from inside a document that is one section of
+  somebody's page, and it moves whichever thing is actually scrolling: a
+  SharePoint page scrolls an inner container, not the window.
+- **Show reading time** puts an estimate in the toolbar, counted from the text
+  a reader actually reads. Code blocks and diagram source are left out, since
+  neither is read at the speed of prose; on the kitchen sink that is close to
+  half the words on the page.
+
 - YAML frontmatter is taken off the front of a document instead of rendered.
   Markdown has no frontmatter: the opening `---` is a thematic break and the
   closing one is a setext underline, so a file from Obsidian, Hugo, Jekyll or

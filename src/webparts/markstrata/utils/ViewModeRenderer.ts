@@ -19,6 +19,7 @@ import {
 // it can be exercised in a plain browser page without the SPFx host.
 import type { IFileMetadata } from './SharePointService';
 import { splitFrontMatter, IFrontMatter } from './frontMatter';
+import { BackToTop } from './backToTop';
 
 export type TocPosition = 'left' | 'right' | 'inline' | 'off';
 
@@ -35,6 +36,8 @@ export interface IViewOptions {
   /** What a diagram does when it wants more width than the column gives. */
   diagramWidth?: DiagramWidth;
   enableImageZoom?: boolean;
+  showReadingTime?: boolean;
+  backToTop?: BackToTop;
   canReload: boolean;
   canShowVersions: boolean;
   /** True while the SharePoint page itself is being edited. */
@@ -77,8 +80,10 @@ export class ViewModeRenderer {
     const host: HTMLElement = ThemeManager.mount(container, options.settings, options.resolvedMode);
     host.setAttribute('data-strata-editing', String(options.isPageEditing));
 
+    let toolbar: HTMLElement | undefined;
     if (options.showToolbar) {
-      host.appendChild(this.buildToolbar(options));
+      toolbar = this.buildToolbar(options);
+      host.appendChild(toolbar);
     }
 
     const layout: HTMLElement = document.createElement('div');
@@ -117,6 +122,17 @@ export class ViewModeRenderer {
     this.enhancer.attachCopyButtons(article);
     this.enhancer.secureExternalLinks(article);
     this.enhancer.enhanceImages(article, options.enableImageZoom !== false);
+
+    /* Measured from the rendered document rather than the markdown, so code
+       and diagram source are not counted as prose, which means it can only be
+       filled in once the article exists. */
+    const readingTime: HTMLElement | null = toolbar
+      ? toolbar.querySelector('.strata-reading-time') : null;
+    if (readingTime) {
+      readingTime.textContent = this.enhancer.readingTime(article);
+    }
+
+    this.enhancer.attachBackToTop(host, options.backToTop || 'off');
 
     if (options.enableMermaid) {
       void this.mermaid.render(article, options.settings.themeFamily, options.resolvedMode,
@@ -182,6 +198,15 @@ export class ViewModeRenderer {
 
     if (options.showThemeSwitcher) {
       toolbar.appendChild(this.buildThemeSwitcher(options));
+    }
+
+    /* Beside the theme control rather than with the actions: how long the
+       document is describes the document, it is not something to do to it.
+       Filled in after the article renders, since that is what it counts. */
+    if (options.showReadingTime) {
+      const time: HTMLElement = document.createElement('span');
+      time.className = 'strata-reading-time';
+      toolbar.appendChild(time);
     }
 
     const spacer: HTMLElement = document.createElement('div');
