@@ -256,6 +256,8 @@ export class MarkdownProcessor {
       const token: IToken = tokens[idx];
       const src: string | null = token.attrGet ? token.attrGet('src') : null;
 
+      this.sizeImage(token);
+
       if (src && base) {
         const resolved: string | undefined = resolveAgainst(base, src);
         if (resolved !== undefined && token.attrSet) {
@@ -274,6 +276,63 @@ export class MarkdownProcessor {
         ? previous(tokens, idx, options, env, self)
         : self.renderToken(tokens, idx, options);
     };
+  }
+
+  /*
+   * Obsidian writes an image's width after a pipe in the alt text, either
+   * `![alt|300]` or `![alt|300x200]`, and enough documents come from Obsidian
+   * that the syntax arrives whether or not it is supported. Unsupported, it
+   * did not merely fail to resize: the digits stayed in the alt text, so a
+   * screen reader read "diagram 300" aloud.
+   *
+   * The width is set as an attribute rather than as a style, because an
+   * attribute gives the image an intrinsic size. Every image here is lazily
+   * loaded, and a lazily loaded image with no intrinsic size reserves no room:
+   * the text below it jumps as each one arrives, which moves the paragraph
+   * being read and unsettles the contents tracking.
+   *
+   * Height is left off unless the document asks for one, so the stylesheet's
+   * `height: auto` keeps the aspect ratio. Asking for both is taken at face
+   * value: a document that gives two numbers has said what it wants.
+   */
+  private sizeImage(token: IToken): void {
+    if (!token.attrGet || !token.attrSet) {
+      return;
+    }
+
+    const alt: string = this.altText(token);
+    const match: RegExpMatchArray | null = alt.match(/^([\s\S]*?)\s*\|\s*(\d+)(?:\s*[x\u00d7]\s*(\d+))?\s*$/);
+    if (!match) {
+      return;
+    }
+
+    this.setAltText(token, match[1]);
+    token.attrSet('width', match[2]);
+    if (match[3]) {
+      token.attrSet('height', match[3]);
+    }
+  }
+
+  /*
+   * An image's alt text is the rendered content of its child tokens, not an
+   * attribute, so it is read and written through them.
+   */
+  private altText(token: IToken): string {
+    const children: IToken[] | undefined = token.children as IToken[] | undefined;
+    if (!children || !children.length) {
+      return (token.content as string) || '';
+    }
+    return children.map((child: IToken) => (child.content as string) || '').join('');
+  }
+
+  private setAltText(token: IToken, text: string): void {
+    const children: IToken[] | undefined = token.children as IToken[] | undefined;
+    token.content = text;
+    if (children && children.length) {
+      children.forEach((child: IToken, index: number) => {
+        child.content = index === 0 ? text : '';
+      });
+    }
   }
 
   /** Wide tables scroll inside their own box instead of stretching the page. */

@@ -60,6 +60,7 @@ const STRINGS = {
   MermaidLabel: 'Mermaid diagrams',
   DiagramWidthLabel: 'Wide diagrams',
   DiagramWidthHint: 'Gantt charts lay out from their time axis rather than wrapping, so they often want more width than a column gives. Fitting compresses the axis and keeps the text readable.',
+  ImageZoomLabel: 'Click an image to see it full size',
   MathLabel: 'Math (KaTeX)',
   AllowHtmlLabel: 'Allow raw HTML in markdown',
   AllowHtmlHint: 'Leave off unless you trust everyone who can edit the source. With it on, HTML in the markdown is rendered as-is.',

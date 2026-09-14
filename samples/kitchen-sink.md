@@ -76,6 +76,20 @@ Reference style works too, which keeps a long source out of the prose:
 
 [mark-ref]: brand/mark.svg "Declared once at the foot of the document"
 
+A width can be asked for after a pipe, the way Obsidian writes it, as
+`![alt|240]` or `![alt|240x120]`. The number is set as the image's width rather
+than as a style, so the browser knows the shape of the picture before it has
+loaded one and the text below does not jump as it arrives. Height is left to
+the stylesheet, so the aspect ratio holds:
+
+![The Markstrata mark, asked for at 240 wide|240](brand/mark.svg)
+
+An image that is a paragraph on its own and carries a title becomes a figure,
+with the title as its caption rather than as a tooltip nobody on a touch screen
+can see:
+
+![A wide view of the mark](brand/mark.svg "The mark, with its title shown as a caption")
+
 ## Code
 
 ```typescript title="ThemeManager.ts"

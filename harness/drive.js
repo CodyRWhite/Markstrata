@@ -125,6 +125,18 @@ const demoUrl = 'file://' + path.join(__dirname, '..', 'site', 'demo', 'index.ht
      image survives rendering and that the browser could actually fetch it. */
   await step('every image decodes: relative, data URI and reference style', async () => {
     await page.waitForSelector('.strata-content img', { timeout: 5000 });
+    /* Every image is loading="lazy", so one below the fold has not decoded yet
+       and never will while it is off screen. Bring each into view first, or
+       this measures where the images are rather than whether they load. */
+    await page.evaluate(async () => {
+      const images = [...document.querySelectorAll('.strata-content img')];
+      for (const img of images) {
+        img.scrollIntoView();
+        await new Promise((done) => setTimeout(done, 60));
+      }
+      window.scrollTo(0, 0);
+    });
+    await page.waitForTimeout(400);
     const imgs = await page.evaluate(() => [...document.querySelectorAll('.strata-content img')]
       .map((img) => ({ src: img.getAttribute('src'), loading: img.getAttribute('loading'),
                        width: img.naturalWidth })));
@@ -136,6 +148,62 @@ const demoUrl = 'file://' + path.join(__dirname, '..', 'site', 'demo', 'index.ht
     /* The data URI must survive untouched; resolving it would corrupt it. */
     if (!imgs.some((i) => i.src.indexOf('data:image/png;base64,') === 0)) {
       throw new Error('the data URI was rewritten');
+    }
+  });
+
+  /*
+   * Captions and the full size view are built from the rendered document
+   * rather than from the markdown, because both turn on where an image sits:
+   * only an image that is a paragraph of its own can become a figure, and an
+   * image inside a link already does something when clicked. Nothing outside a
+   * browser can check either.
+   */
+  await step('a titled image on its own becomes a figure with a caption', async () => {
+    const captions = await page.locator('.strata-figure figcaption').allTextContents();
+    if (!captions.length) throw new Error('no figure captions at all');
+    if (!captions.some((text) => /shown as a caption/.test(text))) {
+      throw new Error('captions read: ' + JSON.stringify(captions));
+    }
+    const stillATooltip = await page.locator('.strata-figure img[title]').count();
+    if (stillATooltip !== 0) throw new Error('the title is still a tooltip as well');
+  });
+
+  await step('an inline image is left in its sentence', async () => {
+    /* The data URI in the kitchen sink sits mid-sentence and carries a title;
+       lifting it into a figure would break the sentence around it. */
+    const inline = await page.evaluate(() => {
+      const images = Array.prototype.slice.call(document.querySelectorAll('.strata-content img'));
+      return images.some((img) => img.closest('p') && (img.closest('p').textContent || '').trim().length > 0);
+    });
+    if (!inline) throw new Error('no inline image left to check');
+  });
+
+  await step('a sized image keeps its aspect ratio', async () => {
+    const box = await page.evaluate(() => {
+      const img = document.querySelector('.strata-content img[width="240"]');
+      if (!img) return null;
+      const rect = img.getBoundingClientRect();
+      return { w: Math.round(rect.width), h: Math.round(rect.height),
+               natural: img.naturalWidth / img.naturalHeight };
+    });
+    if (!box) throw new Error('the sized image is missing');
+    if (box.w !== 240) throw new Error('rendered ' + box.w + 'px wide, asked for 240');
+    const ratio = box.w / box.h;
+    if (Math.abs(ratio - box.natural) > 0.02) {
+      throw new Error('drawn at ' + ratio.toFixed(3) + ', the picture is ' + box.natural.toFixed(3));
+    }
+  });
+
+  await step('clicking an image opens it full size, and Escape closes it', async () => {
+    await page.locator('.strata-content img.strata-zoomable').first().click();
+    await page.waitForTimeout(250);
+    if (await page.locator('.strata-zoom img').count() === 0) {
+      throw new Error('no full size view opened');
+    }
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(250);
+    if (await page.locator('.strata-zoom').count() !== 0) {
+      throw new Error('Escape did not close it');
     }
   });
 

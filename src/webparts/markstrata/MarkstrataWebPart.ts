@@ -88,6 +88,7 @@ export interface IMarkstrataWebPartProps {
   // Features
   enableMermaid: boolean;
   diagramWidth: DiagramWidth;
+  enableImageZoom: boolean;
   enableMath: boolean;
   enableAnchors: boolean;
   tocPosition: TocPosition;
@@ -251,6 +252,7 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
       wrapCodeLines: false,
       enableMermaid: true,
       diagramWidth: 'fit',
+      enableImageZoom: true,
       enableMath: true,
       enableAnchors: true,
       tocPosition: 'off',
@@ -295,6 +297,7 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
         resolvedMode: mode,
         enableMermaid: this.properties.enableMermaid,
       diagramWidth: this.properties.diagramWidth,
+      enableImageZoom: this.properties.enableImageZoom,
         canSave: this.canSaveToSharePoint(),
         saveTargetName: this.properties.fileMetadata ? this.properties.fileMetadata.name : ''
       });
@@ -315,6 +318,7 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
       showSourceInfo: this.properties.showSourceInfo,
       enableMermaid: this.properties.enableMermaid,
       diagramWidth: this.properties.diagramWidth,
+      enableImageZoom: this.properties.enableImageZoom,
       canReload: this.properties.contentSource !== 'manual',
       canShowVersions: this.properties.enableVersionHistory && this.canSaveToSharePoint(),
       isPageEditing: this.displayMode === DisplayMode.Edit,
@@ -937,6 +941,11 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
                   disabled: !this.properties.enableMermaid
                 }),
                 PropertyPaneLabel('diagramWidthHint', { text: strings.DiagramWidthHint }),
+                PropertyPaneToggle('enableImageZoom', {
+                  label: strings.ImageZoomLabel,
+                  onText: 'On',
+                  offText: 'Off'
+                }),
                 PropertyPaneToggle('enableMath', {
                   label: strings.MathLabel,
                   onText: 'On',

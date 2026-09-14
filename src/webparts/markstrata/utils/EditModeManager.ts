@@ -21,6 +21,7 @@ export interface IEditOptions {
   enableMermaid: boolean;
   /** What a diagram does when it wants more width than the column gives. */
   diagramWidth?: DiagramWidth;
+  enableImageZoom?: boolean;
   /** True when the content came from a file we are allowed to write back to. */
   canSave: boolean;
   saveTargetName: string;
@@ -211,6 +212,8 @@ export class EditModeManager {
     const preview: HTMLElement = this.preview;
     preview.innerHTML = this.processor.render(markdown);
     this.enhancer.attachCopyButtons(preview);
+    this.enhancer.secureExternalLinks(preview);
+    this.enhancer.enhanceImages(preview, options.enableImageZoom !== false);
     if (options.enableMermaid) {
       void this.mermaid.render(preview, options.settings.themeFamily, options.resolvedMode,
         options.diagramWidth).then(() => this.enhancer.attachDiagramCopyButtons(preview));

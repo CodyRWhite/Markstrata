@@ -26,6 +26,11 @@ const html = new MarkdownProcessor({
    against the source where it is a fence flag the renderer consumes. */
 const RENDERED = {
   'a table': /<table/,
+  'an image sized after a pipe': /<img[^>]+width="240"/,
+  /* The pipe carries the size; it must not survive into what a screen reader
+     reads out. */
+  'an alt text with the size taken out of it': /alt="The Markstrata mark, asked for at 240 wide"/,
+  'an image titled for a caption': /<img[^>]+title="The mark, with its title shown as a caption"/,
   'a spanning cell, across': /colspan="\d+"/,
   'a spanning cell, down': /rowspan="\d+"/,
   'aligned columns': /text-align/,

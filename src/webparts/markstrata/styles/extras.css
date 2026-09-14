@@ -127,3 +127,93 @@
   color: rgb(var(--strata-color-red));
   font-size: 0.875em;
 }
+
+/*
+ * An image that is a paragraph of its own, with its markdown title shown as a
+ * caption rather than left as a tooltip a touch screen never sees and a
+ * printed page loses.
+ */
+.strata-figure {
+  margin: var(--strata-block-gap) 0;
+  padding: 0;
+  text-align: center;
+}
+
+.strata-figure figcaption {
+  margin-top: 8px;
+  color: var(--strata-text-faint);
+  font-size: 0.875em;
+  line-height: 1.5;
+}
+
+/*
+ * Screenshots are most of what documentation carries, and a SharePoint column
+ * is narrow, so an image is usually shown well below its own size. Clicking it
+ * opens it at full size.
+ */
+.strata-zoomable {
+  cursor: zoom-in;
+}
+
+.strata-zoomable:focus-visible {
+  outline: 2px solid var(--strata-link);
+  outline-offset: 2px;
+}
+
+/*
+ * Fixed rather than absolute: the overlay covers the window, not the web part,
+ * which is a section of a page that may itself be scrolled.
+ */
+.strata-zoom {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px;
+  background-color: rgba(0, 0, 0, 0.82);
+  cursor: zoom-out;
+}
+
+.strata-zoom img {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  /* The picture is the one thing in here that is not a dismiss target. */
+  cursor: default;
+  border-radius: var(--strata-radius-sm);
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.5);
+}
+
+.strata-zoom-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 50%;
+  background-color: rgba(0, 0, 0, 0.5);
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.strata-zoom-close:hover {
+  background-color: rgba(0, 0, 0, 0.75);
+}
+
+.strata-zoom-close:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.9);
+  outline-offset: 2px;
+}
+
+/* Printing wants the document, not an overlay that happened to be open. */
+@media print {
+  .strata-zoom { display: none; }
+}

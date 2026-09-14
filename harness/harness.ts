@@ -53,6 +53,7 @@ const state: any = {
   // Features
   enableMermaid: true,
   diagramWidth: 'fit',
+  enableImageZoom: true,
   enableMath: true,
   allowHtml: false,
   showToolbar: true,
@@ -131,6 +132,7 @@ function draw(): void {
       resolvedMode: mode,
       enableMermaid: true,
       diagramWidth: state.diagramWidth,
+      enableImageZoom: state.enableImageZoom,
       canSave: true,
       saveTargetName: 'handbook.md'
     });
@@ -148,6 +150,7 @@ function draw(): void {
     showSourceInfo: state.showSourceInfo,
     enableMermaid: state.enableMermaid,
     diagramWidth: state.diagramWidth,
+    enableImageZoom: state.enableImageZoom,
     canReload: state.canReload,
     canShowVersions: state.canShowVersions,
     isPageEditing: false,
@@ -337,6 +340,8 @@ const PANEL_PAGES: IPanelPage[] = [
             hint: 'Gantt charts lay out from their time axis rather than wrapping, so '
               + 'they often want more width than a column gives. Fitting compresses the '
               + 'axis and keeps the text readable.' },
+          { key: 'enableImageZoom', label: 'Click an image to see it full size',
+            type: 'toggle' },
           { key: 'enableMath', label: 'Math (KaTeX)', type: 'toggle' },
           { key: 'allowHtml', label: 'Allow raw HTML in markdown', type: 'toggle',
             hint: 'Leave off unless you trust everyone who can edit the source. With it '

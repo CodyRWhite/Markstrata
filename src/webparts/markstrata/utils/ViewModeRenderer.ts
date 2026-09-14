@@ -34,6 +34,7 @@ export interface IViewOptions {
   enableMermaid: boolean;
   /** What a diagram does when it wants more width than the column gives. */
   diagramWidth?: DiagramWidth;
+  enableImageZoom?: boolean;
   canReload: boolean;
   canShowVersions: boolean;
   /** True while the SharePoint page itself is being edited. */
@@ -115,6 +116,7 @@ export class ViewModeRenderer {
 
     this.enhancer.attachCopyButtons(article);
     this.enhancer.secureExternalLinks(article);
+    this.enhancer.enhanceImages(article, options.enableImageZoom !== false);
 
     if (options.enableMermaid) {
       void this.mermaid.render(article, options.settings.themeFamily, options.resolvedMode,

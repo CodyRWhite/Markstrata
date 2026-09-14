@@ -39,6 +39,9 @@ export class ContentEnhancer {
   private copyResetTimers: number[] = [];
   private onScroll: (() => void) | undefined;
   private scrollFrame: number | undefined;
+  private zoomOverlay: HTMLElement | undefined;
+  private zoomOpener: HTMLImageElement | undefined;
+  private zoomKeydown: ((event: KeyboardEvent) => void) | undefined;
   private onResize: (() => void) | undefined;
   private resizeFrame: number | undefined;
 
@@ -533,10 +536,158 @@ export class ContentEnhancer {
     }
   }
 
+  /**
+   * Gives images their caption and, optionally, a full size view.
+   *
+   * Both are done here rather than in the markdown pipeline because both turn
+   * on where an image sits: a caption only makes sense for an image that is a
+   * block of its own, and an image inside a link has somewhere to go already.
+   * Those are questions about the rendered document, not about the tokens.
+   */
+  public enhanceImages(container: HTMLElement, allowZoom: boolean): void {
+    this.closeZoom();
+
+    const images: HTMLImageElement[] =
+      Array.prototype.slice.call(container.querySelectorAll('img'));
+
+    images.forEach((image: HTMLImageElement) => {
+      this.captionImage(image);
+      if (allowZoom) {
+        this.makeZoomable(image);
+      }
+    });
+  }
+
+  /*
+   * An image's title is markdown's caption, and until now it was only a
+   * tooltip: invisible on a touch screen, and gone from a printed page.
+   *
+   * Only an image that is a paragraph on its own becomes a figure. The other
+   * kind sits mid-sentence, where lifting it out into a block would break the
+   * sentence around it.
+   */
+  private captionImage(image: HTMLImageElement): void {
+    const title: string = image.getAttribute('title') || '';
+    const paragraph: HTMLElement | null = image.parentElement;
+    if (!title || !paragraph || paragraph.tagName !== 'P' || !paragraph.parentNode) {
+      return;
+    }
+    /* Text beside it means the image is part of a sentence. */
+    if ((paragraph.textContent || '').trim().length > 0) {
+      return;
+    }
+    if (paragraph.querySelectorAll('img').length !== 1) {
+      return;
+    }
+
+    const figure: HTMLElement = document.createElement('figure');
+    figure.className = 'strata-figure';
+    /* Moved wholesale, so an image wrapped in a link keeps its link. */
+    while (paragraph.firstChild) {
+      figure.appendChild(paragraph.firstChild);
+    }
+
+    const caption: HTMLElement = document.createElement('figcaption');
+    caption.textContent = title;
+    figure.appendChild(caption);
+
+    /* The caption says it now, so the tooltip would only repeat it. */
+    image.removeAttribute('title');
+    paragraph.parentNode.insertBefore(figure, paragraph);
+    paragraph.remove();
+  }
+
+  private makeZoomable(image: HTMLImageElement): void {
+    /* A linked image already does something when clicked. */
+    if (image.closest('a')) {
+      return;
+    }
+
+    image.classList.add('strata-zoomable');
+    image.tabIndex = 0;
+    image.setAttribute('role', 'button');
+    image.setAttribute('aria-label',
+      `${image.getAttribute('alt') || 'Image'}: select to see it full size`);
+
+    image.addEventListener('click', () => this.openZoom(image));
+    image.addEventListener('keydown', (event: KeyboardEvent) => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        this.openZoom(image);
+      }
+    });
+  }
+
+  /*
+   * The overlay is built inside the themed root rather than on the body, so it
+   * is painted from the same --strata-* values as the document behind it and
+   * follows a reader's theme choice without being told about it.
+   */
+  private openZoom(image: HTMLImageElement): void {
+    this.closeZoom();
+
+    const root: HTMLElement = (image.closest('.strata-root') as HTMLElement) || document.body;
+
+    const overlay: HTMLElement = document.createElement('div');
+    overlay.className = 'strata-zoom';
+    overlay.setAttribute('role', 'dialog');
+    overlay.setAttribute('aria-modal', 'true');
+    overlay.setAttribute('aria-label', image.getAttribute('alt') || 'Image');
+
+    const full: HTMLImageElement = document.createElement('img');
+    full.src = image.currentSrc || image.src;
+    full.alt = image.getAttribute('alt') || '';
+    overlay.appendChild(full);
+
+    const close: HTMLButtonElement = document.createElement('button');
+    close.type = 'button';
+    close.className = 'strata-zoom-close';
+    close.setAttribute('aria-label', 'Close');
+    close.textContent = '\u2715';
+    overlay.appendChild(close);
+
+    /* Anywhere outside the picture closes it, which is what people try first. */
+    overlay.addEventListener('click', (event: MouseEvent) => {
+      if (event.target !== full) {
+        this.closeZoom();
+      }
+    });
+
+    this.zoomKeydown = (event: KeyboardEvent): void => {
+      if (event.key === 'Escape') {
+        this.closeZoom();
+      }
+    };
+    document.addEventListener('keydown', this.zoomKeydown);
+
+    this.zoomOpener = image;
+    this.zoomOverlay = overlay;
+    root.appendChild(overlay);
+    close.focus();
+  }
+
+  private closeZoom(): void {
+    if (this.zoomKeydown) {
+      document.removeEventListener('keydown', this.zoomKeydown);
+      this.zoomKeydown = undefined;
+    }
+    if (this.zoomOverlay) {
+      this.zoomOverlay.remove();
+      this.zoomOverlay = undefined;
+    }
+    /* Back to the image that was opened, so the keyboard does not lose its
+       place in the document. */
+    if (this.zoomOpener) {
+      this.zoomOpener.focus();
+      this.zoomOpener = undefined;
+    }
+  }
+
   public dispose(): void {
     this.copyResetTimers.forEach((timer: number) => window.clearTimeout(timer));
     this.copyResetTimers = [];
     this.stopTracking();
     this.stopFilling();
+    this.closeZoom();
   }
 }

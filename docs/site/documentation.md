@@ -182,6 +182,41 @@ its own, so its relative paths resolve against the site root.
 Images are given `loading="lazy"` and `decoding="async"`, so a long document
 fetches them as the reader reaches them rather than all at once.
 
+### Sizing an image
+
+A width goes after a pipe, the way Obsidian writes it:
+
+| Written | Result |
+|---|---|
+| `![Diagram\|300](flow.png)` | 300 pixels wide |
+| `![Diagram\|300x200](flow.png)` | 300 wide, and told the picture is 3:2 |
+
+The number becomes the image's `width` attribute rather than a style, which
+gives it an intrinsic size. That matters because every image here loads lazily,
+and a lazily loaded image with no intrinsic size reserves no room: the text
+below it jumps as each picture arrives. **The aspect ratio is always kept** and
+the height follows the width, so a second number describes the picture rather
+than stretching it. An image still shrinks to fit a narrow column.
+
+### Captions
+
+An image that is a paragraph of its own and carries a title becomes a figure,
+with the title as its caption:
+
+```markdown
+![A deployment flow](flow.png "How a release reaches the tenant")
+```
+
+An image inside a sentence keeps its title as a tooltip instead, since lifting
+it out into a block would break the sentence around it.
+
+### Seeing an image full size
+
+**Click an image to see it full size** opens it over the page, which is worth
+having because documentation is mostly screenshots and a column is narrower
+than the screen. Escape closes it, or a click anywhere outside the picture. An
+image that is a link is left alone: it already does something when clicked.
+
 > [!NOTE]
 > Readers see only the images they have permission to open. A relative path
 > resolves to a real SharePoint URL, and SharePoint still applies the
