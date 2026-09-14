@@ -7,6 +7,21 @@ the same number with a fourth part appended (0.2.0 -> 0.2.0.0), stamped by
 
 ## Unreleased
 
+- Room at the sides of the web part, matching the room already at the top and
+  bottom. The toolbar's last button and a left contents sidebar sat hard against
+  the edge of the panel, which reads as clipped rather than as a margin. It
+  follows the spacing setting like the block padding does, and the content
+  column still centres in what is left.
+- The property pane says what the toolbar setting takes with it. The print
+  button lives in the toolbar, so "Only while editing the page" hides it from
+  readers while the toggle still reads On. The toggle is now disabled unless the
+  toolbar is set to Always, and a line under the setting explains what else goes
+  with it.
+- The file name and last modified footer is disabled in the pane unless the
+  content comes from a document library, which is the only source that has a
+  file name and a modified date to show. It read as On and did nothing for
+  content typed into the web part or fetched from a URL.
+
 - The site follows the reader's system colour scheme. Every page starts in dark
   mode on a machine set to dark, the surface around the web part moves with it
   rather than leaving a dark document on a white page, and a mode chosen on the

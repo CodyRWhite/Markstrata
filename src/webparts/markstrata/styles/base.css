@@ -48,6 +48,13 @@
      gets less of it than relaxed. */
   --strata-root-padding-block: calc(26px * var(--strata-density-scale));
 
+  /* And at the sides, for the same reason. Without it the toolbar's last
+     button and a left contents sidebar sit hard against the edge of the
+     panel, which reads as clipped rather than as a margin. The content column
+     centres inside whatever is left, so this narrows the column rather than
+     pushing it off-centre. */
+  --strata-root-padding-inline: calc(22px * var(--strata-density-scale));
+
   /* Code defaults that themes rarely need to change. */
   --strata-code-font-size: 0.875em;
   --strata-code-line-height: 1.55;
@@ -81,6 +88,7 @@
   text-rendering: optimizeLegibility;
   overflow-wrap: break-word;
   padding-block: var(--strata-root-padding-block);
+  padding-inline: var(--strata-root-padding-inline);
 }
 
 .strata-root *,

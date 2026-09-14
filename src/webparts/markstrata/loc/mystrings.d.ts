@@ -23,8 +23,10 @@ declare interface IMarkstrataWebPartStrings {
   DensityLabel: string;
   TextSizeLabel: string;
   ToolbarVisibilityLabel: string;
+  ToolbarHint: string;
   PrintButtonLabel: string;
   ShowSourceInfoLabel: string;
+  SourceInfoHint: string;
   CodeGroupName: string;
   SyntaxHighlightingLabel: string;
   CodeHeaderLabel: string;

@@ -726,17 +726,26 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
                   ],
                   selectedKey: this.properties.toolbarVisibility
                 }),
+                // The toolbar carries the print button, so a reader who never
+                // sees the toolbar never sees printing either. Saying so here
+                // costs a line and saves someone turning the toggle on and
+                // wondering why nothing changed.
+                PropertyPaneLabel('toolbarHint', { text: strings.ToolbarHint }),
                 PropertyPaneToggle('showPrintButton', {
                   label: strings.PrintButtonLabel,
                   onText: 'On',
                   offText: 'Off',
-                  disabled: this.properties.toolbarVisibility === 'never'
+                  disabled: this.properties.toolbarVisibility !== 'always'
                 }),
                 PropertyPaneToggle('showSourceInfo', {
                   label: strings.ShowSourceInfoLabel,
                   onText: 'On',
-                  offText: 'Off'
-                })
+                  offText: 'Off',
+                  // The footer is built from the file's metadata, and only a
+                  // library file has any.
+                  disabled: this.properties.contentSource !== 'library'
+                }),
+                PropertyPaneLabel('sourceInfoHint', { text: strings.SourceInfoHint })
               ]
             },
             {
