@@ -58,7 +58,8 @@ const state: any = {
   showToolbar: true,
   showPrintButton: true,
   showSourceInfo: true,
-  pinMeta: false
+  pinMeta: false,
+  fillHeight: false
 };
 
 /* The options the processor is built from, as opposed to the ones the
@@ -114,7 +115,8 @@ function settings(): any {
     codeSize: state.codeSize,
     tocWidth: state.tocWidthMode === 'auto'
       ? 'auto' : `${state.tocWidthValue}${state.tocWidthUnit}`,
-    pinMeta: state.pinMeta
+    pinMeta: state.pinMeta,
+    fillHeight: state.fillHeight
   };
 }
 
@@ -261,7 +263,13 @@ const PANEL_PAGES: IPanelPage[] = [
             { value: 'small', text: 'Small' },
             { value: 'normal', text: 'Normal' },
             { value: 'large', text: 'Large' },
-            { value: 'xlarge', text: 'Extra large' }] }
+            { value: 'xlarge', text: 'Extra large' }] },
+          { key: 'fillHeight', label: 'Fill the available height', type: 'toggle',
+            hint: 'Gives the web part at least the room below it, so a short document '
+              + 'does not stop halfway down the page and leave the canvas showing under '
+              + 'it. The file name and modified date, if they are shown, sit at the '
+              + 'bottom of that. Measured from where the web part starts, so a part '
+              + 'placed below other content on a long page is left alone.' }
         ]
       },
       {

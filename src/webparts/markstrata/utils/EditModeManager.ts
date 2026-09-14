@@ -66,6 +66,8 @@ export class EditModeManager {
   public render(container: HTMLElement, markdown: string, options: IEditOptions): void {
     const host: HTMLElement = ThemeManager.mount(container, options.settings, options.resolvedMode);
     host.setAttribute('data-strata-editing', 'true');
+    // The editor sizes itself, and the root the fitter was measuring is gone.
+    this.enhancer.stopFilling();
 
     const editor: HTMLElement = document.createElement('div');
     editor.className = 'strata-editor';

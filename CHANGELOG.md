@@ -8,6 +8,21 @@ is normally zero. `scripts/set-version.js` stamps it when a release is cut.
 
 Entries below 0.0.10.0 were written before the switch and are three-part.
 
+## Unreleased
+
+- The web part can take the height it is given rather than only the height of
+  its content. **Fill the available height**, on the Appearance page under
+  Reading, gives it at least the room below where it starts, so a short
+  document no longer stops halfway down and leaves the page canvas showing
+  under it. With the file name and modified date shown they sit at the bottom
+  of that, which is usually the reason for turning it on. The room is measured
+  on the page rather than written as `100vh`: a SharePoint page scrolls an
+  inner container under a header and a command bar, so a viewport unit
+  overshoots by however tall that chrome is, the same reason the contents
+  sidebar stopped guessing at its own cap. A web part placed under other
+  content on a long page has no room below it and is left as it is, and the
+  default is off, so nothing already on a page changes.
+
 ## 0.0.12.0
 
 - The property pane has four pages instead of three, grouped by what you came

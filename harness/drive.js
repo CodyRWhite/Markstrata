@@ -388,6 +388,78 @@ const demoUrl = 'file://' + path.join(__dirname, '..', 'site', 'demo', 'index.ht
 
   await page.screenshot({ path: path.join(OUT, 'harness-narrow.png'), fullPage: false });
 
+  /*
+   * A short document leaves the page canvas showing under the web part, which
+   * is the whole point of "Fill the available height". The height it takes is
+   * measured in the page rather than written as 100vh, because a SharePoint
+   * page scrolls an inner container rather than the window, so only a running
+   * browser can show whether the measurement lands.
+   */
+  await step('filling the height reaches the bottom, and carries the footer', async () => {
+    // Back to Appearance, where the setting lives; the walk above ended on Features.
+    await page.locator('.pp-step', { hasText: 'Back' }).click();
+    await page.waitForTimeout(120);
+    await page.locator('.pp-step', { hasText: 'Back' }).click();
+    await page.waitForTimeout(120);
+    const groups = (await page.locator('.pp-group').allTextContents()).join(', ');
+    if (groups !== 'Theme, Reading, Code blocks') {
+      throw new Error('expected the Appearance page, found "' + groups + '"');
+    }
+
+    await page.evaluate(() => {
+      window.scrollTo(0, 0);
+      window.harness.state.markdown = '# Access VM Remotely\n\n- Dial your number\n- Press star\n';
+    });
+    await page.locator('#pp-fillHeight').click();
+    await page.waitForTimeout(500);
+
+    const box = await page.evaluate(() => {
+      const root = document.querySelector('.strata-root');
+      const meta = document.querySelector('.strata-meta');
+      return {
+        fill: root.getAttribute('data-strata-fill'),
+        minHeight: root.style.minHeight,
+        bottom: root.getBoundingClientRect().bottom,
+        metaBottom: meta ? meta.getBoundingClientRect().bottom : null,
+        viewport: window.innerHeight
+      };
+    });
+
+    if (box.fill !== 'window') throw new Error('the root reports fill=' + box.fill);
+    if (!/^[0-9]+px$/.test(box.minHeight)) {
+      throw new Error('nothing was measured; min-height is "' + box.minHeight + '"');
+    }
+    if (box.viewport - box.bottom > 4) {
+      throw new Error('the web part stops ' + Math.round(box.viewport - box.bottom)
+        + 'px above the bottom of the window');
+    }
+    if (box.metaBottom === null) throw new Error('the file footer is not shown');
+    if (box.bottom - box.metaBottom > 40) {
+      throw new Error('the file footer sits ' + Math.round(box.bottom - box.metaBottom)
+        + 'px above the bottom of the web part');
+    }
+  });
+
+  await step('turning it off gives the height straight back', async () => {
+    await page.locator('#pp-fillHeight').click();
+    await page.waitForTimeout(500);
+    const left = await page.evaluate(() => {
+      const root = document.querySelector('.strata-root');
+      return {
+        fill: root.getAttribute('data-strata-fill'),
+        minHeight: root.style.minHeight,
+        height: root.getBoundingClientRect().height
+      };
+    });
+    if (left.fill !== 'content') throw new Error('the root reports fill=' + left.fill);
+    if (left.minHeight) {
+      throw new Error('a measured height was left on the element: ' + left.minHeight);
+    }
+    if (left.height > 500) {
+      throw new Error('the web part is still ' + Math.round(left.height) + 'px tall');
+    }
+  });
+
   console.log('\n' + (problems.length ? 'Problems:\n  ' + problems.join('\n  ') : 'No failures and no page errors.'));
   await browser.close();
   process.exit(problems.length ? 1 : 0);

@@ -115,6 +115,13 @@ export class ViewModeRenderer {
       void this.mermaid.render(article, options.settings.themeFamily, options.resolvedMode,
         options.diagramWidth).then(() => this.enhancer.attachDiagramCopyButtons(article));
     }
+
+    // Last, so the height is measured against the finished layout.
+    if (options.settings.fillHeight) {
+      this.enhancer.fillHeight(host);
+    } else {
+      this.enhancer.stopFilling();
+    }
   }
 
   /**

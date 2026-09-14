@@ -36,6 +36,7 @@
         "textSize": "normal",
         "codeSize": "normal",
         "showThemeSwitcher": false,
+        "fillHeight": false,
         "enableSyntaxHighlighting": true,
         "showCodeHeader": true,
         "showLineNumbers": true,

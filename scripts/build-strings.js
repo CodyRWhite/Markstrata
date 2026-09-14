@@ -36,6 +36,8 @@ const STRINGS = {
   ContentWidthLabel: 'Content width',
   DensityLabel: 'Spacing',
   TextSizeLabel: 'Text size',
+  FillHeightLabel: 'Fill the available height',
+  FillHeightHint: 'Gives the web part at least the room below it, so a short document does not stop halfway down the page and leave the canvas showing under it. The file name and modified date, if they are shown, sit at the bottom of that. Measured from where the web part starts, so a part placed below other content on a long page is left alone.',
   CodeGroupName: 'Code blocks',
   SyntaxHighlightingLabel: 'Syntax highlighting',
   CodeHeaderLabel: 'Show language header',

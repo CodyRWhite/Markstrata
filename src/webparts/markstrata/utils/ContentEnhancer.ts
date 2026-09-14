@@ -19,6 +19,10 @@ const SIDEBAR_BOTTOM_GAP: number = 24;
    makes the scrollbar the whole control. */
 const SIDEBAR_MIN_HEIGHT: number = 180;
 
+/* Below this there is not enough room below the web part to be worth filling,
+   and forcing it would only push the document off the bottom of the screen. */
+const FILL_MIN_HEIGHT: number = 200;
+
 const CHECK_ICON: string =
   '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m20 6-11 11-5-5"/></svg>';
 
@@ -35,6 +39,8 @@ export class ContentEnhancer {
   private copyResetTimers: number[] = [];
   private onScroll: (() => void) | undefined;
   private scrollFrame: number | undefined;
+  private onResize: (() => void) | undefined;
+  private resizeFrame: number | undefined;
 
   /** Wires every copy button inside `container` exactly once. */
   public attachCopyButtons(container: HTMLElement): void {
@@ -214,16 +220,103 @@ export class ContentEnhancer {
     let parent: HTMLElement | null = element.parentElement;
 
     while (parent && parent !== document.body) {
-      const style: CSSStyleDeclaration = window.getComputedStyle(parent);
-      const scrolls: boolean = /(auto|scroll|overlay)/.test(style.overflowY)
-        && parent.scrollHeight > parent.clientHeight;
-      if (scrolls) {
+      if (ContentEnhancer.scrolls(parent)) {
         bottom = Math.min(bottom, parent.getBoundingClientRect().bottom);
       }
       parent = parent.parentElement;
     }
 
     return bottom;
+  }
+
+  /** True if `element` is the thing a wheel gesture over it would move. */
+  private static scrolls(element: HTMLElement): boolean {
+    const style: CSSStyleDeclaration = window.getComputedStyle(element);
+    return /(auto|scroll|overlay)/.test(style.overflowY)
+      && element.scrollHeight > element.clientHeight;
+  }
+
+  /** The nearest ancestor that scrolls, or undefined when the window does. */
+  private static scroller(element: HTMLElement): HTMLElement | undefined {
+    let parent: HTMLElement | null = element.parentElement;
+
+    while (parent && parent !== document.body) {
+      if (ContentEnhancer.scrolls(parent)) {
+        return parent;
+      }
+      parent = parent.parentElement;
+    }
+
+    return undefined;
+  }
+
+  /**
+   * How much visible room there is from where `element` starts to the bottom
+   * of the area that is actually scrolling.
+   *
+   * Measured from the top of the scrollable content rather than from the
+   * element's position on screen, so the answer does not change as the page is
+   * scrolled: a min-height that grew every time the reader scrolled down would
+   * push the document further away with every wheel click.
+   */
+  private static roomBelow(element: HTMLElement): number {
+    const scroller: HTMLElement | undefined = ContentEnhancer.scroller(element);
+    const top: number = scroller ? scroller.getBoundingClientRect().top : 0;
+    const scrolled: number = scroller ? scroller.scrollTop : window.pageYOffset;
+    const above: number = element.getBoundingClientRect().top - top + scrolled;
+
+    return ContentEnhancer.visibleBottom(element) - top - above;
+  }
+
+  /**
+   * Gives `root` at least the height of the room below it, and keeps it there
+   * as the window is resized.
+   *
+   * This is what "fill the available height" costs: the room is the distance
+   * from where the web part starts to the bottom of whatever is scrolling, and
+   * neither of those is a number a stylesheet can reach. `100vh` is the
+   * tempting shortcut and it is wrong on a SharePoint page, which scrolls an
+   * inner container under a header and a command bar rather than the window.
+   *
+   * A web part far enough down a long page has no room below it at all, and
+   * gets nothing: filling is for the page whose content this is, not for
+   * stretching a part that was placed under something else.
+   */
+  public fillHeight(root: HTMLElement): void {
+    this.stopFilling();
+
+    const fit = (): void => {
+      const room: number = Math.round(ContentEnhancer.roomBelow(root));
+      if (room < FILL_MIN_HEIGHT) {
+        root.style.removeProperty('min-height');
+        return;
+      }
+      root.style.minHeight = `${room}px`;
+    };
+
+    this.onResize = (): void => {
+      if (this.resizeFrame !== undefined) {
+        return;
+      }
+      this.resizeFrame = window.requestAnimationFrame(() => {
+        this.resizeFrame = undefined;
+        fit();
+      });
+    };
+
+    window.addEventListener('resize', this.onResize, { passive: true });
+    fit();
+  }
+
+  public stopFilling(): void {
+    if (this.onResize) {
+      window.removeEventListener('resize', this.onResize);
+      this.onResize = undefined;
+    }
+    if (this.resizeFrame !== undefined) {
+      window.cancelAnimationFrame(this.resizeFrame);
+      this.resizeFrame = undefined;
+    }
   }
 
   private legacyCopy(text: string): boolean {
@@ -444,5 +537,6 @@ export class ContentEnhancer {
     this.copyResetTimers.forEach((timer: number) => window.clearTimeout(timer));
     this.copyResetTimers = [];
     this.stopTracking();
+    this.stopFilling();
   }
 }

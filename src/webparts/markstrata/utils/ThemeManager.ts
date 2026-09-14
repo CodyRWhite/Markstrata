@@ -22,6 +22,11 @@ export interface IThemeSettings {
   tocWidth?: string;
   /** True to keep the file name and modified date in view while scrolling. */
   pinMeta?: boolean;
+  /**
+   * True to give the web part at least the height of the room below it, so a
+   * short document does not leave the page canvas showing under it.
+   */
+  fillHeight?: boolean;
 }
 
 export interface IThemeChoice {
@@ -221,6 +226,18 @@ export class ThemeManager {
       element.style.setProperty('--strata-toc-width', tocWidth);
     }
     element.setAttribute('data-strata-meta', settings.pinMeta ? 'pinned' : 'flow');
+    /*
+     * Only the layout half of "fill the available height" lives in CSS. The
+     * height itself cannot: it is the room below wherever the web part starts,
+     * which the stylesheet has no way to measure, so ContentEnhancer sets it.
+     * Clearing it here means turning the setting off in the property pane
+     * takes effect on the next render rather than leaving the last measured
+     * height stuck on the element.
+     */
+    element.setAttribute('data-strata-fill', settings.fillHeight ? 'window' : 'content');
+    if (!settings.fillHeight) {
+      element.style.removeProperty('min-height');
+    }
     // Lets the browser pick matching form controls and scrollbars.
     element.style.colorScheme = resolved;
   }

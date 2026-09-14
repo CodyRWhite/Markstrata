@@ -30,6 +30,33 @@
 .strata-root[data-strata-code-size='small'] { --strata-code-font-size: 0.8em; }
 .strata-root[data-strata-code-size='large'] { --strata-code-font-size: 0.95em; }
 
+/* ------------------------------------------------------------- fill height */
+
+/*
+ * "Fill the available height" gives the web part at least the room below it,
+ * so a short document does not stop halfway down and leave the page canvas
+ * showing underneath. The height is measured in ContentEnhancer, not written
+ * here as 100vh: a SharePoint page does not scroll the window, it scrolls an
+ * inner container under a header and a command bar, so a viewport unit
+ * overshoots by however tall that chrome is.
+ *
+ * All the stylesheet does is decide where the extra room goes. Laying the root
+ * out as a column and letting the document take the slack puts it between the
+ * text and the file footer, so the footer sits at the bottom of the web part
+ * rather than under a gap.
+ *
+ * Not while the page is being edited: there the root holds the split editor,
+ * which sizes itself.
+ */
+.strata-root[data-strata-fill='window'][data-strata-editing='false'] {
+  display: flex;
+  flex-direction: column;
+}
+
+.strata-root[data-strata-fill='window'][data-strata-editing='false'] > .strata-layout {
+  flex: 1 1 auto;
+}
+
 /* Respect the reader's motion preference for the few transitions we use. */
 @media (prefers-reduced-motion: reduce) {
   .strata-root * {

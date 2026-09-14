@@ -63,6 +63,19 @@ anyone else sees.
 **Content width, spacing and text size**: independent of theme, so you can run
 GitHub's look at a narrower measure or a larger size without editing anything.
 
+**Fill the available height**: gives the web part at least the room below where
+it starts, so a short document does not stop halfway down and leave the page
+canvas showing under it. With the file name and modified date shown, they sit at
+the bottom of that rather than under a gap, which is usually the reason for
+turning it on.
+
+> [!NOTE]
+> The room is measured on the page, not written as `100vh`. A SharePoint page
+> does not scroll the window: it scrolls an inner container under a header and a
+> command bar, so a viewport unit overshoots by however tall that chrome is.
+> It is measured from where the web part starts too, so a part placed under
+> other content on a long page has no room below it and is left as it is.
+
 ## The toolbar and the file footer
 
 Both are on the **Features** page of the pane, under **Toolbar** and **File
@@ -250,7 +263,8 @@ SharePoint page.
 
 A web part you have just added starts on the **VS Code** theme in light mode,
 comfortable width, compact spacing, contents above the content, and line numbers
-on. Raw HTML is off. Every one of those is a setting.
+on. It is as tall as its content, and raw HTML is off. Every one of those is a
+setting.
 
 ## Security
 

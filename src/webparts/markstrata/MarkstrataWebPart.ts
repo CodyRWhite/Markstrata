@@ -77,6 +77,7 @@ export interface IMarkstrataWebPartProps {
   textSize: string;
   codeSize: string;
   showThemeSwitcher: boolean;
+  fillHeight: boolean;
 
   // Code blocks
   enableSyntaxHighlighting: boolean;
@@ -261,6 +262,7 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
       showPrintButton: true,
       showSourceInfo: true,
       pinMeta: false,
+      fillHeight: false,
       enableVersionHistory: true,
       allowHtml: false,
       searchablePlainText: ''
@@ -429,7 +431,8 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
       codeSize: this.properties.codeSize,
       tocWidth: tocWidthCss(this.properties.tocWidthMode, this.properties.tocWidthUnit,
         this.properties.tocWidthValue),
-      pinMeta: this.properties.pinMeta
+      pinMeta: this.properties.pinMeta,
+      fillHeight: this.properties.fillHeight
     };
   }
 
@@ -823,7 +826,13 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
                   label: strings.TextSizeLabel,
                   options: this.toDropdown(TEXT_SIZES),
                   selectedKey: this.properties.textSize
-                })
+                }),
+                PropertyPaneToggle('fillHeight', {
+                  label: strings.FillHeightLabel,
+                  onText: 'On',
+                  offText: 'Off'
+                }),
+                PropertyPaneLabel('fillHeightHint', { text: strings.FillHeightHint })
               ]
             },
             {
