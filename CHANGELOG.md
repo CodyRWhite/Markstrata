@@ -5,7 +5,7 @@ All notable changes to this project are recorded here. Versions follow
 the same number with a fourth part appended (0.2.0 -> 0.2.0.0), stamped by
 `scripts/set-version.js` when a release is tagged.
 
-## Unreleased
+## 0.0.8
 
 - Room at the sides of the web part, matching the room already at the top and
   bottom. The toolbar's last button and a left contents sidebar sat hard against
