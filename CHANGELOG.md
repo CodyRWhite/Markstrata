@@ -10,6 +10,24 @@ Entries below 0.0.10.0 were written before the switch and are three-part.
 
 ## Unreleased
 
+- The property pane has four pages instead of three, grouped by what you came
+  to change. The table of contents has a page of its own, since between its
+  position, its depth and its width there is more to it than one setting.
+  Appearance keeps the theme, reading and code blocks. Features is what is
+  rendered and what is drawn around it, split into **Rendering**, **Toolbar**
+  and **File information**; the toolbar and the file footer used to sit under
+  Reading, between content width and text size. Content is unchanged. No
+  setting changed its meaning or its default, only where it is found.
+- Fixed a fault that would have emptied the pane's labels. `loc/en-us.js` is
+  generated, and nine strings had been added to the generated file and never to
+  the generator that writes it, so the next run of the generator would have
+  deleted all nine and nothing would have failed until the pane opened in
+  SharePoint with blank labels. The two are back in step and a test holds them
+  there, along with the typings and what the web part actually reads.
+- The demo page's property pane matches the real one, and gained **Wide
+  diagrams**, which it had never carried. The two panes are separate literals
+  in separate files, so a test now compares them page by page and group by
+  group, and the pane is driven in a real browser along with the rest.
 - The kitchen sink shows everything it is meant to. Seven documented features
   were missing from it: spanning table cells, emoji, abbreviations, subscript
   and superscript, the `wrap` and `numbers` fence flags, and an inline
