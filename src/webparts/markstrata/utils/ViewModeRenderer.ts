@@ -18,6 +18,7 @@ import {
 // Type only: the view renderer knows nothing about SharePoint at runtime, so
 // it can be exercised in a plain browser page without the SPFx host.
 import type { IFileMetadata } from './SharePointService';
+import { splitFrontMatter, IFrontMatter } from './frontMatter';
 
 export type TocPosition = 'left' | 'right' | 'inline' | 'off';
 
@@ -97,6 +98,10 @@ export class ViewModeRenderer {
       article.innerHTML = this.processor.render(markdown);
     }
 
+    /* Read here rather than inside the processor, because the footer wants the
+       values and the processor only hands back HTML. */
+    const front: IFrontMatter = splitFrontMatter(markdown || '').data;
+
     // The sidebar has to be built from the rendered article, so render first
     // and insert the aside in front of it afterwards.
     layout.appendChild(article);
@@ -105,7 +110,7 @@ export class ViewModeRenderer {
     this.addToc(layout, article, host, options);
 
     if (options.showSourceInfo && options.fileMetadata) {
-      host.appendChild(this.buildSourceInfo(options.fileMetadata));
+      host.appendChild(this.buildSourceInfo(options.fileMetadata, front));
     }
 
     this.enhancer.attachCopyButtons(article);
@@ -230,12 +235,17 @@ export class ViewModeRenderer {
     return wrapper;
   }
 
-  private buildSourceInfo(metadata: IFileMetadata): HTMLElement {
+  private buildSourceInfo(metadata: IFileMetadata, front: IFrontMatter): HTMLElement {
     const info: HTMLElement = document.createElement('div');
     info.className = 'strata-meta';
 
+    /* A document that titled itself in its frontmatter is better named by that
+       than by its file name, which is often a slug. */
     const name: HTMLElement = document.createElement('span');
-    name.textContent = metadata.name;
+    name.textContent = front.title || metadata.name;
+    if (front.title) {
+      name.title = metadata.name;
+    }
     info.appendChild(name);
 
     if (metadata.timeLastModified) {
@@ -244,11 +254,21 @@ export class ViewModeRenderer {
       info.appendChild(modified);
     }
 
-    if (metadata.author) {
-      const author: HTMLElement = document.createElement('span');
-      author.textContent = `By ${metadata.author}`;
-      info.appendChild(author);
+    /* The file's author is who saved it; the document's is who wrote it, and
+       when a document says so it is the more useful of the two. */
+    const author: string = front.author || metadata.author;
+    if (author) {
+      const byline: HTMLElement = document.createElement('span');
+      byline.textContent = `By ${author}`;
+      info.appendChild(byline);
     }
+
+    (front.tags || []).forEach((tag: string) => {
+      const chip: HTMLElement = document.createElement('span');
+      chip.className = 'strata-tag';
+      chip.textContent = tag;
+      info.appendChild(chip);
+    });
 
     return info;
   }

@@ -95,6 +95,21 @@
 }
 
 /*
+ * Tags a document gave itself in its frontmatter. Quiet on purpose: they label
+ * the document, they are not navigation, and the footer they sit in is meant to
+ * stay out of the way of the text above it.
+ */
+.strata-meta .strata-tag {
+  padding: 1px 8px;
+  border: 1px solid var(--strata-border);
+  border-radius: 999px;
+  background-color: var(--strata-bg-elevated);
+  color: var(--strata-text-muted);
+  font-size: 0.9em;
+  line-height: 1.5;
+}
+
+/*
  * Pinned, the file name and modified date stay in view for the whole document
  * rather than only at the end of it. Sticky rather than fixed, so it belongs to
  * the web part: it rides the bottom of the window while the web part is on

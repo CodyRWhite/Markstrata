@@ -13,5 +13,6 @@ module.exports = {
   imagePaths: require(path.join(LIB, 'imagePaths')),
   mermaidConfig: require(path.join(LIB, 'mermaidConfig')),
   tocWidth: require(path.join(LIB, 'tocWidth')),
-  callouts: require(path.join(LIB, 'callouts'))
+  callouts: require(path.join(LIB, 'callouts')),
+  frontMatter: require(path.join(LIB, 'frontMatter'))
 };

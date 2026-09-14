@@ -9,6 +9,7 @@ import { calloutPlugin } from './markdownItCallouts';
 import { taskListPlugin } from './markdownItTaskLists';
 import { renderCodeBlock, ICodeBlockOptions, escapeHtml } from './codeBlocks';
 import { resolveAgainst } from './imagePaths';
+import { splitFrontMatter, ISplitDocument } from './frontMatter';
 import {
   IMarkdownIt,
   IRenderer,
@@ -101,7 +102,11 @@ export class MarkdownProcessor {
 
   public render(markdown: string): string {
     try {
-      return this.unwrapToc(this.md.render(markdown || ''));
+      /* Frontmatter is metadata for whatever built the file, not part of the
+         document. Left in, it renders as a rule and a heading of its own keys.
+         What it held is read back separately, by whoever wants the footer. */
+      const document: ISplitDocument = splitFrontMatter(markdown || '');
+      return this.unwrapToc(this.md.render(document.body));
     } catch (error) {
       const message: string = (error as Error).message || 'Unknown error';
       return `<div class="strata-error">Could not render this markdown: ${escapeHtml(message)}</div>`;
