@@ -128,6 +128,31 @@ const pageUrl = 'file://' + path.join(OUT, 'index.html');
     }
   });
 
+  /*
+   * A diagram is the one thing on the page nobody can copy out by selecting it,
+   * so the button hands over a raster. This checks the clipboard actually
+   * receives PNG bytes, not that a button exists and says Copied.
+   */
+  await step('a diagram can be copied as a PNG', async () => {
+    await page.context().grantPermissions(['clipboard-read', 'clipboard-write']);
+    const host = page.locator('.strata-mermaid').first();
+    await host.hover();
+    await page.locator('.strata-diagram-copy').first().click();
+    await page.waitForTimeout(1000);
+    const copied = await page.evaluate(async () => {
+      const items = await navigator.clipboard.read();
+      for (const item of items) {
+        if (item.types.indexOf('image/png') !== -1) {
+          const bytes = new Uint8Array(await (await item.getType('image/png')).arrayBuffer());
+          return { bytes: bytes.length, png: bytes[0] === 0x89 && bytes[1] === 0x50 };
+        }
+      }
+      return { bytes: 0, png: false };
+    });
+    if (!copied.png) throw new Error('no PNG on the clipboard');
+    if (copied.bytes < 1000) throw new Error('suspiciously small: ' + copied.bytes + ' bytes');
+  });
+
   await step('copy button copies the code, without line numbers', async () => {
     await page.context().grantPermissions(['clipboard-read', 'clipboard-write']);
     const block = page.locator('.strata-code[data-lang="typescript"]').first();

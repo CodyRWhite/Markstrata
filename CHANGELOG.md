@@ -10,6 +10,12 @@ Entries below 0.0.10.0 were written before the switch and are three-part.
 
 ## Unreleased
 
+- Every diagram carries a copy button in its top right corner, which puts it on
+  the clipboard as a PNG drawn at twice its size on the page, so it stays sharp
+  pasted into a deck or a document. A diagram was the one thing on the page
+  nobody could copy out: selecting it gets the source, not the picture. The
+  button stays faint until the diagram is hovered, and is always there on touch
+  and for a keyboard.
 - Wide diagrams fit the column instead of scrolling or shrinking. A gantt lays
   out from its time axis rather than wrapping, so it asks for more width than an
   article column has. It is now laid out at the column width, which compresses

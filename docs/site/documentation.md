@@ -151,6 +151,24 @@ fetches them as the reader reaches them rather than all at once.
 > resolves to a real SharePoint URL, and SharePoint still applies the
 > library's permissions to it.
 
+## Diagrams
+
+Mermaid diagrams are themed to match the page and re-drawn when the theme
+changes. Each one carries a copy button in its top right corner that puts the
+diagram on the clipboard as a PNG, drawn at twice its size on the page so it
+stays sharp when it is pasted into a deck or a document. Selecting a diagram
+would only get you its source, which is rarely what you want.
+
+A gantt chart lays out from its time axis rather than wrapping, so it asks for
+more width than a column usually has. **Wide diagrams** decides what happens
+then:
+
+| Setting | What it does |
+|---|---|
+| Fit to the column | Lays the chart out at the column width, compressing the axis. The text stays full size and there is no scrollbar. The default. |
+| Keep their size and scroll | The chart keeps its natural width and the box scrolls sideways. |
+| Scale down to fit | Shrinks the whole drawing, text included. Mermaid's own behaviour. |
+
 ## Table of contents
 
 Built from the headings, or placed inline with `[[toc]]`. It can sit in a left

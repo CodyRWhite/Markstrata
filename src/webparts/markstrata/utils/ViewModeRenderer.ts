@@ -113,7 +113,7 @@ export class ViewModeRenderer {
 
     if (options.enableMermaid) {
       void this.mermaid.render(article, options.settings.themeFamily, options.resolvedMode,
-        options.diagramWidth);
+        options.diagramWidth).then(() => this.enhancer.attachDiagramCopyButtons(article));
     }
   }
 

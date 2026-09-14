@@ -15,6 +15,15 @@ const ACTIVE_HEADING_LINE: number = 120;
 const CHECK_ICON: string =
   '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m20 6-11 11-5-5"/></svg>';
 
+const IMAGE_ICON: string =
+  '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">'
+  + '<rect x="3" y="4" width="18" height="14" rx="2"/>'
+  + '<circle cx="8.5" cy="9" r="1.5"/><path d="m21 15-5-5-9 8"/></svg>';
+
+/* Drawn at twice the diagram's size, so the copy is still sharp when it is
+   pasted into a deck or a document and scaled back up. */
+const DIAGRAM_COPY_SCALE: number = 2;
+
 export class ContentEnhancer {
   private copyResetTimers: number[] = [];
   private onScroll: (() => void) | undefined;
@@ -41,6 +50,119 @@ export class ContentEnhancer {
 
         this.copy(this.readCode(block), button as HTMLButtonElement);
       });
+    });
+  }
+
+  /**
+   * Puts a copy button on every diagram, which copies it as a PNG.
+   *
+   * A diagram is the one thing on the page nobody can usefully copy out: the
+   * text is markup, and selecting it gets the source rather than the picture.
+   * A raster is what a deck or a document wants anyway.
+   */
+  public attachDiagramCopyButtons(container: HTMLElement): void {
+    const hosts: HTMLElement[] = Array.prototype.slice.call(
+      container.querySelectorAll('.strata-mermaid')
+    );
+
+    hosts.forEach((host: HTMLElement) => {
+      /* The host is rebuilt whenever the diagram re-renders, so an old button
+         is stale rather than already wired. */
+      const existing: HTMLElement | null = host.querySelector('.strata-diagram-copy');
+      if (existing && existing.parentElement) {
+        existing.parentElement.removeChild(existing);
+      }
+      if (!host.querySelector('svg')) {
+        return;
+      }
+
+      const button: HTMLButtonElement = document.createElement('button');
+      button.type = 'button';
+      button.className = 'strata-code-btn strata-diagram-copy';
+      button.setAttribute('aria-label', 'Copy this diagram as an image');
+      button.innerHTML = IMAGE_ICON + '<span class="strata-code-btn-label">Copy</span>';
+      button.addEventListener('click', (event: Event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        void this.copyDiagram(host, button);
+      });
+      host.appendChild(button);
+    });
+  }
+
+  /**
+   * Draws the diagram's SVG onto a canvas and puts the result on the clipboard.
+   *
+   * The SVG carries its own stylesheet, which mermaid generates inside it, so
+   * it stands on its own once it is serialised. What it does not carry is the
+   * page's background, and a diagram drawn in light text on nothing pastes as
+   * light text on black, so the host's own background colour is painted first.
+   */
+  private async copyDiagram(host: HTMLElement, button: HTMLButtonElement): Promise<void> {
+    const svg: SVGSVGElement | null = host.querySelector('svg');
+    if (!svg) {
+      this.showResult(button, false, 'No diagram');
+      return;
+    }
+
+    try {
+      const blob: Blob = await ContentEnhancer.diagramToPng(host, svg);
+      const clipboard: Clipboard = navigator.clipboard;
+      const CopyItem: typeof ClipboardItem | undefined =
+        (window as unknown as { ClipboardItem?: typeof ClipboardItem }).ClipboardItem;
+
+      if (!clipboard || !clipboard.write || !CopyItem || !window.isSecureContext) {
+        throw new Error('the clipboard cannot take an image here');
+      }
+      await clipboard.write([new CopyItem({ 'image/png': blob })]);
+      this.showResult(button, true);
+    } catch {
+      this.showResult(button, false, 'Cannot copy');
+    }
+  }
+
+  private static diagramToPng(host: HTMLElement, svg: SVGSVGElement): Promise<Blob> {
+    const box: DOMRect = svg.getBoundingClientRect();
+    const width: number = Math.max(1, Math.round(box.width));
+    const height: number = Math.max(1, Math.round(box.height));
+
+    /* A clone, because the copy needs explicit pixel dimensions and the one on
+       the page is sized by the layout. */
+    const clone: SVGSVGElement = svg.cloneNode(true) as SVGSVGElement;
+    clone.setAttribute('width', String(width));
+    clone.setAttribute('height', String(height));
+    clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+
+    const markup: string = new XMLSerializer().serializeToString(clone);
+    const source: string = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(markup);
+    const background: string = window.getComputedStyle(host).backgroundColor;
+
+    return new Promise((resolve, reject) => {
+      const image: HTMLImageElement = new Image();
+      image.onload = () => {
+        const canvas: HTMLCanvasElement = document.createElement('canvas');
+        canvas.width = width * DIAGRAM_COPY_SCALE;
+        canvas.height = height * DIAGRAM_COPY_SCALE;
+        const context: CanvasRenderingContext2D | null = canvas.getContext('2d');
+        if (!context) {
+          reject(new Error('no 2d context'));
+          return;
+        }
+        if (background && background !== 'transparent' && background.indexOf('0)') === -1) {
+          context.fillStyle = background;
+          context.fillRect(0, 0, canvas.width, canvas.height);
+        }
+        context.drawImage(image, 0, 0, canvas.width, canvas.height);
+        canvas.toBlob((blob: Blob | null) => {
+          if (blob) {
+            resolve(blob);
+          } else {
+            reject(new Error('the diagram could not be drawn'));
+          }
+        }, 'image/png');
+      };
+      image.onerror = () => reject(new Error('the diagram could not be read'));
+      image.src = source;
     });
   }
 
@@ -88,13 +210,14 @@ export class ContentEnhancer {
     }
   }
 
-  private showResult(button: HTMLButtonElement, success: boolean): void {
+  private showResult(button: HTMLButtonElement, success: boolean,
+    failure: string = 'Press Ctrl+C'): void {
     const label: HTMLElement | null = button.querySelector('.strata-code-btn-label');
     const icon: string = button.innerHTML;
 
     button.setAttribute('data-state', success ? 'done' : 'error');
     if (label) {
-      label.textContent = success ? 'Copied' : 'Press Ctrl+C';
+      label.textContent = success ? 'Copied' : failure;
     }
     if (success) {
       const svg: Element | null = button.querySelector('svg');

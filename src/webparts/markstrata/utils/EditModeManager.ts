@@ -206,11 +206,12 @@ export class EditModeManager {
     if (!this.preview) {
       return;
     }
-    this.preview.innerHTML = this.processor.render(markdown);
-    this.enhancer.attachCopyButtons(this.preview);
+    const preview: HTMLElement = this.preview;
+    preview.innerHTML = this.processor.render(markdown);
+    this.enhancer.attachCopyButtons(preview);
     if (options.enableMermaid) {
-      void this.mermaid.render(this.preview, options.settings.themeFamily, options.resolvedMode,
-        options.diagramWidth);
+      void this.mermaid.render(preview, options.settings.themeFamily, options.resolvedMode,
+        options.diagramWidth).then(() => this.enhancer.attachDiagramCopyButtons(preview));
     }
   }
 
