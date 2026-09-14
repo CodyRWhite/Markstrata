@@ -9,7 +9,7 @@
 
 import { IMermaidApi, IMermaidRenderResult } from 'mermaid';
 import { ThemeManager, ThemeFamily, ResolvedMode } from './ThemeManager';
-import { MERMAID_BASE_CONFIG } from './mermaidConfig';
+import { mermaidConfigFor, MERMAID_BASE_CONFIG, DiagramWidth } from './mermaidConfig';
 
 
 export class MermaidRenderer {
@@ -29,7 +29,8 @@ export class MermaidRenderer {
   /** Ids must be unique across every web part on the page, not just this one. */
   private idPrefix: string = `strata-mermaid-${Math.random().toString(36).substring(2, 8)}`;
 
-  public async render(container: HTMLElement, family: ThemeFamily, mode: ResolvedMode): Promise<void> {
+  public async render(container: HTMLElement, family: ThemeFamily, mode: ResolvedMode,
+    width: DiagramWidth = 'fit'): Promise<void> {
     const hosts: HTMLElement[] = Array.prototype.slice.call(container.querySelectorAll('.strata-mermaid'));
     if (hosts.length === 0) {
       return;
@@ -55,18 +56,28 @@ export class MermaidRenderer {
       if (!this.mermaid) {
         this.mermaid = await MermaidRenderer.load();
       }
-      this.mermaid.initialize({
-        ...MERMAID_BASE_CONFIG,
-        ...ThemeManager.getMermaidTheme(family, mode)
-      });
     } catch {
       jobs.forEach((job) => this.showError(job.host, job.source, 'Mermaid could not be loaded.'));
       return;
     }
 
+    const palette: { [key: string]: unknown } = ThemeManager.getMermaidTheme(family, mode) as
+      unknown as { [key: string]: unknown };
+
     for (const job of jobs) {
       this.renderCount += 1;
       try {
+        /*
+         * Configured per diagram rather than once for all of them, because
+         * fitting needs the width of the box this one is going into. The host
+         * is already in the document and already has its padding, so its inner
+         * width is what the drawing has to live in.
+         */
+        job.host.setAttribute('data-strata-diagram', width);
+        this.mermaid.initialize({
+          ...mermaidConfigFor(width, MermaidRenderer.usableWidth(job.host), MERMAID_BASE_CONFIG),
+          ...palette
+        });
         const result: IMermaidRenderResult = await this.mermaid.render(
           `${this.idPrefix}-${this.renderCount}`,
           job.source
@@ -77,6 +88,14 @@ export class MermaidRenderer {
         this.showError(job.host, job.source, (error as Error).message || 'Diagram could not be rendered.');
       }
     }
+  }
+
+  /** The width inside the host's own padding, which is what a diagram gets. */
+  private static usableWidth(host: HTMLElement): number {
+    const style: CSSStyleDeclaration = window.getComputedStyle(host);
+    const padding: number = parseFloat(style.paddingLeft || '0')
+      + parseFloat(style.paddingRight || '0');
+    return Math.max(0, Math.floor(host.clientWidth - padding));
   }
 
   /** Falls back to showing the diagram source, which beats showing nothing. */

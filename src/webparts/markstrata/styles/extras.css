@@ -38,9 +38,11 @@
   margin-inline: auto;
 }
 
-/* A gantt keeps its natural width and scrolls, rather than being scaled down
-   until its labels are unreadable. See utils/mermaidConfig.ts. */
-.strata-mermaid svg[aria-roledescription='gantt'] {
+/* Scrolling a wide diagram means letting it keep its width: max-width would
+   scale it back down, which is the thing the setting is there to avoid. Only
+   the scroll mode wants this; fitting lays the diagram out to the column, and
+   scaling is mermaid shrinking it on purpose. See utils/mermaidConfig.ts. */
+.strata-mermaid[data-strata-diagram='scroll'] svg[aria-roledescription='gantt'] {
   max-width: none;
   flex: none;
 }

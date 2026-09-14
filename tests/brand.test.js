@@ -177,7 +177,7 @@ test('mermaid is configured from one place', () => {
     'markstrata', 'utils', 'MermaidRenderer.ts'), 'utf8');
   const builder = fs.readFileSync(path.join(__dirname, '..', 'demo', 'build-demo.js'), 'utf8');
   for (const [name, body] of [['MermaidRenderer.ts', renderer], ['build-demo.js', builder]]) {
-    assert.ok(/MERMAID_BASE/.test(body), `${name} should use the shared mermaid config`);
+    assert.ok(/mermaidConfigFor/.test(body), `${name} should build its config with mermaidConfigFor`);
     assert.ok(!/securityLevel:\s*'strict'/.test(body),
       `${name} spells out mermaid options again; they belong in utils/mermaidConfig.ts`);
   }
@@ -199,4 +199,27 @@ test('gantt text is sized to survive the scaling, and layout agrees with it', ()
   }
   assert.equal(MERMAID_BASE_CONFIG.gantt.fontSize, sizes[0],
     'the layout font size and the drawn font size have drifted apart');
+});
+
+/*
+ * Fitting is what keeps a gantt readable without a scrollbar: the chart is laid
+ * out at the column width, so its axis compresses and the text stays put. The
+ * other two modes are the reader's call, not a fallback.
+ */
+test('each diagram width mode asks mermaid for the right thing', () => {
+  const { mermaidConfigFor, MERMAID_BASE_CONFIG } = require('./helpers').mermaidConfig;
+  const fit = mermaidConfigFor('fit', 900, MERMAID_BASE_CONFIG).gantt;
+  assert.equal(fit.useMaxWidth, false, 'fitting must not let mermaid scale the drawing');
+  assert.equal(fit.useWidth, 900, 'fitting lays the chart out at the width it was given');
+
+  const scroll = mermaidConfigFor('scroll', 900, MERMAID_BASE_CONFIG).gantt;
+  assert.equal(scroll.useMaxWidth, false);
+  assert.equal(scroll.useWidth, undefined, 'scrolling keeps the natural width');
+
+  const scale = mermaidConfigFor('scale', 900, MERMAID_BASE_CONFIG).gantt;
+  assert.equal(scale.useMaxWidth, true, 'scaling is mermaid shrinking it to fit');
+
+  /* An unmeasurable box must not become a zero-width chart. */
+  const unmeasured = mermaidConfigFor('fit', 0, MERMAID_BASE_CONFIG).gantt;
+  assert.equal(unmeasured.useWidth, undefined, 'a zero-width box falls back to natural width');
 });

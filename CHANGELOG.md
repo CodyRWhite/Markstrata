@@ -8,6 +8,17 @@ is normally zero. `scripts/set-version.js` stamps it when a release is cut.
 
 Entries below 0.0.10.0 were written before the switch and are three-part.
 
+## Unreleased
+
+- Wide diagrams fit the column instead of scrolling or shrinking. A gantt lays
+  out from its time axis rather than wrapping, so it asks for more width than an
+  article column has. It is now laid out at the column width, which compresses
+  the axis and leaves the text the size it is set to: no scrollbar, no shrunken
+  labels. **Wide diagrams** in the property pane offers the other two if they
+  suit a document better, keeping their size and scrolling, or scaling down.
+- The documentation site's pages configure each diagram the same way, from the
+  same function, rather than initialising mermaid once for the page.
+
 ## 0.0.11.0
 
 - Gantt charts are readable, which 0.0.8 and 0.0.9 both claimed and neither

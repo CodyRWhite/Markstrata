@@ -5,6 +5,7 @@
 
 import { MarkdownProcessor } from './MarkdownProcessor';
 import { MermaidRenderer } from './MermaidRenderer';
+import { DiagramWidth } from './mermaidConfig';
 import { ContentEnhancer, ITocEntry } from './ContentEnhancer';
 import {
   ThemeManager,
@@ -30,6 +31,8 @@ export interface IViewOptions {
   tocMaxLevel: number;
   showSourceInfo: boolean;
   enableMermaid: boolean;
+  /** What a diagram does when it wants more width than the column gives. */
+  diagramWidth?: DiagramWidth;
   canReload: boolean;
   canShowVersions: boolean;
   /** True while the SharePoint page itself is being edited. */
@@ -109,7 +112,8 @@ export class ViewModeRenderer {
     this.enhancer.secureExternalLinks(article);
 
     if (options.enableMermaid) {
-      void this.mermaid.render(article, options.settings.themeFamily, options.resolvedMode);
+      void this.mermaid.render(article, options.settings.themeFamily, options.resolvedMode,
+        options.diagramWidth);
     }
   }
 

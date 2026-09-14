@@ -10,6 +10,7 @@
 import { MarkdownProcessor } from './MarkdownProcessor';
 import { MermaidRenderer } from './MermaidRenderer';
 import { ContentEnhancer } from './ContentEnhancer';
+import { DiagramWidth } from './mermaidConfig';
 import { ThemeManager, IThemeSettings, ResolvedMode } from './ThemeManager';
 
 export type EditorLayout = 'edit' | 'split' | 'preview';
@@ -18,6 +19,8 @@ export interface IEditOptions {
   settings: IThemeSettings;
   resolvedMode: ResolvedMode;
   enableMermaid: boolean;
+  /** What a diagram does when it wants more width than the column gives. */
+  diagramWidth?: DiagramWidth;
   /** True when the content came from a file we are allowed to write back to. */
   canSave: boolean;
   saveTargetName: string;
@@ -206,7 +209,8 @@ export class EditModeManager {
     this.preview.innerHTML = this.processor.render(markdown);
     this.enhancer.attachCopyButtons(this.preview);
     if (options.enableMermaid) {
-      void this.mermaid.render(this.preview, options.settings.themeFamily, options.resolvedMode);
+      void this.mermaid.render(this.preview, options.settings.themeFamily, options.resolvedMode,
+        options.diagramWidth);
     }
   }
 

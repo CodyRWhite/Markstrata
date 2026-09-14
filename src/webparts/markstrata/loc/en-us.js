@@ -40,6 +40,8 @@ define([], function () {
     "TocPositionLabel": "Table of contents",
     "TocLevelLabel": "Deepest heading in the contents",
     "AnchorsLabel": "Heading link anchors",
+    "DiagramWidthLabel": "Wide diagrams",
+    "DiagramWidthHint": "Gantt charts lay out from their time axis rather than wrapping, so they often want more width than a column gives. Fitting compresses the axis and keeps the text readable.",
     "MermaidLabel": "Mermaid diagrams",
     "MathLabel": "Math (KaTeX)",
     "AllowHtmlLabel": "Allow raw HTML in markdown",

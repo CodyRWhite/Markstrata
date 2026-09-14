@@ -34,6 +34,7 @@ import './styles/print.css';
 
 import { MarkdownProcessor, IMarkdownProcessorOptions } from './utils/MarkdownProcessor';
 import { folderOf } from './utils/imagePaths';
+import { DiagramWidth } from './utils/mermaidConfig';
 import { MermaidRenderer } from './utils/MermaidRenderer';
 import { ContentEnhancer } from './utils/ContentEnhancer';
 import { ViewModeRenderer, TocPosition } from './utils/ViewModeRenderer';
@@ -82,6 +83,7 @@ export interface IMarkstrataWebPartProps {
 
   // Features
   enableMermaid: boolean;
+  diagramWidth: DiagramWidth;
   enableMath: boolean;
   enableAnchors: boolean;
   tocPosition: TocPosition;
@@ -240,6 +242,7 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
       showLineNumbers: false,
       wrapCodeLines: false,
       enableMermaid: true,
+      diagramWidth: 'fit',
       enableMath: true,
       enableAnchors: true,
       tocPosition: 'off',
@@ -278,6 +281,7 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
         settings: settings,
         resolvedMode: mode,
         enableMermaid: this.properties.enableMermaid,
+      diagramWidth: this.properties.diagramWidth,
         canSave: this.canSaveToSharePoint(),
         saveTargetName: this.properties.fileMetadata ? this.properties.fileMetadata.name : ''
       });
@@ -297,6 +301,7 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
       tocMaxLevel: this.properties.tocMaxLevel,
       showSourceInfo: this.properties.showSourceInfo,
       enableMermaid: this.properties.enableMermaid,
+      diagramWidth: this.properties.diagramWidth,
       canReload: this.properties.contentSource !== 'manual',
       canShowVersions: this.properties.enableVersionHistory && this.canSaveToSharePoint(),
       isPageEditing: this.displayMode === DisplayMode.Edit,
@@ -813,6 +818,17 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
                   onText: 'On',
                   offText: 'Off'
                 }),
+                PropertyPaneDropdown('diagramWidth', {
+                  label: strings.DiagramWidthLabel,
+                  options: [
+                    { key: 'fit', text: 'Fit to the column' },
+                    { key: 'scroll', text: 'Keep their size and scroll' },
+                    { key: 'scale', text: 'Scale down to fit' }
+                  ],
+                  selectedKey: this.properties.diagramWidth,
+                  disabled: !this.properties.enableMermaid
+                }),
+                PropertyPaneLabel('diagramWidthHint', { text: strings.DiagramWidthHint }),
                 PropertyPaneToggle('enableMath', {
                   label: strings.MathLabel,
                   onText: 'On',

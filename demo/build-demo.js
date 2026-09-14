@@ -106,7 +106,7 @@ function build() {
   const { ThemeManager } = require(path.join(libDir, 'ThemeManager.js'));
   /* The same object the web part initialises mermaid with, so the two cannot
      drift: this page used to carry its own copy and missed the gantt fix. */
-  const { MERMAID_BASE_CONFIG } = require(path.join(libDir, 'mermaidConfig.js'));
+  const { mermaidConfigFor, MERMAID_BASE_CONFIG } = require(path.join(libDir, 'mermaidConfig.js'));
   const processor = new MarkdownProcessor({ showLineNumbers: true, allowHtml: true });
 
   // Diagrams are themed from the same palettes the web part uses, so the
@@ -123,7 +123,8 @@ function build() {
     : fs.readFileSync(path.join(root, 'samples', 'kitchen-sink.md'), 'utf8');
 
   const html = processor.render(sample);
-  const page = template(readCss(), html, buildToc(html), mermaidThemes, MERMAID_BASE_CONFIG,
+  const page = template(readCss(), html, buildToc(html), mermaidThemes,
+    { fn: mermaidConfigFor, base: MERMAID_BASE_CONFIG },
     pageId ? site.page(pageId).title : pageTitle(html));
 
   fs.mkdirSync(outDir, { recursive: true });
@@ -275,7 +276,8 @@ ${footer}
 <script src="mermaid.min.js"></script>
 <script>
 var MERMAID_THEMES = ${JSON.stringify(mermaidThemes)};
-var MERMAID_BASE = ${JSON.stringify(mermaidBase)};
+var MERMAID_BASE = ${JSON.stringify(mermaidBase.base)};
+var MERMAID_CONFIG_FOR = ${mermaidBase.fn.toString()};
 </script>
 <script>
 (function () {
@@ -410,9 +412,15 @@ var MERMAID_BASE = ${JSON.stringify(mermaidBase)};
     }
     var key = document.getElementById('theme').value + '-' + document.getElementById('mode').value;
     var config = mermaidThemes[key];
-    mermaid.initialize(Object.assign({}, MERMAID_BASE, config));
     for (var j = 0; j < hosts.length; j++) {
       (function (host, source, index) {
+        /* Configured per diagram, as the web part does it: fitting a gantt to
+           its column needs the width of that column. */
+        var style = window.getComputedStyle(host);
+        var padding = parseFloat(style.paddingLeft || '0') + parseFloat(style.paddingRight || '0');
+        var usable = Math.max(0, Math.floor(host.clientWidth - padding));
+        host.setAttribute('data-strata-diagram', 'fit');
+        mermaid.initialize(Object.assign({}, MERMAID_CONFIG_FOR('fit', usable, MERMAID_BASE), config));
         mermaid.render('demo-mermaid-' + index + '-' + Date.now(), source).then(function (result) {
           host.innerHTML = result.svg;
         }).catch(function () {});

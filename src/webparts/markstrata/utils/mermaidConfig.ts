@@ -51,14 +51,49 @@ export const MERMAID_BASE_CONFIG: { [key: string]: unknown } = {
     htmlLabels: false, curve: 'basis', padding: 12, useMaxWidth: true, wrappingWidth: 220
   },
   sequence: { useMaxWidth: true },
-  /*
-   * useMaxWidth would fit the chart to the column by scaling the whole SVG,
-   * which scales the text with it: a gantt lays out wider than the column it
-   * sits in, so the labels arrived on screen a good deal smaller than the size
-   * set above and no amount of raising that number fixed it reliably, because
-   * the scale depends on the column. Off, the chart keeps its natural size and
-   * the text is exactly the size it says; extras.css lets a wide one scroll.
-   */
-  gantt: { useMaxWidth: false, barHeight: 24, barGap: 6, fontSize: GANTT_TEXT_SIZE },
+  gantt: { barHeight: 24, barGap: 6, fontSize: GANTT_TEXT_SIZE },
   themeCSS: GANTT_TEXT_CSS
 };
+
+/**
+ * What a diagram does when it wants more width than the column gives it.
+ *
+ * A gantt is the one that runs into this: it lays out from its time axis and
+ * its labels rather than wrapping, so it asks for more room than an article
+ * column usually has.
+ *
+ * - `fit`    lay the chart out at the column width, so the axis is compressed
+ *            and the text stays the size it is set to. No scrollbar.
+ * - `scroll` keep the natural width and let the box scroll sideways.
+ * - `scale`  shrink the whole drawing to fit, text included. This is mermaid's
+ *            own default and the reason gantt labels read so small.
+ */
+export type DiagramWidth = 'fit' | 'scroll' | 'scale';
+
+/**
+ * The config for one diagram. `available` is the usable width of the box the
+ * diagram is going into, and is only consulted when fitting.
+ *
+ * `base` is passed in rather than read from module scope so the compiled
+ * function can be serialised into the documentation site's pages, which render
+ * their diagrams in an inline script and have no module system to import from.
+ */
+export function mermaidConfigFor(width: DiagramWidth, available: number,
+  base: { [key: string]: unknown }): { [key: string]: unknown } {
+  const gantt: { [key: string]: unknown } = {
+    ...(base.gantt as { [key: string]: unknown })
+  };
+
+  if (width === 'scale') {
+    gantt.useMaxWidth = true;
+  } else {
+    gantt.useMaxWidth = false;
+    /* A hidden or not-yet-laid-out box measures zero; scrolling is the safer
+       thing to fall back on, since it never shrinks the text. */
+    if (width === 'fit' && available > 0) {
+      gantt.useWidth = available;
+    }
+  }
+
+  return { ...base, gantt: gantt };
+}

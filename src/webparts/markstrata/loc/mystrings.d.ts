@@ -39,6 +39,8 @@ declare interface IMarkstrataWebPartStrings {
   TocPositionLabel: string;
   TocLevelLabel: string;
   AnchorsLabel: string;
+  DiagramWidthLabel: string;
+  DiagramWidthHint: string;
   MermaidLabel: string;
   MathLabel: string;
   AllowHtmlLabel: string;
