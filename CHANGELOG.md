@@ -8,7 +8,7 @@ is normally zero. `scripts/set-version.js` stamps it when a release is cut.
 
 Entries below 0.0.10.0 were written before the switch and are three-part.
 
-## Unreleased
+## 0.0.13.0
 
 - The web part can take the height it is given rather than only the height of
   its content. **Fill the available height**, on the Appearance page under
