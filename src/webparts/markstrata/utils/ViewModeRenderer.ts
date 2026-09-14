@@ -141,7 +141,14 @@ export class ViewModeRenderer {
       return;
     }
 
-    const entries: ITocEntry[] = this.enhancer.collectHeadings(article, options.tocMaxLevel);
+    /* A contents the document wrote for itself is a decision, and a
+       hand-written one is often a deliberate subset of the headings. Taking it
+       over also stops the page carrying two: the document's, in the text, and
+       ours beside it. With the contents switched off this is never reached, so
+       an authored one is left exactly where the author put it. */
+    const authored: ITocEntry[] | undefined = this.enhancer.adoptAuthoredToc(article);
+    const entries: ITocEntry[] = authored
+      || this.enhancer.collectHeadings(article, options.tocMaxLevel);
     const nav: HTMLElement | undefined = this.enhancer.buildToc(entries, article);
     if (!nav) {
       return;

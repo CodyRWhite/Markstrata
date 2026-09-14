@@ -8,6 +8,37 @@ is normally zero. `scripts/set-version.js` stamps it when a release is cut.
 
 Entries below 0.0.10.0 were written before the switch and are three-part.
 
+## Unreleased
+
+- YAML frontmatter is taken off the front of a document instead of rendered.
+  Markdown has no frontmatter: the opening `---` is a thematic break and the
+  closing one is a setext underline, so a file from Obsidian, Hugo, Jekyll or
+  Docusaurus opened with a rule and then a title-size heading made of its own
+  metadata, which also led the table of contents above the document's real
+  title. What the block held is offered to the file footer instead: a title
+  names the document better than a file name that is usually a slug, an author
+  in the document wrote it rather than merely saved it, and tags show as chips.
+- Images can be given a width, after a pipe, the way Obsidian writes it:
+  `![alt|300]` or `![alt|300x200]`. Unsupported, that syntax did not simply
+  fail to resize, it left the digits in the alt text for a screen reader to
+  read out. The number is set as the width attribute rather than as a style,
+  which gives a lazily loaded image an intrinsic size, so the text below it no
+  longer jumps as each picture arrives. The aspect ratio is always kept.
+- An image that is a paragraph of its own and carries a title becomes a figure
+  with that title as its caption, rather than a tooltip a touch screen never
+  shows and a printed page loses. An image inside a sentence stays there.
+- **Click an image to see it full size** opens it over the page, which
+  documentation wants because it is mostly screenshots and a column is
+  narrower than a screen. Escape or a click outside closes it, focus returns
+  to the image, and an image that is a link is left alone.
+- A contents the document wrote for itself is used instead of a generated one.
+  A document with `[[toc]]`, or a hand-written list of heading links under a
+  Contents heading, used to show two: its own in the text and ours beside it.
+  A hand-written list is usually a deliberate subset, so it is taken as a
+  decision and adopted whole, keeping the indentation, smooth scrolling and
+  reading-position tracking. With the contents switched off, an authored one
+  is left where it was written.
+
 ## 0.0.13.0
 
 - The web part can take the height it is given rather than only the height of

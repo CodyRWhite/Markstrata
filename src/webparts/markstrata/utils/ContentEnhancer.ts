@@ -404,6 +404,117 @@ export class ContentEnhancer {
       .filter((entry: ITocEntry) => entry.text.length > 0);
   }
 
+  /**
+   * Takes over a contents the document wrote for itself, if it has one.
+   *
+   * A document can say what its contents are, either with `[[toc]]` or by
+   * hand as a list of links under a Contents heading. Until now the sidebar
+   * ignored both and generated its own from the headings, so a document that
+   * had gone to the trouble showed two tables of contents: its own, in the
+   * text, and ours beside it.
+   *
+   * An authored one wins, because it is a decision. A hand-written list is
+   * often a deliberate subset, leaving out the headings that are not worth
+   * navigating to, and `[[toc]]` is at least an explicit request.
+   *
+   * The entries are handed back for buildToc rather than the markup being
+   * moved, so an adopted contents gets the same indentation, smooth scrolling
+   * and reading position tracking as a generated one.
+   *
+   * Returns undefined when the document has no contents of its own, which is
+   * the caller's signal to generate from the headings instead.
+   */
+  public adoptAuthoredToc(container: HTMLElement): ITocEntry[] | undefined {
+    const authored: { list: HTMLElement; heading?: HTMLElement } | undefined =
+      this.findAuthoredToc(container);
+    if (!authored) {
+      return undefined;
+    }
+
+    const entries: ITocEntry[] = this.tocEntriesFrom(authored.list, container);
+    /* A list of links that go nowhere in this document is not a contents, and
+       removing it would lose whatever it actually was. */
+    if (!entries.length) {
+      return undefined;
+    }
+
+    if (authored.heading) {
+      authored.heading.remove();
+    }
+    authored.list.remove();
+    return entries;
+  }
+
+  private findAuthoredToc(container: HTMLElement):
+    { list: HTMLElement; heading?: HTMLElement } | undefined {
+    /* What [[toc]] leaves behind. */
+    const generated: HTMLElement | null = container.querySelector('.strata-toc');
+    if (generated) {
+      return { list: generated };
+    }
+
+    /* A list of in-page links under a heading that says what it is. */
+    const headings: HTMLElement[] =
+      Array.prototype.slice.call(container.querySelectorAll('h1,h2,h3,h4'));
+
+    for (let i: number = 0; i < headings.length; i += 1) {
+      const heading: HTMLElement = headings[i];
+      const text: string = (heading.textContent || '').replace(/^#/, '').trim();
+      if (!/^(table of )?contents$/i.test(text) && !/^on this page$/i.test(text)) {
+        continue;
+      }
+
+      const next: Element | null = heading.nextElementSibling;
+      if (next && (next.tagName === 'UL' || next.tagName === 'OL')
+        && this.isLinkList(next as HTMLElement)) {
+        return { list: next as HTMLElement, heading: heading };
+      }
+    }
+
+    return undefined;
+  }
+
+  /* Every link has to point inside this document, or it is a list of links
+     that happens to sit under an unlucky heading. */
+  private isLinkList(list: HTMLElement): boolean {
+    const links: HTMLAnchorElement[] = Array.prototype.slice.call(list.querySelectorAll('a'));
+    if (!links.length) {
+      return false;
+    }
+    return links.every((link: HTMLAnchorElement) =>
+      (link.getAttribute('href') || '').charAt(0) === '#');
+  }
+
+  private tocEntriesFrom(list: HTMLElement, container: HTMLElement): ITocEntry[] {
+    const links: HTMLAnchorElement[] = Array.prototype.slice.call(list.querySelectorAll('a'));
+
+    return links
+      .map((link: HTMLAnchorElement) => {
+        const id: string = (link.getAttribute('href') || '').slice(1);
+        /* Nesting is how an authored contents shows depth. */
+        let level: number = 1;
+        let node: HTMLElement | null = link.parentElement;
+        while (node && node !== list) {
+          if (node.tagName === 'UL' || node.tagName === 'OL') {
+            level += 1;
+          }
+          node = node.parentElement;
+        }
+        return { id: id, text: (link.textContent || '').trim(), level: level };
+      })
+      .filter((entry: ITocEntry) => {
+        if (!entry.id || !entry.text) {
+          return false;
+        }
+        /* A link to a heading that is not here would scroll nowhere. */
+        try {
+          return !!container.querySelector(`#${CSS.escape(entry.id)}`);
+        } catch {
+          return false;
+        }
+      });
+  }
+
   /** Builds the contents list and scrolls smoothly instead of jumping the page. */
   public buildToc(entries: ITocEntry[], container: HTMLElement): HTMLElement | undefined {
     if (entries.length === 0) {

@@ -343,6 +343,39 @@ const demoUrl = 'file://' + path.join(__dirname, '..', 'site', 'demo', 'index.ht
     await widthOf('auto');
   });
 
+  /*
+   * The kitchen sink opens with [[toc]], so it is exactly the case that used
+   * to produce two tables of contents: the document's own, in the text, and a
+   * generated one beside it.
+   */
+  await step("the document's own contents is used, not a second one", async () => {
+    await page.setViewportSize({ width: 1200, height: 900 });
+    await page.evaluate(() => window.harness.setToc('left'));
+    await page.waitForTimeout(400);
+
+    const counts = await page.evaluate(() => ({
+      inTheText: document.querySelectorAll('.strata-content .strata-toc').length,
+      panels: document.querySelectorAll('.strata-toc-sidebar, .strata-toc-inline').length
+    }));
+    if (counts.inTheText !== 0) {
+      throw new Error('the authored contents is still in the text as well');
+    }
+    if (counts.panels !== 1) {
+      throw new Error(counts.panels + ' contents panels');
+    }
+  });
+
+  await step('the adopted contents still scrolls and tracks', async () => {
+    const entries = await page.locator('.strata-toc-sidebar .strata-toc a').count();
+    if (entries < 3) throw new Error('only ' + entries + ' entries');
+    await page.locator('.strata-toc-sidebar .strata-toc a').nth(2).click();
+    await page.waitForTimeout(600);
+    const active = await page.locator('.strata-toc-sidebar .strata-toc a[aria-current="true"]').count();
+    if (active !== 1) throw new Error(active + ' entries marked as being read');
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await page.waitForTimeout(300);
+  });
+
   await step('contents move to the right', async () => {
     await page.evaluate(() => window.harness.setToc('right'));
     await page.waitForTimeout(400);

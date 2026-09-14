@@ -247,6 +247,25 @@ or right column, above the content, or be switched off. It has a pane page of
 its own, **Contents**, since between the position, the depth and the width
 there is more to it than one setting.
 
+### A contents the document writes itself
+
+If the document has its own contents, that one is used and the generated one is
+not built, so the page never carries two. Either of these counts:
+
+- `[[toc]]` on a line of its own.
+- A list of links to headings in this document, under a heading that reads
+  *Contents*, *Table of contents* or *On this page*.
+
+A hand-written list is usually a deliberate subset, naming the sections worth
+jumping to and leaving out the rest, so it is treated as a decision rather than
+as something to improve on. It is lifted out of the text into whichever position
+the setting gives it, and gets the same indentation, smooth scrolling and
+reading-position tracking as a generated one. **Deepest heading in the contents**
+does not apply to it, since the document has already said what belongs.
+
+With the contents set to **No contents**, nothing is taken over: an authored one
+stays exactly where it was written.
+
 **Deepest heading in the contents** decides how far down it goes, from top-level
 headings only through to every level. A long document with four levels of
 heading usually reads better listing two or three of them.
