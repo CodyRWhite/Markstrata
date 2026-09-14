@@ -47,12 +47,27 @@ test('the header marks the current page and links to all of them', () => {
 });
 
 /*
- * House style for the site's prose: no em dashes. They are easy to reintroduce
- * by habit, and the only place it shows is the published page.
+ * House style for every word this project ships: no em dashes. They are easy to
+ * reintroduce by habit and invisible in review, and they surface in places that
+ * are awkward to correct later - the app's own description in the SharePoint
+ * store, a published release note, the rendered site.
+ *
+ * The list is explicit rather than a directory walk: the brand package under
+ * assets/ is delivered artwork and documentation that is not ours to restyle,
+ * and sharepoint/solution/ is build output full of third-party bundles.
  */
-test('no em dashes in anything the site renders', () => {
+const PROSE = [
+  'README.md', 'CONTRIBUTING.md', 'THEMES.md', 'CHANGELOG.md',
+  'scripts/site.js', 'harness/build.js',
+  'samples/welcome.md', 'samples/kitchen-sink.md',
+  'src/webparts/markstrata/loc/en-us.js',
+  'src/webparts/markstrata/MarkstrataWebPart.manifest.json',
+  'config/package-solution.json'
+];
+
+test('no em dashes in the prose this project ships', () => {
   const sources = PAGES.filter((entry) => entry.source).map((entry) => entry.source)
-    .concat(['scripts/site.js', 'harness/build.js']);
+    .concat(PROSE);
   for (const file of sources) {
     const body = fs.readFileSync(path.join(root, file), 'utf8');
     const found = /—|&mdash;|&#8212;/.exec(body);

@@ -7,6 +7,14 @@ the same number with a fourth part appended (0.2.0 -> 0.2.0.0), stamped by
 
 ## Unreleased
 
+- No em dashes in anything this project ships. They were in the README, the
+  contributing guide, the theme guide, the changelog, the sample documents and
+  the web part's own sample content, which is the copy a reader meets first
+  inside SharePoint. Each one was rewritten rather than swapped for a hyphen,
+  so the punctuation still suits the sentence. The site guard that already
+  checked this now covers the prose files too, and it fails with the file and
+  the surrounding words.
+
 - The App Catalog lists the app as "Markstrata - Markdown Web Part for
   SharePoint Online" rather than the scaffold's `markstrata-client-side-
   solution`, and the feature is titled Markstrata.
@@ -146,7 +154,7 @@ First build, and the baseline the pre-releases are cut against.
 - Repository renamed to `Markstrata`, matching the solution and package
   names. Every link in the repository now points at the new path, including
   the documentation site, which moves from `/Markdown-Formatter-SPO/` to
-  `/Markstrata/` — GitHub redirects the old repository URL but not the
+  `/Markstrata/`. GitHub redirects the old repository URL but not the
   old Pages paths, so any bookmark to the demo needs updating. Pages paths are
   case-sensitive, so the site links keep the repository's own capitalisation.
 

@@ -4,7 +4,7 @@ Every colour, font and shape in this web part comes from a CSS custom property
 declared in `src/webparts/markstrata/styles/base.css` and given a value
 by a theme file in `styles/themes/`. Nothing in the structural stylesheets
 hard-codes a colour, which is why "GitHub / Obsidian / VS Code" is a data change
-rather than three forks of the same CSS — and why adding a fourth theme is one
+rather than three forks of the same CSS, and why adding a fourth theme is one
 file plus one dropdown entry.
 
 The root element carries the selection as attributes:
@@ -122,7 +122,7 @@ All of them are documented in the theme files as well:
 
 - **Obsidian light accents** are darkened about 15% (hue preserved). Obsidian's
   own light green `#08b94e`, cyan `#00bfbc` and yellow `#e0ac00` land near
-  2.5:1 on white — below WCAG AA — which makes callout titles and syntax tokens
+  2.5:1 on white, below WCAG AA, which makes callout titles and syntax tokens
   hard to read. Dark mode keeps Obsidian's values.
 - **Obsidian dark blue** `#027aff` is raised to `#4a9eff`; the original is about
   3.2:1 on Obsidian's own `#1e1e1e`.
@@ -154,7 +154,7 @@ Wiki.js classes map on too: `is-info` → info, `is-warning` → warning,
 ## Adding a theme
 
 1. Copy `styles/themes/github.css` to `styles/themes/mytheme.css` and replace
-   `github` with `mytheme` in the three selectors. Fill in the values — every
+   `github` with `mytheme` in the three selectors. Fill in the values; every
    token the other themes set has to be set here too, since there is no fallback
    palette by design (a missing colour should be obvious, not silently grey).
    `npm test` checks this for you: the theme files must declare an identical set
@@ -172,7 +172,7 @@ Wiki.js classes map on too: `is-info` → info, `is-warning` → warning,
 
 The demo page is the fastest check: open `demo/dist/index.html`, switch through
 the six combinations, and look at the callout titles, comments in code, and the
-muted text in the footer — those are the three places a palette usually fails.
+muted text in the footer. Those are the three places a palette usually fails.
 
 ## Names and trademarks
 

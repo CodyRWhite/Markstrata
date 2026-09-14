@@ -70,8 +70,8 @@ test tenant without releasing, download the artifact from the CI run, or run
 
 ## The documentation site
 
-`npm run site` builds `site/` — the landing page, the theme preview and the
-working demo — from the same sources as the package. It is published to GitHub
+`npm run site` builds `site/` (the landing page, the theme preview and the
+working demo) from the same sources as the package. It is published to GitHub
 Pages by `.github/workflows/pages.yml` on every push to `main`.
 
 The workflow enables Pages itself through the API, so no manual setting is

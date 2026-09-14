@@ -1,6 +1,6 @@
 # Markstrata
 
-Pick a theme in the property pane — **GitHub**, **Obsidian** or **VS Code**, each in light or dark — and the whole page follows: text, tables, callouts and syntax highlighting.
+Pick a theme in the property pane (**GitHub**, **Obsidian** or **VS Code**, each in light or dark) and the whole page follows: text, tables, callouts and syntax highlighting.
 
 ## Callouts
 
@@ -13,7 +13,7 @@ Both syntaxes work, and so does the `{.is-info}` style from older SharePoint mar
 > And any of Obsidian's types: info, success, question, failure, bug, example, quote.
 
 > [!warning]- Foldable, collapsed by default
-> Add `-` to collapse a callout and `+` to leave it open. No JavaScript involved — it is a `<details>` element.
+> Add `-` to collapse a callout and `+` to leave it open. No JavaScript involved: it is a `<details>` element.
 
 ## Code
 
