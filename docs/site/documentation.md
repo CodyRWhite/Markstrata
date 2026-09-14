@@ -62,6 +62,16 @@ anyone else sees.
 **Content width, spacing and text size**: independent of theme, so you can run
 GitHub's look at a narrower measure or a larger size without editing anything.
 
+**Show file name and last updated**: a footer with the file's name, when it was
+last changed and by whom. It needs a file from a document library, since that is
+the only source with any of those to show. **Keep it in view while scrolling**
+pins it to the bottom of the web part rather than leaving it at the end of the
+document, which in a long one means a reader never reaches it.
+
+**Show toolbar** carries the reload, version history, theme and print controls.
+Set to *only while editing the page*, readers never see any of them, including
+the print button.
+
 ## Code blocks
 
 ````markdown
