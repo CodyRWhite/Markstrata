@@ -10,6 +10,12 @@ the same number with a fourth part appended (0.2.0 -> 0.2.0.0), stamped by
 - The App Catalog lists the app as "Markstrata - Markdown Web Part for
   SharePoint Online" rather than the scaffold's `markstrata-client-side-
   solution`, and the feature is titled Markstrata.
+- The toolbox and full-page apps picker show the web part tile - markdown open
+  in an editor - instead of the brand mark. The mark is already the app catalog
+  icon, so showing it in both places said nothing about what the web part does.
+  It is inlined into the manifest, which loads with the web part on every page,
+  so it is re-encoded at a lower quality than the copy the site uses: 12 KB
+  against the 690 characters the SVG took, and a test caps it at 20 KB.
 - The app tile shows. The packager writes `<AppIconPath>` as the base name of
   `iconPath` but copies the file to `iconPath` itself, so a tile under a folder
   shipped to `assets/icon.png` while the manifest asked SharePoint for

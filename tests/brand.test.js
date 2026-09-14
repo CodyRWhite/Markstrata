@@ -146,15 +146,21 @@ test('the web part tile is a JPEG at its intended size', () => {
   assert.ok(buf.length < 40 * 1024, `tile is ${buf.length} bytes; it is inlined into the manifest`);
 });
 
-test('the manifest carries the brand icon, with a glyph still there as a fallback', () => {
+/*
+ * The toolbox and full-page apps picker show this one, and it is the tile
+ * rather than the mark: the mark is already the app catalog icon, and showing
+ * it twice tells a reader nothing about what the web part does. It is inlined
+ * into the manifest, which loads with the web part on every page, so the cap
+ * is a real budget and not a formality.
+ */
+test('the manifest carries the web part tile, with a glyph still there as a fallback', () => {
   const manifest = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'src', 'webparts',
     'markstrata', 'MarkstrataWebPart.manifest.json'), 'utf8'));
-  const supplied = fs.readFileSync(path.join(BRAND, 'export/spfx-iconImageUrl.txt'), 'utf8').trim();
   for (const entry of manifest.preconfiguredEntries) {
-    assert.equal(entry.iconImageUrl, supplied,
-      'the manifest icon is out of step with the brand package; run `npm run brand`');
-    assert.ok(entry.iconImageUrl.startsWith('data:image/svg+xml'),
-      'the brand package supplies an SVG data URI, which is a fraction of a raster');
+    assert.ok(entry.iconImageUrl.startsWith('data:image/jpeg;base64,'),
+      'the manifest icon should be the rendered tile; run `npm run brand`');
+    assert.ok(entry.iconImageUrl.length < 20 * 1024,
+      `manifest icon is ${entry.iconImageUrl.length} chars; it loads with every page`);
     assert.ok(entry.officeFabricIconFontName, 'keep a glyph for surfaces that ignore the image');
   }
 });

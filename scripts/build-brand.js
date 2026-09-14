@@ -59,8 +59,14 @@ const COPIES = [
 const APP_CATALOG_ICON = ['export/markstrata-icon-96.png',
   path.join(root, 'sharepoint', 'icon.png')];
 
-/* The manifest icon, as the brand guide supplies it: an SVG data URI. */
-const MANIFEST_ICON = 'export/spfx-iconImageUrl.txt';
+/*
+ * The manifest icon is the web part's tile in the toolbox and on the full-page
+ * apps picker, so it shows the thing itself - markdown open in an editor -
+ * rather than the mark, which is already the app catalog icon two rows up.
+ * It is the rendered tile re-encoded a little harder: the manifest rides along
+ * with every page that loads the web part, so the bytes are worth trimming.
+ */
+const MANIFEST_TILE_QUALITY = 70;
 
 function copyDelivered() {
   COPIES.forEach(([from, to]) => {
@@ -74,17 +80,11 @@ function copyDelivered() {
   console.log(`copied ${COPIES.length + 1} files out of the brand package`);
 }
 
-/*
- * Writes the manifest's icon. The brand package supplies the data URI, so this
- * copies it rather than encoding one: the SVG is 691 characters against 16 KB
- * for a raster of the same mark, and it rides along in every page that loads
- * the web part.
- */
-function stampManifestIcon() {
+/* Writes the manifest's icon from the data URI the tile render produced. */
+function stampManifestIcon(uri) {
   const manifest = path.join(root, 'src', 'webparts', 'markstrata',
     'MarkstrataWebPart.manifest.json');
   const json = JSON.parse(fs.readFileSync(manifest, 'utf8'));
-  const uri = fs.readFileSync(path.join(BRAND, MANIFEST_ICON), 'utf8').trim();
   let changed = false;
   json.preconfiguredEntries.forEach((entry) => {
     if (entry.iconImageUrl !== uri) {
@@ -118,8 +118,13 @@ async function renderTile(browser) {
     + tile.tileHtml(dataUri(path.join(assets, 'mark-mono-light.svg'))) + '</body>');
   await page.waitForFunction(() => [...document.images].every((i) => i.complete && i.naturalWidth));
   await page.screenshot({ path: dest, type: 'jpeg', quality: 82, scale: 'css' });
+  /* The same frame, encoded for the manifest rather than for the site. */
+  const inline = await page.screenshot({
+    type: 'jpeg', quality: MANIFEST_TILE_QUALITY, scale: 'css'
+  });
   await page.close();
   console.log('webpart-tile.jpg'.padEnd(30), String(fs.statSync(dest).size).padStart(6), 'bytes');
+  return 'data:image/jpeg;base64,' + inline.toString('base64');
 }
 
 /* Social preview, at the 1.91:1 GitHub, Slack and Teams all crop to. */
@@ -138,13 +143,12 @@ async function renderSocialCard(browser) {
 
 async function build() {
   copyDelivered();
-  stampManifestIcon();
   const browser = await chromium.launch(
     process.env.PLAYWRIGHT_CHROMIUM ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM } : {}
   );
   try {
     await renderSocialCard(browser);
-    await renderTile(browser);
+    stampManifestIcon(await renderTile(browser));
   } finally {
     await browser.close();
   }
