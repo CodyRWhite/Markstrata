@@ -183,12 +183,20 @@ test('mermaid is configured from one place', () => {
   }
 });
 
-test('the shared mermaid config lifts gantt text off its 10px default', () => {
-  const config = fs.readFileSync(path.join(__dirname, '..', 'src', 'webparts',
-    'markstrata', 'utils', 'mermaidConfig.ts'), 'utf8');
-  const sizes = (config.match(/font-size:\s*(\d+)px/g) || []).map((s) => parseInt(/\d+/.exec(s)[0], 10));
-  assert.ok(sizes.length >= 2, 'expected the gantt text rules');
+/*
+ * A gantt lays out wider than its container and useMaxWidth scales the SVG
+ * down to fit, so what is written here lands smaller on screen. It has to
+ * start above body text to survive that, and the size the layout is measured
+ * at has to match the size that is drawn or the labels stop fitting the bars.
+ */
+test('gantt text is sized to survive the scaling, and layout agrees with it', () => {
+  const { GANTT_TEXT_CSS, MERMAID_BASE_CONFIG } = require('./helpers').mermaidConfig;
+  const sizes = (GANTT_TEXT_CSS.match(/font-size:\s*(\d+)px/g) || [])
+    .map((rule) => parseInt(/\d+/.exec(rule)[0], 10));
+  assert.ok(sizes.length >= 2, 'expected rules for the axis and the task labels');
   for (const size of sizes) {
-    assert.ok(size >= 12, `gantt text set to ${size}px, which is back in unreadable territory`);
+    assert.ok(size >= 15, `gantt text is ${size}px; scaling would drop it below body text`);
   }
+  assert.equal(MERMAID_BASE_CONFIG.gantt.fontSize, sizes[0],
+    'the layout font size and the drawn font size have drifted apart');
 });

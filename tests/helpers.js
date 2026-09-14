@@ -11,5 +11,6 @@ module.exports = {
   ThemeManager: require(path.join(LIB, 'ThemeManager')).ThemeManager,
   codeBlocks: require(path.join(LIB, 'codeBlocks')),
   imagePaths: require(path.join(LIB, 'imagePaths')),
+  mermaidConfig: require(path.join(LIB, 'mermaidConfig')),
   callouts: require(path.join(LIB, 'callouts'))
 };

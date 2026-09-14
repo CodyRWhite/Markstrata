@@ -5,7 +5,16 @@ All notable changes to this project are recorded here. Versions follow
 the same number with a fourth part appended (0.2.0 -> 0.2.0.0), stamped by
 `scripts/set-version.js` when a release is tagged.
 
-## Unreleased
+## 0.0.9
+
+- Gantt text is readable next to body text, which 0.0.8 did not manage. Two
+  things were missing. A gantt lays itself out wider than its container and
+  `useMaxWidth` then scales the whole SVG down to fit, so 13px was landing at
+  about 11px on screen beside 15px body text. And `gantt.fontSize`, which sets
+  the size the layout is measured at, was not being set alongside the size that
+  is actually drawn, so the two could disagree. The text is now 16px with the
+  layout measured at the same, which lands at or just above body text once the
+  scaling is applied.
 
 - The gantt fix reaches the documentation site. The site's static pages
   initialise mermaid in an inline script rather than through the renderer

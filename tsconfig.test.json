@@ -16,6 +16,7 @@
     "src/webparts/markstrata/utils/MarkdownProcessor.ts",
     "src/webparts/markstrata/utils/ThemeManager.ts",
     "src/webparts/markstrata/utils/codeBlocks.ts",
-    "src/webparts/markstrata/utils/callouts.ts"
+    "src/webparts/markstrata/utils/callouts.ts",
+    "src/webparts/markstrata/utils/mermaidConfig.ts"
   ]
 }
