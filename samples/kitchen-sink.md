@@ -142,6 +142,23 @@ And this one forces the gutter on and scrolls instead of wrapping:
 }
 ```
 
+A fence can also call out the lines that matter, the way Docusaurus and
+VitePress write it. The rest of the block is faded rather than the called lines
+being tinted, so it reads the same against every theme's syntax colours, and
+hovering the block brings it all back:
+
+```typescript {3,6-7}
+export function resolveMode(mode: ColorMode, isInverted?: boolean): ResolvedMode {
+  if (mode === 'light' || mode === 'dark') {
+    return mode;
+  }
+  if (typeof isInverted === 'boolean') {
+    return isInverted ? 'dark' : 'light';
+  }
+  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+}
+```
+
 ```diff
 - --strata-code-bg: #212121;
 - text-shadow: 0 -0.1em 0.2em #000;

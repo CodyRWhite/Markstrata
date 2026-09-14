@@ -10,6 +10,7 @@ import { taskListPlugin } from './markdownItTaskLists';
 import { renderCodeBlock, ICodeBlockOptions, escapeHtml } from './codeBlocks';
 import { resolveAgainst } from './imagePaths';
 import { splitFrontMatter, ISplitDocument } from './frontMatter';
+import { wikiLinkPlugin } from './markdownItWikiLinks';
 import {
   IMarkdownIt,
   IRenderer,
@@ -39,6 +40,7 @@ export interface IMarkdownProcessorOptions {
   enableMermaid: boolean;
   enableToc: boolean;
   enableAnchors: boolean;
+  enableWikiLinks: boolean;
   showCodeHeader: boolean;
   showLineNumbers: boolean;
   wrapCodeLines: boolean;
@@ -62,6 +64,7 @@ export const DEFAULT_PROCESSOR_OPTIONS: IMarkdownProcessorOptions = {
   enableMermaid: true,
   enableToc: true,
   enableAnchors: true,
+  enableWikiLinks: false,
   showCodeHeader: true,
   showLineNumbers: false,
   wrapCodeLines: false,
@@ -148,6 +151,15 @@ export class MarkdownProcessor {
     // `{.is-info}` classes have already landed on the blockquote token.
     this.md.use(calloutPlugin);
     this.md.use(taskListPlugin);
+
+    if (this.options.enableWikiLinks) {
+      /* Given the same resolver as images, so a link and a picture beside it
+         agree about which folder this document is in. */
+      this.md.use(wikiLinkPlugin, {
+        resolve: (src: string): string | undefined =>
+          this.options.imageBasePath ? resolveAgainst(this.options.imageBasePath, src) : undefined
+      });
+    }
   }
 
   private addPlugins(): void {
@@ -168,6 +180,18 @@ export class MarkdownProcessor {
     };
 
     use('attributes', markdownItAttrs, { leftDelimiter: '{', rightDelimiter: '}', allowedAttributes: ['id', 'class'] });
+
+    /*
+     * A fence's line spec has to be taken before markdown-it-attrs runs.
+     * Attributes use the same braces, so `{2,4-6}` was read as an attribute
+     * list, found to hold nothing it allows, and removed from the info string
+     * before the fence renderer ever saw it.
+     *
+     * Registered against that rule by name rather than pushed, because pushing
+     * appends to the end of the chain while attrs inserts itself near the
+     * front: the order has to be said, not assumed.
+     */
+    this.claimFenceLineSpecs();
     use('footnotes', markdownItFootnote);
     // markdown-it-emoji 3 exports `full`, `light` and `bare` rather than a
     // single default plugin.
@@ -225,12 +249,52 @@ export class MarkdownProcessor {
 
     this.md.renderer.rules.fence = (tokens: IToken[], idx: number): string => {
       const token: IToken = tokens[idx];
-      return renderCodeBlock(token.content, this.fenceInfo(token), codeOptions());
+      return renderCodeBlock(token.content,
+        this.fenceInfo(token) + this.fenceLines(token), codeOptions());
     };
 
     // Indented code blocks get the same treatment, just without a language.
     this.md.renderer.rules.code_block = (tokens: IToken[], idx: number): string =>
       renderCodeBlock(tokens[idx].content, '', codeOptions());
+  }
+
+  /*
+   * Moves `{2,4-6}` off a fence's info string and onto the token, before
+   * anything else can claim the braces. The spec is kept rather than parsed
+   * here so codeBlocks stays the one place that understands a fence.
+   */
+  private claimFenceLineSpecs(): void {
+    const claim = (state: { tokens: IToken[] }): void => {
+      state.tokens.forEach((token: IToken) => {
+        if (token.type !== 'fence') {
+          return;
+        }
+        const info: string = this.fenceInfo(token);
+        const braces: RegExpExecArray | null = /\{[\d\s,-]+\}/.exec(info);
+        if (!braces) {
+          return;
+        }
+        const raw: { info?: string; meta?: { [key: string]: unknown } } =
+          (token as unknown) as { info?: string; meta?: { [key: string]: unknown } };
+        raw.meta = { ...(raw.meta || {}), strataLines: braces[0] };
+        raw.info = info.replace(braces[0], '').replace(/\s+/g, ' ').trim();
+      });
+    };
+
+    /* Before attrs where it loaded, and before linkify otherwise, which is
+       where attrs would have put itself. */
+    try {
+      this.md.core.ruler.before('curly_attributes', 'strata_fence_lines', claim);
+    } catch {
+      this.md.core.ruler.before('linkify', 'strata_fence_lines', claim);
+    }
+  }
+
+  /** The line spec claimed above, put back for the fence renderer. */
+  private fenceLines(token: IToken): string {
+    const meta: { strataLines?: string } | undefined =
+      ((token as unknown) as { meta?: { strataLines?: string } }).meta;
+    return meta && meta.strataLines ? ` ${meta.strataLines}` : '';
   }
 
   /** The token's info string; markdown-it keeps it outside the typed surface. */

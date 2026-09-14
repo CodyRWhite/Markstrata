@@ -105,6 +105,8 @@ export interface IFenceInfo {
   wrap?: boolean;
   /** Per-fence override of the line number setting. */
   lineNumbers?: boolean;
+  /** 1-based source lines to call out, from a `{2,4-6}` on the fence. */
+  highlight?: number[];
 }
 
 /**
@@ -115,6 +117,7 @@ export interface IFenceInfo {
  *   ```ts:app.ts              the shorthand some editors use
  *   ```python wrap            soft-wrap this block whatever the web part default
  *   ```python nowrap numbers  and the opposites, per block
+ *   ```js {2,4-6}             call out those lines, as Docusaurus and VitePress do
  */
 export function parseInfo(info: string): IFenceInfo {
   const trimmed: string = (info || '').trim();
@@ -130,8 +133,11 @@ export function parseInfo(info: string): IFenceInfo {
     .slice(1)
     .map((flag: string) => flag.toLowerCase());
 
+  /* A fence that carries only a line spec has no language, and `{2,4-6}` is
+     not one. */
+  const language: string = /^\{/.test(first) ? '' : first;
   const parsed: IFenceInfo = {
-    lang: (colonIndex > 0 ? first.slice(0, colonIndex) : first).toLowerCase(),
+    lang: (colonIndex > 0 ? language.slice(0, colonIndex) : language).toLowerCase(),
     filename: titleMatch ? titleMatch[1] || titleMatch[2] : colonIndex > 0 ? first.slice(colonIndex + 1) : ''
   };
 
@@ -147,7 +153,48 @@ export function parseInfo(info: string): IFenceInfo {
     parsed.lineNumbers = false;
   }
 
+  const lines: number[] = parseHighlightedLines(trimmed);
+  if (lines.length) {
+    parsed.highlight = lines;
+  }
+
   return parsed;
+}
+
+/**
+ * Reads `{2,4-6}` off a fence into the lines it names.
+ *
+ * Out of range numbers are kept rather than checked here, because the fence
+ * string does not know how long the block is; a line that is not there simply
+ * matches nothing when the block is rendered.
+ */
+export function parseHighlightedLines(info: string): number[] {
+  const braces: RegExpExecArray | null = /\{([\d\s,-]+)\}/.exec(info || '');
+  if (!braces) {
+    return [];
+  }
+
+  const lines: number[] = [];
+  braces[1].split(',').forEach((part: string) => {
+    const range: RegExpMatchArray | null = part.trim().match(/^(\d+)\s*-\s*(\d+)$/);
+    if (range) {
+      const from: number = parseInt(range[1], 10);
+      const to: number = parseInt(range[2], 10);
+      /* Written either way round, because 6-4 is a slip, not a request for
+         nothing. */
+      for (let n: number = Math.min(from, to); n <= Math.max(from, to); n += 1) {
+        lines.push(n);
+      }
+      return;
+    }
+    const single: number = parseInt(part.trim(), 10);
+    if (!isNaN(single)) {
+      lines.push(single);
+    }
+  });
+
+  return lines.filter((line: number, index: number) =>
+    line > 0 && lines.indexOf(line) === index);
 }
 
 export function languageLabel(lang: string): string {
@@ -214,12 +261,15 @@ export function renderCodeBlock(code: string, info: string, options: ICodeBlockO
 
   // Joined with no separator: each line is a block element, so a newline
   // between them would render as an extra blank line inside the <pre>.
+  const called: number[] = parsed.highlight || [];
   const lines: string = splitHighlightedLines(highlighted.html)
-    .map(
-      (line: string) =>
-        `<span class="strata-code-line"><span class="strata-code-ln" aria-hidden="true"></span>` +
-        `<span class="strata-code-line-text">${line}</span></span>`
-    )
+    .map((line: string, index: number) => {
+      /* Numbered from one, the way a fence names them and a gutter shows them. */
+      const marked: boolean = called.indexOf(index + 1) !== -1;
+      const cls: string = marked ? 'strata-code-line strata-code-line--called' : 'strata-code-line';
+      return `<span class="${cls}"><span class="strata-code-ln" aria-hidden="true"></span>` +
+        `<span class="strata-code-line-text">${line}</span></span>`;
+    })
     .join('');
 
   const classes: string[] = ['strata-code'];
@@ -231,6 +281,10 @@ export function renderCodeBlock(code: string, info: string, options: ICodeBlockO
   }
   if (wrap) {
     classes.push('strata-code--wrap');
+  }
+  /* Dimming the rest only reads as deliberate when something is called out. */
+  if (called.length) {
+    classes.push('strata-code--calling');
   }
 
   const copyButton: string =

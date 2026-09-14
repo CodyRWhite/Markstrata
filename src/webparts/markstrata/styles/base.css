@@ -25,6 +25,12 @@
 .strata-root {
   /* Shape defaults - themes may override. */
   --strata-radius-sm: 3px;
+
+  /* Lines a fence calls out. Built from the theme's own accent palette rather
+     than stated as colours, so each theme marks them in its own blue and both
+     modes stay legible without either being named here. */
+  --strata-code-called-bg: rgba(var(--strata-color-blue), 0.12);
+  --strata-code-called-bar: rgb(var(--strata-color-blue));
   --strata-radius-md: 6px;
   --strata-radius-lg: 8px;
 

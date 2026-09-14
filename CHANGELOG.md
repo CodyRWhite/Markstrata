@@ -10,6 +10,17 @@ Entries below 0.0.10.0 were written before the switch and are three-part.
 
 ## Unreleased
 
+- A fence can call out the lines that matter, ```` ```js {2,4-6} ````, the
+  convention Docusaurus and VitePress use. The rest of the block is faded
+  rather than the called lines tinted, because a tint has to be a colour and a
+  colour behind syntax highlighting either fights it or cannot be seen; hover
+  brings the block back, and paper never fades it.
+- **Wiki links**, off by default, turns `[[Another page]]` into a link to that
+  file, with `[[Page|worded differently]]`, `[[Page#Heading]]` and `[[#Heading]]`
+  all understood. The name resolves against the folder the document lives in,
+  the same rule images follow. Whether the page exists is not checked, since
+  that is a request to SharePoint for every link on the page.
+
 - **Back to top button** floats above the page once the reader is a screenful
   past the top of the document, at the bottom left or bottom right, or off. It
   goes back to the top of the web part rather than the top of the page, which

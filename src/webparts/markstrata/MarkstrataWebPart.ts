@@ -90,6 +90,7 @@ export interface IMarkstrataWebPartProps {
   enableMermaid: boolean;
   diagramWidth: DiagramWidth;
   enableImageZoom: boolean;
+  enableWikiLinks: boolean;
   showReadingTime: boolean;
   backToTop: BackToTop;
   enableMath: boolean;
@@ -256,6 +257,7 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
       enableMermaid: true,
       diagramWidth: 'fit',
       enableImageZoom: true,
+      enableWikiLinks: false,
       showReadingTime: false,
       backToTop: 'right',
       enableMath: true,
@@ -459,6 +461,7 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
       enableMermaid: this.properties.enableMermaid,
       enableToc: true,
       enableAnchors: this.properties.enableAnchors,
+      enableWikiLinks: this.properties.enableWikiLinks,
       showCodeHeader: this.properties.showCodeHeader,
       showLineNumbers: this.properties.showLineNumbers,
       wrapCodeLines: this.properties.wrapCodeLines,
@@ -635,6 +638,7 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
       'enableMath',
       'enableMermaid',
       'enableAnchors',
+      'enableWikiLinks',
       'showCodeHeader',
       'showLineNumbers',
       'wrapCodeLines',
@@ -953,6 +957,12 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
                   onText: 'On',
                   offText: 'Off'
                 }),
+                PropertyPaneToggle('enableWikiLinks', {
+                  label: strings.WikiLinksLabel,
+                  onText: 'On',
+                  offText: 'Off'
+                }),
+                PropertyPaneLabel('wikiLinksHint', { text: strings.WikiLinksHint }),
                 PropertyPaneToggle('enableMath', {
                   label: strings.MathLabel,
                   onText: 'On',

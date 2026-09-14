@@ -47,6 +47,8 @@ declare interface IMarkstrataWebPartStrings {
   DiagramWidthLabel: string;
   DiagramWidthHint: string;
   ImageZoomLabel: string;
+  WikiLinksLabel: string;
+  WikiLinksHint: string;
   MathLabel: string;
   AllowHtmlLabel: string;
   AllowHtmlHint: string;

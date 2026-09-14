@@ -254,3 +254,41 @@
 .strata-code pre::-webkit-scrollbar-track {
   background-color: transparent;
 }
+
+/*
+ * Lines called out by a fence, `\`\`\`js {2,4-6}`.
+ *
+ * The called lines are left at full strength and the rest are faded, rather
+ * than the called ones being tinted. A tint has to be a colour, and a colour
+ * behind syntax highlighting either fights it or is too faint to see; fading
+ * what is not being pointed at says the same thing in every theme and against
+ * every palette.
+ *
+ * The marker is drawn in the gutter area so it lines up whether or not line
+ * numbers are on, and the whole row carries the emphasis, so a long line that
+ * scrolls sideways stays marked across its width.
+ */
+.strata-code--calling .strata-code-line {
+  opacity: 0.45;
+  transition: opacity 0.1s;
+}
+
+.strata-code--calling .strata-code-line--called {
+  opacity: 1;
+  background-color: var(--strata-code-called-bg);
+  box-shadow: inset 2px 0 0 var(--strata-code-called-bar);
+}
+
+/* Hovering the block shows the whole thing, for reading around the excerpt. */
+.strata-code--calling:hover .strata-code-line {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .strata-code--calling .strata-code-line { transition: none; }
+}
+
+/* On paper there is no hover, so nothing must be faded past reading. */
+@media print {
+  .strata-code--calling .strata-code-line { opacity: 1; }
+}

@@ -36,5 +36,6 @@ module.exports = {
   tocWidth: lib('tocWidth'),
   callouts: lib('callouts'),
   frontMatter: lib('frontMatter'),
-  readingTime: lib('readingTime')
+  readingTime: lib('readingTime'),
+  wikiLinks: lib('wikiLinks')
 };

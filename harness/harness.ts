@@ -54,6 +54,7 @@ const state: any = {
   enableMermaid: true,
   diagramWidth: 'fit',
   enableImageZoom: true,
+  enableWikiLinks: false,
   enableMath: true,
   allowHtml: false,
   showToolbar: true,
@@ -69,7 +70,7 @@ const state: any = {
    renderer reads at draw time. Changing any of these rebuilds markdown-it. */
 const PROCESSOR_KEYS: string[] = ['enableSyntaxHighlighting', 'showCodeHeader',
   'showLineNumbers', 'wrapCodeLines', 'allowHtml', 'enableMath', 'enableMermaid',
-  'enableAnchors'];
+  'enableAnchors', 'enableWikiLinks'];
 
 function processorOptions(): any {
   return {
@@ -80,7 +81,8 @@ function processorOptions(): any {
     allowHtml: state.allowHtml,
     enableMath: state.enableMath,
     enableMermaid: state.enableMermaid,
-    enableAnchors: state.enableAnchors
+    enableAnchors: state.enableAnchors,
+    enableWikiLinks: state.enableWikiLinks
   };
 }
 
@@ -350,6 +352,10 @@ const PANEL_PAGES: IPanelPage[] = [
               + 'axis and keeps the text readable.' },
           { key: 'enableImageZoom', label: 'Click an image to see it full size',
             type: 'toggle' },
+          { key: 'enableWikiLinks', label: 'Wiki links', type: 'toggle',
+            hint: 'Turns [[Another page]] into a link to that file in the same folder. '
+              + 'There is no document library behind this page, so the links here go '
+              + 'nowhere, but the syntax renders.' },
           { key: 'enableMath', label: 'Math (KaTeX)', type: 'toggle' },
           { key: 'allowHtml', label: 'Allow raw HTML in markdown', type: 'toggle',
             hint: 'Leave off unless you trust everyone who can edit the source. With it '

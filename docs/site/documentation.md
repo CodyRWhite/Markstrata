@@ -125,6 +125,19 @@ export function resolveMode(mode: ColorMode): ResolvedMode {
 sideways. It applies to every block on the page, and any block can override it,
 or the line numbers, on its fence:
 
+A fence can also call out the lines that matter, which is the convention
+Docusaurus and VitePress use:
+
+````markdown
+```typescript {3,6-7}
+````
+
+Single lines, ranges and both together all work: `{2}`, `{4-6}`, `{2,4-6}`. The
+rest of the block is faded rather than the called lines being tinted, because a
+tint has to be a colour and a colour behind syntax highlighting either fights it
+or is too faint to see. Hovering the block brings all of it back, and printing
+never fades anything, since there is no hover on paper.
+
 | Flag | Effect |
 |---|---|
 | `wrap` / `nowrap` | Soft wrap, or horizontal scroll |
@@ -133,6 +146,28 @@ or the line numbers, on its fence:
 
 **Code text size** sets code independently of body text, so a dense block can
 be brought down a notch without shrinking the prose around it.
+
+## Linking between pages
+
+**Wiki links** turns `[[Another page]]` into a link to that file, the way
+Obsidian and older wikis write one. It is off by default, since the brackets
+mean nothing in ordinary markdown and a document that uses them for something
+else should keep them.
+
+| Written | Links to |
+|---|---|
+| `[[Deploy runbook]]` | `Deploy runbook.md` in the same folder |
+| `[[Deploy runbook\|how we ship]]` | the same file, worded for the sentence |
+| `[[Deploy runbook#Rollback]]` | straight to that heading in that file |
+| `[[#Rollback]]` | a heading in this document |
+
+The name resolves against the folder the document lives in, the same rule
+images follow, and `.md` is added when the name has no extension.
+
+> [!NOTE]
+> Whether the page exists is not checked. Finding out means asking SharePoint
+> once per link, which cannot happen while the document is being rendered, so
+> every link is written and a missing page is a 404 when it is followed.
 
 ## Callouts
 

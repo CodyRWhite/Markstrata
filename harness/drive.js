@@ -295,6 +295,30 @@ const demoUrl = 'file://' + path.join(__dirname, '..', 'site', 'demo', 'index.ht
     await page.waitForTimeout(300);
   });
 
+  await step('a fence calls out its lines, and dims the rest', async () => {
+    const block = page.locator('.strata-code--calling').first();
+    if (await block.count() === 0) throw new Error('no block calling out lines');
+
+    const opacity = await block.evaluate((node) => {
+      const lines = [...node.querySelectorAll('.strata-code-line')];
+      const called = lines.filter((line) => line.classList.contains('strata-code-line--called'));
+      const rest = lines.filter((line) => !line.classList.contains('strata-code-line--called'));
+      const of = (line) => parseFloat(getComputedStyle(line).opacity);
+      return { called: called.map(of), rest: rest.map(of), counts: [called.length, rest.length] };
+    });
+    if (!opacity.counts[0] || !opacity.counts[1]) {
+      throw new Error('nothing to compare: ' + JSON.stringify(opacity.counts));
+    }
+    /* Measured on screen rather than trusting the class: a rule that loses to
+       another one leaves the markup right and the page unchanged. */
+    if (!opacity.called.every((value) => value === 1)) {
+      throw new Error('called lines faded: ' + JSON.stringify(opacity.called));
+    }
+    if (!opacity.rest.every((value) => value < 1)) {
+      throw new Error('the rest is not dimmed: ' + JSON.stringify(opacity.rest));
+    }
+  });
+
   /*
    * A diagram is the one thing on the page nobody can copy out by selecting it,
    * so the button hands over a raster. This checks the clipboard actually
