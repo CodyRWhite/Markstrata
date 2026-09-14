@@ -823,43 +823,7 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
                   label: strings.TextSizeLabel,
                   options: this.toDropdown(TEXT_SIZES),
                   selectedKey: this.properties.textSize
-                }),
-                PropertyPaneDropdown('toolbarVisibility', {
-                  label: strings.ToolbarVisibilityLabel,
-                  options: [
-                    { key: 'always', text: 'Always' },
-                    { key: 'editing', text: 'Only while editing the page' },
-                    { key: 'never', text: 'Never' }
-                  ],
-                  selectedKey: this.properties.toolbarVisibility
-                }),
-                // The toolbar carries the print button, so a reader who never
-                // sees the toolbar never sees printing either. Saying so here
-                // costs a line and saves someone turning the toggle on and
-                // wondering why nothing changed.
-                PropertyPaneLabel('toolbarHint', { text: strings.ToolbarHint }),
-                PropertyPaneToggle('showPrintButton', {
-                  label: strings.PrintButtonLabel,
-                  onText: 'On',
-                  offText: 'Off',
-                  disabled: this.properties.toolbarVisibility !== 'always'
-                }),
-                PropertyPaneToggle('showSourceInfo', {
-                  label: strings.ShowSourceInfoLabel,
-                  onText: 'On',
-                  offText: 'Off',
-                  // The footer is built from the file's metadata, and only a
-                  // library file has any.
-                  disabled: this.properties.contentSource !== 'library'
-                }),
-                PropertyPaneToggle('pinMeta', {
-                  label: strings.PinMetaLabel,
-                  onText: 'On',
-                  offText: 'Off',
-                  disabled: this.properties.contentSource !== 'library'
-                    || !this.properties.showSourceInfo
-                }),
-                PropertyPaneLabel('sourceInfoHint', { text: strings.SourceInfoHint })
+                })
               ]
             },
             {
@@ -895,10 +859,10 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
           ]
         },
         {
-          header: { description: strings.FeaturesPageDescription },
+          header: { description: strings.ContentsPageDescription },
           groups: [
             {
-              groupName: strings.FeaturesGroupName,
+              groupName: strings.ContentsGroupName,
               groupFields: [
                 PropertyPaneDropdown('tocPosition', {
                   label: strings.TocPositionLabel,
@@ -937,7 +901,17 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
                   label: strings.AnchorsLabel,
                   onText: 'On',
                   offText: 'Off'
-                }),
+                })
+              ]
+            }
+          ]
+        },
+        {
+          header: { description: strings.FeaturesPageDescription },
+          groups: [
+            {
+              groupName: strings.RenderingGroupName,
+              groupFields: [
                 PropertyPaneToggle('enableMermaid', {
                   label: strings.MermaidLabel,
                   onText: 'On',
@@ -965,6 +939,51 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
                   offText: 'Off'
                 }),
                 PropertyPaneLabel('htmlHint', { text: strings.AllowHtmlHint })
+              ]
+            },
+            {
+              groupName: strings.ToolbarGroupName,
+              groupFields: [
+                PropertyPaneDropdown('toolbarVisibility', {
+                  label: strings.ToolbarVisibilityLabel,
+                  options: [
+                    { key: 'always', text: 'Always' },
+                    { key: 'editing', text: 'Only while editing the page' },
+                    { key: 'never', text: 'Never' }
+                  ],
+                  selectedKey: this.properties.toolbarVisibility
+                }),
+                // The toolbar carries the print button, so a reader who never
+                // sees the toolbar never sees printing either. Saying so here
+                // costs a line and saves someone turning the toggle on and
+                // wondering why nothing changed.
+                PropertyPaneLabel('toolbarHint', { text: strings.ToolbarHint }),
+                PropertyPaneToggle('showPrintButton', {
+                  label: strings.PrintButtonLabel,
+                  onText: 'On',
+                  offText: 'Off',
+                  disabled: this.properties.toolbarVisibility !== 'always'
+                })
+              ]
+            },
+            {
+              groupName: strings.FileInfoGroupName,
+              groupFields: [
+                PropertyPaneToggle('showSourceInfo', {
+                  label: strings.ShowSourceInfoLabel,
+                  onText: 'On',
+                  offText: 'Off',
+                  // The footer is built from the file's metadata, and only a
+                  // library file has any.
+                  disabled: !isLibrary
+                }),
+                PropertyPaneToggle('pinMeta', {
+                  label: strings.PinMetaLabel,
+                  onText: 'On',
+                  offText: 'Off',
+                  disabled: !isLibrary || !this.properties.showSourceInfo
+                }),
+                PropertyPaneLabel('sourceInfoHint', { text: strings.SourceInfoHint })
               ]
             }
           ]

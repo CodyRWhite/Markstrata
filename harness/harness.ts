@@ -39,25 +39,26 @@ const state: any = {
   contentWidth: 'comfortable',
   density: 'compact',
   textSize: 'normal',
-  codeSize: 'normal',
-  showToolbar: true,
-  showPrintButton: true,
-  showSourceInfo: true,
-  pinMeta: false,
-  // Code blocks
   enableSyntaxHighlighting: true,
   showCodeHeader: true,
   showLineNumbers: true,
   wrapCodeLines: false,
-  // Features
+  codeSize: 'normal',
+  // Contents
   tocMaxLevel: 3,
   tocWidthMode: 'auto',
   tocWidthUnit: 'em',
   tocWidthValue: 15,
   enableAnchors: true,
+  // Features
   enableMermaid: true,
+  diagramWidth: 'fit',
   enableMath: true,
-  allowHtml: false
+  allowHtml: false,
+  showToolbar: true,
+  showPrintButton: true,
+  showSourceInfo: true,
+  pinMeta: false
 };
 
 /* The options the processor is built from, as opposed to the ones the
@@ -127,6 +128,7 @@ function draw(): void {
       settings: settings(),
       resolvedMode: mode,
       enableMermaid: true,
+      diagramWidth: state.diagramWidth,
       canSave: true,
       saveTargetName: 'handbook.md'
     });
@@ -143,6 +145,7 @@ function draw(): void {
     tocMaxLevel: state.tocMaxLevel,
     showSourceInfo: state.showSourceInfo,
     enableMermaid: state.enableMermaid,
+    diagramWidth: state.diagramWidth,
     canReload: state.canReload,
     canShowVersions: state.canShowVersions,
     isPageEditing: false,
@@ -217,7 +220,7 @@ const PANEL_PAGES: IPanelPage[] = [
             { value: 'onboarding.md', text: 'onboarding.md' }],
             hint: 'These four are filled in for show. There is no SharePoint site behind '
               + 'this page, so the demo renders its own sample document whatever they say. '
-              + 'Everything on the next two pages is live.' },
+              + 'Everything on the next three pages is live.' },
           { key: 'canReload', label: 'Reload when the file changes', type: 'toggle' },
           { key: 'canShowVersions', label: 'Show version history button', type: 'toggle' }
         ]
@@ -258,12 +261,7 @@ const PANEL_PAGES: IPanelPage[] = [
             { value: 'small', text: 'Small' },
             { value: 'normal', text: 'Normal' },
             { value: 'large', text: 'Large' },
-            { value: 'xlarge', text: 'Extra large' }] },
-          { key: 'showToolbar', label: 'Show toolbar', type: 'toggle' },
-          { key: 'showPrintButton', label: 'Show print button', type: 'toggle' },
-          { key: 'showSourceInfo', label: 'Show file name and last updated', type: 'toggle' },
-          { key: 'pinMeta', label: 'Keep it in view while scrolling', type: 'toggle',
-            showIf: (state) => state.showSourceInfo === true }
+            { value: 'xlarge', text: 'Extra large' }] }
         ]
       },
       {
@@ -282,10 +280,10 @@ const PANEL_PAGES: IPanelPage[] = [
     ]
   },
   {
-    description: 'Turn individual rendering features on or off.',
+    description: 'The table of contents, and links to headings.',
     groups: [
       {
-        name: 'Features',
+        name: 'Contents',
         fields: [
           { key: 'toc', label: 'Table of contents', type: 'dropdown', options: [
             { value: 'left', text: 'Sidebar on the left' },
@@ -310,12 +308,49 @@ const PANEL_PAGES: IPanelPage[] = [
             max: (state) => TOC_WIDTH_RANGES[String(state.tocWidthUnit)].max,
             hint: 'Only applies with the contents in a left or right sidebar, and only '
               + 'on a fixed width. Stacked above the content they are always full width.' },
-          { key: 'enableAnchors', label: 'Heading link anchors', type: 'toggle' },
+          { key: 'enableAnchors', label: 'Heading link anchors', type: 'toggle' }
+        ]
+      }
+    ]
+  },
+  {
+    description: 'What is rendered, and what is shown around it.',
+    groups: [
+      {
+        name: 'Rendering',
+        fields: [
           { key: 'enableMermaid', label: 'Mermaid diagrams', type: 'toggle' },
+          { key: 'diagramWidth', label: 'Wide diagrams', type: 'dropdown',
+            showIf: (state) => state.enableMermaid === true,
+            options: [
+              { value: 'fit', text: 'Fit to the column' },
+              { value: 'scroll', text: 'Keep their size and scroll' },
+              { value: 'scale', text: 'Scale down to fit' }],
+            hint: 'Gantt charts lay out from their time axis rather than wrapping, so '
+              + 'they often want more width than a column gives. Fitting compresses the '
+              + 'axis and keeps the text readable.' },
           { key: 'enableMath', label: 'Math (KaTeX)', type: 'toggle' },
           { key: 'allowHtml', label: 'Allow raw HTML in markdown', type: 'toggle',
             hint: 'Leave off unless you trust everyone who can edit the source. With it '
               + 'on, HTML in the markdown is rendered as-is.' }
+        ]
+      },
+      {
+        name: 'Toolbar',
+        fields: [
+          { key: 'showToolbar', label: 'Show toolbar', type: 'toggle',
+            hint: 'The reload, version history, theme and print controls all live in the '
+              + 'toolbar, so turning it off takes the print button with it.' },
+          { key: 'showPrintButton', label: 'Show print button', type: 'toggle',
+            showIf: (state) => state.showToolbar === true }
+        ]
+      },
+      {
+        name: 'File information',
+        fields: [
+          { key: 'showSourceInfo', label: 'Show file name and last updated', type: 'toggle' },
+          { key: 'pinMeta', label: 'Keep it in view while scrolling', type: 'toggle',
+            showIf: (state) => state.showSourceInfo === true }
         ]
       }
     ]
@@ -390,7 +425,8 @@ if (panelHost && panelButton) {
       }
       /* These decide whether other fields apply, or what range they take. */
       if (key === 'tocWidthMode' || key === 'tocWidthUnit' || key === 'toc'
-        || key === 'showSourceInfo') {
+        || key === 'showSourceInfo' || key === 'enableMermaid'
+        || key === 'showToolbar') {
         panel.refresh();
       }
       if (PROCESSOR_KEYS.indexOf(key) !== -1) {

@@ -36,9 +36,6 @@ const STRINGS = {
   ContentWidthLabel: 'Content width',
   DensityLabel: 'Spacing',
   TextSizeLabel: 'Text size',
-  ToolbarVisibilityLabel: 'Show toolbar',
-  PrintButtonLabel: 'Show print button',
-  ShowSourceInfoLabel: 'Show file name and last updated',
   CodeGroupName: 'Code blocks',
   SyntaxHighlightingLabel: 'Syntax highlighting',
   CodeHeaderLabel: 'Show language header',
@@ -46,15 +43,35 @@ const STRINGS = {
   WrapCodeLabel: 'Long lines',
   CodeSizeLabel: 'Code text size',
 
-  FeaturesPageDescription: 'Turn individual rendering features on or off.',
-  FeaturesGroupName: 'Features',
+  ContentsPageDescription: 'The table of contents, and links to headings.',
+  ContentsGroupName: 'Contents',
   TocPositionLabel: 'Table of contents',
   TocLevelLabel: 'Deepest heading in the contents',
+  TocWidthUnitLabel: 'Contents width',
+  TocWidthUnitsLabel: 'Measured in',
+  TocWidthValueLabel: 'Width',
+  TocWidthHint: 'Only applies with the contents in a left or right sidebar; stacked above the content they are always full width. Auto fits the longest entry. Em keeps the sidebar in step with the text size, per cent with the width of the web part. Vw measures the browser window rather than the web part, so a narrow column and a full-width one get the same sidebar.',
   AnchorsLabel: 'Heading link anchors',
+
+  FeaturesPageDescription: 'What is rendered, and what is shown around it.',
+  RenderingGroupName: 'Rendering',
   MermaidLabel: 'Mermaid diagrams',
+  DiagramWidthLabel: 'Wide diagrams',
+  DiagramWidthHint: 'Gantt charts lay out from their time axis rather than wrapping, so they often want more width than a column gives. Fitting compresses the axis and keeps the text readable.',
   MathLabel: 'Math (KaTeX)',
   AllowHtmlLabel: 'Allow raw HTML in markdown',
   AllowHtmlHint: 'Leave off unless you trust everyone who can edit the source. With it on, HTML in the markdown is rendered as-is.',
+
+  ToolbarGroupName: 'Toolbar',
+  ToolbarVisibilityLabel: 'Show toolbar',
+  ToolbarHint: 'The reload, version history, theme and print controls all live in the toolbar. With "Only while editing the page", readers of the page never see them.',
+  PrintButtonLabel: 'Show print button',
+
+  FileInfoGroupName: 'File information',
+  ShowSourceInfoLabel: 'Show file name and last updated',
+  PinMetaLabel: 'Keep it in view while scrolling',
+  SourceInfoHint: 'Needs a file from a document library. Markdown typed into the web part, or fetched from a URL, has no file name or modified date to show.',
+
   SaveShortcutHint: 'Ctrl+S saves while the editor has focus.',
 
   SampleContent: sample

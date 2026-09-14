@@ -20,6 +20,17 @@ try {
 
 const OUT = path.join(__dirname, 'dist');
 const pageUrl = 'file://' + path.join(OUT, 'index.html');
+/*
+ * The property pane only exists on the page the documentation site publishes:
+ * the bare harness page is the web part with no chrome around it. So the pane
+ * is driven against the built site, which is the artifact that ships, rather
+ * than a copy of it built here.
+ *
+ * It is a second pass rather than a replacement for the first because the site
+ * page resolves its images against the site root, and the image checks above
+ * would then be testing paths instead of behaviour.
+ */
+const demoUrl = 'file://' + path.join(__dirname, '..', 'site', 'demo', 'index.html');
 
 (async () => {
   // PLAYWRIGHT_CHROMIUM lets a preinstalled browser be used instead.
@@ -306,6 +317,73 @@ const pageUrl = 'file://' + path.join(OUT, 'index.html');
     const box = await page.locator('.strata-content').boundingBox();
     const toc = await page.locator('.strata-toc-sidebar').boundingBox();
     if (toc.y + toc.height > box.y + 8) throw new Error('contents overlap the text');
+  });
+
+  /*
+   * The property pane is the only way most of these settings are ever reached,
+   * and its pages are declared as data, so a field can be dropped from the
+   * layout without anything failing to compile. These walk the real pane the
+   * demo draws and check that every page is reachable and that the fields
+   * which only apply given another setting appear when it is made.
+   */
+  await step('the property pane opens on four pages', async () => {
+    await page.setViewportSize({ width: 1200, height: 900 });
+    await page.goto(demoUrl, { waitUntil: 'load' });
+    await page.waitForTimeout(1500);
+    await page.locator('#demo-configure').click();
+    await page.waitForTimeout(200);
+    const count = await page.locator('.pp-count').textContent();
+    if (!/of 4$/.test(count.trim())) throw new Error('pane reports ' + count);
+  });
+
+  await step('every pane page names its groups', async () => {
+    const seen = [];
+    for (let i = 0; i < 4; i += 1) {
+      const groups = await page.locator('.pp-group').allTextContents();
+      seen.push(groups.join(', '));
+      if (i < 3) {
+        await page.locator('.pp-step', { hasText: 'Next' }).click();
+        await page.waitForTimeout(120);
+      }
+    }
+    const expected = [
+      'Content',
+      'Theme, Reading, Code blocks',
+      'Contents',
+      'Rendering, Toolbar, File information'
+    ];
+    for (let i = 0; i < 4; i += 1) {
+      if (seen[i] !== expected[i]) {
+        throw new Error('page ' + (i + 1) + ' has "' + seen[i] + '", expected "'
+          + expected[i] + '"');
+      }
+    }
+  });
+
+  await step('turning diagrams off hides the width that depends on them', async () => {
+    // Left on the Features page by the walk above.
+    const width = page.locator('#pp-diagramWidth');
+    if (await width.count() === 0) throw new Error('Wide diagrams is missing');
+    await page.locator('#pp-enableMermaid').click();
+    await page.waitForTimeout(200);
+    if (await page.locator('#pp-diagramWidth').count() !== 0) {
+      throw new Error('Wide diagrams still shown with diagrams off');
+    }
+    await page.locator('#pp-enableMermaid').click();
+    await page.waitForTimeout(400);
+    if (await page.locator('#pp-diagramWidth').count() === 0) {
+      throw new Error('Wide diagrams did not come back');
+    }
+  });
+
+  await step('a wide diagram takes the width mode it is given', async () => {
+    await page.selectOption('#pp-diagramWidth', 'scroll');
+    await page.waitForTimeout(900);
+    const mode = await page.evaluate(() => {
+      const box = document.querySelector('.strata-mermaid[data-strata-diagram]');
+      return box ? box.getAttribute('data-strata-diagram') : null;
+    });
+    if (mode !== 'scroll') throw new Error('diagram box reports ' + mode);
   });
 
   await page.screenshot({ path: path.join(OUT, 'harness-narrow.png'), fullPage: false });

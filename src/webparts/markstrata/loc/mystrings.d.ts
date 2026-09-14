@@ -22,12 +22,6 @@ declare interface IMarkstrataWebPartStrings {
   ContentWidthLabel: string;
   DensityLabel: string;
   TextSizeLabel: string;
-  ToolbarVisibilityLabel: string;
-  ToolbarHint: string;
-  PrintButtonLabel: string;
-  ShowSourceInfoLabel: string;
-  PinMetaLabel: string;
-  SourceInfoHint: string;
   CodeGroupName: string;
   SyntaxHighlightingLabel: string;
   CodeHeaderLabel: string;
@@ -35,8 +29,8 @@ declare interface IMarkstrataWebPartStrings {
   WrapCodeLabel: string;
   CodeSizeLabel: string;
 
-  FeaturesPageDescription: string;
-  FeaturesGroupName: string;
+  ContentsPageDescription: string;
+  ContentsGroupName: string;
   TocPositionLabel: string;
   TocLevelLabel: string;
   TocWidthUnitLabel: string;
@@ -44,12 +38,26 @@ declare interface IMarkstrataWebPartStrings {
   TocWidthValueLabel: string;
   TocWidthHint: string;
   AnchorsLabel: string;
+
+  FeaturesPageDescription: string;
+  RenderingGroupName: string;
+  MermaidLabel: string;
   DiagramWidthLabel: string;
   DiagramWidthHint: string;
-  MermaidLabel: string;
   MathLabel: string;
   AllowHtmlLabel: string;
   AllowHtmlHint: string;
+
+  ToolbarGroupName: string;
+  ToolbarVisibilityLabel: string;
+  ToolbarHint: string;
+  PrintButtonLabel: string;
+
+  FileInfoGroupName: string;
+  ShowSourceInfoLabel: string;
+  PinMetaLabel: string;
+  SourceInfoHint: string;
+
   SaveShortcutHint: string;
 
   SampleContent: string;
