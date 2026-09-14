@@ -24,10 +24,14 @@ export interface IPanelField {
   label: string;
   type: FieldType;
   options?: IPanelOption[];
-  min?: number;
-  max?: number;
+  /* A number, or read from the state: a slider's useful range can depend on
+     another setting, the way a width's does on the unit it is measured in. */
+  min?: number | ((state: IPanelState) => number);
+  max?: number | ((state: IPanelState) => number);
   /** Small print under the control, as the real pane uses for its warnings. */
   hint?: string;
+  /** Fields that only apply given some other setting are left out until then. */
+  showIf?: (state: IPanelState) => boolean;
 }
 
 export interface IPanelGroup {
@@ -82,6 +86,19 @@ export class PropertyPanel {
     return !this.host.hidden;
   }
 
+  /*
+   * Redraws the pane against the current state, keeping the page you are on.
+   * Some settings decide whether others apply at all, and a control that has
+   * just become relevant has to appear; SharePoint's own pane has the same
+   * call for the same reason. Not done on every change, because rebuilding a
+   * slider under the pointer interrupts the drag.
+   */
+  public refresh(): void {
+    if (this.isOpen) {
+      this.render();
+    }
+  }
+
   private render(): void {
     const page: IPanelPage = this.pages[this.pageIndex];
     this.host.textContent = '';
@@ -91,7 +108,9 @@ export class PropertyPanel {
     body.appendChild(el('p', 'pp-description', page.description));
     page.groups.forEach((group) => {
       body.appendChild(el('h3', 'pp-group', group.name));
-      group.fields.forEach((field) => body.appendChild(this.field(field)));
+      group.fields
+        .filter((field) => !field.showIf || field.showIf(this.state))
+        .forEach((field) => body.appendChild(this.field(field)));
     });
     this.host.appendChild(body);
     this.host.appendChild(this.footer());
@@ -181,8 +200,8 @@ export class PropertyPanel {
     input.type = 'range';
     input.className = 'pp-slider';
     input.id = id;
-    input.min = String(field.min === undefined ? 1 : field.min);
-    input.max = String(field.max === undefined ? 6 : field.max);
+    input.min = String(this.bound(field.min, 1));
+    input.max = String(this.bound(field.max, 6));
     input.value = String(this.state[field.key]);
     const readout: HTMLElement = el('span', 'pp-slider-value', input.value);
     input.addEventListener('input', () => {
@@ -192,6 +211,14 @@ export class PropertyPanel {
     row.appendChild(input);
     row.appendChild(readout);
     return row;
+  }
+
+  private bound(value: number | ((state: IPanelState) => number) | undefined,
+    fallback: number): number {
+    if (value === undefined) {
+      return fallback;
+    }
+    return typeof value === 'function' ? value(this.state) : value;
   }
 
   /*

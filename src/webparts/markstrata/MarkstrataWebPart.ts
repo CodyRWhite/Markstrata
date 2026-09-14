@@ -2,6 +2,7 @@ import { Version, DisplayMode } from '@microsoft/sp-core-library';
 import {
   IPropertyPaneConfiguration,
   IPropertyPaneDropdownOption,
+  IPropertyPaneField,
   PropertyPaneDropdown,
   PropertyPaneSlider,
   PropertyPaneTextField,
@@ -35,6 +36,8 @@ import './styles/print.css';
 import { MarkdownProcessor, IMarkdownProcessorOptions } from './utils/MarkdownProcessor';
 import { folderOf } from './utils/imagePaths';
 import { DiagramWidth } from './utils/mermaidConfig';
+import { TocWidthMode, TocWidthUnit, ITocWidthRange, TOC_WIDTH_RANGES, tocWidthCss,
+  tocWidthForUnit } from './utils/tocWidth';
 import { MermaidRenderer } from './utils/MermaidRenderer';
 import { ContentEnhancer } from './utils/ContentEnhancer';
 import { ViewModeRenderer, TocPosition } from './utils/ViewModeRenderer';
@@ -88,6 +91,9 @@ export interface IMarkstrataWebPartProps {
   enableAnchors: boolean;
   tocPosition: TocPosition;
   tocMaxLevel: number;
+  tocWidthMode: TocWidthMode;
+  tocWidthUnit: TocWidthUnit;
+  tocWidthValue: number;
   toolbarVisibility: 'always' | 'editing' | 'never';
   showPrintButton: boolean;
   showSourceInfo: boolean;
@@ -247,6 +253,9 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
       enableAnchors: true,
       tocPosition: 'off',
       tocMaxLevel: 3,
+      tocWidthMode: 'auto',
+      tocWidthUnit: 'em',
+      tocWidthValue: 15,
       toolbarVisibility: 'always',
       showPrintButton: true,
       showSourceInfo: true,
@@ -318,6 +327,60 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
     }
   }
 
+  /** The contents are only a sidebar on two of the four placements. */
+  private isTocSidebar(): boolean {
+    return this.properties.tocPosition === 'left' || this.properties.tocPosition === 'right';
+  }
+
+  /*
+   * Slider and box are the same property. The slider is for finding a width by
+   * eye, the box for typing one already known; the pane re-reads the property
+   * when either changes, so the two stay in step.
+   */
+  private tocWidthFields(): IPropertyPaneField<unknown>[] {
+    const range: ITocWidthRange = this.tocWidthRange();
+    return [
+      PropertyPaneDropdown('tocWidthUnit', {
+        label: strings.TocWidthUnitsLabel,
+        options: [
+          { key: 'em', text: 'em, follows the text size' },
+          { key: '%', text: '%, share of the web part' },
+          { key: 'px', text: 'px, a fixed number of pixels' },
+          { key: 'vw', text: 'vw, share of the browser window' }
+        ],
+        selectedKey: this.properties.tocWidthUnit
+      }),
+      PropertyPaneSlider('tocWidthValue', {
+        label: strings.TocWidthValueLabel,
+        min: range.min,
+        max: range.max,
+        step: range.step,
+        showValue: true
+      }),
+      PropertyPaneTextField('tocWidthValue', {
+        label: `${strings.TocWidthValueLabel} (${this.properties.tocWidthUnit})`,
+        onGetErrorMessage: (raw: string): string => this.checkTocWidth(raw)
+      })
+    ] as IPropertyPaneField<unknown>[];
+  }
+
+  private tocWidthRange(): ITocWidthRange {
+    return TOC_WIDTH_RANGES[this.properties.tocWidthUnit] || TOC_WIDTH_RANGES.em;
+  }
+
+  /** Keeps a typed width inside the range its unit makes sense in. */
+  private checkTocWidth(raw: string): string {
+    const range: ITocWidthRange = this.tocWidthRange();
+    const value: number = Number(raw);
+    if (raw.trim().length === 0 || isNaN(value)) {
+      return 'Enter a number.';
+    }
+    if (value < range.min || value > range.max) {
+      return `Between ${range.min} and ${range.max}${this.properties.tocWidthUnit}.`;
+    }
+    return '';
+  }
+
   /** True when the toolbar should be shown for the current display mode. */
   private isToolbarVisible(): boolean {
     if (this.properties.toolbarVisibility === 'never') {
@@ -361,7 +424,9 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
       contentWidth: this.properties.contentWidth,
       density: this.properties.density,
       textSize: this.properties.textSize,
-      codeSize: this.properties.codeSize
+      codeSize: this.properties.codeSize,
+      tocWidth: tocWidthCss(this.properties.tocWidthMode, this.properties.tocWidthUnit,
+        this.properties.tocWidthValue)
     };
   }
 
@@ -561,6 +626,36 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
 
     if (rebuildProcessor.indexOf(propertyPath) !== -1) {
       this.processor.updateOptions(this.processorOptions());
+    }
+
+    /*
+     * A width that was sensible in one unit is not in another, and the number
+     * outlives the unit: 240 is a reasonable px sidebar and an absurd em one.
+     * The slider's own range moves too, so the pane is refreshed to redraw it.
+     */
+    if (propertyPath === 'tocWidthMode') {
+      this.context.propertyPane.refresh();
+    }
+
+    if (propertyPath === 'tocWidthUnit') {
+      this.properties.tocWidthValue = tocWidthForUnit(
+        newValue as TocWidthUnit, this.properties.tocWidthValue
+      );
+      this.context.propertyPane.refresh();
+    }
+
+    /* Typed into the box, it arrives as a string. */
+    if (propertyPath === 'tocWidthValue' && typeof newValue === 'string') {
+      const typed: number = Number(newValue);
+      if (!isNaN(typed)) {
+        this.properties.tocWidthValue = typed;
+      }
+      this.context.propertyPane.refresh();
+    }
+
+    /* The width controls only mean anything with the contents in a sidebar. */
+    if (propertyPath === 'tocPosition') {
+      this.context.propertyPane.refresh();
     }
 
     if (propertyPath === 'contentSource') {
@@ -808,6 +903,22 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
                   step: 1,
                   disabled: this.properties.tocPosition === 'off'
                 }),
+                PropertyPaneDropdown('tocWidthMode', {
+                  label: strings.TocWidthUnitLabel,
+                  options: [
+                    { key: 'auto', text: 'Auto, fits the longest entry' },
+                    { key: 'fixed', text: 'Fixed width' }
+                  ],
+                  selectedKey: this.properties.tocWidthMode,
+                  disabled: !this.isTocSidebar()
+                }),
+                /* The unit and the number only exist once a fixed width is
+                   asked for. Greyed-out controls read as broken; absent ones
+                   read as not applicable, which is what they are. */
+                ...(this.isTocSidebar() && this.properties.tocWidthMode === 'fixed'
+                  ? this.tocWidthFields()
+                  : []),
+                PropertyPaneLabel('tocWidthHint', { text: strings.TocWidthHint }),
                 PropertyPaneToggle('enableAnchors', {
                   label: strings.AnchorsLabel,
                   onText: 'On',

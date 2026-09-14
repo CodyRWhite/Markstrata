@@ -10,6 +10,17 @@ Entries below 0.0.10.0 were written before the switch and are three-part.
 
 ## Unreleased
 
+- The contents sidebar has a width setting. **Auto** fits it to its longest
+  entry, floored so a short document still reads as a column and capped so one
+  deep heading cannot take the page; that is the default. **Fixed** adds a unit
+  and a width, as a slider for finding one by eye and a box for typing one you
+  already know, in `em`, `%`, `px` or `vw`. The slider's range follows the unit,
+  since 240 is a reasonable width in pixels and an absurd one in em, and a width
+  that stops making sense when the unit changes is replaced rather than kept.
+  The unit and width only appear once a fixed width is chosen, and the whole
+  setting only appears with the contents in a sidebar.
+
+
 - Every diagram carries a copy button in its top right corner, which puts it on
   the clipboard as a PNG drawn at twice its size on the page, so it stays sharp
   pasted into a deck or a document. A diagram was the one thing on the page

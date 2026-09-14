@@ -181,6 +181,26 @@ column it collapses to a single line you can expand, and while the page is being
 edited it stops sticking to the top of the screen. The entry for the heading you
 are reading is highlighted as you scroll.
 
+### How wide the sidebar is
+
+With the contents in a left or right sidebar, **Contents width** decides how
+much room they take. Stacked above the content in a narrow column the setting
+does not apply: there they are always full width.
+
+**Auto** fits the sidebar to its longest entry, so there is no gap beside short
+headings and no wrapping of long ones. It is floored and capped, so a document
+with three short headings still reads as a column and one deep heading cannot
+take the page.
+
+**Fixed** adds a unit and a width, as a slider and a box:
+
+| Unit | What it measures | Worth knowing |
+|---|---|---|
+| `em` | The contents' own text size | Keeps the same characters per line as the text size changes. The best choice for most documents. |
+| `%` | A share of the web part | Adapts to the column the web part is placed in. |
+| `px` | A fixed number of pixels | Predictable, but ignores both text size and column width. |
+| `vw` | A share of the browser window | Measures the window rather than the web part, so a narrow column and a full-width one get the same sidebar. Rarely what you want. |
+
 ## Editing in the page
 
 Put the page in edit mode and the web part becomes a split editor: markdown on

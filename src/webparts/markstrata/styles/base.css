@@ -144,7 +144,9 @@
 /* ------------------------------------------------------- table of contents */
 
 .strata-toc-sidebar {
-  flex: 0 0 240px;
+  /* Set from the contents width setting. The fallback is what the sidebar was
+     before the setting existed, so an older web part keeps its layout. */
+  flex: 0 0 var(--strata-toc-width, 240px);
   align-self: flex-start;
   position: sticky;
   top: 16px;
@@ -155,6 +157,19 @@
   border-radius: var(--strata-radius-md);
   background-color: var(--strata-bg-elevated);
   font-size: 0.875em;
+}
+
+/*
+ * Auto sizes the sidebar to its longest entry, so there is no gap beside short
+ * headings and no wrapping of long ones. Capped, because one deep heading
+ * should not be allowed to take the page, and floored so a document with three
+ * short headings still reads as a column rather than a label.
+ */
+.strata-root[data-strata-toc-width='auto'] .strata-toc-sidebar {
+  flex: 0 1 auto;
+  width: max-content;
+  min-width: 11em;
+  max-width: 38%;
 }
 
 /* While the page is being edited, sticky positioning fights the page canvas,

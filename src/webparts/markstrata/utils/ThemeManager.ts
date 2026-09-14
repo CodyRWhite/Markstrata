@@ -18,6 +18,8 @@ export interface IThemeSettings {
   density: string;
   textSize: string;
   codeSize: string;
+  /** 'auto', or a CSS length for the contents sidebar: '240px', '15em', '22%'. */
+  tocWidth?: string;
 }
 
 export interface IThemeChoice {
@@ -204,6 +206,18 @@ export class ThemeManager {
     element.setAttribute('data-strata-density', settings.density);
     element.setAttribute('data-strata-size', settings.textSize);
     element.setAttribute('data-strata-code-size', settings.codeSize);
+    /*
+     * The contents sidebar sizes itself from this. 'auto' is a mode rather than
+     * a length, so it goes on the attribute and the stylesheet handles it;
+     * anything else is a length the stylesheet can use directly.
+     */
+    const tocWidth: string = settings.tocWidth || 'auto';
+    element.setAttribute('data-strata-toc-width', tocWidth === 'auto' ? 'auto' : 'fixed');
+    if (tocWidth === 'auto') {
+      element.style.removeProperty('--strata-toc-width');
+    } else {
+      element.style.setProperty('--strata-toc-width', tocWidth);
+    }
     // Lets the browser pick matching form controls and scrollbars.
     element.style.colorScheme = resolved;
   }

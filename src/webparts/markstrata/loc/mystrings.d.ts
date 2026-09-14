@@ -38,6 +38,10 @@ declare interface IMarkstrataWebPartStrings {
   FeaturesGroupName: string;
   TocPositionLabel: string;
   TocLevelLabel: string;
+  TocWidthUnitLabel: string;
+  TocWidthUnitsLabel: string;
+  TocWidthValueLabel: string;
+  TocWidthHint: string;
   AnchorsLabel: string;
   DiagramWidthLabel: string;
   DiagramWidthHint: string;

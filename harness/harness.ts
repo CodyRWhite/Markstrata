@@ -13,6 +13,7 @@ import { ViewModeRenderer } from '../src/webparts/markstrata/utils/ViewModeRende
 import { EditModeManager } from '../src/webparts/markstrata/utils/EditModeManager';
 import { ThemeManager } from '../src/webparts/markstrata/utils/ThemeManager';
 import { PropertyPanel, IPanelPage } from './panel';
+import { TOC_WIDTH_RANGES, tocWidthForUnit } from '../src/webparts/markstrata/utils/tocWidth';
 
 declare const SAMPLE: string;
 
@@ -49,6 +50,9 @@ const state: any = {
   wrapCodeLines: false,
   // Features
   tocMaxLevel: 3,
+  tocWidthMode: 'auto',
+  tocWidthUnit: 'em',
+  tocWidthValue: 15,
   enableAnchors: true,
   enableMermaid: true,
   enableMath: true,
@@ -105,7 +109,9 @@ function settings(): any {
     contentWidth: state.contentWidth,
     density: state.density,
     textSize: state.textSize,
-    codeSize: state.codeSize
+    codeSize: state.codeSize,
+    tocWidth: state.tocWidthMode === 'auto'
+      ? 'auto' : `${state.tocWidthValue}${state.tocWidthUnit}`
   };
 }
 
@@ -284,6 +290,22 @@ const PANEL_PAGES: IPanelPage[] = [
             { value: 'off', text: 'Off' }] },
           { key: 'tocMaxLevel', label: 'Deepest heading in the contents', type: 'slider',
             min: 1, max: 6 },
+          { key: 'tocWidthMode', label: 'Contents width', type: 'dropdown', options: [
+            { value: 'auto', text: 'Auto, fits the longest entry' },
+            { value: 'fixed', text: 'Fixed width' }] },
+          { key: 'tocWidthUnit', label: 'Measured in', type: 'dropdown',
+            showIf: (state) => state.tocWidthMode === 'fixed',
+            options: [
+              { value: 'em', text: 'em, follows the text size' },
+              { value: '%', text: '%, share of the web part' },
+              { value: 'px', text: 'px, a fixed number of pixels' },
+              { value: 'vw', text: 'vw, share of the browser window' }] },
+          { key: 'tocWidthValue', label: 'Width', type: 'slider',
+            showIf: (state) => state.tocWidthMode === 'fixed',
+            min: (state) => TOC_WIDTH_RANGES[String(state.tocWidthUnit)].min,
+            max: (state) => TOC_WIDTH_RANGES[String(state.tocWidthUnit)].max,
+            hint: 'Only applies with the contents in a left or right sidebar, and only '
+              + 'on a fixed width. Stacked above the content they are always full width.' },
           { key: 'enableAnchors', label: 'Heading link anchors', type: 'toggle' },
           { key: 'enableMermaid', label: 'Mermaid diagrams', type: 'toggle' },
           { key: 'enableMath', label: 'Math (KaTeX)', type: 'toggle' },
@@ -352,11 +374,19 @@ if (panelHost && panelButton) {
   };
 
   draw();
-  const panel: PropertyPanel = new PropertyPanel(panelHost, PANEL_PAGES, state, {
+  let panel: PropertyPanel;
+  panel = new PropertyPanel(panelHost, PANEL_PAGES, state, {
     onChange: (key, value) => {
       state[key] = value;
       if (key === 'mode') {
         rememberMode(String(value));
+      }
+      if (key === 'tocWidthUnit') {
+        state.tocWidthValue = tocWidthForUnit(value as never, state.tocWidthValue as number);
+      }
+      /* These decide whether other fields apply, or what range they take. */
+      if (key === 'tocWidthMode' || key === 'tocWidthUnit' || key === 'toc') {
+        panel.refresh();
       }
       if (PROCESSOR_KEYS.indexOf(key) !== -1) {
         processor.updateOptions(processorOptions());

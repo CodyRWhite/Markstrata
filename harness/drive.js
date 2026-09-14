@@ -237,6 +237,33 @@ const pageUrl = 'file://' + path.join(OUT, 'index.html');
 
   await page.screenshot({ path: path.join(OUT, 'harness-view-obsidian-dark.png'), fullPage: false });
 
+  /*
+   * Auto sizes the sidebar to its longest entry; a fixed width is whatever it
+   * says. The setting only applies as a sidebar, so this runs with one.
+   */
+  await step('the contents sidebar takes the width it is given', async () => {
+    await page.evaluate(() => window.harness.setToc('left'));
+    await page.waitForTimeout(300);
+    const widthOf = async (toc) => page.evaluate((value) => {
+      const root = document.querySelector('.strata-root');
+      root.setAttribute('data-strata-toc-width', value === 'auto' ? 'auto' : 'fixed');
+      if (value === 'auto') {
+        root.style.removeProperty('--strata-toc-width');
+      } else {
+        root.style.setProperty('--strata-toc-width', value);
+      }
+      const side = document.querySelector('.strata-toc-sidebar');
+      return side ? Math.round(side.getBoundingClientRect().width) : 0;
+    }, toc);
+
+    const auto = await widthOf('auto');
+    const fixed = await widthOf('320px');
+    if (fixed !== 320) throw new Error(`320px asked for, ${fixed}px drawn`);
+    if (auto === fixed) throw new Error('auto is not sizing to its content');
+    if (auto < 100) throw new Error(`auto collapsed to ${auto}px`);
+    await widthOf('auto');
+  });
+
   await step('contents move to the right', async () => {
     await page.evaluate(() => window.harness.setToc('right'));
     await page.waitForTimeout(400);
