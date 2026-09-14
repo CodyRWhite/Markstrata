@@ -5,6 +5,18 @@ All notable changes to this project are recorded here. Versions follow
 the same number with a fourth part appended (0.2.0 -> 0.2.0.0), stamped by
 `scripts/set-version.js` when a release is tagged.
 
+## Unreleased
+
+- The App Catalog lists the app as "Markstrata - Markdown Web Part for
+  SharePoint Online" rather than the scaffold's `markstrata-client-side-
+  solution`, and the feature is titled Markstrata.
+- The app tile shows. The packager writes `<AppIconPath>` as the base name of
+  `iconPath` but copies the file to `iconPath` itself, so a tile under a folder
+  shipped to `assets/icon.png` while the manifest asked SharePoint for
+  `icon.png`. Nothing failed: the upload succeeded and the app simply wore the
+  generic package tile. The icon is now `sharepoint/icon.png`, flat, where both
+  agree, and a test rejects any `iconPath` containing a separator.
+
 ## 0.0.6
 
 - Markdown images render. A relative source is resolved against the folder the

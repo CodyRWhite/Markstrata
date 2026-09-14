@@ -57,7 +57,7 @@ test('what the build copied still matches the brand package', () => {
     ['icon/markstrata-glyph.svg', 'mark.svg'],
     ['lockup/markstrata-lockup-horizontal.svg', 'lockup-horizontal.svg'],
     ['lockup/markstrata-lockup-horizontal-reversed.svg', 'lockup-horizontal-dark.svg'],
-    ['export/markstrata-icon-96.png', '../sharepoint/assets/icon.png']
+    ['export/markstrata-icon-96.png', '../sharepoint/icon.png']
   ];
   for (const [source, copy] of pairs) {
     assert.deepEqual(fs.readFileSync(path.join(ASSETS, copy)), fs.readFileSync(path.join(BRAND, source)),
@@ -94,16 +94,37 @@ test('brand.md sends people to the delivered guide rather than restating it', ()
  * the only other place it shows up is an upload failing in a tenant.
  */
 test('the app catalog tile is exactly 96x96', () => {
-  const icon = path.join(__dirname, '..', 'sharepoint', 'assets', 'icon.png');
-  assert.ok(fs.existsSync(icon), 'sharepoint/assets/icon.png is missing');
+  const icon = path.join(__dirname, '..', 'sharepoint', 'icon.png');
+  assert.ok(fs.existsSync(icon), 'sharepoint/icon.png is missing');
   assert.deepEqual(pngSize(icon), { width: 96, height: 96 });
 });
 
-test('the solution points at that tile', () => {
+/*
+ * The packager writes <AppIconPath> as the BASENAME of iconPath, but copies the
+ * file to iconPath itself. A tile under a folder therefore ships to
+ * assets/icon.png while the manifest asks SharePoint for icon.png, and the app
+ * shows the generic package tile with no error anywhere. Keeping iconPath flat
+ * is what makes the two agree, so the shape is asserted, not just the string.
+ */
+test('the solution points at that tile, at the package root', () => {
   const solution = JSON.parse(
     fs.readFileSync(path.join(__dirname, '..', 'config', 'package-solution.json'), 'utf8')
   );
-  assert.equal(solution.solution.iconPath, 'assets/icon.png');
+  const iconPath = solution.solution.iconPath;
+  assert.equal(iconPath.indexOf('/'), -1,
+    `iconPath must be a bare file name or SharePoint cannot resolve it: ${iconPath}`);
+  assert.ok(fs.existsSync(path.join(__dirname, '..', 'sharepoint', iconPath)),
+    `sharepoint/${iconPath} is missing`);
+});
+
+/* The title the App Catalog lists the app under. */
+test('the solution is titled for people, not for the scaffold', () => {
+  const solution = JSON.parse(
+    fs.readFileSync(path.join(__dirname, '..', 'config', 'package-solution.json'), 'utf8')
+  );
+  assert.equal(solution.solution.name, 'Markstrata - Markdown Web Part for SharePoint Online');
+  assert.ok(!/client-side-solution/.test(solution.solution.name),
+    'the generated scaffold name is still showing in the App Catalog');
 });
 
 test('the icon PNGs are the sizes their names claim', () => {

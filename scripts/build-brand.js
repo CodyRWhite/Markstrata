@@ -57,7 +57,7 @@ const COPIES = [
  * required size of '96' pixels" - and the brand package draws one at that size.
  */
 const APP_CATALOG_ICON = ['export/markstrata-icon-96.png',
-  path.join(root, 'sharepoint', 'assets', 'icon.png')];
+  path.join(root, 'sharepoint', 'icon.png')];
 
 /* The manifest icon, as the brand guide supplies it: an SVG data URI. */
 const MANIFEST_ICON = 'export/spfx-iconImageUrl.txt';
