@@ -52,17 +52,29 @@ runs `harness:drive` on every push.
 ## Releasing
 
 Releases are built by `.github/workflows/release.yml` when a `v*.*.*` tag is
-pushed. The tag is the version: it is stamped into `package.json` and
+pushed, or from the Actions tab with the workflow's **Run workflow** button.
+The tag is the version: it is stamped into `package.json` and
 `config/package-solution.json` before the build, and the resulting `.sppkg` is
 attached to a GitHub Release whose notes come from the matching `CHANGELOG.md`
 section.
 
+Versions are four-part, `major.minor.patch.build`, because that is the number
+SharePoint compares when it decides whether an uploaded package is an upgrade.
+The build part is normally zero. A three-part tag is still accepted and treated
+as build zero, so older tags keep working.
+
 ```bash
-# 1. Add the release section to CHANGELOG.md and commit it.
+# 1. Add the release section to CHANGELOG.md, headed with the four-part
+#    version, and commit it.
+node scripts/set-version.js 1.1.0.0
 # 2. Tag and push.
-git tag v1.1.0
-git push origin v1.1.0
+git tag v1.1.0.0
+git push origin v1.1.0.0
 ```
+
+Re-cutting a version that already exists needs the **replace** input on the
+manual run; without it the existing release keeps its tag where it is, which
+strands the tag if the history has moved.
 
 Nothing else is needed - do not commit a built `.sppkg`. To build one for a
 test tenant without releasing, download the artifact from the CI run, or run

@@ -16,7 +16,21 @@ function section() {
     return '';
   }
   const lines = fs.readFileSync(changelog, 'utf8').split('\n');
-  const start = lines.findIndex((line) => line.startsWith('## ') && line.indexOf(version) !== -1);
+  /*
+   * The heading has to match the whole version, not contain it. A substring
+   * test reads the 0.0.10.0 section when asked for 0.0.1, which is the kind of
+   * mistake that ships the wrong notes and is never noticed.
+   *
+   * A three-part number also answers to its four-part heading, since a release
+   * cut as 1.2.0 is written up as 1.2.0.0.
+   */
+  const heading = (line) => line.replace(/^##\s+/, '').trim();
+  /* The four-part and three-part spellings of one release both count, so the
+     sections written before the four-part switch are still reachable. */
+  const forms = [version,
+    version.split('.').length === 4 ? version.replace(/\.0$/, '') : `${version}.0`];
+  const start = lines.findIndex((line) => line.startsWith('## ')
+    && forms.indexOf(heading(line)) !== -1);
   if (start === -1) {
     return '';
   }

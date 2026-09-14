@@ -1,8 +1,11 @@
 name: Release
 
 # Tag a commit to cut a release:
-#   npm version 1.2.0 --no-git-tag-version   (or edit package.json)
-#   git commit -am "Release 1.2.0" && git tag v1.2.0 && git push --follow-tags
+#   node scripts/set-version.js 1.2.0.0
+#   git commit -am "Cut 1.2.0.0" && git tag v1.2.0.0 && git push --follow-tags
+#
+# Versions are four-part, matching what SharePoint compares. A three-part tag
+# still works and is treated as build zero.
 #
 # The tag is the source of truth for the version: it is stamped into
 # package.json and config/package-solution.json before the package is built, so
@@ -13,7 +16,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Version to build, without the leading v (e.g. 1.2.0)'
+        description: 'Version to build, four-part, without the leading v (e.g. 1.2.0.0)'
         required: true
       prerelease:
         description: 'Publish as a pre-release, for testing before it is the recommended download'

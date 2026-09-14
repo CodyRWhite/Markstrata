@@ -1,22 +1,31 @@
 /*
  * Stamps a version into package.json and config/package-solution.json.
  *
- *   node scripts/set-version.js 1.2.0
+ *   node scripts/set-version.js 1.2.0.0
  *
- * SharePoint solution versions are four-part (1.2.0.0), npm versions are
- * three-part, and they have to agree or a tenant will not see an upgrade. This
- * keeps both in step from one number - the release workflow passes the git tag.
+ * Versions are written the way SharePoint writes them, four-part, because that
+ * is the number a tenant compares when deciding whether a package is an
+ * upgrade. The same number goes into package.json, which npm tolerates here
+ * because the package is private and never published to a registry.
+ *
+ * A three-part number is still accepted and gets a .0 appended, so tags cut
+ * before this and anyone typing out of habit both still work.
  */
 const fs = require('fs');
 const path = require('path');
 
-const root = path.join(__dirname, '..');
+/* The repository, unless a caller points somewhere else. The tests do, so that
+   checking what this writes cannot rewrite the real manifests. */
+const root = process.env.SET_VERSION_ROOT || path.join(__dirname, '..');
 const version = (process.argv[2] || '').trim();
 
-if (!/^\d+\.\d+\.\d+$/.test(version)) {
-  console.error(`Usage: node scripts/set-version.js <major.minor.patch>\nGot: "${version}"`);
+if (!/^\d+\.\d+\.\d+(\.\d+)?$/.test(version)) {
+  console.error(`Usage: node scripts/set-version.js <major.minor.patch[.build]>\nGot: "${version}"`);
   process.exit(1);
 }
+
+/* SharePoint wants four parts; a three-part number means build zero. */
+const fourPart = version.split('.').length === 4 ? version : `${version}.0`;
 
 function editJson(relativePath, edit) {
   const file = path.join(root, relativePath);
@@ -27,13 +36,13 @@ function editJson(relativePath, edit) {
 }
 
 editJson('package.json', (json) => {
-  json.version = version;
+  json.version = fourPart;
 });
 
 editJson('config/package-solution.json', (json) => {
-  json.solution.version = `${version}.0`;
+  json.solution.version = fourPart;
   (json.solution.features || []).forEach((feature) => {
-    feature.version = `${version}.0`;
+    feature.version = fourPart;
   });
 });
 
@@ -41,9 +50,9 @@ editJson('config/package-solution.json', (json) => {
 const lockPath = path.join(root, 'package-lock.json');
 if (fs.existsSync(lockPath)) {
   const lock = JSON.parse(fs.readFileSync(lockPath, 'utf8'));
-  lock.version = version;
+  lock.version = fourPart;
   if (lock.packages && lock.packages['']) {
-    lock.packages[''].version = version;
+    lock.packages[''].version = fourPart;
   }
   fs.writeFileSync(lockPath, `${JSON.stringify(lock, null, 2)}\n`);
   console.log('Updated package-lock.json');

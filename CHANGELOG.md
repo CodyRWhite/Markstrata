@@ -1,9 +1,30 @@
 # Changelog
 
-All notable changes to this project are recorded here. Versions follow
-[semantic versioning](https://semver.org/); the SharePoint solution version is
-the same number with a fourth part appended (0.2.0 -> 0.2.0.0), stamped by
-`scripts/set-version.js` when a release is tagged.
+All notable changes to this project are recorded here. Versions are written the
+way SharePoint writes them, four-part, because that is the number a tenant
+compares when deciding whether a package is an upgrade. The first three parts
+follow [semantic versioning](https://semver.org/); the fourth is the build and
+is normally zero. `scripts/set-version.js` stamps it when a release is cut.
+
+Entries below 0.0.10.0 were written before the switch and are three-part.
+
+## 0.0.10.0
+
+- Versions are four-part from here on, matching what SharePoint compares when
+  it decides whether an uploaded package is an upgrade. The same number goes
+  into the tag, the release, `package.json` and the solution manifest, so there
+  is one version to read rather than a three-part one and a four-part one that
+  have to be kept in step. npm accepts it because this package is private and
+  never published to a registry. A three-part tag still works and is treated as
+  build zero.
+- Release notes are matched to their changelog section by the whole version
+  rather than by a substring of it. Asking for 0.0.1 returned the 0.0.10.0
+  notes, which four-part numbers make easy to hit since every version is a
+  prefix of a longer one. Both spellings of a version now find their section,
+  so the entries written before this still resolve.
+- `scripts/set-version.js` can be pointed at another directory, so the test
+  that checks what it writes cannot rewrite the real manifests. It could, and
+  it did.
 
 ## 0.0.9
 
