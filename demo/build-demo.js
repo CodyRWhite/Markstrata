@@ -190,7 +190,14 @@ function template(css, content, toc, mermaidThemes, title) {
 ${brandHead(title, pageId ? site.page(pageId).description : 'Markdown for SharePoint, themed like the editors you write it in.')}
 <link rel="stylesheet" href="katex/katex.min.css">
 <style>
-body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+/* The page follows the reader's system setting unless they pick a mode, and
+   the surface behind the web part has to move with it or a dark document sits
+   on a white page. The web part paints its own root; this is everything
+   around it. */
+:root { color-scheme: light; --site-canvas: #FFFFFF; }
+:root[data-site-mode="dark"] { color-scheme: dark; --site-canvas: #0A1417; }
+body { margin: 0; background: var(--site-canvas);
+       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
 .demo-bar {
   position: sticky; top: 0; z-index: 20; display: flex; flex-wrap: wrap; gap: 12px;
   align-items: center; padding: 10px 16px; background: #1b1f24; color: #e6edf3; font-size: 13px;
@@ -297,6 +304,47 @@ var MERMAID_THEMES = ${JSON.stringify(mermaidThemes)};
   if (toc && root.clientWidth <= 720) {
     toc.open = false;
   }
+  /*
+   * Colour mode follows the operating system until the reader chooses one, and
+   * their choice is remembered from then on. Storage can throw in a private
+   * window, so every read and write is guarded and the page simply falls back
+   * to the system setting.
+   */
+  var MODE_KEY = 'markstrata-site-mode';
+  var query = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
+
+  function storedMode() {
+    try {
+      var saved = window.localStorage.getItem(MODE_KEY);
+      return saved === 'light' || saved === 'dark' ? saved : null;
+    } catch (error) {
+      return null;
+    }
+  }
+
+  function applyMode(mode) {
+    root.setAttribute('data-strata-mode', mode);
+    root.style.colorScheme = mode;
+    document.documentElement.setAttribute('data-site-mode', mode);
+    document.getElementById('mode').value = mode;
+  }
+
+  applyMode(storedMode() || (query && query.matches ? 'dark' : 'light'));
+
+  if (query) {
+    var follow = function () {
+      if (!storedMode()) {
+        applyMode(query.matches ? 'dark' : 'light');
+        renderDiagrams();
+      }
+    };
+    if (query.addEventListener) {
+      query.addEventListener('change', follow);
+    } else if (query.addListener) {
+      query.addListener(follow);
+    }
+  }
+
   function bind(id, attribute) {
     var input = document.getElementById(id);
     input.addEventListener('change', function () {
@@ -306,7 +354,16 @@ var MERMAID_THEMES = ${JSON.stringify(mermaidThemes)};
     });
   }
   bind('theme', 'data-strata-theme');
-  bind('mode', 'data-strata-mode');
+  document.getElementById('mode').addEventListener('change', function () {
+    var chosen = document.getElementById('mode').value;
+    try {
+      window.localStorage.setItem(MODE_KEY, chosen);
+    } catch (error) {
+      /* A private window still gets the change, just not the memory of it. */
+    }
+    applyMode(chosen);
+    renderDiagrams();
+  });
   bind('width', 'data-strata-width');
   bind('density', 'data-strata-density');
 

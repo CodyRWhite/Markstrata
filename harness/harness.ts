@@ -293,6 +293,8 @@ const PANEL_PAGES: IPanelPage[] = [
   }
 ];
 
+let rememberMode: (mode: string) => void = () => undefined;
+
 const panelHost: HTMLElement | null = document.getElementById('demo-panel');
 const panelButton: HTMLElement | null = document.getElementById('demo-configure');
 if (panelHost && panelButton) {
@@ -302,10 +304,57 @@ if (panelHost && panelButton) {
    * can turn back on. The bare harness has no pane, so it keeps the switcher.
    */
   state.showThemeSwitcher = false;
+
+  /*
+   * Colour mode follows the operating system until the reader picks one in the
+   * pane, as it does on the rest of the site. Storage can throw in a private
+   * window, so a failure just means the choice is not remembered.
+   */
+  const MODE_KEY: string = 'markstrata-site-mode';
+  const query: MediaQueryList | null = window.matchMedia
+    ? window.matchMedia('(prefers-color-scheme: dark)') : null;
+
+  const storedMode = (): string | null => {
+    try {
+      const saved: string | null = window.localStorage.getItem(MODE_KEY);
+      return saved === 'light' || saved === 'dark' ? saved : null;
+    } catch (error) {
+      return null;
+    }
+  };
+
+  const applyMode = (mode: string): void => {
+    state.mode = mode;
+    document.documentElement.setAttribute('data-site-mode', mode);
+  };
+
+  applyMode(storedMode() || (query && query.matches ? 'dark' : 'light'));
+
+  if (query && query.addEventListener) {
+    query.addEventListener('change', () => {
+      if (!storedMode()) {
+        applyMode(query.matches ? 'dark' : 'light');
+        draw();
+      }
+    });
+  }
+
+  rememberMode = (mode: string): void => {
+    try {
+      window.localStorage.setItem(MODE_KEY, mode);
+    } catch (error) {
+      /* The change still applies, it is just not remembered. */
+    }
+    document.documentElement.setAttribute('data-site-mode', mode);
+  };
+
   draw();
   const panel: PropertyPanel = new PropertyPanel(panelHost, PANEL_PAGES, state, {
     onChange: (key, value) => {
       state[key] = value;
+      if (key === 'mode') {
+        rememberMode(String(value));
+      }
       if (PROCESSOR_KEYS.indexOf(key) !== -1) {
         processor.updateOptions(processorOptions());
       }

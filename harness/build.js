@@ -118,12 +118,16 @@ ${standalone ? brandHead(pageId ? site.page(pageId).title : 'Markstrata',
     pageId ? site.page(pageId).description : 'The web part\'s own renderer, running in the page.') : ''}
 ${links}
 <style>
-  body { margin: 0; font-family: system-ui, sans-serif; }
+  /* Matches the rest of the site: the surface around the web part follows the
+     reader's system setting until they choose a mode in the pane. */
+  :root { color-scheme: light; --site-canvas: #f3f2f1; --site-intro: #424242; }
+  :root[data-site-mode="dark"] { color-scheme: dark; --site-canvas: #0A1417; --site-intro: #9FBCBE; }
+  body { margin: 0; font-family: system-ui, sans-serif; background: var(--site-canvas); }
   /* Stands in for the SharePoint page canvas around the web part. */
-  .page { padding: 24px; background: #f3f2f1; min-height: 100vh; }
+  .page { padding: 24px; background: var(--site-canvas); min-height: 100vh; }
   .canvas { margin: 0 auto; max-width: 1100px; }
   .demo-intro { margin: 0; padding: 18px 22px 0; max-width: 1100px;
-                margin-inline: auto; color: #424242;
+                margin-inline: auto; color: var(--site-intro);
                 font: 15px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
   .demo-actions { max-width: 1100px; margin: 14px auto 0; padding: 0 22px; }
   .demo-actions button { font: 600 14px/1 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;

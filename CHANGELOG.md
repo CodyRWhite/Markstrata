@@ -7,6 +7,17 @@ the same number with a fourth part appended (0.2.0 -> 0.2.0.0), stamped by
 
 ## Unreleased
 
+- The site follows the reader's system colour scheme. Every page starts in dark
+  mode on a machine set to dark, the surface around the web part moves with it
+  rather than leaving a dark document on a white page, and a mode chosen on the
+  page is remembered and wins from then on. Storage is guarded, so a private
+  window still gets the right mode, just not the memory of it.
+- The README is about half its length. Everything the website documents now
+  links to the website instead of being repeated: syntax, settings, the theme
+  detail and the reasons behind the project. What stays is what a reader of the
+  repository needs and cannot get from the site: what it is, how to build it,
+  the security posture, how to work on it and where things live.
+
 - Gantt charts are legible. Mermaid draws their axis at 10px and their task and
   section labels at 11px, and unlike a flowchart a gantt re-lays out to the
   container rather than scaling, so the text stayed that size however wide the
