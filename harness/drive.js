@@ -73,17 +73,36 @@ const pageUrl = 'file://' + path.join(OUT, 'index.html');
    * size however wide the column is. themeCSS is what lifts them; this fails
    * if that override stops reaching the generated stylesheet.
    */
-  await step('gantt labels are legible, not mermaid default 10px', async () => {
+  /*
+   * The size that matters is the one on screen, not the one in the stylesheet.
+   * An SVG with a viewBox is scaled to fit its box, so gantt labels shipped at
+   * 13px and then 16px still arrived smaller than body text while a check on
+   * the computed value passed. This measures what a reader actually gets, by
+   * multiplying the computed size by the SVG's scale, and compares it to the
+   * page's own body text.
+   */
+  await step('gantt labels reach the screen at body text size', async () => {
     await page.waitForSelector('.strata-mermaid svg .taskText', { timeout: 15000 });
-    const sizes = await page.evaluate(() => {
-      const px = (sel) => {
+    const seen = await page.evaluate(() => {
+      const svg = document.querySelector('.strata-mermaid svg[aria-roledescription="gantt"]');
+      if (!svg) { return { error: 'no gantt in the sample' }; }
+      const box = parseFloat(svg.getAttribute('viewBox').split(/\s+/)[2]);
+      const scale = svg.getBoundingClientRect().width / box;
+      const body = parseFloat(getComputedStyle(document.querySelector('.strata-content p')).fontSize);
+      const onScreen = (sel) => {
         const el = document.querySelector('.strata-mermaid ' + sel);
-        return el ? parseFloat(getComputedStyle(el).fontSize) : 0;
+        return el ? parseFloat(getComputedStyle(el).fontSize) * scale : 0;
       };
-      return { tick: px('.tick text'), task: px('.taskText'), section: px('.sectionTitle') };
+      return { scale: scale, body: body, tick: onScreen('.tick text'),
+               task: onScreen('.taskText'), section: onScreen('.sectionTitle') };
     });
-    for (const [name, size] of Object.entries(sizes)) {
-      if (size < 12) throw new Error(`${name} is ${size}px`);
+    if (seen.error) throw new Error(seen.error);
+    for (const name of ['tick', 'task', 'section']) {
+      /* A little under body text is fine; noticeably under is the bug. */
+      if (seen[name] < seen.body - 2) {
+        throw new Error(`${name} reaches the screen at ${seen[name].toFixed(1)}px `
+          + `against ${seen.body}px body text (svg scale ${seen.scale.toFixed(3)})`);
+      }
     }
   });
 

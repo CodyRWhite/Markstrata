@@ -8,6 +8,26 @@ is normally zero. `scripts/set-version.js` stamps it when a release is cut.
 
 Entries below 0.0.10.0 were written before the switch and are three-part.
 
+## 0.0.11.0
+
+- Gantt charts are readable, which 0.0.8 and 0.0.9 both claimed and neither
+  delivered. The size in the stylesheet was never the size on screen: an SVG
+  with a viewBox is scaled to fit its box, and a gantt lays out wider than the
+  column it sits in, so the labels arrived shrunk by a factor that depends on
+  the column. It ran about 0.85 where it was measured and 0.67 in the harness,
+  which is how 16px reached a page at nearer 10px, beside 15px body text.
+  Raising the number could not fix that reliably because the scale moves.
+  The chart now keeps its natural size and a wide one scrolls, so the text is
+  exactly the size it is set to, at any column width.
+- A wide diagram no longer loses its left edge. The container centred its
+  contents, and a centred flex item that overflows cannot be scrolled back to,
+  so about 30px of a wide chart was unreachable. Centring is now done with an
+  auto margin, which collapses when the diagram is wider than the column.
+- The harness measures what reaches the screen rather than what the stylesheet
+  says, and compares it against the page's own body text. The previous check
+  read the computed font size, which is what let two releases go out reporting
+  a fix that readers could not see.
+
 ## 0.0.10.0
 
 - Versions are four-part from here on, matching what SharePoint compares when

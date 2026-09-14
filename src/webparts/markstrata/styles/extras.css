@@ -19,7 +19,11 @@
 
 .strata-mermaid {
   display: flex;
-  justify-content: center;
+  /* Centred by an auto margin on the diagram rather than by justify-content:
+     a centred flex item that overflows its container cannot be scrolled back
+     to, so the left edge of a wide chart is lost. An auto margin centres what
+     fits and collapses to nothing when it does not. */
+  justify-content: flex-start;
   margin: 0 0 var(--strata-block-gap);
   padding: 16px;
   border: 1px solid var(--strata-border);
@@ -31,6 +35,14 @@
 .strata-mermaid svg {
   max-width: 100%;
   height: auto;
+  margin-inline: auto;
+}
+
+/* A gantt keeps its natural width and scrolls, rather than being scaled down
+   until its labels are unreadable. See utils/mermaidConfig.ts. */
+.strata-mermaid svg[aria-roledescription='gantt'] {
+  max-width: none;
+  flex: none;
 }
 
 .strata-mermaid pre.mermaid {

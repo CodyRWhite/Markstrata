@@ -51,6 +51,14 @@ export const MERMAID_BASE_CONFIG: { [key: string]: unknown } = {
     htmlLabels: false, curve: 'basis', padding: 12, useMaxWidth: true, wrappingWidth: 220
   },
   sequence: { useMaxWidth: true },
-  gantt: { useMaxWidth: true, barHeight: 24, barGap: 6, fontSize: GANTT_TEXT_SIZE },
+  /*
+   * useMaxWidth would fit the chart to the column by scaling the whole SVG,
+   * which scales the text with it: a gantt lays out wider than the column it
+   * sits in, so the labels arrived on screen a good deal smaller than the size
+   * set above and no amount of raising that number fixed it reliably, because
+   * the scale depends on the column. Off, the chart keeps its natural size and
+   * the text is exactly the size it says; extras.css lets a wide one scroll.
+   */
+  gantt: { useMaxWidth: false, barHeight: 24, barGap: 6, fontSize: GANTT_TEXT_SIZE },
   themeCSS: GANTT_TEXT_CSS
 };
