@@ -466,20 +466,10 @@ var MERMAID_CONFIG_FOR = ${mermaidBase.configFor.toString()};
   toggleClass('numbers', 'strata-code--numbered');
   toggleClass('wrap', 'strata-code--wrap');
 
-  // Copy buttons, same behaviour as the web part.
-  document.addEventListener('click', function (event) {
-    var button = event.target.closest ? event.target.closest('.strata-code-copy') : null;
-    if (!button) { return; }
-    var block = button.closest('.strata-code');
-    var lines = block.querySelectorAll('.strata-code-line-text');
-    var text = [];
-    for (var index = 0; index < lines.length; index++) {
-      text.push(lines[index].textContent);
-    }
-    navigator.clipboard.writeText(text.join('\\n'));
-    button.setAttribute('data-state', 'done');
-    setTimeout(function () { button.removeAttribute('data-state'); }, 1500);
-  });
+  /* Copy buttons are the web part's own: page.js wires the real
+     attachCopyButtons above, and a second copy here would only be a worse one -
+     it said nothing on the button, put it back on a different timer, and had no
+     answer for a browser that will not give it the clipboard. */
 
   var mermaidThemes = MERMAID_THEMES;
   var sources = [];

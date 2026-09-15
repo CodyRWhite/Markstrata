@@ -1176,6 +1176,46 @@ const demoUrl = 'file://' + path.join(__dirname, '..', 'site', 'demo', 'index.ht
     await page.waitForTimeout(300);
   });
 
+  /*
+   * Counting copy buttons only proves the markup is there. The site pages used
+   * to carry a second, hand-written copy handler of their own, which was dead
+   * on arrival - the real one wired by page.js stops the event before it gets
+   * there - and was a worse handler besides. So this clicks one and looks at
+   * what the real handler does: the button says Copied, and what lands on the
+   * clipboard is the source without the line numbers.
+   */
+  await step('a copy button on a site page is the web part\'s own', async () => {
+    await page.context().grantPermissions(['clipboard-read', 'clipboard-write']);
+    await page.goto('file://' + path.join(__dirname, '..', 'site', 'docs', 'index.html'),
+      { waitUntil: 'load' });
+    await page.waitForTimeout(900);
+
+    const button = page.locator('.strata-code-copy').first();
+    await button.scrollIntoViewIfNeeded();
+    await button.click();
+    await page.waitForTimeout(300);
+
+    const said = await page.evaluate(() => {
+      const first = document.querySelector('.strata-code-copy');
+      return {
+        label: (first.querySelector('.strata-code-btn-label') || {}).textContent,
+        state: first.getAttribute('data-state'),
+        wired: first.getAttribute('data-strata-wired')
+      };
+    });
+    if (said.wired !== 'true') {
+      throw new Error('the copy button was never wired by the enhancer');
+    }
+    if (said.label !== 'Copied' || said.state !== 'done') {
+      throw new Error('the button said ' + JSON.stringify(said));
+    }
+
+    const copied = await page.evaluate(() => navigator.clipboard.readText());
+    if (!copied || /^\s*\d+\s/.test(copied)) {
+      throw new Error('the clipboard holds ' + JSON.stringify((copied || '').slice(0, 60)));
+    }
+  });
+
   await step('a site page with pictures gets the picture behaviour too', async () => {
     await page.goto('file://' + path.join(__dirname, '..', 'site', 'themes', 'index.html'),
       { waitUntil: 'load' });
