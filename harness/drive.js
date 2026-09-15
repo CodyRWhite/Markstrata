@@ -1742,6 +1742,158 @@ const webPartUrl = 'file://' + path.join(HARNESS_DIST, 'webpart.html');
     }
   });
 
+  /*
+   * Measuring the chrome means asking every element on the page where it sits,
+   * which on a SharePoint page is thousands of them, on every render and on
+   * every tick of a window drag. Two things are being checked here: that the
+   * measurement no longer reads the web part's own document, and that it still
+   * finds a real bar across the top of the page.
+   *
+   * The web part's own content matters because its table headers are sticky
+   * and positioned at this very offset, so a wide enough one was chrome as far
+   * as the measurement was concerned - and the offset it fed back into was its
+   * own.
+   */
+  await step('the offset does not grow every time the window changes', async () => {
+    const offsets = await page.evaluate(async () => {
+      const wide = [
+        '| A column wide enough to be mistaken for a bar across the page | B |',
+        '|---|---|',
+        '| one | two |'
+      ].join('\n');
+
+      await window.webPartHarness.start({
+        contentSource: 'manual',
+        markdownContent: `# Wide\n\n${wide}\n`
+      });
+
+      const read = () => {
+        const root = document.querySelector('.strata-root');
+        return parseFloat(root.style.getPropertyValue('--strata-scroll-offset')) || 0;
+      };
+      const settle = () => new Promise((resolve) =>
+        requestAnimationFrame(() => requestAnimationFrame(resolve)));
+
+      const first = read();
+      window.dispatchEvent(new Event('resize'));
+      await settle();
+      const second = read();
+      window.dispatchEvent(new Event('resize'));
+      await settle();
+      return { first: first, second: second, third: read() };
+    });
+
+    if (offsets.second !== offsets.first || offsets.third !== offsets.first) {
+      throw new Error('the offset went ' + offsets.first + ' then ' + offsets.second
+        + ' then ' + offsets.third);
+    }
+  });
+
+  await step('but a bar across the top of the page is still measured', async () => {
+    const measured = await page.evaluate(async () => {
+      const bar = document.createElement('div');
+      bar.id = 'wp-fake-chrome';
+      bar.style.cssText = 'position:fixed;top:0;left:0;right:0;height:48px;background:#333';
+      document.body.appendChild(bar);
+
+      const settle = () => new Promise((resolve) =>
+        requestAnimationFrame(() => requestAnimationFrame(resolve)));
+
+      window.dispatchEvent(new Event('resize'));
+      await settle();
+      const root = document.querySelector('.strata-root');
+      const offset = parseFloat(root.style.getPropertyValue('--strata-scroll-offset')) || 0;
+
+      bar.remove();
+      window.dispatchEvent(new Event('resize'));
+      await settle();
+      const without = parseFloat(root.style.getPropertyValue('--strata-scroll-offset')) || 0;
+
+      return { withBar: offset, without: without };
+    });
+
+    if (measured.withBar < 48) {
+      throw new Error('a 48px bar measured as ' + measured.withBar);
+    }
+    if (measured.without >= measured.withBar) {
+      throw new Error('removing the bar left the offset at ' + measured.without);
+    }
+  });
+
+  await step('and it does not read the web part own document to do it', async () => {
+    const counted = await page.evaluate(async () => {
+      /* A long document, so anything proportional to it is obvious. */
+      const rows = [];
+      for (let index = 0; index < 400; index += 1) {
+        rows.push(`- item number ${index}`);
+      }
+      await window.webPartHarness.start({
+        contentSource: 'manual',
+        markdownContent: `# Long\n\n${rows.join('\n')}\n`
+      });
+
+      const inside = document.querySelectorAll('.strata-root *').length;
+      const onThePage = document.querySelectorAll('body *').length;
+
+      /* Counted rather than timed: a stopwatch in a browser check is a flake
+         waiting to happen, and the question is what it looks at, not how fast
+         it looks. */
+      const real = window.getComputedStyle;
+      let asked = 0;
+      window.getComputedStyle = function () {
+        asked += 1;
+        return real.apply(window, arguments);
+      };
+
+      const settle = () => new Promise((resolve) =>
+        requestAnimationFrame(() => requestAnimationFrame(resolve)));
+      window.dispatchEvent(new Event('resize'));
+      await settle();
+
+      window.getComputedStyle = real;
+      return { asked: asked, inside: inside, onThePage: onThePage };
+    });
+
+    if (counted.inside < 400) {
+      throw new Error('the document only has ' + counted.inside + ' elements in it');
+    }
+    if (counted.asked >= counted.onThePage - counted.inside + 10) {
+      throw new Error('it asked about ' + counted.asked + ' elements, with '
+        + counted.inside + ' of the page\'s ' + counted.onThePage + ' inside the web part');
+    }
+  });
+
+  await step('and it measures once for a burst of resizes, not once each', async () => {
+    const counted = await page.evaluate(async () => {
+      const real = window.getComputedStyle;
+      let asked = 0;
+      window.getComputedStyle = function () {
+        asked += 1;
+        return real.apply(window, arguments);
+      };
+
+      for (let index = 0; index < 20; index += 1) {
+        window.dispatchEvent(new Event('resize'));
+      }
+      const duringTheBurst = asked;
+
+      await new Promise((resolve) =>
+        requestAnimationFrame(() => requestAnimationFrame(resolve)));
+      const afterIt = asked;
+
+      window.getComputedStyle = real;
+      return { duringTheBurst: duringTheBurst, afterIt: afterIt };
+    });
+
+    if (counted.duringTheBurst !== 0) {
+      throw new Error('twenty resize events measured ' + counted.duringTheBurst
+        + ' times before the browser had drawn anything');
+    }
+    if (counted.afterIt === 0) {
+      throw new Error('the burst never measured at all');
+    }
+  });
+
   await step('a library that will not answer is a message, not a broken page', async () => {
     const shown = await page.evaluate(async () => {
       window.webPartHarness.refuse(true);

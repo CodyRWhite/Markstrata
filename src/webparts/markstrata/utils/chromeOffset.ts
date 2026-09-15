@@ -29,16 +29,50 @@
 const HEADING_CLEARANCE: number = 16;
 
 /**
+ * Every element on the page except the ones inside `ours`.
+ *
+ * Whole subtrees are refused rather than each element in them being visited
+ * and discarded, which is the difference between walking the page and walking
+ * the page plus every paragraph, list item, table cell and code line of the
+ * document the web part is showing. A long document is most of the page.
+ */
+function elementsAround(ours: HTMLElement | undefined): HTMLElement[] {
+  const walker: TreeWalker = document.createTreeWalker(
+    document.body,
+    NodeFilter.SHOW_ELEMENT,
+    {
+      acceptNode: (node: Node): number => node === ours
+        ? NodeFilter.FILTER_REJECT
+        : NodeFilter.FILTER_ACCEPT
+    }
+  );
+
+  const found: HTMLElement[] = [];
+  while (walker.nextNode()) {
+    found.push(walker.currentNode as HTMLElement);
+  }
+  return found;
+}
+
+/**
  * Measures the chrome. Anything stuck to the top of the window and wide enough
  * to be a bar across it counts; the contents sidebar does not, because it sits
  * beside the text rather than over it, and neither does a small fixed control
  * like the button back to the top.
+ *
+ * `ours` is the web part's own root, and it is skipped for two reasons. The
+ * page's chrome is the page's, by definition - and the web part's own table
+ * headers are sticky and are positioned at the very offset being measured, so
+ * a wide one is a bar across the page as far as the rule below is concerned,
+ * and the offset it would contribute to is its own.
+ *
+ * Asking an element where it sits means resolving its style, so what this
+ * costs is the number of elements it looks at. On a SharePoint page holding a
+ * long document, most of them are the document.
  */
-export function chromeAbove(): number {
+export function chromeAbove(ours?: HTMLElement): number {
   const width: number = window.innerWidth;
-  const elements: HTMLElement[] = Array.prototype.slice.call(
-    document.querySelectorAll('body *')
-  );
+  const elements: HTMLElement[] = elementsAround(ours);
 
   let bottom: number = 0;
   elements.forEach((element: HTMLElement) => {
@@ -87,21 +121,40 @@ export function chromeAbove(): number {
  */
 export class ScrollOffset {
   private onResize: (() => void) | undefined;
+  private pending: number | undefined;
 
   public track(root: HTMLElement): void {
     this.stop();
 
     const apply = (): void => {
+      this.pending = undefined;
       root.style.setProperty('--strata-scroll-offset',
-        `${chromeAbove() + HEADING_CLEARANCE}px`);
+        `${chromeAbove(root) + HEADING_CLEARANCE}px`);
     };
 
-    this.onResize = apply;
+    /*
+     * Dragging a window edge raises resize continuously - tens of events
+     * between two frames - and measuring on each one measured the same page
+     * over and over to produce the same answer, because nothing the browser
+     * has not drawn yet can have moved. One measurement per frame is the most
+     * that can tell you anything different.
+     */
+    this.onResize = (): void => {
+      if (this.pending !== undefined) {
+        return;
+      }
+      this.pending = window.requestAnimationFrame(apply);
+    };
+
     window.addEventListener('resize', this.onResize, { passive: true });
     apply();
   }
 
   public stop(): void {
+    if (this.pending !== undefined) {
+      window.cancelAnimationFrame(this.pending);
+      this.pending = undefined;
+    }
     if (this.onResize) {
       window.removeEventListener('resize', this.onResize);
       this.onResize = undefined;

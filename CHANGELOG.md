@@ -8,6 +8,16 @@ is normally zero. `scripts/set-version.js` stamps it when a release is cut.
 
 Entries below 0.0.10.0 were written before the switch and are three-part.
 
+- Working out how far below the page's chrome a heading has to land no longer
+  reads the whole page to do it. It asked every element in the document where
+  it sat, which on a page holding a long document is mostly that document -
+  and it asked again on every resize event, of which dragging a window edge
+  raises tens between two frames. On a four hundred item document that was 452
+  elements measured per event and 9,040 in a burst of twenty; it is 15 either
+  way now. The web part's own content is skipped as a subtree rather than
+  element by element, and a burst of resizes measures once, on the next frame,
+  because nothing the browser has not drawn yet can have moved.
+
 - Printing a SharePoint page that has this web part on it no longer reformats
   the rest of the page. SharePoint loads a web part's stylesheets into the page
   itself, beside its own, so three rules that named elements rather than this
