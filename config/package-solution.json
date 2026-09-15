@@ -3,7 +3,7 @@
   "solution": {
     "name": "Markstrata - Markdown Web Part for SharePoint Online",
     "id": "7160b942-6869-49d0-b3e9-db7b50ca5fdc",
-    "version": "0.0.17.1",
+    "version": "0.0.17.2",
     "includeClientSideAssets": true,
     "skipFeatureDeployment": true,
     "isDomainIsolated": false,
@@ -31,7 +31,7 @@
         "title": "Markstrata",
         "description": "Activates the Markstrata markdown web part.",
         "id": "d4f340af-99c8-4167-88ef-53b89003b7bc",
-        "version": "0.0.17.1"
+        "version": "0.0.17.2"
       }
     ]
   },

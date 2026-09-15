@@ -8,6 +8,8 @@ is normally zero. `scripts/set-version.js` stamps it when a release is cut.
 
 Entries below 0.0.10.0 were written before the switch and are three-part.
 
+## 0.0.17.2
+
 - Working out how far below the page's chrome a heading has to land no longer
   reads the whole page to do it. It asked every element in the document where
   it sat, which on a page holding a long document is mostly that document -
