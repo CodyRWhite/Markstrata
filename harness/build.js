@@ -68,71 +68,13 @@ const CSS_FILES = [
 
 fs.mkdirSync(outDir, { recursive: true });
 
-// The sample document, as a global the harness reads.
-const sample = fs.readFileSync(path.join(root, 'samples', 'kitchen-sink.md'), 'utf8');
-fs.writeFileSync(path.join(outDir, 'sample.js'), `globalThis.SAMPLE=${JSON.stringify(sample)};`);
-
-execFileSync(
-  path.join(root, 'node_modules', '.bin', 'esbuild'),
-  [
-    path.join(__dirname, 'harness.ts'),
-    '--bundle',
-    '--format=iife',
-    `--outfile=${path.join(outDir, 'bundle.js')}`,
-    `--define:process.env.NODE_ENV="${standalone ? 'production' : 'development'}"`,
-    standalone ? '--minify' : '--sourcemap',
-    '--log-level=warning'
-  ],
-  { stdio: 'inherit', cwd: root }
-);
-
-function copyInto(sourceDir, targetDir, filter) {
-  fs.mkdirSync(targetDir, { recursive: true });
-  fs.readdirSync(sourceDir).forEach((entry) => {
-    const source = path.join(sourceDir, entry);
-    if (fs.statSync(source).isDirectory()) {
-      copyInto(source, path.join(targetDir, entry), filter);
-    } else if (!filter || filter(entry)) {
-      fs.copyFileSync(source, path.join(targetDir, entry));
-    }
-  });
-}
-
-// Both modes: the sample document references brand/mark.svg to exercise
-// relative image sources, and the development harness should show the same
-// page the published one does rather than a broken image.
-copyBrand(outDir);
-
-if (standalone) {
-  copyInto(stylesDir, path.join(outDir, 'styles'), (name) => name.endsWith('.css'));
-  const katexSource = path.join(root, 'node_modules', 'katex', 'dist');
-  fs.mkdirSync(path.join(outDir, 'katex', 'fonts'), { recursive: true });
-  fs.copyFileSync(path.join(katexSource, 'katex.min.css'), path.join(outDir, 'katex', 'katex.min.css'));
-  copyInto(path.join(katexSource, 'fonts'), path.join(outDir, 'katex', 'fonts'), (name) => name.endsWith('.woff2'));
-}
-
-// Stylesheets are plain CSS, so the page links the real files rather than a
-// copy: editing one and reloading is enough to see the change.
-const cssBase = standalone ? 'styles' : '../../src/webparts/markstrata/styles';
-const katexHref = standalone ? 'katex/katex.min.css' : '../../node_modules/katex/dist/katex.min.css';
-
-const links = [katexHref]
-  .concat(CSS_FILES.map((file) => `${cssBase}/${file}`))
-  .map((href) => `<link rel="stylesheet" href="${href}">`)
-  .join('\n');
-
-fs.writeFileSync(
-  path.join(outDir, 'index.html'),
-  `<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>${pageId ? site.page(pageId).title : 'Markstrata - runtime harness'}</title>
-${standalone ? brandHead(pageId ? site.page(pageId).title : 'Markstrata',
-    pageId ? site.page(pageId).description : 'The web part\'s own renderer, running in the page.') : ''}
-${links}
-<style>
+/*
+ * The page's own styles: the canvas the web part sits on, and the stand-in for
+ * the property pane. Shared by both harness pages, which is why it is a
+ * function rather than sitting in one of their templates.
+ */
+function pageStyles(pageId) {
+  return `<style>
   /* Matches the rest of the site: the surface around the web part follows the
      reader's system setting until they choose a mode in the pane. */
   :root { color-scheme: light; --site-canvas: #f3f2f1; --site-intro: #424242; }
@@ -214,7 +156,74 @@ ${links}
          padding: 6px; border-radius: 4px; opacity: .9; }
   ${pageId ? '#log { display: none; }' : ''}
 ${pageId ? site.CHROME_CSS : ''}
-</style>
+</style>`;
+}
+
+// The sample document, as a global the harness reads.
+const sample = fs.readFileSync(path.join(root, 'samples', 'kitchen-sink.md'), 'utf8');
+fs.writeFileSync(path.join(outDir, 'sample.js'), `globalThis.SAMPLE=${JSON.stringify(sample)};`);
+
+execFileSync(
+  path.join(root, 'node_modules', '.bin', 'esbuild'),
+  [
+    path.join(__dirname, 'harness.ts'),
+    '--bundle',
+    '--format=iife',
+    `--outfile=${path.join(outDir, 'bundle.js')}`,
+    `--define:process.env.NODE_ENV="${standalone ? 'production' : 'development'}"`,
+    standalone ? '--minify' : '--sourcemap',
+    '--log-level=warning'
+  ],
+  { stdio: 'inherit', cwd: root }
+);
+
+function copyInto(sourceDir, targetDir, filter) {
+  fs.mkdirSync(targetDir, { recursive: true });
+  fs.readdirSync(sourceDir).forEach((entry) => {
+    const source = path.join(sourceDir, entry);
+    if (fs.statSync(source).isDirectory()) {
+      copyInto(source, path.join(targetDir, entry), filter);
+    } else if (!filter || filter(entry)) {
+      fs.copyFileSync(source, path.join(targetDir, entry));
+    }
+  });
+}
+
+// Both modes: the sample document references brand/mark.svg to exercise
+// relative image sources, and the development harness should show the same
+// page the published one does rather than a broken image.
+copyBrand(outDir);
+
+if (standalone) {
+  copyInto(stylesDir, path.join(outDir, 'styles'), (name) => name.endsWith('.css'));
+  const katexSource = path.join(root, 'node_modules', 'katex', 'dist');
+  fs.mkdirSync(path.join(outDir, 'katex', 'fonts'), { recursive: true });
+  fs.copyFileSync(path.join(katexSource, 'katex.min.css'), path.join(outDir, 'katex', 'katex.min.css'));
+  copyInto(path.join(katexSource, 'fonts'), path.join(outDir, 'katex', 'fonts'), (name) => name.endsWith('.woff2'));
+}
+
+// Stylesheets are plain CSS, so the page links the real files rather than a
+// copy: editing one and reloading is enough to see the change.
+const cssBase = standalone ? 'styles' : '../../src/webparts/markstrata/styles';
+const katexHref = standalone ? 'katex/katex.min.css' : '../../node_modules/katex/dist/katex.min.css';
+
+const links = [katexHref]
+  .concat(CSS_FILES.map((file) => `${cssBase}/${file}`))
+  .map((href) => `<link rel="stylesheet" href="${href}">`)
+  .join('\n');
+
+fs.writeFileSync(
+  path.join(outDir, 'index.html'),
+  `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>${pageId ? site.page(pageId).title : 'Markstrata - runtime harness'}</title>
+${standalone ? brandHead(pageId ? site.page(pageId).title : 'Markstrata',
+    pageId ? site.page(pageId).description : 'The web part\'s own renderer, running in the page.') : ''}
+${links}
+${pageStyles(pageId)}
 ${site.MODE_BOOTSTRAP}
 </head>
 <body>
@@ -233,3 +242,115 @@ ${pageId ? '<aside id="demo-panel" hidden aria-label="Markstrata web part proper
 );
 
 console.log(`Wrote ${path.relative(root, path.join(outDir, 'index.html'))}`);
+
+/*
+ * The second page: the web part itself.
+ *
+ * index.html runs the renderer classes, which is most of the code and none of
+ * the lifecycle. This one runs MarkstrataWebPart - onInit, render, onDispose,
+ * the property pane - against the stand-ins in harness/spfx. It is built only
+ * for development, not for the published site: a page whose whole purpose is
+ * to start a web part badly on purpose is not a demo.
+ */
+const SPFX_STAND_INS = {
+  '@microsoft/sp-core-library': 'harness/spfx/coreLibrary.ts',
+  '@microsoft/sp-webpart-base': 'harness/spfx/webPartBase.ts',
+  '@microsoft/sp-component-base': 'harness/spfx/componentBase.ts',
+  '@microsoft/sp-property-pane': 'harness/spfx/propertyPane.ts',
+  'MarkstrataWebPartStrings': 'harness/spfx/strings.js'
+};
+
+/*
+ * SharePoint itself cannot be stood in for by a package alias: the web part
+ * reaches it through a relative path of its own. So the resolver catches the
+ * path instead, wherever it is imported from.
+ */
+const SHAREPOINT_SERVICE = /(^|\/)SharePointService$/;
+
+/* Asynchronous because esbuild only takes plugins that way, and the whole
+   point here is a plugin. */
+async function buildWebPartPage() {
+  const esbuild = require('esbuild');
+
+  const standIns = {
+    name: 'sharepoint-stand-ins',
+    setup(build) {
+      Object.keys(SPFX_STAND_INS).forEach((moduleName) => {
+        const filter = new RegExp(`^${moduleName.replace(/[/@.]/g, '\\$&')}$`);
+        build.onResolve({ filter }, () => ({
+          path: path.join(root, SPFX_STAND_INS[moduleName])
+        }));
+      });
+
+      build.onResolve({ filter: SHAREPOINT_SERVICE }, () => ({
+        path: path.join(root, 'harness', 'spfx', 'sharePoint.ts')
+      }));
+    }
+  };
+
+  await esbuild.build({
+    entryPoints: [path.join(__dirname, 'webPart.ts')],
+    bundle: true,
+    format: 'iife',
+    outfile: path.join(outDir, 'webpart.js'),
+    sourcemap: true,
+    /* The page links the real stylesheets, as index.html does; the web part's
+       own imports of them would otherwise bundle a second copy. */
+    loader: { '.css': 'empty' },
+    define: { 'process.env.NODE_ENV': '"development"' },
+    plugins: [standIns],
+    logLevel: 'warning'
+  });
+
+  fs.writeFileSync(
+    path.join(outDir, 'webpart.html'),
+    `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Markstrata - the web part itself</title>
+${links}
+${pageStyles(null)}
+<style>
+  .wp-intro { max-width: 1100px; margin: 0 auto; padding: 18px 22px 0;
+              color: var(--site-intro); font: 15px/1.6 system-ui, sans-serif; }
+  #wp-status { max-width: 1100px; margin: 12px auto 0; padding: 10px 14px;
+               border-radius: 6px; font: 600 14px/1.5 system-ui, sans-serif;
+               border: 1px solid; }
+  #wp-status[data-state="started"] { background: #edf7ed; border-color: #9ad29a; color: #1f5c1f; }
+  #wp-status[data-state="failed"] { background: #fdecea; border-color: #e2a6a0; color: #7a231b; }
+  #wp-status[data-state="away"], #wp-status[data-state="starting"] {
+               background: #f3f2f1; border-color: #d6d4d2; color: #424242; }
+  .pp-text { width: 100%; padding: 6px 8px; border: 1px solid #605e5c;
+             border-radius: 2px; font: inherit; background: #fff; color: #323130; }
+</style>
+${site.MODE_BOOTSTRAP}
+</head>
+<body>
+<p class="wp-intro">This is <strong>MarkstrataWebPart</strong> itself, started the way a SharePoint page starts it: onInit is awaited, then render is called, and putting it away calls onDispose. SharePoint around it is stood in for; the web part is the real one.</p>
+<div id="wp-status" data-state="starting">Starting…</div>
+<div class="demo-actions">
+  <button type="button" id="demo-configure" aria-expanded="false" aria-controls="demo-panel">Edit web part properties</button>
+  <button type="button" class="demo-secondary" id="demo-edit" aria-pressed="false">Edit the markdown</button>
+  <button type="button" class="demo-secondary" id="demo-away">Put the web part away</button>
+</div>
+<div class="page"><div class="canvas"><div id="host"></div></div></div>
+<aside id="demo-panel" hidden aria-label="Markstrata web part properties"></aside>
+<div id="log"></div>
+<script src="sample.js"></script>
+<script src="webpart.js"></script>
+</body>
+</html>
+`
+  );
+
+  console.log(`Wrote ${path.relative(root, path.join(outDir, 'webpart.html'))}`);
+}
+
+if (!standalone) {
+  buildWebPartPage().catch((error) => {
+    console.error(error);
+    process.exit(1);
+  });
+}

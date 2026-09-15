@@ -135,7 +135,7 @@ the upload refused; the version lives in the tag and inside the package.
 npm run lint           # eslint, zero warnings allowed
 npm test               # unit tests: markdown, code blocks, theme contract, brand assets
 npm run demo           # static preview of every theme, in demo/dist/
-npm run harness:drive  # run the renderer classes in a real browser
+npm run harness:drive  # run the renderer classes, and the web part, in a browser
 npm run site           # the documentation site
 npm run brand          # regenerate the brand assets from the delivered package
 npm run screenshots    # regenerate the theme screenshots in docs/images/
@@ -163,7 +163,9 @@ the theme token contract, so a theme missing a colour fails the build instead of
 rendering grey. SPFx has no local workbench any more, so `harness:drive` loads
 the real renderer classes into a browser page and checks the toolbar, contents
 tracking, copy buttons, theme switching, diagram re-rendering, image loading and
-the live preview. CI runs both on every push.
+the live preview. A second page runs the web part itself - its start-up, its
+property pane and its disposal - against stand-ins for SharePoint. CI runs both
+on every push.
 
 Branch, commit and release conventions are in
 [CONTRIBUTING.md](./CONTRIBUTING.md). Adding a theme is documented in
@@ -185,6 +187,8 @@ samples/                          welcome + kitchen-sink markdown
 demo/                             static theme preview builder
 harness/                          renderer classes driven in a real browser,
                                   plus the demo page's property pane
+  spfx/                           stand-ins for SharePoint, so the web part's
+                                  own lifecycle can run in a plain page
 assets/                           delivered brand package and generated assets
 docs/site/                        the website's markdown sources
 scripts/                          site, brand, screenshots, version stamping,

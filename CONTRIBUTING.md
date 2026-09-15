@@ -38,16 +38,29 @@ Two ways to look at it without a tenant:
 
 ```bash
 npm run demo           # demo/dist/index.html - every theme, real pipeline
-npm run harness        # harness/dist/index.html - the real renderer classes
+npm run harness        # harness/dist/ - the renderer classes, and the web part
 npm run harness:drive  # ...and drive them in Chromium (needs Playwright)
 ```
 
-`demo` is for judging how markdown *renders*. `harness` is for the parts only a
-running page exercises - the toolbar, the contents sidebar and its scroll
-tracking, copy buttons, theme switching, diagram re-rendering, the split editor
-and its live preview. SPFx removed the local workbench and the hosted one needs
-a tenant, so this is as close to running the web part as you get locally. CI
-runs `harness:drive` on every push.
+`demo` is for judging how markdown *renders*. `harness` builds two pages.
+
+`harness/dist/index.html` runs the renderer classes: the parts only a running
+page exercises - the toolbar, the contents sidebar and its scroll tracking,
+copy buttons, theme switching, diagram re-rendering, the split editor and its
+live preview.
+
+`harness/dist/webpart.html` runs `MarkstrataWebPart` itself, started the way a
+SharePoint page starts it - onInit awaited, render called, onDispose on the way
+out - against the SharePoint stand-ins in `harness/spfx/`. That page exists
+because 0.0.17.0 shipped a web part that could not start at all: the lifecycle
+had never run outside a tenant, so nothing here could see it. It also drives
+the unhappy paths on purpose, since those are the ones a tenant finds first - a
+library that is slow to answer, a library that refuses, and a web part put away
+while it is still starting.
+
+SPFx removed the local workbench and the hosted one needs a tenant, so this is
+as close to running the web part as you get locally. CI runs `harness:drive` on
+every push.
 
 ## Releasing
 

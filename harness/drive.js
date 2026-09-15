@@ -47,6 +47,12 @@ const pageUrl = 'file://' + path.join(HARNESS_DIST, 'index.html');
  * would then be testing paths instead of behaviour.
  */
 const demoUrl = 'file://' + path.join(__dirname, '..', 'site', 'demo', 'index.html');
+/*
+ * And the web part itself, which is a third page because it is a different
+ * thing being driven: not the renderers, but MarkstrataWebPart's own
+ * lifecycle, against the SharePoint stand-ins in harness/spfx.
+ */
+const webPartUrl = 'file://' + path.join(HARNESS_DIST, 'webpart.html');
 
 (async () => {
   // PLAYWRIGHT_CHROMIUM lets a preinstalled browser be used instead.
@@ -1479,6 +1485,186 @@ const demoUrl = 'file://' + path.join(__dirname, '..', 'site', 'demo', 'index.ht
     }
     if (left.height > 500) {
       throw new Error('the web part is still ' + Math.round(left.height) + 'px tall');
+    }
+  });
+
+  /*
+   * The third pass: the web part itself.
+   *
+   * Everything above drives the classes below the web part. This drives
+   * MarkstrataWebPart - the real one, started the way SharePoint starts it -
+   * against the stand-ins in harness/spfx. It exists because 0.0.17.0 shipped
+   * a web part that could not start at all and nothing here noticed: the
+   * lifecycle had never run outside a tenant.
+   *
+   * Against that release these checks fail with the two errors it produced, in
+   * the order it produced them: it could not start because the processor was
+   * built before the navigator it reads, and it could not be put away either
+   * because the disposal assumed everything had been built. The second is the
+   * one the tenant showed.
+   */
+  console.log('\nDriving the web part itself:');
+
+  await step('the web part starts, and says so rather than failing', async () => {
+    await page.goto(webPartUrl, { waitUntil: 'load' });
+    await page.waitForTimeout(1500);
+
+    const state = await page.evaluate(() => {
+      const strip = document.getElementById('wp-status');
+      return { state: strip.dataset.state, text: (strip.textContent || '').trim() };
+    });
+    if (state.state !== 'started') {
+      throw new Error(state.text || ('the status strip reads ' + state.state));
+    }
+  });
+
+  await step('it drew a document, with its toolbar and its contents', async () => {
+    const drawn = await page.evaluate(() => ({
+      toolbar: !!document.querySelector('.strata-toolbar'),
+      headings: document.querySelectorAll('#host h1, #host h2').length,
+      code: document.querySelectorAll('#host pre').length
+    }));
+    if (!drawn.toolbar) throw new Error('no toolbar');
+    if (drawn.headings < 2) throw new Error('only ' + drawn.headings + ' headings');
+    if (drawn.code < 1) throw new Error('no code blocks');
+  });
+
+  /*
+   * The other half of the same release. The lists the pane offers come from
+   * the site through the web part, and they were built from a connection that
+   * did not exist yet - so every dropdown was empty, in every tenant, and in
+   * nothing anybody could see until an author opened the pane.
+   */
+  await step('the pane offers the libraries the site holds', async () => {
+    const libraries = await page.evaluate(() => {
+      /* The library picker only appears once the source is a library, which is
+         also the only time its contents mean anything. */
+      window.webPartHarness.change('contentSource', 'library');
+      window.webPartHarness.openPane();
+      return window.webPartHarness.paneOptions('selectedLibrary');
+    });
+    if (libraries.indexOf('Documents') === -1) {
+      throw new Error('the library dropdown offers ' + JSON.stringify(libraries));
+    }
+  });
+
+  await step('picking a file in the pane loads that file', async () => {
+    const heading = await page.evaluate(async () => {
+      window.webPartHarness.change('selectedLibrary', '/sites/demo/Documents');
+      window.webPartHarness.change('selectedFile', '/sites/demo/Documents/Runbooks/deploy.md');
+      await new Promise((resolve) => setTimeout(resolve, 400));
+      const first = document.querySelector('#host h1');
+      return first ? first.textContent : '';
+    });
+    if (heading.indexOf('Deploying') === -1) {
+      throw new Error('the web part is showing ' + JSON.stringify(heading));
+    }
+  });
+
+  await step('a link to another document opens it in the web part', async () => {
+    const heading = await page.evaluate(async () => {
+      const link = Array.from(document.querySelectorAll('#host a'))
+        .filter((anchor) => (anchor.getAttribute('href') || '').indexOf('rollback.md') !== -1)[0];
+      if (!link) { return 'no link to follow'; }
+      link.click();
+      await new Promise((resolve) => setTimeout(resolve, 400));
+      const first = document.querySelector('#host h1');
+      return first ? first.textContent : '';
+    });
+    if (heading.indexOf('Rolling back') === -1) {
+      throw new Error('after following the link the web part shows ' + JSON.stringify(heading));
+    }
+  });
+
+  await step('a setting changed in the pane reaches the document', async () => {
+    const theme = await page.evaluate(() => {
+      window.webPartHarness.change('themeFamily', 'obsidian');
+      const root = document.querySelector('.strata-root');
+      return root ? root.getAttribute('data-strata-theme') : '';
+    });
+    if (theme !== 'obsidian') throw new Error('the document reports theme ' + theme);
+  });
+
+  await step('the site turning dark reaches a web part set to follow it', async () => {
+    const modes = await page.evaluate(() => {
+      window.webPartHarness.change('colorMode', 'auto');
+      const before = document.querySelector('.strata-root').getAttribute('data-strata-mode');
+      window.webPartHarness.siteTheme(true);
+      const after = document.querySelector('.strata-root').getAttribute('data-strata-mode');
+      return { before: before, after: after };
+    });
+    if (modes.before !== 'light' || modes.after !== 'dark') {
+      throw new Error('the document went from ' + modes.before + ' to ' + modes.after);
+    }
+  });
+
+  /*
+   * Putting it away has to let go of everything it took hold of. The theme
+   * listener is the one that can be checked from outside, because SharePoint
+   * matches it on both the handler and the scope it was added with, so a
+   * disposal that gets either wrong leaves it attached.
+   */
+  await step('putting the web part away lets go of the page', async () => {
+    const left = await page.evaluate(() => {
+      const failure = window.webPartHarness.dispose();
+      return {
+        error: failure ? failure.message : '',
+        listeners: window.webPartHarness.themeListeners(),
+        drawn: document.getElementById('host').children.length
+      };
+    });
+    if (left.error) throw new Error('disposing threw: ' + left.error);
+    if (left.listeners !== 0) {
+      throw new Error(left.listeners + ' theme listeners are still attached');
+    }
+    if (left.drawn !== 0) throw new Error('the web part is still on the page');
+  });
+
+  /*
+   * The case the release actually died on. A web part whose onInit threw on
+   * its first line still gets disposed, with nothing built - and a disposal
+   * that throws takes the whole page with it, which is why the tenant showed
+   * a failure to stop instead of the failure to start.
+   */
+  await step('a web part that never started can still be put away', async () => {
+    const failure = await page.evaluate(() => {
+      const error = window.webPartHarness.disposeBeforeStarting();
+      return error ? error.message : '';
+    });
+    if (failure) throw new Error('disposing an unstarted web part threw: ' + failure);
+  });
+
+  await step('so can one put away while it is still starting', async () => {
+    const failure = await page.evaluate(async () => {
+      const error = await window.webPartHarness.disposeWhileStarting(300);
+      return error ? error.message : '';
+    });
+    if (failure) throw new Error('disposing mid-start threw: ' + failure);
+  });
+
+  await step('a library that will not answer is a message, not a broken page', async () => {
+    const shown = await page.evaluate(async () => {
+      window.webPartHarness.refuse(true);
+      await window.webPartHarness.start({
+        contentSource: 'library',
+        selectedLibrary: '/sites/demo/Documents',
+        selectedFile: '/sites/demo/Documents/handbook.md'
+      });
+      window.webPartHarness.refuse(false);
+      const strip = document.getElementById('wp-status');
+      const banner = document.querySelector('#host .strata-status');
+      return {
+        state: strip.dataset.state,
+        banner: banner ? (banner.textContent || '').trim() : '',
+        drawn: document.querySelectorAll('#host .strata-root').length
+      };
+    });
+    if (shown.state !== 'started') {
+      throw new Error('the web part reports ' + shown.state + ' rather than starting anyway');
+    }
+    if (shown.drawn !== 1) throw new Error('nothing was drawn');
+    if (shown.banner.indexOf('Could not load') === -1) {
+      throw new Error('the page says ' + JSON.stringify(shown.banner));
     }
   });
 

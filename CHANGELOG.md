@@ -8,6 +8,22 @@ is normally zero. `scripts/set-version.js` stamps it when a release is cut.
 
 Entries below 0.0.10.0 were written before the switch and are three-part.
 
+- The harness can now run the web part, not only the classes underneath it.
+  `npm run harness` builds a second page that starts `MarkstrataWebPart` the
+  way a SharePoint page starts it - onInit awaited, render called, onDispose on
+  the way out - against stand-ins for SharePoint small enough to read in one
+  sitting. Nothing about the web part is stood in for; it is compiled from src.
+  This is the gap 0.0.17.0 went out through: the lifecycle had never run
+  outside a tenant, so a web part that could not start at all passed every test
+  and every browser check there was.
+- The page also runs the settings pane, drawn from the description the web part
+  returns rather than a copy of it, so the lists SharePoint fills in are
+  visible - the other half of the same release, where they came up empty.
+- Eleven browser checks go with it, including the ones for a web part put away
+  while it is still starting, and one put away having never started at all.
+  Against 0.0.17.0 every one of them fails, with the two errors that release
+  produced and in the order it produced them.
+
 ## 0.0.17.1
 
 - Fixes a web part that did not load at all in 0.0.17.0. It built its markdown
