@@ -8,7 +8,7 @@ is normally zero. `scripts/set-version.js` stamps it when a release is cut.
 
 Entries below 0.0.10.0 were written before the switch and are three-part.
 
-## Unreleased
+## 0.0.17.0
 
 - A link to another markdown document opens that document in the web part
   instead of handing the reader the file. Wiki links, link checking and
@@ -78,6 +78,22 @@ Entries below 0.0.10.0 were written before the switch and are three-part.
   movement gets the new icon and none of the travel.
 - The toolbar is padded evenly above and below. It carried 6px above and 10px
   below, which read as a bar hung high in its own strip.
+
+Under the hood, with nothing to see in a tenant:
+
+- ContentEnhancer was one class of 1,482 lines holding thirteen unrelated
+  behaviours; each now lives in a file named for what it does, behind a facade
+  with the same methods, so no caller changed. The property pane, the reader's
+  theme choice, the document a reader followed a link to and the lists the pane
+  offers all moved out of the web part in the same way, taking it from 823
+  lines to 680. Following a link and the browser's Back button are now driven in
+  a browser, which they never were.
+- Every abbreviated name was given its word back - idx, cls, btn, el, bg, buf,
+  cfg and the single letters - and every file opens with a header saying what it
+  is, how it is used, which release it dates from and what it needs. A test
+  keeps that true, and it caught a real one on the way in: a string in the
+  property pane's generator carried an unescaped apostrophe, so
+  `node scripts/build-strings.js` had not run since the day it was added.
 
 ## 0.0.16.0
 
