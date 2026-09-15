@@ -123,6 +123,9 @@ the upload refused; the version lives in the tag and inside the package.
   Callout titles are escaped either way.
 - Mermaid runs with `securityLevel: 'strict'` and HTML labels disabled, so
   diagram text can never become markup.
+- Diagrams need a current browser. Mermaid 12 targets ES2024 and Safari 17.4,
+  so iOS 16 and earlier show a message where a diagram would be; everything
+  else on the page renders as usual.
 - `npm audit --omit=dev` reports no advisories. Build-time tooling still carries
   some, as most JavaScript toolchains do; none of it reaches a page.
 

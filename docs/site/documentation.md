@@ -306,6 +306,12 @@ image that is a link is left alone: it already does something when clicked.
 
 ## Diagrams
 
+> [!NOTE] Diagrams need a current browser
+> Mermaid 12 targets ES2024 and Safari 17.4, which means iOS 17 or later. On an
+> older browser the diagram library does not load and each diagram shows a
+> message in its place; the rest of the document renders normally.
+
+
 Mermaid diagrams are themed to match the page and re-drawn when the theme
 changes. Each one carries a copy button in its top right corner that puts the
 diagram on the clipboard as a PNG, drawn at twice its size on the page so it

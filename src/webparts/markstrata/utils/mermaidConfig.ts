@@ -47,8 +47,15 @@ export const MERMAID_BASE_CONFIG: { [key: string]: unknown } = {
    */
   securityLevel: 'strict',
   htmlLabels: false,
+  /*
+   * No `curve` here any more. Mermaid 12 lays flowcharts out with ELK, which
+   * routes its own edges as right angles and ignores the setting: asked for
+   * `basis` and not asked at all, the generated paths are identical. A setting
+   * that does nothing is worse than no setting, because the next person reads
+   * it as the reason the edges look how they look.
+   */
   flowchart: {
-    htmlLabels: false, curve: 'basis', padding: 12, useMaxWidth: true, wrappingWidth: 220
+    htmlLabels: false, padding: 12, useMaxWidth: true, wrappingWidth: 220
   },
   sequence: { useMaxWidth: true },
   gantt: { barHeight: 24, barGap: 6, fontSize: GANTT_TEXT_SIZE },

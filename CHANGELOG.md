@@ -8,6 +8,24 @@ is normally zero. `scripts/set-version.js` stamps it when a release is cut.
 
 Entries below 0.0.10.0 were written before the switch and are three-part.
 
+## Unreleased
+
+- Mermaid 12. Flowcharts, state and class diagrams are laid out by ELK now
+  rather than dagre, which routes edges as right angles instead of curves and
+  rounds the node corners. Every diagram this project ships was rendered
+  through both versions first: all of them render, the gantt is unchanged, and
+  the theme colours survive because the palette sets its own `nodeBorder`,
+  which turns off the gradient the new look would otherwise paint.
+- The flowchart `curve` setting is gone, because ELK routes its own edges and
+  ignored it: asked for `basis` and not asked at all produced identical paths.
+  A setting that does nothing is worse than no setting.
+- Diagrams now need a current browser. Mermaid 12 targets ES2024 and Safari
+  17.4, so on iOS 16 and earlier the library does not load and each diagram
+  shows a message in its place, while the rest of the document renders as
+  usual. The package grows from 2.07MB to 2.58MB, and a page carrying a
+  diagram fetches about 460KB more.
+- The theme screenshots are regenerated, since the layouts they show changed.
+
 ## 0.0.15.0
 
 - A heading scrolled to no longer lands under whatever is stuck above it. The
