@@ -102,6 +102,32 @@ Record what you find in the release's notes. A host nobody checked is a host
 nobody supports, whatever the manifest says - `TeamsPersonalApp` was claimed
 for four versions and never worked, because a personal app has no site behind
 it and every picker in the pane is a picker over a site.
+## Where this pushes
+
+Markstrata lives at `CodyRWhite/Markstrata` and is private. It was forked out
+of `Markdown-Formatter-SPO`, which is still what a Claude Code session clones
+from, so that session's environment rewrites `origin` back to the fork between
+turns. There is no second remote to delete - there is one remote whose URL
+changes underneath you, and a push that looked right when you checked it can
+land in the fork minutes later. That has happened.
+
+The guard is a pre-push hook, which git hands the URL it is actually about to
+use. Turn it on once per clone:
+
+```bash
+git config core.hooksPath .githooks
+```
+
+It refuses anything that is not Markstrata and prints the command to put the
+remote back. To push somewhere else deliberately:
+
+```bash
+MARKSTRATA_ALLOW_ANY_REMOTE=1 git push <remote> <branch>
+```
+
+Setting `core.hooksPath` is local config, so a fresh clone or a fresh session
+container needs that one line again. The hook itself is in the repository, so
+it is always there to be turned on.
 
 ## Releasing
 

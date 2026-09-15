@@ -1,0 +1,60 @@
+#!/bin/sh
+#
+# .SYNOPSIS
+# Refuses to push this repository anywhere but Markstrata.
+#
+# .DESCRIPTION
+# The project lives at CodyRWhite/Markstrata and is private. It was forked out
+# of Markdown-Formatter-SPO, which is still where a Claude Code session clones
+# it from - so the session environment rewrites `origin` back to that fork
+# between turns, and a push that looked fine when the remote was checked lands
+# in the wrong repository minutes later. That has happened.
+#
+# There is nothing to remove: there is only ever one remote, and its URL is
+# changed underneath us. So the guard is here instead, where it fails closed.
+# git hands a pre-push hook the remote name and the URL it is about to use, and
+# that URL is the real one, at the moment of the push.
+#
+# .USAGE
+#   git config core.hooksPath .githooks     once per clone
+#
+#   To push somewhere else on purpose, for one command:
+#     MARKSTRATA_ALLOW_ANY_REMOTE=1 git push <remote> <branch>
+#
+# .NOTES
+# Since:     unreleased
+# Ships in:  nothing - it runs before a push
+# Requires:  nothing else in this project
+#
+
+url="$2"
+
+if [ -n "$MARKSTRATA_ALLOW_ANY_REMOTE" ]; then
+  exit 0
+fi
+
+case "$url" in
+  *[Mm]arkstrata*)
+    exit 0
+    ;;
+esac
+
+cat >&2 <<MESSAGE
+
+  Refused: this would push to
+
+      $url
+
+  Markstrata lives at https://github.com/CodyRWhite/Markstrata.git and the
+  session environment resets the remote to the fork it clones from, so this
+  is most likely that happening again rather than what you meant.
+
+      git remote set-url origin https://github.com/CodyRWhite/Markstrata.git
+
+  If you did mean it, say so for the one command:
+
+      MARKSTRATA_ALLOW_ANY_REMOTE=1 git push ...
+
+MESSAGE
+
+exit 1
