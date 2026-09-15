@@ -154,7 +154,6 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
     this.applyDefaults();
     this.themeOverride = new ThemeOverride(this.context.instanceId);
     this.themeOverride.read();
-    this.paneSources = new PaneSources(this.sharePoint, this.properties);
 
     this.themeProvider = this.context.serviceScope.consume(ThemeProvider.serviceKey);
     const theme: IReadonlyTheme | undefined = this.themeProvider.tryGetTheme();
@@ -168,6 +167,38 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
     this.themeProvider.themeChangedEvent.add(this, this.handleThemeChanged);
 
     this.sharePoint = new SharePointService(this.context);
+    /* After the service exists, not before: PaneSources keeps the one it is
+       given, so building it any earlier hands it undefined for good and leaves
+       every dropdown on the property pane empty. */
+    this.paneSources = new PaneSources(this.sharePoint, this.properties);
+
+    /*
+     * Reading another document is not configuring the page, so none of what it
+     * knows goes into the properties: see documentNavigator.ts.
+     */
+    this.navigator = new DocumentNavigator({
+      instanceId: this.context.instanceId,
+      load: async (path: string): Promise<ILoadedDocument> => ({
+        markdown: await this.sharePoint.getFileContent(path),
+        metadata: await this.sharePoint.getFileMetadata(path)
+      }),
+      onChange: () => {
+        this.loadError = undefined;
+        this.previewContent = undefined;
+        this.previewBanner = undefined;
+        /* The folder a document resolves its pictures and links against is its
+           own, which is rarely the configured file's. */
+        this.processor.updateOptions(this.processorOptions());
+        this.render();
+      },
+      onError: (message: string) => {
+        this.loadError = message;
+        this.render();
+      }
+    });
+
+    /* Built after the navigator, because the folder it resolves pictures
+       against is the followed document's when there is one. */
     this.processor = new MarkdownProcessor(this.processorOptions());
     this.mermaid = new MermaidRenderer();
     this.enhancer = new ContentEnhancer();
@@ -195,31 +226,6 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
       }
     });
 
-    /*
-     * Reading another document is not configuring the page, so none of what it
-     * knows goes into the properties: see documentNavigator.ts.
-     */
-    this.navigator = new DocumentNavigator({
-      instanceId: this.context.instanceId,
-      load: async (path: string): Promise<ILoadedDocument> => ({
-        markdown: await this.sharePoint.getFileContent(path),
-        metadata: await this.sharePoint.getFileMetadata(path)
-      }),
-      onChange: () => {
-        this.loadError = undefined;
-        this.previewContent = undefined;
-        this.previewBanner = undefined;
-        /* The folder a document resolves its pictures and links against is its
-           own, which is rarely the configured file's. */
-        this.processor.updateOptions(this.processorOptions());
-        this.render();
-      },
-      onError: (message: string) => {
-        this.loadError = message;
-        this.render();
-      }
-    });
-
     this.versionPanel = new VersionPanel(this.sharePoint, {
       onPreview: (content: string, label: string) => {
         this.previewContent = content;
@@ -233,14 +239,30 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
     await this.loadContent(false);
   }
 
+  /*
+   * Every collaborator is checked for, because this can run before there are
+   * any. A page that is closed while onInit is still awaiting, or an onInit
+   * that threw part of the way down, both leave a half-built web part that
+   * SharePoint still disposes - and a disposal that throws takes the whole page
+   * down with it, which is a far worse outcome than a listener left attached to
+   * an element that is going away regardless.
+   */
   protected onDispose(): void {
     if (this.themeProvider && this.handleThemeChanged) {
       this.themeProvider.themeChangedEvent.remove(this, this.handleThemeChanged);
     }
-    this.sharePoint.unwatchFile();
-    this.navigator.dispose();
-    this.enhancer.dispose();
-    this.editManager.dispose();
+    if (this.sharePoint) {
+      this.sharePoint.unwatchFile();
+    }
+    if (this.navigator) {
+      this.navigator.dispose();
+    }
+    if (this.enhancer) {
+      this.enhancer.dispose();
+    }
+    if (this.editManager) {
+      this.editManager.dispose();
+    }
     super.onDispose();
   }
 

@@ -8,6 +8,27 @@ is normally zero. `scripts/set-version.js` stamps it when a release is cut.
 
 Entries below 0.0.10.0 were written before the switch and are three-part.
 
+## 0.0.17.1
+
+- Fixes a web part that did not load at all in 0.0.17.0. It built its markdown
+  processor from settings that ask which document is open, and did not build
+  the thing that answers that until fifty lines further down, so starting up
+  threw every time. SharePoint then put away a web part that had got half way
+  through starting, the shutdown assumed everything had been built and threw as
+  well, and that second error - `Cannot read properties of undefined (reading
+  'dispose')` - was the only one anybody saw. Shutting down now checks for what
+  it is shutting down, so a failure to start shows what actually failed instead
+  of being replaced by a failure to stop.
+- The property pane's library, folder and file lists come back. They were built
+  from a connection to SharePoint that had not been made yet, so they were
+  asking nothing and came up empty.
+- Both of those were mine, from the refactoring in 0.0.17.0, and neither was
+  something a compiler could see: every field was declared, and the order they
+  are filled in is not a thing a type checker reads. So the order is now read
+  by a test, which follows a helper down to the field it reads and fails if
+  anything in the start-up sequence uses something built later. It fails on
+  0.0.17.0, both times.
+
 ## 0.0.17.0
 
 - A link to another markdown document opens that document in the web part
