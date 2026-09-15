@@ -8,7 +8,7 @@ is normally zero. `scripts/set-version.js` stamps it when a release is cut.
 
 Entries below 0.0.10.0 were written before the switch and are three-part.
 
-## Unreleased
+## 0.0.16.0
 
 - The property pane is laid out in five pages of comparable length instead of
   four that ran 8, 16, 5 and 18 fields. Settings that belong together are
