@@ -332,7 +332,7 @@ const PANEL_PAGES: IPanelPage[] = [
             { value: 'left', text: 'Left' },
             { value: 'center', text: 'Centred' },
             { value: 'right', text: 'Right' }] },
-          { key: 'enableImageZoom', label: 'Click an image to see it full size',
+          { key: 'enableImageZoom', label: 'Click a picture or diagram to see it full size',
             type: 'toggle',
             hint: 'Alignment applies to a picture that is a paragraph of its own. One '
               + 'inside a sentence stays on the line it is in, and a document can place '

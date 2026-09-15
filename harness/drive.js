@@ -485,6 +485,55 @@ const demoUrl = 'file://' + path.join(__dirname, '..', 'site', 'demo', 'index.ht
     if (copied.bytes < 1000) throw new Error('suspiciously small: ' + copied.bytes + ' bytes');
   });
 
+  /*
+   * A diagram is the thing on the page most likely to be too small to read, and
+   * until now it was the one thing that did nothing when clicked. It opens as
+   * SVG rather than as a bitmap, so what comes up has to be genuinely bigger
+   * than what was on the page, not the same pixels stretched.
+   */
+  await step('a diagram opens full size, and Escape closes it', async () => {
+    /* The host holds the drawing and the icons on its buttons, so the drawing
+       is the direct child, not "an svg somewhere inside". */
+    const drawing = page.locator('.strata-mermaid > svg').first();
+    const before = await drawing.boundingBox();
+
+    await drawing.click({ position: { x: 4, y: 4 } });
+    await page.waitForSelector('.strata-zoom .strata-zoom-diagram svg', { timeout: 3000 });
+    const after = await page.locator('.strata-zoom .strata-zoom-diagram svg').boundingBox();
+    if (after.width <= before.width + 1) {
+      throw new Error('opened at ' + Math.round(after.width)
+        + 'px from ' + Math.round(before.width) + 'px');
+    }
+
+    /* The drawing carries no background of its own, so the panel under it has
+       to paint one: on the overlay's black, a light-theme diagram would be an
+       empty rectangle. */
+    const ground = await page.evaluate(() => {
+      const panel = document.querySelector('.strata-zoom-diagram');
+      const colour = getComputedStyle(panel).backgroundColor;
+      return { colour, transparent: /rgba\(0, 0, 0, 0\)|transparent/.test(colour) };
+    });
+    if (ground.transparent) throw new Error('the panel paints no background');
+
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(200);
+    if (await page.locator('.strata-zoom').count() !== 0) {
+      throw new Error('Escape left the overlay open');
+    }
+  });
+
+  /* The same thing from the keyboard, which cannot click a drawing: the host
+     holds buttons of its own, so it is not itself a button, and the Expand
+     button is what a keyboard reaches. */
+  await step('a diagram opens from its own button too', async () => {
+    const host = page.locator('.strata-mermaid').first();
+    await host.hover();
+    await page.locator('.strata-diagram-open').first().click();
+    await page.waitForSelector('.strata-zoom-diagram svg', { timeout: 3000 });
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(200);
+  });
+
   await step('copy button copies the code, without line numbers', async () => {
     await page.context().grantPermissions(['clipboard-read', 'clipboard-write']);
     const block = page.locator('.strata-code[data-lang="typescript"]').first();

@@ -162,7 +162,8 @@ export class ViewModeRenderer {
 
     if (options.enableMermaid) {
       void this.mermaid.render(article, options.settings.themeFamily, options.resolvedMode,
-        options.diagramWidth).then(() => this.enhancer.attachDiagramCopyButtons(article));
+        options.diagramWidth)
+        .then(() => this.enhancer.attachDiagramTools(article, options.enableImageZoom !== false));
     }
 
     /* Read by the next render to tell a mode the reader just chose from one

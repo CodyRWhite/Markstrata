@@ -295,10 +295,17 @@ it out into a block would break the sentence around it.
 
 ### Seeing an image full size
 
-**Click an image to see it full size** opens it over the page, which is worth
-having because documentation is mostly screenshots and a column is narrower
-than the screen. Escape closes it, or a click anywhere outside the picture. An
-image that is a link is left alone: it already does something when clicked.
+**Click a picture or diagram to see it full size** opens it over the page,
+which is worth having because documentation is mostly screenshots and a column
+is narrower than the screen. Escape closes it, or a click anywhere outside.
+An image that is a link is left alone: it already does something when clicked.
+
+The same setting covers diagrams, which are the likeliest thing on a page to be
+too small to read. A diagram opens as a drawing rather than as a picture of
+one, so it is as sharp at full width as it was in the column, and it is given a
+background of its own: a light-theme diagram is drawn in dark ink and would
+otherwise open as an empty rectangle. Click it, or use the **Expand** button
+that appears over it beside **Copy**.
 
 > [!NOTE]
 > Readers see only the images they have permission to open. A relative path

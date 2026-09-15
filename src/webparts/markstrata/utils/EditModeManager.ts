@@ -221,7 +221,8 @@ export class EditModeManager {
     this.enhancer.enhanceImages(preview, options.enableImageZoom !== false);
     if (options.enableMermaid) {
       void this.mermaid.render(preview, options.settings.themeFamily, options.resolvedMode,
-        options.diagramWidth).then(() => this.enhancer.attachDiagramCopyButtons(preview));
+        options.diagramWidth)
+        .then(() => this.enhancer.attachDiagramTools(preview, options.enableImageZoom !== false));
     }
   }
 

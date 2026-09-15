@@ -10,6 +10,15 @@ Entries below 0.0.10.0 were written before the switch and are three-part.
 
 ## Unreleased
 
+- A diagram opens full size when it is clicked, the way a picture already did.
+  It was the one thing on a page most likely to be too small to read and the
+  one thing that did nothing when clicked. It opens as a drawing rather than as
+  a picture of one, so it is as sharp at full width as it was in the column,
+  and it is given a background of its own, because a diagram carries none and a
+  light-theme one would otherwise open as an empty rectangle. There is an
+  **Expand** button beside **Copy** for a keyboard, and the setting is the one
+  that already governed pictures, now named for both.
+
 - The toolbar is laid out by what its controls do. What the document is sits on
   the left - the theme list and how long the document takes to read - and what
   you can do to it sits together at the right in one bordered group: reload,

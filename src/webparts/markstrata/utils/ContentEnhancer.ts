@@ -46,6 +46,12 @@ const IMAGE_ICON: string =
   + '<rect x="3" y="4" width="18" height="14" rx="2"/>'
   + '<circle cx="8.5" cy="9" r="1.5"/><path d="m21 15-5-5-9 8"/></svg>';
 
+/* Arrows to the four corners: the diagram, opened out to the window. */
+const EXPAND_ICON: string =
+  '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">'
+  + '<path d="M9 3H3v6M21 9V3h-6M15 21h6v-6M3 15v6h6"/>'
+  + '<path d="m3 3 6 6M21 3l-6 6M21 21l-6-6M3 21l6-6"/></svg>';
+
 /* Drawn at twice the diagram's size, so the copy is still sharp when it is
    pasted into a deck or a document and scaled back up. */
 const DIAGRAM_COPY_SCALE: number = 2;
@@ -55,7 +61,7 @@ export class ContentEnhancer {
   private onScroll: (() => void) | undefined;
   private scrollFrame: number | undefined;
   private zoomOverlay: HTMLElement | undefined;
-  private zoomOpener: HTMLImageElement | undefined;
+  private zoomOpener: HTMLElement | undefined;
   private zoomKeydown: ((event: KeyboardEvent) => void) | undefined;
   private backToTop: HTMLElement | undefined;
   private onBackToTopScroll: (() => void) | undefined;
@@ -95,15 +101,15 @@ export class ContentEnhancer {
    * text is markup, and selecting it gets the source rather than the picture.
    * A raster is what a deck or a document wants anyway.
    */
-  public attachDiagramCopyButtons(container: HTMLElement): void {
+  public attachDiagramTools(container: HTMLElement, allowZoom: boolean): void {
     const hosts: HTMLElement[] = Array.prototype.slice.call(
       container.querySelectorAll('.strata-mermaid')
     );
 
     hosts.forEach((host: HTMLElement) => {
-      /* The host is rebuilt whenever the diagram re-renders, so an old button
-         is stale rather than already wired. */
-      const existing: HTMLElement | null = host.querySelector('.strata-diagram-copy');
+      /* The host is rebuilt whenever the diagram re-renders, so old buttons are
+         stale rather than already wired. */
+      const existing: HTMLElement | null = host.querySelector('.strata-diagram-tools');
       if (existing && existing.parentElement) {
         existing.parentElement.removeChild(existing);
       }
@@ -111,18 +117,102 @@ export class ContentEnhancer {
         return;
       }
 
-      const button: HTMLButtonElement = document.createElement('button');
-      button.type = 'button';
-      button.className = 'strata-code-btn strata-diagram-copy';
-      button.setAttribute('aria-label', 'Copy this diagram as an image');
-      button.innerHTML = IMAGE_ICON + '<span class="strata-code-btn-label">Copy</span>';
-      button.addEventListener('click', (event: Event) => {
+      const tools: HTMLElement = document.createElement('div');
+      tools.className = 'strata-diagram-tools';
+
+      if (allowZoom) {
+        const open: HTMLButtonElement = document.createElement('button');
+        open.type = 'button';
+        open.className = 'strata-code-btn strata-diagram-open';
+        open.setAttribute('aria-label', 'Open this diagram full size');
+        open.innerHTML = EXPAND_ICON + '<span class="strata-code-btn-label">Expand</span>';
+        open.addEventListener('click', (event: Event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          this.openDiagram(host);
+        });
+        tools.appendChild(open);
+      }
+
+      const copy: HTMLButtonElement = document.createElement('button');
+      copy.type = 'button';
+      copy.className = 'strata-code-btn strata-diagram-copy';
+      copy.setAttribute('aria-label', 'Copy this diagram as an image');
+      copy.innerHTML = IMAGE_ICON + '<span class="strata-code-btn-label">Copy</span>';
+      copy.addEventListener('click', (event: Event) => {
         event.preventDefault();
         event.stopPropagation();
-        void this.copyDiagram(host, button);
+        void this.copyDiagram(host, copy);
       });
-      host.appendChild(button);
+      tools.appendChild(copy);
+
+      host.appendChild(tools);
+
+      /* The drawing itself opens too, because that is what a reader tries
+         first on something too small to read. The host is not made a button:
+         it holds buttons of its own, and a control inside a control is a thing
+         neither a screen reader nor a keyboard can describe. The buttons above
+         are what the keyboard uses. */
+      if (allowZoom) {
+        host.classList.add('strata-zoomable');
+        host.addEventListener('click', (event: Event) => {
+          const target: HTMLElement = event.target as HTMLElement;
+          if (target && target.closest('button, a')) {
+            return;
+          }
+          this.openDiagram(host);
+        });
+      }
     });
+  }
+
+  /*
+   * A diagram, as big as the window will allow.
+   *
+   * The drawing is copied rather than moved, so the document keeps its own,
+   * and copied as SVG rather than drawn to a bitmap: it is vector, and the
+   * whole reason for opening it is to read labels that were too small.
+   *
+   * Mermaid sizes its SVG with an inline max-width and a fixed height; both
+   * have to go or the copy opens at exactly the size that was too small to
+   * read. What stays is the viewBox, which is what lets it scale to the space.
+   *
+   * It is given a background of its own because a diagram carries none: a
+   * light-theme diagram is drawn in dark ink, and on the overlay's black that
+   * is an empty rectangle.
+   */
+  private openDiagram(host: HTMLElement): void {
+    const svg: SVGSVGElement | null = host.querySelector(':scope > svg');
+    if (!svg) {
+      return;
+    }
+
+    const panel: HTMLElement = document.createElement('div');
+    panel.className = 'strata-zoom-diagram';
+
+    const copy: SVGSVGElement = svg.cloneNode(true) as SVGSVGElement;
+    copy.removeAttribute('style');
+    copy.removeAttribute('width');
+    copy.removeAttribute('height');
+    panel.appendChild(copy);
+
+    /* Sized without any of that, an SVG in a flex box has nothing to be as
+       wide as and collapses to nothing - measured, not guessed. So the panel
+       is given the drawing's proportions and told to be as big as it can:
+       width and height caps then settle which of the two the window runs out
+       of first. The proportions come from the viewBox, or from what the
+       diagram measures on the page when it has none. */
+    const box: DOMRect = svg.getBoundingClientRect();
+    const view: number[] = (svg.getAttribute('viewBox') || '').trim().split(/[\s,]+/)
+      .map((part: string) => Number(part));
+    const wide: number = view.length === 4 && view[2] > 0 ? view[2] : box.width;
+    const tall: number = view.length === 4 && view[3] > 0 ? view[3] : box.height;
+    if (wide > 0 && tall > 0) {
+      panel.style.aspectRatio = `${wide} / ${tall}`;
+    }
+
+    const title: Element | null = svg.querySelector('title');
+    this.openZoom(host, panel, (title && title.textContent) || 'Diagram');
   }
 
   /**
@@ -134,7 +224,10 @@ export class ContentEnhancer {
    * light text on black, so the host's own background colour is painted first.
    */
   private async copyDiagram(host: HTMLElement, button: HTMLButtonElement): Promise<void> {
-    const svg: SVGSVGElement | null = host.querySelector('svg');
+    /* Not just any svg inside: the buttons over the diagram carry icons of
+       their own, and one of those is the first one in the markup if the tools
+       are ever built before the drawing. */
+    const svg: SVGSVGElement | null = host.querySelector(':scope > svg');
     if (!svg) {
       this.showResult(button, false, 'No diagram');
       return;
@@ -906,35 +999,46 @@ export class ContentEnhancer {
     image.setAttribute('aria-label',
       `${image.getAttribute('alt') || 'Image'}: select to see it full size`);
 
-    image.addEventListener('click', () => this.openZoom(image));
+    const open: () => void = () => this.openZoom(image, ContentEnhancer.fullImage(image),
+      image.getAttribute('alt') || 'Image');
+    image.addEventListener('click', open);
     image.addEventListener('keydown', (event: KeyboardEvent) => {
       if (event.key === 'Enter' || event.key === ' ') {
         event.preventDefault();
-        this.openZoom(image);
+        open();
       }
     });
+  }
+
+  /** The same picture again, at whatever size the window allows. */
+  private static fullImage(image: HTMLImageElement): HTMLImageElement {
+    const full: HTMLImageElement = document.createElement('img');
+    full.src = image.currentSrc || image.src;
+    full.alt = image.getAttribute('alt') || '';
+    return full;
   }
 
   /*
    * The overlay is built inside the themed root rather than on the body, so it
    * is painted from the same --strata-* values as the document behind it and
    * follows a reader's theme choice without being told about it.
+   *
+   * What it shows is passed in: a picture at its own size, or a diagram scaled
+   * up. Everything else about it - dismissing, the keyboard, where focus goes
+   * afterwards - is the same either way, which is the point of it taking a
+   * node rather than an image.
    */
-  private openZoom(image: HTMLImageElement): void {
+  private openZoom(opener: HTMLElement, content: HTMLElement, label: string): void {
     this.closeZoom();
 
-    const root: HTMLElement = (image.closest('.strata-root') as HTMLElement) || document.body;
+    const root: HTMLElement = (opener.closest('.strata-root') as HTMLElement) || document.body;
 
     const overlay: HTMLElement = document.createElement('div');
     overlay.className = 'strata-zoom';
     overlay.setAttribute('role', 'dialog');
     overlay.setAttribute('aria-modal', 'true');
-    overlay.setAttribute('aria-label', image.getAttribute('alt') || 'Image');
-
-    const full: HTMLImageElement = document.createElement('img');
-    full.src = image.currentSrc || image.src;
-    full.alt = image.getAttribute('alt') || '';
-    overlay.appendChild(full);
+    overlay.setAttribute('aria-label', label);
+    overlay.appendChild(content);
 
     const close: HTMLButtonElement = document.createElement('button');
     close.type = 'button';
@@ -943,9 +1047,11 @@ export class ContentEnhancer {
     close.textContent = '\u2715';
     overlay.appendChild(close);
 
-    /* Anywhere outside the picture closes it, which is what people try first. */
+    /* Anywhere outside what was opened closes it, which is what people try
+       first. Measured by containment rather than by identity, because a
+       diagram is a panel with a drawing inside it. */
     overlay.addEventListener('click', (event: MouseEvent) => {
-      if (event.target !== full) {
+      if (!content.contains(event.target as Node)) {
         this.closeZoom();
       }
     });
@@ -957,7 +1063,7 @@ export class ContentEnhancer {
     };
     document.addEventListener('keydown', this.zoomKeydown);
 
-    this.zoomOpener = image;
+    this.zoomOpener = opener;
     this.zoomOverlay = overlay;
     root.appendChild(overlay);
     close.focus();
@@ -972,8 +1078,8 @@ export class ContentEnhancer {
       this.zoomOverlay.remove();
       this.zoomOverlay = undefined;
     }
-    /* Back to the image that was opened, so the keyboard does not lose its
-       place in the document. */
+    /* Back to what was opened, so the keyboard does not lose its place in the
+       document. */
     if (this.zoomOpener) {
       this.zoomOpener.focus();
       this.zoomOpener = undefined;

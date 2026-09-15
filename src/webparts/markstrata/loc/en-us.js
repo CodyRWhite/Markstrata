@@ -53,7 +53,7 @@ define([], function () {
     "MermaidLabel": "Mermaid diagrams",
     "DiagramWidthLabel": "Wide diagrams",
     "DiagramWidthHint": "Gantt charts lay out from their time axis rather than wrapping, so they often want more width than a column gives. Fitting compresses the axis and keeps the text readable.",
-    "ImageZoomLabel": "Click an image to see it full size",
+    "ImageZoomLabel": "Click a picture or diagram to see it full size",
     "WikiLinksLabel": "Wiki links",
     "CheckWikiLinksLabel": "Mark links to pages that are not there",
     "WikiLinksHint": "Turns [[Another page]] into a link to that file in the same folder, the way Obsidian and older wikis write one. [[Page|worded differently]] and [[Page#Heading]] both work. With a library file, links to pages that are not there are marked: the folder is listed once and every link into it answered from that, rather than asked one at a time.",
