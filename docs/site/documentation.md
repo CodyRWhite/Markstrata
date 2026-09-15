@@ -243,6 +243,23 @@ below it jumps as each picture arrives. **The aspect ratio is always kept** and
 the height follows the width, so a second number describes the picture rather
 than stretching it. An image still shrinks to fit a narrow column.
 
+### Where a picture sits
+
+**Picture alignment** places any image that is a paragraph of its own, left,
+centred or right. Left is the default, which is how markdown has always
+rendered a block image and what GitHub and Obsidian both do. An image inside a
+sentence is not moved: it sits on the baseline of the text around it, and
+shifting it would take the sentence with it.
+
+A document can place one picture itself, whatever the page is set to, by giving
+the image a class:
+
+```markdown
+![A deployment flow](flow.png){.center}
+```
+
+`{.left}`, `{.center}` and `{.right}` all work.
+
 ### Captions
 
 An image that is a paragraph of its own and carries a title becomes a figure,

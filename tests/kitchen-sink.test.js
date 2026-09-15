@@ -27,6 +27,7 @@ const html = new MarkdownProcessor({
 const RENDERED = {
   'a table': /<table/,
   'a code block calling out lines': /strata-code-line--called/,
+  'an image placing itself': /<img[^>]+class="center"/,
   'an image sized after a pipe': /<img[^>]+width="240"/,
   /* The pipe carries the size; it must not survive into what a screen reader
      reads out. */

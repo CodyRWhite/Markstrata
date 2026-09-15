@@ -349,6 +349,54 @@ const demoUrl = 'file://' + path.join(__dirname, '..', 'site', 'demo', 'index.ht
     await page.waitForTimeout(600);
   });
 
+  /*
+   * Captioned images used to centre themselves while plain ones sat left,
+   * because the figure rule set text-align and nothing else did. So this
+   * measures where the pictures actually are, not what classes they carry.
+   */
+  await step('block images line up with each other, whatever the setting', async () => {
+    const offsets = () => page.evaluate(() => {
+      const blocks = [...document.querySelectorAll('.strata-content .strata-image-block')]
+        .filter((block) => !block.hasAttribute('data-strata-align'));
+      return blocks.map((block) => {
+        const img = block.querySelector('img').getBoundingClientRect();
+        const box = block.getBoundingClientRect();
+        /* Positive means a gap on the left, so equal values mean lined up. */
+        return Math.round(img.left - box.left);
+      });
+    });
+
+    const left = await offsets();
+    if (left.length < 2) throw new Error('only ' + left.length + ' block images');
+    if (!left.every((value) => value === left[0])) {
+      throw new Error('left aligned but sitting differently: ' + JSON.stringify(left));
+    }
+    if (left[0] !== 0) throw new Error('left aligned but indented by ' + left[0]);
+
+    await page.evaluate(() => window.harness.setImageAlign('center'));
+    await page.waitForTimeout(400);
+    const centred = await offsets();
+    if (!centred.every((value) => value > 0)) {
+      throw new Error('centring left something against the edge: ' + JSON.stringify(centred));
+    }
+
+    await page.evaluate(() => window.harness.setImageAlign('left'));
+    await page.waitForTimeout(400);
+  });
+
+  await step('a picture can place itself against the page setting', async () => {
+    const placed = await page.evaluate(() => {
+      const block = document.querySelector('.strata-image-block[data-strata-align="center"]');
+      if (!block) return null;
+      const img = block.querySelector('img').getBoundingClientRect();
+      const box = block.getBoundingClientRect();
+      return Math.round(img.left - box.left);
+    });
+    if (placed === null) throw new Error('no picture asked to place itself');
+    /* The page is left aligned, so a gap on the left means the class won. */
+    if (placed <= 0) throw new Error('the class did not override the page: ' + placed);
+  });
+
   await step('a fence calls out its lines, and dims the rest', async () => {
     const block = page.locator('.strata-code--calling').first();
     if (await block.count() === 0) throw new Error('no block calling out lines');
@@ -593,6 +641,31 @@ const demoUrl = 'file://' + path.join(__dirname, '..', 'site', 'demo', 'index.ht
    * demo draws and check that every page is reachable and that the fields
    * which only apply given another setting appear when it is made.
    */
+  /*
+   * The site's pages are built by a different builder from the web part, with
+   * its own contents code, so the rule that a document's own contents wins had
+   * to be taught to it separately. The documentation page carried two until it
+   * was: its own from [[toc]], and a generated one beside it.
+   */
+  await step('every page of the site shows one contents', async () => {
+    const pages = ['index.html', 'docs/index.html', 'themes/index.html',
+      'about/index.html', 'support/index.html'];
+    for (const name of pages) {
+      await page.goto('file://' + path.join(__dirname, '..', 'site', name),
+        { waitUntil: 'load' });
+      await page.waitForTimeout(300);
+      const counts = await page.evaluate(() => ({
+        panels: document.querySelectorAll('.strata-toc-sidebar, .strata-toc-inline').length,
+        inText: document.querySelectorAll('.strata-content .strata-toc').length,
+        entries: document.querySelectorAll('.strata-toc-sidebar a').length
+      }));
+      if (counts.panels !== 1 || counts.inText !== 0) {
+        throw new Error(name + ': ' + JSON.stringify(counts));
+      }
+      if (counts.entries < 2) throw new Error(name + ' has an empty contents');
+    }
+  });
+
   await step('the property pane opens on four pages', async () => {
     await page.setViewportSize({ width: 1200, height: 900 });
     await page.goto(demoUrl, { waitUntil: 'load' });

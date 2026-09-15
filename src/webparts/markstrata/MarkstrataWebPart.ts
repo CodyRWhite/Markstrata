@@ -77,6 +77,7 @@ export interface IMarkstrataWebPartProps {
   density: string;
   textSize: string;
   codeSize: string;
+  imageAlign: string;
   showThemeSwitcher: boolean;
   fillHeight: boolean;
 
@@ -250,6 +251,7 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
       density: 'normal',
       textSize: 'normal',
       codeSize: 'normal',
+      imageAlign: 'left',
       showThemeSwitcher: false,
       enableSyntaxHighlighting: true,
       showCodeHeader: true,
@@ -450,6 +452,7 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
       density: this.properties.density,
       textSize: this.properties.textSize,
       codeSize: this.properties.codeSize,
+      imageAlign: this.properties.imageAlign,
       tocWidth: tocWidthCss(this.properties.tocWidthMode, this.properties.tocWidthUnit,
         this.properties.tocWidthValue),
       pinMeta: this.properties.pinMeta,
@@ -854,6 +857,16 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
                   options: this.toDropdown(TEXT_SIZES),
                   selectedKey: this.properties.textSize
                 }),
+                PropertyPaneDropdown('imageAlign', {
+                  label: strings.ImageAlignLabel,
+                  options: [
+                    { key: 'left', text: 'Left' },
+                    { key: 'center', text: 'Centred' },
+                    { key: 'right', text: 'Right' }
+                  ],
+                  selectedKey: this.properties.imageAlign
+                }),
+                PropertyPaneLabel('imageAlignHint', { text: strings.ImageAlignHint }),
                 PropertyPaneToggle('fillHeight', {
                   label: strings.FillHeightLabel,
                   onText: 'On',

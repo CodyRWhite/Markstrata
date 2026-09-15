@@ -18,6 +18,7 @@ export interface IThemeSettings {
   density: string;
   textSize: string;
   codeSize: string;
+  imageAlign: string;
   /** 'auto', or a CSS length for the contents sidebar: '240px', '15em', '22%'. */
   tocWidth?: string;
   /** True to keep the file name and modified date in view while scrolling. */
@@ -78,7 +79,8 @@ export const DEFAULT_THEME_SETTINGS: IThemeSettings = {
   contentWidth: 'comfortable',
   density: 'normal',
   textSize: 'normal',
-  codeSize: 'normal'
+  codeSize: 'normal',
+  imageAlign: 'left'
 };
 
 /** The config object handed to mermaid.initialize for a theme. */
@@ -213,6 +215,7 @@ export class ThemeManager {
     element.setAttribute('data-strata-density', settings.density);
     element.setAttribute('data-strata-size', settings.textSize);
     element.setAttribute('data-strata-code-size', settings.codeSize);
+    element.setAttribute('data-strata-image-align', settings.imageAlign);
     /*
      * The contents sidebar sizes itself from this. 'auto' is a mode rather than
      * a length, so it goes on the attribute and the stylesheet handles it;

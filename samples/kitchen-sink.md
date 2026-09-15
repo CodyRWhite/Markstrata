@@ -93,6 +93,11 @@ the stylesheet, so the aspect ratio holds:
 
 ![The Markstrata mark, asked for at 240 wide|240](brand/mark.svg)
 
+A document can place one picture itself, whatever the page is set to, by giving
+the image a class. This one asks to be centred:
+
+![The mark, asked to sit in the middle|200](brand/mark.svg){.center}
+
 An image that is a paragraph on its own and carries a title becomes a figure,
 with the title as its caption rather than as a tooltip nobody on a touch screen
 can see:

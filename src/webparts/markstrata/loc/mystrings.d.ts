@@ -22,6 +22,8 @@ declare interface IMarkstrataWebPartStrings {
   ContentWidthLabel: string;
   DensityLabel: string;
   TextSizeLabel: string;
+  ImageAlignLabel: string;
+  ImageAlignHint: string;
   FillHeightLabel: string;
   FillHeightHint: string;
   CodeGroupName: string;

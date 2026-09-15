@@ -36,6 +36,8 @@ const STRINGS = {
   ContentWidthLabel: 'Content width',
   DensityLabel: 'Spacing',
   TextSizeLabel: 'Text size',
+  ImageAlignLabel: 'Picture alignment',
+  ImageAlignHint: 'Applies to a picture that is a paragraph of its own, with or without a caption. One inside a sentence stays on the line it is in. A document can place a single picture itself by giving it a class, ![alt](x.png){.center}.',
   FillHeightLabel: 'Fill the available height',
   FillHeightHint: 'Gives the web part at least the room below it, so a short document does not stop halfway down the page and leave the canvas showing under it. The file name and modified date, if they are shown, sit at the bottom of that. Measured from where the web part starts, so a part placed below other content on a long page is left alone.',
   CodeGroupName: 'Code blocks',

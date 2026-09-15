@@ -122,8 +122,11 @@ function build() {
     ? fs.readFileSync(path.resolve(sampleArg), 'utf8')
     : fs.readFileSync(path.join(root, 'samples', 'kitchen-sink.md'), 'utf8');
 
-  const html = processor.render(sample);
-  const page = template(readCss(), html, buildToc(html), mermaidThemes,
+  /* The web part prefers a contents the document wrote for itself; this does
+     the same, or the page carries two. */
+  const rendered = adoptAuthoredToc(processor.render(sample));
+  const html = rendered.html;
+  const page = template(readCss(), html, rendered.toc || buildToc(html), mermaidThemes,
     { fn: mermaidConfigFor, base: MERMAID_BASE_CONFIG },
     pageId ? site.page(pageId).title : pageTitle(html));
 
@@ -131,6 +134,34 @@ function build() {
   copyAssets();
   fs.writeFileSync(path.join(outDir, 'index.html'), page);
   console.log('Wrote', path.relative(root, path.join(outDir, 'index.html')));
+}
+
+/*
+ * Takes over a contents the document wrote for itself, with [[toc]].
+ *
+ * The same rule ViewModeRenderer follows, for the same reason: a document that
+ * has said what its contents are should not also be given a generated one. The
+ * web part does it against the rendered DOM, this does it against the rendered
+ * HTML, and the documentation page showed two tables of contents until it did.
+ */
+function adoptAuthoredToc(html) {
+  const authored = /<div class="strata-toc">([\s\S]*?)<\/div>/.exec(html);
+  if (!authored) {
+    return { html: html, toc: '' };
+  }
+  return {
+    /* Out of the text, since it is about to become the sidebar. */
+    html: html.replace(authored[0], ''),
+    toc: sidebar(authored[1])
+  };
+}
+
+/** The panel the layout expects, around a list of entries. */
+function sidebar(list) {
+  return `<details class="strata-toc-sidebar" open>
+      <summary class="strata-toc-heading">On this page</summary>
+      <nav class="strata-toc" aria-label="Table of contents">${list}</nav>
+    </details>`;
 }
 
 /*
@@ -161,10 +192,7 @@ function buildToc(html) {
         `<li style="padding-left:${(item.level - 2) * 12}px"><a href="#${item.id}">${item.text}</a></li>`
     )
     .join('\n');
-  return `<details class="strata-toc-sidebar" open>
-      <summary class="strata-toc-heading">On this page</summary>
-      <nav class="strata-toc" aria-label="Table of contents"><ul>${links}</ul></nav>
-    </details>`;
+  return sidebar(`<ul>${links}</ul>`);
 }
 
 /*

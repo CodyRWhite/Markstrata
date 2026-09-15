@@ -10,6 +10,16 @@ Entries below 0.0.10.0 were written before the switch and are three-part.
 
 ## Unreleased
 
+- **Picture alignment** places block images left, centred or right, left by
+  default. It also fixes an inconsistency: a captioned image centred itself
+  while a plain one sat left, so whether a picture was centred depended on
+  whether its author had given it a title. A document can still place one
+  picture itself with `![alt](x.png){.center}`.
+- The documentation page no longer shows two tables of contents. The site's
+  pages are built by a different builder from the web part, with its own
+  contents code, so preferring a contents the document wrote for itself had to
+  be taught to it separately.
+
 - Wiki links to pages that are not there are marked, the way Obsidian marks an
   unresolved link. The links are grouped by folder first, so a document
   pointing at its neighbours costs one folder listing rather than one request

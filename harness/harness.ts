@@ -48,6 +48,7 @@ const state: any = {
   showLineNumbers: true,
   wrapCodeLines: false,
   codeSize: 'normal',
+  imageAlign: 'left',
   // Contents
   tocMaxLevel: 3,
   tocWidthMode: 'auto',
@@ -156,6 +157,7 @@ function settings(): any {
     density: state.density,
     textSize: state.textSize,
     codeSize: state.codeSize,
+    imageAlign: state.imageAlign,
     tocWidth: state.tocWidthMode === 'auto'
       ? 'auto' : `${state.tocWidthValue}${state.tocWidthUnit}`,
     pinMeta: state.pinMeta,
@@ -223,6 +225,10 @@ function log(message: string): void {
   },
   setToc: (position: any) => {
     state.toc = position;
+    draw();
+  },
+  setImageAlign: (align: any) => {
+    state.imageAlign = align;
     draw();
   },
   setLibraryBase: setLibraryBase,
@@ -312,6 +318,13 @@ const PANEL_PAGES: IPanelPage[] = [
             { value: 'compact', text: 'Compact' },
             { value: 'comfortable', text: 'Comfortable' },
             { value: 'relaxed', text: 'Relaxed' }] },
+          { key: 'imageAlign', label: 'Picture alignment', type: 'dropdown', options: [
+            { value: 'left', text: 'Left' },
+            { value: 'center', text: 'Centred' },
+            { value: 'right', text: 'Right' }],
+            hint: 'Applies to a picture that is a paragraph of its own. One inside a '
+              + 'sentence stays on the line it is in, and a document can place a single '
+              + 'picture itself with ![alt](x.png){.center}.' },
           { key: 'textSize', label: 'Text size', type: 'dropdown', options: [
             { value: 'small', text: 'Small' },
             { value: 'normal', text: 'Normal' },

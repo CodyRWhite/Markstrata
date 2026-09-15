@@ -673,8 +673,47 @@ export class ContentEnhancer {
 
     images.forEach((image: HTMLImageElement) => {
       this.captionImage(image);
+      this.markBlockImage(image);
       if (allowZoom) {
         this.makeZoomable(image);
+      }
+    });
+  }
+
+  /*
+   * Marks the block an image sits in, so the page's alignment setting has
+   * something to align.
+   *
+   * The class goes on the container rather than the image, because aligning is
+   * text-align on the block: putting it on the image would need :has() to
+   * reach the parent, and the browsers this has to run in are not a set worth
+   * guessing at.
+   *
+   * An image inside a sentence is left out. It sits on the baseline of the
+   * text around it, and centring the paragraph to move the picture would take
+   * the sentence with it.
+   */
+  private markBlockImage(image: HTMLImageElement): void {
+    const block: HTMLElement | null = image.closest('figure') || image.parentElement;
+    if (!block) {
+      return;
+    }
+    if (block.tagName === 'P' && (block.textContent || '').trim().length > 0) {
+      return;
+    }
+    if (block.tagName !== 'P' && block.tagName !== 'FIGURE') {
+      return;
+    }
+
+    block.classList.add('strata-image-block');
+
+    /* A document can say where one picture goes, written the way every other
+       class is: ![alt](x.png){.center}. Moved to the block for the same reason
+       the marker is. */
+    ['left', 'center', 'centre', 'right'].forEach((side: string) => {
+      if (image.classList.contains(side)) {
+        image.classList.remove(side);
+        block.setAttribute('data-strata-align', side === 'centre' ? 'center' : side);
       }
     });
   }

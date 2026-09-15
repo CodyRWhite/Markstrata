@@ -136,8 +136,32 @@
 .strata-figure {
   margin: var(--strata-block-gap) 0;
   padding: 0;
+}
+
+/*
+ * Where a picture sits in the column.
+ *
+ * Left by default, which is how markdown has always rendered a block image and
+ * what GitHub and Obsidian both do. It is a setting rather than a fixed choice
+ * because a page of screenshots usually reads better centred, and because
+ * captioned images used to centre themselves while plain ones did not: the
+ * figure rule set text-align and nothing else did, so whether a picture was
+ * centred depended on whether its author had given it a title.
+ *
+ * A document can override the page for one picture by giving the image a
+ * class, ![alt](x.png){.center}, which the attributes plugin already parses.
+ */
+.strata-root[data-strata-image-align='center'] .strata-image-block {
   text-align: center;
 }
+
+.strata-root[data-strata-image-align='right'] .strata-image-block {
+  text-align: right;
+}
+
+.strata-image-block[data-strata-align='left'] { text-align: left; }
+.strata-image-block[data-strata-align='center'] { text-align: center; }
+.strata-image-block[data-strata-align='right'] { text-align: right; }
 
 .strata-figure figcaption {
   margin-top: 8px;
