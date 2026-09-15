@@ -21,6 +21,10 @@ Entries below 0.0.10.0 were written before the switch and are three-part.
   to get there, and the last headings never have one: the page runs out first,
   so the highlight stopped short of the end however far you scrolled. At the
   end of a document the last entry is what is being read.
+- A page opens in the reader's colour mode instead of flashing. Both builders
+  decided the mode at the foot of the page, so a page was drawn light, painted,
+  and then repainted dark: a white flash on every load for anyone reading in
+  the dark. It is decided in the head now, before anything is painted.
 - Clicking a contents entry marks it even when there is no scroll left to make.
   Near the end of a document, clicking one of the last entries moved nothing
   and changed nothing, so the contents appeared to ignore them.

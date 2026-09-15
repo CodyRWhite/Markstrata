@@ -116,6 +116,33 @@ function footer(currentId) {
 }
 
 /* Styling for the chrome above. The page body below it is the web part's. */
+/*
+ * The reader's colour mode, settled before anything is painted.
+ *
+ * Both builders used to decide this at the foot of the page, so a page was
+ * drawn light, painted, and then repainted dark: a white flash on every load
+ * for anyone reading in the dark. Deciding it in the head costs one small
+ * blocking script and removes the flash entirely.
+ *
+ * It sets the page canvas only. The web part's own root does not exist yet on
+ * either page, so each builder finishes the job where its root appears.
+ */
+const MODE_KEY = 'markstrata-site-mode';
+
+const MODE_BOOTSTRAP = `<script>
+(function () {
+  var mode;
+  try { mode = window.localStorage.getItem(${JSON.stringify(MODE_KEY)}); } catch (e) { mode = null; }
+  if (mode !== 'light' && mode !== 'dark') {
+    mode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+      ? 'dark' : 'light';
+  }
+  window.__strataMode = mode;
+  document.documentElement.setAttribute('data-site-mode', mode);
+  document.documentElement.style.colorScheme = mode;
+})();
+</script>`;
+
 const CHROME_CSS = `
 .site-header {
   display: flex; flex-wrap: wrap; gap: 10px 22px; align-items: center;
@@ -164,6 +191,6 @@ const CHROME_CSS = `
 `;
 
 module.exports = {
-  PAGES, page, linkTo, header, footer, CHROME_CSS,
+  PAGES, page, linkTo, header, footer, CHROME_CSS, MODE_BOOTSTRAP, MODE_KEY,
   COFFEE_URL, COFFEE_HANDLE, SPONSORS_URL, SPONSORS_USER, REPO
 };

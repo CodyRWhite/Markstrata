@@ -774,6 +774,51 @@ const demoUrl = 'file://' + path.join(__dirname, '..', 'site', 'demo', 'index.ht
     if (!pictures.blocks) throw new Error('no image is placed by the page setting');
   });
 
+  /*
+   * The colour mode used to be decided at the foot of the page, so a page was
+   * drawn light, painted, and repainted dark: a white flash on every load for
+   * anyone reading in the dark. It is decided in the head now, and this
+   * samples the page from the moment it commits rather than waiting for load,
+   * because a flash is only visible before that.
+   */
+  await step('a page opens in the reader\'s colour mode, without a flash', async () => {
+    const dark = await page.context().browser().newContext({
+      viewport: { width: 1000, height: 700 }, colorScheme: 'dark'
+    });
+    try {
+      for (const name of ['docs/index.html', 'demo/index.html']) {
+        const fresh = await dark.newPage();
+        const seen = [];
+        await fresh.goto('file://' + path.join(__dirname, '..', 'site', name),
+          { waitUntil: 'commit' });
+        for (let i = 0; i < 16; i += 1) {
+          try {
+            /* Only once there is a body, because that is the first moment
+               anything can be on screen: an instant with no body is not a
+               flash, it is a page that has not started. */
+            const state = await fresh.evaluate(() => document.body
+              ? (document.documentElement.getAttribute('data-site-mode') || 'none')
+              : null);
+            if (state) {
+              seen.push(state);
+            }
+          } catch (error) {
+            /* Still navigating; nothing painted to judge yet. */
+          }
+          await fresh.waitForTimeout(25);
+        }
+        const states = [...new Set(seen)];
+        await fresh.close();
+        if (!states.length) throw new Error(name + ' never painted');
+        if (states.length !== 1 || states[0] !== 'dark') {
+          throw new Error(name + ' passed through ' + JSON.stringify(states));
+        }
+      }
+    } finally {
+      await dark.close();
+    }
+  });
+
   await step('the property pane opens on four pages', async () => {
     await page.setViewportSize({ width: 1200, height: 900 });
     await page.goto(demoUrl, { waitUntil: 'load' });

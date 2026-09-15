@@ -200,6 +200,7 @@ ${links}
   ${pageId ? '#log { display: none; }' : ''}
 ${pageId ? site.CHROME_CSS : ''}
 </style>
+${site.MODE_BOOTSTRAP}
 </head>
 <body>
 ${pageId ? site.header(pageId) : ''}

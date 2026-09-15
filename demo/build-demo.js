@@ -268,6 +268,7 @@ ${pageId ? site.CHROME_CSS : ''}
 <style>
 ${css}
 </style>
+${site.MODE_BOOTSTRAP}
 </head>
 <body>
 ${header}
@@ -314,6 +315,14 @@ ${header}
 <div class="demo-stage">
   <div class="strata-root" id="root" data-strata-theme="vscode" data-strata-mode="light"
        data-strata-width="comfortable" data-strata-density="compact" data-strata-size="normal" data-strata-code-size="normal">
+    <script>
+      /* Runs as soon as the opening tag above has been parsed, so the element
+         carries the right mode before any of its content is painted. The
+         attribute is written into the markup as light because a file has to
+         say something, and this corrects it in the same breath. */
+      document.getElementById('root')
+        .setAttribute('data-strata-mode', window.__strataMode || 'light');
+    </script>
     <div class="strata-layout" id="layout" data-strata-toc="left">
       ${toc}
       <article class="strata-content" id="content">
@@ -390,7 +399,9 @@ var MERMAID_CONFIG_FOR = ${mermaidBase.fn.toString()};
     document.getElementById('mode').value = mode;
   }
 
-  applyMode(storedMode() || (query && query.matches ? 'dark' : 'light'));
+  /* Decided in the head, before the first paint; this only keeps the controls
+     and the listeners in step with it. */
+  applyMode(window.__strataMode || storedMode() || (query && query.matches ? 'dark' : 'light'));
 
   if (query) {
     var follow = function () {
