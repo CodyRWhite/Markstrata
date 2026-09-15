@@ -62,6 +62,39 @@ const demoUrl = 'file://' + path.join(__dirname, '..', 'site', 'demo', 'index.ht
     await page.waitForSelector('.strata-toolbar .strata-btn', { timeout: 5000 });
   });
 
+  /*
+   * What the bar is made of and in what order: the theme list and how long the
+   * document takes on the left, everything you can do to the page in one group
+   * at the right, the colour toggle last of those. It also has to sit level in
+   * its own strip - it used to carry more air below it than above, which read
+   * as a bar hung too high.
+   */
+  await step('the bar reads left to right and sits level', async () => {
+    const bar = await page.evaluate(() => {
+      const toolbar = document.querySelector('.strata-toolbar');
+      const style = getComputedStyle(toolbar);
+      const actions = toolbar.querySelector('.strata-toolbar-actions');
+      return {
+        order: Array.from(toolbar.children).map((child) => child.className),
+        actions: actions
+          ? Array.from(actions.children).map((child) => (child.textContent || '').trim())
+          : [],
+        top: parseFloat(style.paddingTop),
+        bottom: parseFloat(style.paddingBottom)
+      };
+    });
+    const expected = ['strata-switcher', 'strata-reading-time', 'strata-toolbar-actions'];
+    if (bar.order.join(' ') !== expected.join(' ')) {
+      throw new Error('the bar holds ' + JSON.stringify(bar.order));
+    }
+    if (bar.actions.join(' ') !== 'Reload History Print Dark') {
+      throw new Error('the actions are ' + JSON.stringify(bar.actions));
+    }
+    if (Math.abs(bar.top - bar.bottom) > 0.5) {
+      throw new Error('padded ' + bar.top + ' above and ' + bar.bottom + ' below');
+    }
+  });
+
   // Either placement, so the check follows the harness's starting position
   // rather than pinning it: what matters is that headings became entries.
   await step('contents built from headings', async () => {
@@ -210,9 +243,15 @@ const demoUrl = 'file://' + path.join(__dirname, '..', 'site', 'demo', 'index.ht
   await step('reading time counts prose, not code or diagram source', async () => {
     await page.setViewportSize({ width: 1200, height: 900 });
     await page.evaluate(() => window.scrollTo(0, 0));
-    const shown = await page.locator('.strata-reading-time').textContent();
-    if (!/^\d+ min read$/.test((shown || '').trim())) {
+    /* The pill shows the number beside a clock, and says the whole phrase in
+       its tooltip: "4 min" next to a clock face needs no second word. */
+    const shown = await page.locator('.strata-reading-time-value').textContent();
+    if (!/^\d+ min$/.test((shown || '').trim())) {
       throw new Error('toolbar reads "' + shown + '"');
+    }
+    const spoken = await page.locator('.strata-reading-time').getAttribute('title');
+    if (!/^About \d+ min to read$/.test(spoken || '')) {
+      throw new Error('the pill says "' + spoken + '" to a pointer');
     }
     /* The kitchen sink is mostly code and diagrams. Counting those as prose
        roughly doubles it, so the two numbers have to differ. */
@@ -493,10 +532,55 @@ const demoUrl = 'file://' + path.join(__dirname, '..', 'site', 'demo', 'index.ht
   });
 
   await step('dark mode toggle repaints', async () => {
-    await page.getByRole('button', { name: 'Dark mode' }).click();
+    const toggle = page.locator('.strata-mode-toggle');
+    /* It says what the click gives, not what the page is, so on a light page
+       it offers the dark one. */
+    const offered = (await toggle.textContent() || '').trim();
+    if (offered !== 'Dark') throw new Error('the toggle offers "' + offered + '"');
+    await toggle.click();
     await page.waitForTimeout(600);
     const mode = await page.locator('.strata-root').getAttribute('data-strata-mode');
     if (mode !== 'dark') throw new Error('mode is ' + mode);
+    const now = (await toggle.textContent() || '').trim();
+    if (now !== 'Light') throw new Error('after the click it offers "' + now + '"');
+  });
+
+  /*
+   * The sun and the moon are one drawing that travels between the two. Choosing
+   * a mode rebuilds the toolbar, so the button is a new element every time and
+   * would land in its finished state with nothing to animate unless the
+   * renderer mounts it in the state being left. Caught only in a browser: the
+   * markup is identical either way, and what differs is whether it moves.
+   */
+  await step('the sun and moon travel rather than swap', async () => {
+    const reading = () => page.evaluate(() => {
+      const disc = document.querySelector('.strata-theme-disc');
+      const bite = document.querySelector('.strata-theme-bite');
+      const scale = /matrix\(([-\d.]+)/.exec(getComputedStyle(disc).transform);
+      const slide = /matrix\(1, 0, 0, 1, ([-\d.]+)/.exec(getComputedStyle(bite).transform);
+      return { scale: scale ? Number(scale[1]) : null, slide: slide ? Number(slide[1]) : null };
+    });
+
+    const sun = await reading();
+    if (sun.scale === null || sun.slide === null) throw new Error('no transform on the icon');
+    await page.locator('.strata-mode-toggle').click();
+    await page.waitForTimeout(120);
+    const flight = await reading();
+    await page.waitForTimeout(900);
+    const moon = await reading();
+
+    if (Math.abs(moon.scale - sun.scale) < 0.1 || Math.abs(moon.slide - sun.slide) < 1) {
+      throw new Error('the two states look the same: '
+        + JSON.stringify(sun) + ' then ' + JSON.stringify(moon));
+    }
+    const between = (value, a, b) =>
+      value > Math.min(a, b) + 0.001 && value < Math.max(a, b) - 0.001;
+    if (!between(flight.scale, sun.scale, moon.scale)) {
+      throw new Error('the disc jumped: ' + JSON.stringify(flight));
+    }
+    // Back to where the rest of the run expects it.
+    await page.locator('.strata-mode-toggle').click();
+    await page.waitForTimeout(600);
   });
 
   await step('mermaid re-rendered for the new theme', async () => {

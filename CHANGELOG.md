@@ -8,6 +8,27 @@ is normally zero. `scripts/set-version.js` stamps it when a release is cut.
 
 Entries below 0.0.10.0 were written before the switch and are three-part.
 
+## Unreleased
+
+- The toolbar is laid out by what its controls do. What the document is sits on
+  the left - the theme list and how long the document takes to read - and what
+  you can do to it sits together at the right in one bordered group: reload,
+  history, print, and light or dark. Three loose buttons of whatever width
+  their words needed now read as a single control.
+- Reading time is a pill with a clock in it and reads "4 min" rather than
+  "4 min read" in plain grey text. The whole phrase is still there for a
+  pointer and a screen reader.
+- The reload, history and print buttons carry icons, drawn inline so nothing is
+  fetched and each follows the theme it sits in. In a narrow column the labels
+  step aside and the icons carry the buttons, but the words stay in the markup,
+  so a screen reader still says "Reload" rather than announcing an unnamed
+  button.
+- Light and dark is one button at the far right, and its icon travels between a
+  sun and a moon instead of swapping one glyph for another. A reader who has
+  asked for less movement gets the new icon and none of the travel.
+- The toolbar is padded evenly above and below. It carried 6px above and 10px
+  below, which read as a bar hung high in its own strip.
+
 ## 0.0.16.0
 
 - The property pane is laid out in five pages of comparable length instead of

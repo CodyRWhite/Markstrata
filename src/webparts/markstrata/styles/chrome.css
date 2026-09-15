@@ -7,9 +7,9 @@
 .strata-toolbar {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   flex-wrap: wrap;
-  padding: 6px 0 10px;
+  padding: 8px 0;
   border-bottom: 1px solid var(--strata-border);
   margin-bottom: 12px;
   font-size: 0.8125em;
@@ -18,6 +18,92 @@
 
 .strata-toolbar-spacer {
   flex: 1 1 auto;
+}
+
+/*
+ * The actions sit together at the end of the bar with one border around the
+ * group, so the eye reads a single control rather than three loose buttons of
+ * whatever width their words happened to need.
+ */
+.strata-toolbar-actions {
+  display: inline-flex;
+  align-items: center;
+  margin-left: auto;
+  border: 1px solid var(--strata-border);
+  border-radius: var(--strata-radius-sm);
+  overflow: hidden;
+}
+
+.strata-toolbar-actions .strata-btn {
+  border: 0;
+  border-radius: 0;
+  background-color: transparent;
+}
+
+.strata-toolbar-actions .strata-btn + .strata-btn {
+  border-left: 1px solid var(--strata-border);
+}
+
+/*
+ * The colour-mode toggle, drawn as one shape that travels between a sun and a
+ * moon. Three parts move together: the disc grows, the mask circle slides over
+ * it to bite out a crescent, and the beams turn and fade. The beams leave the
+ * 24-unit box at their tips, so the icon may not clip.
+ *
+ * Every transform is measured from the middle of its own shape, which is what
+ * fill-box gives; the default for SVG is the user-space origin, where a scale
+ * would throw the disc up and to the left instead of growing it in place.
+ */
+.strata-mode-toggle .strata-icon {
+  overflow: visible;
+}
+
+.strata-theme-disc,
+.strata-theme-beams {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+/* Light page: a moon, because dark is what the click gives. */
+.strata-theme-disc {
+  transform: scale(1.2);
+  transition: transform 0.5s cubic-bezier(0.25, 0, 0.3, 1);
+}
+
+.strata-theme-bite {
+  transform: translateX(-9px);
+  transition: transform 0.5s cubic-bezier(0, 0, 0, 1);
+}
+
+.strata-theme-beams {
+  opacity: 0;
+  transform: rotate(-25deg) scale(0.6);
+  transition: transform 0.5s cubic-bezier(0.5, 1.25, 0.75, 1.25), opacity 0.35s ease;
+}
+
+/* Dark page: the bite slides off the disc and the beams come out. */
+.strata-mode-toggle--dark .strata-theme-disc {
+  transform: scale(0.85);
+}
+
+.strata-mode-toggle--dark .strata-theme-bite {
+  transform: translateX(0);
+  /* Out of the way before the beams arrive, so they never cross a crescent. */
+  transition-duration: 0.25s;
+}
+
+.strata-mode-toggle--dark .strata-theme-beams {
+  opacity: 1;
+  transform: rotate(0deg) scale(1);
+}
+
+/* Asked for less movement: the icon still changes, it just does not travel. */
+@media (prefers-reduced-motion: reduce) {
+  .strata-theme-disc,
+  .strata-theme-bite,
+  .strata-theme-beams {
+    transition: none;
+  }
 }
 
 .strata-btn {
@@ -294,11 +380,44 @@
  * among the buttons: it describes the document, it is not something to do
  * to it.
  */
+/*
+ * One rule sizes and colours every icon in the bar. They are 24x24 outlines
+ * inheriting currentColor, so a button's own colour carries into its icon and
+ * no icon has to be told about the theme.
+ */
+.strata-icon {
+  width: 1em;
+  height: 1em;
+  flex: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  /* Optical: an outline on the same grid as text sits a shade high. */
+  vertical-align: -0.12em;
+}
+
+/*
+ * How long the document takes to read, as a quiet pill rather than loose grey
+ * text. It is the one thing in the bar that is a fact about the document
+ * rather than a control, so it is shaped differently from everything else.
+ */
 .strata-reading-time {
-  align-self: center;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px 3px 7px;
+  border-radius: 999px;
+  background-color: var(--strata-bg-elevated);
   color: var(--strata-text-faint);
   font-size: 0.8125em;
+  line-height: 1.5;
   white-space: nowrap;
+}
+
+.strata-reading-time .strata-icon {
+  opacity: 0.85;
 }
 
 /*
@@ -360,4 +479,26 @@
 /* Neither belongs on paper. */
 @media print {
   .strata-to-top { display: none; }
+}
+
+
+/*
+ * In a narrow column the action labels go and the icons carry the buttons.
+ * The label stays in the markup, so a screen reader still reads "Reload"
+ * rather than announcing an unnamed button.
+ */
+@media (max-width: 560px) {
+  .strata-toolbar-actions .strata-btn-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .strata-toolbar-actions .strata-btn {
+    padding: 6px 9px;
+  }
 }

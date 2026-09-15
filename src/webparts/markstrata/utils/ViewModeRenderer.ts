@@ -20,6 +20,9 @@ import {
 import type { IFileMetadata } from './SharePointService';
 import { splitFrontMatter, IFrontMatter } from './frontMatter';
 import { BackToTop } from './backToTop';
+import {
+  CLOCK_ICON, RELOAD_ICON, HISTORY_ICON, PRINT_ICON, themeIcon
+} from './icons';
 
 export type TocPosition = 'left' | 'right' | 'inline' | 'off';
 
@@ -64,6 +67,8 @@ export class ViewModeRenderer {
   private callbacks: IViewCallbacks;
   /** Ids have to be unique across the whole page, not just this web part. */
   private readonly uid: string = `strata-${Math.random().toString(36).substring(2, 8)}`;
+  /** The colour mode this renderer last painted, or undefined before the first. */
+  private lastMode: ResolvedMode | undefined;
 
   constructor(
     processor: MarkdownProcessor,
@@ -129,9 +134,18 @@ export class ViewModeRenderer {
        and diagram source are not counted as prose, which means it can only be
        filled in once the article exists. */
     const readingTime: HTMLElement | null = toolbar
-      ? toolbar.querySelector('.strata-reading-time') : null;
+      ? toolbar.querySelector('.strata-reading-time-value') : null;
     if (readingTime) {
-      readingTime.textContent = this.enhancer.readingTime(article);
+      const spent: string = this.enhancer.readingTime(article);
+      readingTime.textContent = spent.replace(/ read$/, '');
+      /* Nothing to say about an empty document, and a lone clock says less
+         than nothing. */
+      const pill: HTMLElement | null = toolbar
+        ? toolbar.querySelector('.strata-reading-time') : null;
+      if (pill) {
+        pill.hidden = !spent;
+        pill.title = spent ? `About ${spent.replace(' read', '')} to read` : '';
+      }
     }
 
     this.enhancer.attachBackToTop(host, options.backToTop || 'off');
@@ -150,6 +164,10 @@ export class ViewModeRenderer {
       void this.mermaid.render(article, options.settings.themeFamily, options.resolvedMode,
         options.diagramWidth).then(() => this.enhancer.attachDiagramCopyButtons(article));
     }
+
+    /* Read by the next render to tell a mode the reader just chose from one
+       the page simply opened with. */
+    this.lastMode = options.resolvedMode;
 
     // Last, so the height is measured against the finished layout.
     if (options.settings.fillHeight) {
@@ -218,25 +236,42 @@ export class ViewModeRenderer {
     if (options.showReadingTime) {
       const time: HTMLElement = document.createElement('span');
       time.className = 'strata-reading-time';
+      /* The clock is markup rather than a character, so it matches the other
+         icons in weight and follows the theme's colour. */
+      time.innerHTML = CLOCK_ICON;
+      const value: HTMLElement = document.createElement('span');
+      value.className = 'strata-reading-time-value';
+      time.appendChild(value);
       toolbar.appendChild(time);
     }
 
-    const spacer: HTMLElement = document.createElement('div');
-    spacer.className = 'strata-toolbar-spacer';
-    toolbar.appendChild(spacer);
+    /* The things you can do to the document, in one group at the end, so the
+       bar reads as "what this is" on the left and "what you can do" on the
+       right instead of six controls of equal weight in a row. */
+    const actions: HTMLElement = document.createElement('div');
+    actions.className = 'strata-toolbar-actions';
 
     if (options.canReload) {
-      toolbar.appendChild(
-        this.button('Reload', 'Reload the file from SharePoint', () => this.callbacks.onReload())
-      );
+      actions.appendChild(this.button('Reload', 'Reload the file from SharePoint',
+        () => this.callbacks.onReload(), RELOAD_ICON));
     }
     if (options.canShowVersions) {
-      toolbar.appendChild(
-        this.button('Version history', 'Show previous versions of this file', () => this.callbacks.onShowVersions())
-      );
+      actions.appendChild(this.button('History', 'Show previous versions of this file',
+        () => this.callbacks.onShowVersions(), HISTORY_ICON));
     }
     if (options.showPrintButton) {
-      toolbar.appendChild(this.button('Print', 'Print or save as PDF', () => this.callbacks.onPrint()));
+      actions.appendChild(this.button('Print', 'Print or save as PDF',
+        () => this.callbacks.onPrint(), PRINT_ICON));
+    }
+    /* Last in the group, at the far right of the bar. It belongs with the
+       things you do to the page rather than with the theme list: choosing a
+       theme is a setting you pick from, light and dark is one switch you
+       flick, and the two read as different kinds of control. */
+    if (options.showThemeSwitcher) {
+      actions.appendChild(this.buildModeToggle(options));
+    }
+    if (actions.childElementCount) {
+      toolbar.appendChild(actions);
     }
 
     return toolbar;
@@ -247,14 +282,12 @@ export class ViewModeRenderer {
     const wrapper: HTMLElement = document.createElement('div');
     wrapper.className = 'strata-switcher';
 
-    const label: HTMLLabelElement = document.createElement('label');
-    label.textContent = 'Theme';
-    label.htmlFor = `${this.uid}-theme`;
-    wrapper.appendChild(label);
-
+    /* The word "Theme" beside a list of theme names said it twice. The name is
+       still there for anyone who cannot see the list. */
     const select: HTMLSelectElement = document.createElement('select');
     select.className = 'strata-select';
     select.id = `${this.uid}-theme`;
+    select.setAttribute('aria-label', 'Theme');
     THEME_FAMILIES.forEach((choice: IThemeChoice) => {
       const option: HTMLOptionElement = document.createElement('option');
       option.value = choice.key;
@@ -267,18 +300,47 @@ export class ViewModeRenderer {
     });
     wrapper.appendChild(select);
 
-    const toggle: HTMLElement = this.button(
-      options.resolvedMode === 'dark' ? 'Light mode' : 'Dark mode',
-      'Switch between light and dark',
+    return wrapper;
+  }
+
+  /**
+   * Light and dark, as one button at the end of the bar.
+   *
+   * The icon shows what the click gives, not what the page currently is: a sun
+   * on a dark page, a moon on a light one.
+   */
+  private buildModeToggle(options: IViewOptions): HTMLButtonElement {
+    const dark: boolean = options.resolvedMode === 'dark';
+    const toggle: HTMLButtonElement = this.button(
+      dark ? 'Light' : 'Dark',
+      dark ? 'Switch to the light theme' : 'Switch to the dark theme',
       () =>
         this.callbacks.onThemeOverride(
           options.settings.themeFamily,
-          options.resolvedMode === 'dark' ? 'light' : 'dark'
-        )
+          dark ? 'light' : 'dark'
+        ),
+      themeIcon(`${this.uid}-mode-mask`)
     );
-    wrapper.appendChild(toggle);
+    toggle.classList.add('strata-mode-toggle');
 
-    return wrapper;
+    /* The sun and the moon are one drawing that travels between the two, and a
+       transition only runs on a change. Choosing a mode re-renders the whole
+       web part, so this button is new every time and would otherwise land in
+       its finished state with nothing to animate. When the mode is what
+       changed, it is mounted in the state the reader is leaving and moved to
+       the new one once the browser has drawn it - two frames, because a style
+       set in the first one is still the element's first style. A first load
+       has no previous mode and simply paints the right icon. */
+    const settled: () => void = () =>
+      toggle.classList.toggle('strata-mode-toggle--dark', dark);
+    if (this.lastMode !== undefined && this.lastMode !== options.resolvedMode) {
+      toggle.classList.toggle('strata-mode-toggle--dark', !dark);
+      window.requestAnimationFrame(() => window.requestAnimationFrame(settled));
+    } else {
+      settled();
+    }
+
+    return toggle;
   }
 
   private buildSourceInfo(metadata: IFileMetadata, front: IFrontMatter): HTMLElement {
@@ -319,11 +381,27 @@ export class ViewModeRenderer {
     return info;
   }
 
-  private button(text: string, title: string, onClick: () => void): HTMLButtonElement {
+  /*
+   * The label stays in the markup whether or not it is on screen: a narrow
+   * column hides it with CSS, which keeps the button readable to a screen
+   * reader and searchable on the page, where an icon-only button with a title
+   * is neither.
+   */
+  private button(text: string, title: string, onClick: () => void,
+    icon?: string): HTMLButtonElement {
     const button: HTMLButtonElement = document.createElement('button');
     button.type = 'button';
     button.className = 'strata-btn';
-    button.textContent = text;
+    if (icon) {
+      button.innerHTML = icon;
+      button.classList.add('strata-btn--icon');
+    }
+
+    const label: HTMLElement = document.createElement('span');
+    label.className = 'strata-btn-label';
+    label.textContent = text;
+    button.appendChild(label);
+
     button.title = title;
     button.addEventListener('click', onClick);
     return button;
