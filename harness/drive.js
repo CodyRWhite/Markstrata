@@ -491,6 +491,54 @@ const demoUrl = 'file://' + path.join(__dirname, '..', 'site', 'demo', 'index.ht
     await page.waitForTimeout(400);
   });
 
+  /*
+   * The browser's own Back button, which is the half of following a link that
+   * could not be driven until the navigator moved out of the web part: it
+   * pushes a history entry at the same URL, so Back comes back here rather than
+   * sending SharePoint's router off to a page of its own.
+   */
+  await step('the browser\'s Back button comes back to the first document', async () => {
+    await page.evaluate(() => window.harness.setLibraryBase('/sites/demo/runbooks',
+      '# Handbook\n\nSee [[deploy]] for how we ship.\n'));
+    await page.waitForTimeout(600);
+
+    const entries = await page.evaluate(() => window.history.length);
+    await page.locator('.strata-content a.strata-wiki-link').first().click();
+    await page.waitForTimeout(600);
+
+    if (await page.evaluate(() => window.history.length) <= entries) {
+      throw new Error('following a link pushed no history entry');
+    }
+    const opened = await page.evaluate(() =>
+      ((document.querySelector('.strata-content h1') || {}).textContent || '').replace('#', '').trim());
+    if (opened !== 'Deploying') throw new Error('the link opened "' + opened + '"');
+
+    await page.goBack();
+    await page.waitForTimeout(700);
+
+    const back = await page.evaluate(() => ({
+      heading: ((document.querySelector('.strata-content h1') || {}).textContent || '')
+        .replace('#', '').trim(),
+      bar: !!document.querySelector('.strata-open-doc')
+    }));
+    if (back.heading !== 'Handbook') {
+      throw new Error('Back gave "' + back.heading + '"');
+    }
+    if (back.bar) throw new Error('the bar is still there after going back');
+
+    /* And forward again, because an entry of ours names the document to show. */
+    await page.goForward();
+    await page.waitForTimeout(700);
+    const forward = await page.evaluate(() =>
+      ((document.querySelector('.strata-content h1') || {}).textContent || '').replace('#', '').trim());
+    if (forward !== 'Deploying') {
+      throw new Error('Forward gave "' + forward + '"');
+    }
+
+    await page.evaluate(() => window.harness.setLibraryBase('', ''));
+    await page.waitForTimeout(600);
+  });
+
   /* Ctrl, Shift and the middle button are how people open things in a new tab.
      Taking those away would be worse than what this fixes, so the href stays
      on the link and a modified click is left to the browser. */

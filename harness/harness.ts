@@ -28,6 +28,7 @@ import { ContentEnhancer } from '../src/webparts/markstrata/utils/ContentEnhance
 import { ViewModeRenderer } from '../src/webparts/markstrata/utils/ViewModeRenderer';
 import { EditModeManager } from '../src/webparts/markstrata/utils/EditModeManager';
 import { ThemeManager } from '../src/webparts/markstrata/utils/ThemeManager';
+import { DocumentNavigator } from '../src/webparts/markstrata/utils/documentNavigator';
 import { PropertyPanel, IPanelPage } from './panel';
 import { TOC_WIDTH_RANGES, tocWidthForUnit } from '../src/webparts/markstrata/utils/tocWidth';
 
@@ -153,20 +154,32 @@ const DEPLOY: string = [
   'Back to [[handbook]].'
 ].join('\n\n');
 
-/** The document being read, and the one the harness is configured to show. */
-let opened: string = '';
-
-function openDocument(path: string, heading: string): void {
-  opened = path;
-  log(`Open ${path}${heading ? '#' + heading : ''}`);
-  draw(DEPLOY, heading);
-}
-
-function closeDocument(): void {
-  opened = '';
-  log('Back to the configured document');
-  draw();
-}
+/*
+ * The real DocumentNavigator, not a stand-in for it.
+ *
+ * It is the web part's own, so what it decides here is what a SharePoint page
+ * decides: which document is on screen, and the history entries that make the
+ * browser's Back button work. Only the fetch is faked, because there is no
+ * library behind this page to fetch from.
+ */
+const navigator = new DocumentNavigator({
+  instanceId: 'harness',
+  load: (path: string) => {
+    log(`Open ${path}`);
+    return Promise.resolve({
+      markdown: DEPLOY,
+      metadata: {
+        name: path.split('/').pop() || path,
+        serverRelativeUrl: path,
+        timeLastModified: new Date().toISOString(),
+        author: 'Cody White',
+        length: DEPLOY.length
+      }
+    });
+  },
+  onChange: () => draw(),
+  onError: (message: string) => log(message)
+});
 
 /*
  * Checking a link needs a folder to ask about, and a folder needs the base
@@ -179,7 +192,7 @@ function closeDocument(): void {
 function setLibraryBase(base: string, markdown?: string): void {
   /* Changing the document is starting again: whatever was open was opened from
      the old one. */
-  opened = '';
+  navigator.close(false);
   state.libraryBase = base;
   if (markdown !== undefined) {
     state.markdown = markdown || SAMPLE;
@@ -245,7 +258,8 @@ function draw(showing?: string, heading?: string): void {
     return;
   }
 
-  view.render(host, showing !== undefined ? showing : (opened ? DEPLOY : state.markdown), {
+  view.render(host, showing !== undefined ? showing
+    : (navigator.markdown !== undefined ? navigator.markdown : state.markdown), {
     settings: settings(),
     resolvedMode: mode,
     showToolbar: state.showToolbar,
@@ -262,11 +276,13 @@ function draw(showing?: string, heading?: string): void {
     backToTop: state.backToTop,
     listFolder: state.enableWikiLinks && state.checkWikiLinks ? listFolder : undefined,
     documentBase: state.libraryBase || undefined,
-    openDocument: state.followDocumentLinks ? openDocument : undefined,
-    openDocumentName: opened ? opened.split('/').pop() : '',
+    openDocument: state.followDocumentLinks
+      ? (path: string, heading: string) => void navigator.open(path, heading, true)
+      : undefined,
+    openDocumentName: navigator.name,
     homeDocumentName: 'handbook.md',
-    onCloseDocument: closeDocument,
-    landOnHeading: heading,
+    onCloseDocument: () => navigator.close(true),
+    landOnHeading: heading !== undefined ? heading : navigator.takeHeading(),
     canReload: state.canReload,
     canShowVersions: state.canShowVersions,
     isPageEditing: false,

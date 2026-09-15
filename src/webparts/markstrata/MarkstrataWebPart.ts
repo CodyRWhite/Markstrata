@@ -9,10 +9,11 @@
  * renderers run in a plain browser page under harness/ and on the documentation
  * site.
  *
- * It also owns everything that outlives a render: the reader's theme override
- * in local storage, the auto-refresh watcher, the history entries a followed
- * document pushes, and the enhancer whose listeners have to be stopped when the
- * page puts the web part away.
+ * What it still owns after the split is what needs SharePoint or needs to
+ * outlive a render: loading and saving the configured file, the auto-refresh
+ * watcher, and the collaborators it has to shut down when the page puts the web
+ * part away. The reader's theme choice, the document they followed a link to
+ * and the lists the property pane offers each live in a file of their own.
  *
  * .USAGE
  *   // SharePoint builds this: it is the web part the manifest points at.
@@ -32,10 +33,7 @@
  */
 
 import { Version, DisplayMode } from '@microsoft/sp-core-library';
-import {
-  IPropertyPaneConfiguration,
-  IPropertyPaneDropdownOption
-} from '@microsoft/sp-property-pane';
+import { IPropertyPaneConfiguration } from '@microsoft/sp-property-pane';
 import { BaseClientSideWebPart, IWebPartPropertiesMetadata } from '@microsoft/sp-webpart-base';
 import { ThemeProvider, IReadonlyTheme } from '@microsoft/sp-component-base';
 import * as strings from 'MarkstrataWebPartStrings';
@@ -62,14 +60,16 @@ import './styles/print.css';
 
 import { MarkdownProcessor, IMarkdownProcessorOptions } from './utils/MarkdownProcessor';
 import { folderOf } from './utils/imagePaths';
-import { fileOf } from './utils/wikiLinks';
+import { DocumentNavigator, ILoadedDocument } from './utils/documentNavigator';
+import { ThemeOverride } from './utils/themeOverride';
+import { PaneSources } from './paneSources';
 import { TocWidthUnit, tocWidthCss, tocWidthForUnit } from './utils/tocWidth';
 import { MermaidRenderer } from './utils/MermaidRenderer';
 import { ContentEnhancer } from './utils/ContentEnhancer';
 import { ViewModeRenderer } from './utils/ViewModeRenderer';
 import { EditModeManager } from './utils/EditModeManager';
 import { VersionPanel } from './utils/VersionPanel';
-import { SharePointService, IFileMetadata, ILibraryInfo } from './utils/SharePointService';
+import { SharePointService } from './utils/SharePointService';
 import {
   ThemeManager,
   IThemeSettings,
@@ -83,13 +83,41 @@ export { IMarkstrataWebPartProps } from './webPartProps';
 import { IMarkstrataWebPartProps } from './webPartProps';
 import { paneConfiguration } from './propertyPane';
 
+/*
+ * Settings the markdown pipeline is built from: changing one of these means
+ * markdown-it has to be rebuilt, which updateOptions only does when a value
+ * really moved.
+ */
+const REBUILDS_THE_PROCESSOR: string[] = [
+  'enableSyntaxHighlighting',
+  'enableMath',
+  'enableMermaid',
+  'enableAnchors',
+  'enableWikiLinks',
+  'showCodeHeader',
+  'showLineNumbers',
+  'wrapCodeLines',
+  'allowHtml'
+];
+
+/*
+ * Settings that change which other settings the pane shows, or what a control
+ * on it looks like: the width fields only appear with the contents in a
+ * sidebar, link checking only with wiki links on, the file pickers only with a
+ * library, and the width slider's own range moves with its unit. The pane has
+ * to be redrawn for any of those to be seen.
+ */
+const REDRAWS_THE_PANE: string[] = [
+  'contentSource',
+  'tocPosition',
+  'tocWidthMode',
+  'tocWidthUnit',
+  'enableWikiLinks',
+  'showSourceInfo'
+];
+
 /** Longest text handed to the search index, to keep the page payload sane. */
 const MAX_SEARCH_TEXT: number = 20000;
-
-interface IThemeOverride {
-  themeFamily: ThemeFamily;
-  colorMode: 'light' | 'dark';
-}
 
 export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrataWebPartProps> {
   private processor: MarkdownProcessor;
@@ -104,31 +132,19 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
   private handleThemeChanged: (args: { theme?: IReadonlyTheme }) => void;
 
   private isInverted: boolean | undefined;
-  private themeOverride: IThemeOverride | undefined;
+  /** The theme this reader chose for themselves, if they chose one. */
+  private themeOverride: ThemeOverride;
   private loadError: string | undefined;
   /** Suppresses the extra render on first load; SPFx renders straight after onInit. */
   private contentLoadedOnce: boolean = false;
   private previewBanner: string | undefined;
   private previewContent: string | undefined;
 
-  /*
-   * A document the reader followed a link to.
-   *
-   * Kept apart from the properties on purpose. Properties are the page's
-   * configuration and are saved with it, so writing a followed document into
-   * selectedFile would change what everyone sees the next time the page is
-   * saved. Reading is not configuring.
-   */
-  private openPath: string | undefined;
-  private openMarkdown: string | undefined;
-  private openMetadata: IFileMetadata | undefined;
-  /** A heading to land on once the followed document has been drawn. */
-  private openHeading: string | undefined;
-  private onPopState: ((event: PopStateEvent) => void) | undefined;
+  /** A document the reader followed a link to, and the history that goes with it. */
+  private navigator: DocumentNavigator;
 
-  private libraryOptions: IPropertyPaneDropdownOption[] = [];
-  private folderOptions: IPropertyPaneDropdownOption[] = [];
-  private fileOptions: IPropertyPaneDropdownOption[] = [];
+  /** What the pane offers to choose from, and where those lists come from. */
+  private paneSources: PaneSources;
 
   // --------------------------------------------------------------- lifecycle
 
@@ -136,7 +152,9 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
     await super.onInit();
 
     this.applyDefaults();
-    this.readThemeOverride();
+    this.themeOverride = new ThemeOverride(this.context.instanceId);
+    this.themeOverride.read();
+    this.paneSources = new PaneSources(this.sharePoint, this.properties);
 
     this.themeProvider = this.context.serviceScope.consume(ThemeProvider.serviceKey);
     const theme: IReadonlyTheme | undefined = this.themeProvider.tryGetTheme();
@@ -155,11 +173,14 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
     this.enhancer = new ContentEnhancer();
 
     this.viewRenderer = new ViewModeRenderer(this.processor, this.mermaid, this.enhancer, {
-      onReload: () => void (this.openPath
-        ? this.openDocument(this.openPath, '', false)
+      onReload: () => void (this.navigator.path
+        ? this.navigator.open(this.navigator.path, '', false)
         : this.loadContent(true)),
       onShowVersions: () => void this.showVersions(),
-      onThemeOverride: (family: ThemeFamily, mode: 'light' | 'dark') => this.setThemeOverride(family, mode),
+      onThemeOverride: (family: ThemeFamily, mode: 'light' | 'dark') => {
+        this.themeOverride.set(family, mode);
+        this.render();
+      },
       onPrint: () => window.print()
     });
 
@@ -174,6 +195,31 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
       }
     });
 
+    /*
+     * Reading another document is not configuring the page, so none of what it
+     * knows goes into the properties: see documentNavigator.ts.
+     */
+    this.navigator = new DocumentNavigator({
+      instanceId: this.context.instanceId,
+      load: async (path: string): Promise<ILoadedDocument> => ({
+        markdown: await this.sharePoint.getFileContent(path),
+        metadata: await this.sharePoint.getFileMetadata(path)
+      }),
+      onChange: () => {
+        this.loadError = undefined;
+        this.previewContent = undefined;
+        this.previewBanner = undefined;
+        /* The folder a document resolves its pictures and links against is its
+           own, which is rarely the configured file's. */
+        this.processor.updateOptions(this.processorOptions());
+        this.render();
+      },
+      onError: (message: string) => {
+        this.loadError = message;
+        this.render();
+      }
+    });
+
     this.versionPanel = new VersionPanel(this.sharePoint, {
       onPreview: (content: string, label: string) => {
         this.previewContent = content;
@@ -183,7 +229,7 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
       onRestored: () => void this.loadContent(true)
     });
 
-    void this.loadPropertyPaneSources();
+    void this.paneSources.loadAll().then(() => this.context.propertyPane.refresh());
     await this.loadContent(false);
   }
 
@@ -192,10 +238,7 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
       this.themeProvider.themeChangedEvent.remove(this, this.handleThemeChanged);
     }
     this.sharePoint.unwatchFile();
-    if (this.onPopState) {
-      window.removeEventListener('popstate', this.onPopState);
-      this.onPopState = undefined;
-    }
+    this.navigator.dispose();
     this.enhancer.dispose();
     this.editManager.dispose();
     super.onDispose();
@@ -290,7 +333,8 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
        over the one the page is configured to show. */
     const markdown: string = this.previewContent !== undefined
       ? this.previewContent
-      : (this.openMarkdown !== undefined ? this.openMarkdown : this.properties.markdownContent);
+      : (this.navigator.markdown !== undefined
+        ? this.navigator.markdown : this.properties.markdownContent);
 
     if (this.displayMode === DisplayMode.Edit && this.previewContent === undefined) {
       this.editManager.render(this.domElement, markdown, {
@@ -309,10 +353,7 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
       return;
     }
 
-    /* Read once and cleared here: a re-render for a theme change must not send
-       the reader back to a heading they have since scrolled away from. */
-    const landOn: string | undefined = this.openHeading;
-    this.openHeading = undefined;
+    const landOn: string | undefined = this.navigator.takeHeading();
 
     this.viewRenderer.render(this.domElement, markdown, {
       settings: settings,
@@ -338,10 +379,10 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
       documentBase: this.imageBasePath(),
       /* Drawn by the renderer with everything else on the page, rather than
          pushed in over the top of it afterwards. */
-      openDocumentName: this.openMetadata ? this.openMetadata.name : fileOf(this.openPath || ''),
+      openDocumentName: this.navigator.name,
       homeDocumentName: this.properties.fileMetadata
         ? this.properties.fileMetadata.name : '',
-      onCloseDocument: () => this.closeDocument(true),
+      onCloseDocument: () => this.navigator.close(true),
       landOnHeading: landOn,
       /* Only a library can hand over another document, and only a reader is
          reading: in page edit mode a click on a link belongs to the author
@@ -349,15 +390,15 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
       openDocument: this.properties.followDocumentLinks
         && this.properties.contentSource === 'library'
         && this.displayMode !== DisplayMode.Edit
-        ? (path: string, heading: string) => void this.openDocument(path, heading, true)
+        ? (path: string, heading: string) => void this.navigator.open(path, heading, true)
         : undefined,
       canReload: this.properties.contentSource !== 'manual',
       /* Versions are the configured file's. While another document is open the
          button would offer that file's history for the one on screen. */
-      canShowVersions: !this.openPath
+      canShowVersions: !this.navigator.path
         && this.properties.enableVersionHistory && this.canSaveToSharePoint(),
       isPageEditing: this.displayMode === DisplayMode.Edit,
-      fileMetadata: this.openMetadata || this.properties.fileMetadata
+      fileMetadata: this.navigator.metadata || this.properties.fileMetadata
     });
 
     this.updateSearchText();
@@ -409,8 +450,10 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
 
   private themeSettings(): IThemeSettings {
     return {
-      themeFamily: this.themeOverride ? this.themeOverride.themeFamily : this.properties.themeFamily,
-      colorMode: this.themeOverride ? this.themeOverride.colorMode : this.properties.colorMode,
+      themeFamily: this.themeOverride.current
+        ? this.themeOverride.current.themeFamily : this.properties.themeFamily,
+      colorMode: this.themeOverride.current
+        ? this.themeOverride.current.colorMode : this.properties.colorMode,
       contentWidth: this.properties.contentWidth,
       density: this.properties.density,
       textSize: this.properties.textSize,
@@ -453,8 +496,8 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
   private imageBasePath(): string | undefined {
     /* A followed document resolves its own pictures and links against its own
        folder, which is rarely the configured file's. */
-    if (this.openPath) {
-      return folderOf(this.openPath);
+    if (this.navigator.path) {
+      return folderOf(this.navigator.path);
     }
     if (this.properties.contentSource === 'library' && this.properties.selectedFile) {
       return folderOf(this.properties.selectedFile);
@@ -466,30 +509,6 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
   }
 
   // ------------------------------------------------------------ reader theme
-
-  private overrideStorageKey(): string {
-    return `strata-theme-${this.context.instanceId}`;
-  }
-
-  private readThemeOverride(): void {
-    try {
-      const stored: string | null = window.localStorage.getItem(this.overrideStorageKey());
-      this.themeOverride = stored ? (JSON.parse(stored) as IThemeOverride) : undefined;
-    } catch {
-      // Storage can be blocked; the author's theme is then simply used as-is.
-      this.themeOverride = undefined;
-    }
-  }
-
-  private setThemeOverride(family: ThemeFamily, mode: 'light' | 'dark'): void {
-    this.themeOverride = { themeFamily: family, colorMode: mode };
-    try {
-      window.localStorage.setItem(this.overrideStorageKey(), JSON.stringify(this.themeOverride));
-    } catch {
-      // Private browsing or blocked storage: the choice just will not stick.
-    }
-    this.render();
-  }
 
   // ----------------------------------------------------------------- content
 
@@ -528,109 +547,6 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
     this.contentLoadedOnce = true;
   }
 
-  /*
-   * Opens a document the reader followed a link to.
-   *
-   * A history entry is pushed at the same URL rather than at the document's, so
-   * Back comes here rather than to SharePoint's router, which would treat a new
-   * URL as a page of its own and leave. The entry carries this web part's own
-   * id, so two of them on one page do not answer for each other.
-   *
-   * Nothing is written to the properties: see openPath.
-   */
-  private async openDocument(path: string, heading: string, push: boolean): Promise<void> {
-    if (!path) {
-      return;
-    }
-
-    let markdown: string;
-    let metadata: IFileMetadata | undefined;
-    try {
-      markdown = await this.sharePoint.getFileContent(path);
-      metadata = await this.sharePoint.getFileMetadata(path);
-    } catch (error) {
-      /* The link stays where it is and so does the reader: a document that
-         cannot be opened is not a reason to lose the one being read. */
-      this.loadError = `Could not open ${fileOf(path) || path}: ${(error as Error).message}`;
-      this.render();
-      return;
-    }
-
-    this.loadError = undefined;
-    this.previewContent = undefined;
-    this.previewBanner = undefined;
-    this.openPath = path;
-    this.openMarkdown = markdown;
-    this.openMetadata = metadata;
-    this.openHeading = heading;
-
-    if (push) {
-      this.pushHistory(path);
-    }
-    this.processor.updateOptions(this.processorOptions());
-    this.render();
-  }
-
-  /** Back to the document the page is configured to show. */
-  private closeDocument(push: boolean): void {
-    if (!this.openPath) {
-      return;
-    }
-    this.openPath = undefined;
-    this.openMarkdown = undefined;
-    this.openMetadata = undefined;
-    this.openHeading = undefined;
-    if (push) {
-      this.pushHistory(undefined);
-    }
-    this.processor.updateOptions(this.processorOptions());
-    this.render();
-  }
-
-  private pushHistory(path: string | undefined): void {
-    try {
-      window.history.pushState(
-        { strata: this.context.instanceId, path: path },
-        '',
-        window.location.href
-      );
-      this.watchHistory();
-    } catch {
-      /* Some hosts refuse to be pushed to. The bar above the document is the
-         way back either way; this only adds the browser's own button to it. */
-    }
-  }
-
-  private watchHistory(): void {
-    if (this.onPopState) {
-      return;
-    }
-    /*
-     * Back and forward both arrive here. An entry of ours names the document to
-     * show; anything else means the reader has stepped back past the point
-     * where they started following links, so the configured document comes
-     * back. Two navigated web parts on one page share the browser's single
-     * history, so one stepping back can send the other home as well - which is
-     * recoverable, and the alternative is a history entry per web part per
-     * click.
-     */
-    this.onPopState = (event: PopStateEvent): void => {
-      const state: { strata?: string; path?: string } =
-        (event.state || {}) as { strata?: string; path?: string };
-      const mine: boolean = state.strata === this.context.instanceId;
-      const path: string | undefined = mine ? state.path : undefined;
-
-      if (!path) {
-        this.closeDocument(false);
-        return;
-      }
-      if (path !== this.openPath) {
-        void this.openDocument(path, '', false);
-      }
-    };
-    window.addEventListener('popstate', this.onPopState);
-  }
-
   private setupAutoRefresh(): void {
     this.sharePoint.unwatchFile();
     if (!this.properties.enableAutoRefresh || !this.properties.selectedFile) {
@@ -641,7 +557,7 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
         // Never overwrite what the author is typing.
         return;
       }
-      if (this.openPath) {
+      if (this.navigator.path) {
         /* The configured file changed, but the reader is reading another one.
            Loading it now would pull the page out from under them; they will
            get the new text when they come back to it. */
@@ -685,75 +601,29 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
 
   // --------------------------------------------------------- property pane
 
-  private async loadPropertyPaneSources(): Promise<void> {
-    const libraries: ILibraryInfo[] = await this.sharePoint.getDocumentLibraries();
-    this.libraryOptions = libraries.map((library: ILibraryInfo) => ({
-      key: library.serverRelativeUrl,
-      text: library.title
-    }));
-
-    if (this.properties.selectedLibrary) {
-      await this.loadFolderOptions();
-      await this.loadFileOptions();
-    }
-
-    this.context.propertyPane.refresh();
-  }
-
-  private async loadFolderOptions(): Promise<void> {
-    const folders: string[] = await this.sharePoint.getFolders(this.properties.selectedLibrary);
-    this.folderOptions = [{ key: '', text: '(root)' }].concat(
-      folders.map((folder: string) => ({ key: folder, text: folder }))
-    );
-  }
-
-  private async loadFileOptions(): Promise<void> {
-    const files: IFileMetadata[] = await this.sharePoint.getMarkdownFiles(
-      this.properties.selectedLibrary,
-      this.properties.selectedFolder
-    );
-    this.fileOptions = files.map((file: IFileMetadata) => ({ key: file.serverRelativeUrl, text: file.name }));
-  }
-
   // The signature is fixed by BaseClientSideWebPart; property values really can
   // be any of the property types.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   protected onPropertyPaneFieldChanged(propertyPath: string, oldValue: any, newValue: any): void {
     super.onPropertyPaneFieldChanged(propertyPath, oldValue, newValue);
 
-    const rebuildProcessor: string[] = [
-      'enableSyntaxHighlighting',
-      'enableMath',
-      'enableMermaid',
-      'enableAnchors',
-      'enableWikiLinks',
-      'showCodeHeader',
-      'showLineNumbers',
-      'wrapCodeLines',
-      'allowHtml'
-    ];
-
-    if (rebuildProcessor.indexOf(propertyPath) !== -1) {
+    if (REBUILDS_THE_PROCESSOR.indexOf(propertyPath) !== -1) {
       this.processor.updateOptions(this.processorOptions());
     }
 
     /*
      * A width that was sensible in one unit is not in another, and the number
      * outlives the unit: 240 is a reasonable px sidebar and an absurd em one.
-     * The slider's own range moves too, so the pane is refreshed to redraw it.
      */
-    if (propertyPath === 'tocWidthMode') {
-      this.context.propertyPane.refresh();
-    }
-
     if (propertyPath === 'tocWidthUnit') {
       this.properties.tocWidthValue = tocWidthForUnit(
         newValue as TocWidthUnit, this.properties.tocWidthValue
       );
-      this.context.propertyPane.refresh();
     }
 
-    /* Typed into the box, it arrives as a string. */
+    /* Typed into the box rather than dragged on the slider, it arrives as a
+       string - and only that one redraws the pane, because a pane refresh on
+       every tick of a drag is a slider that fights back. */
     if (propertyPath === 'tocWidthValue' && typeof newValue === 'string') {
       const typed: number = Number(newValue);
       if (!isNaN(typed)) {
@@ -762,36 +632,22 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
       this.context.propertyPane.refresh();
     }
 
-    /* The width controls only mean anything with the contents in a sidebar. */
-    if (propertyPath === 'showSourceInfo') {
-      this.context.propertyPane.refresh();
-    }
-
-    if (propertyPath === 'enableWikiLinks') {
-      this.context.propertyPane.refresh();
-    }
-
-    if (propertyPath === 'tocPosition') {
-      this.context.propertyPane.refresh();
-    }
-
     if (propertyPath === 'contentSource') {
       this.previewContent = undefined;
       void this.loadContent(true);
-      this.context.propertyPane.refresh();
     }
 
     if (propertyPath === 'selectedLibrary') {
       this.properties.selectedFolder = '';
       this.properties.selectedFile = '';
-      void this.loadFolderOptions()
-        .then(() => this.loadFileOptions())
+      void this.paneSources.loadFolders()
+        .then(() => this.paneSources.loadFiles())
         .then(() => this.context.propertyPane.refresh());
     }
 
     if (propertyPath === 'selectedFolder') {
       this.properties.selectedFile = '';
-      void this.loadFileOptions().then(() => this.context.propertyPane.refresh());
+      void this.paneSources.loadFiles().then(() => this.context.propertyPane.refresh());
     }
 
     if (propertyPath === 'selectedFile' || propertyPath === 'fileUrl') {
@@ -802,22 +658,23 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
       this.setupAutoRefresh();
     }
 
+    /* Last, so a setting changed above is drawn in the same refresh. The
+       cascading ones are not here: theirs has to wait for a fetch. */
+    if (REDRAWS_THE_PANE.indexOf(propertyPath) !== -1) {
+      this.context.propertyPane.refresh();
+    }
+
     if (propertyPath === 'themeFamily' || propertyPath === 'colorMode') {
       // An author changing the theme should win over a reader's earlier choice.
-      this.themeOverride = undefined;
-      try {
-        window.localStorage.removeItem(this.overrideStorageKey());
-      } catch {
-        // Nothing stored, or storage is blocked; either way there is no override.
-      }
+      this.themeOverride.clear();
     }
   }
 
   protected getPropertyPaneConfiguration(): IPropertyPaneConfiguration {
     return paneConfiguration(this.properties, {
-      libraries: this.libraryOptions,
-      folders: this.folderOptions,
-      files: this.fileOptions
+      libraries: this.paneSources.libraries,
+      folders: this.paneSources.folders,
+      files: this.paneSources.files
     });
   }
 }
