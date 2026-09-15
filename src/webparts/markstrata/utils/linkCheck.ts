@@ -14,7 +14,7 @@
  *   void validateWikiLinks(article, (folder) => sharePoint.listFolderFileNames(folder));
  *
  * .NOTES
- * Since:     unreleased
+ * Since:     0.0.17.0
  * Ships in:  the web part bundle
  * Requires:  wikiLinks.ts
  */

@@ -24,7 +24,7 @@
  *   node --test tests/init-order.test.js  this one
  *
  * .NOTES
- * Since:     unreleased
+ * Since:     0.0.17.1
  * Ships in:  nothing - it runs at test time only
  * Requires:  initOrder.js
  */

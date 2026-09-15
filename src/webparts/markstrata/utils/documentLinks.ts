@@ -10,7 +10,7 @@
  *   followDocumentLinks(article, documentFolder, (path, heading) => openDocument(path, heading));
  *
  * .NOTES
- * Since:     unreleased
+ * Since:     0.0.17.0
  * Ships in:  the web part bundle
  * Requires:  imagePaths.ts
  */

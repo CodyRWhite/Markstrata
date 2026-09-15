@@ -19,7 +19,7 @@
  *   node --test tests/file-headers.test.js  this one
  *
  * .NOTES
- * Since:     unreleased
+ * Since:     0.0.17.0
  * Ships in:  nothing - it runs at test time only
  * Requires:  nothing else in this project
  */

@@ -29,7 +29,7 @@
  *   const family = override.current ? override.current.themeFamily : properties.themeFamily;
  *
  * .NOTES
- * Since:     unreleased
+ * Since:     0.0.17.0
  * Ships in:  the web part bundle
  * Requires:  ThemeManager.ts (for the theme and mode types)
  */

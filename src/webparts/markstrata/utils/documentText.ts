@@ -13,7 +13,7 @@
  *   const label: string = readingTime(article);   // '4 min read', or '' when empty
  *
  * .NOTES
- * Since:     unreleased
+ * Since:     0.0.17.0
  * Ships in:  the web part bundle
  * Requires:  readingTime.ts
  */

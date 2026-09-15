@@ -19,7 +19,7 @@
  *   button.innerHTML = themeIcon(`${uid}-mode-mask`);
  *
  * .NOTES
- * Since:     unreleased
+ * Since:     0.0.17.0
  * Ships in:  the web part bundle
  * Requires:  nothing else in this project
  */

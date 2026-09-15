@@ -28,7 +28,7 @@
  *   // per use, each naming the field, the user and both line numbers.
  *
  * .NOTES
- * Since:     unreleased
+ * Since:     0.0.17.1
  * Ships in:  nothing - it runs at test time only
  * Requires:  nothing else in this project
  */
