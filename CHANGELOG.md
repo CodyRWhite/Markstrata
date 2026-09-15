@@ -10,6 +10,23 @@ Entries below 0.0.10.0 were written before the switch and are three-part.
 
 ## Unreleased
 
+- A **Syntax** page on the site lists everything the web part renders, with the
+  markdown you write beside what it turns into. It is built through the same
+  pipeline as any other page, so an example that stops working stops working in
+  public, and a test renders it and fails on anything it claims but does not
+  show or a setting it names that the pane does not have.
+- The site's own pages run the web part's behaviour instead of a subset of it.
+  They were rendered ahead of time and given none of what happens after a
+  render, so a documentation page had a contents that did not follow the
+  reading position, code blocks with no copy button, no way back to the top,
+  and external links that navigated the whole page away. The real class is
+  bundled and called now rather than the site keeping its own copy of each
+  behaviour.
+- Documentation caught up with the features added since it was last read
+  through: frontmatter, sizing and placing pictures, captions, the full size
+  view, called-out code lines, wiki links and checking them, reading time and
+  the back to top button were all in the product and not on the site.
+
 - **Picture alignment** places block images left, centred or right, left by
   default. It also fixes an inconsistency: a captioned image centred itself
   while a plain one sat left, so whether a picture was centred depended on

@@ -46,6 +46,11 @@ const PAGES = [
     description: 'Install, content sources, themes, code block flags, callout syntaxes, the table of contents and editing in the page.'
   },
   {
+    id: 'syntax', dir: 'syntax', label: 'Syntax', title: 'Syntax - Markstrata',
+    source: 'docs/site/syntax.md',
+    description: 'Every piece of markdown Markstrata renders, with what you write beside what it turns into.'
+  },
+  {
     id: 'about', dir: 'about', label: 'About', title: 'About - Markstrata',
     source: 'docs/site/about.md',
     description: 'Why Markstrata exists, how it is built, and what it borrows from the web part that prompted it.'

@@ -80,6 +80,27 @@ function escapeAttribute(value) {
  * node_modules so the preview is fully self-contained: it renders maths and
  * diagrams with no network access, exactly like the deployed web part.
  */
+/*
+ * The web part's own post-render behaviour, bundled for a static page: copy
+ * buttons, image captions and zoom, external links, the button back to the
+ * top, and the contents following the reading position. Bundled rather than
+ * reimplemented, so the site cannot drift from the web part on any of it.
+ */
+function buildPageScript() {
+  execFileSync(
+    path.join(root, 'node_modules', '.bin', 'esbuild'),
+    [
+      path.join(root, 'demo', 'page.ts'),
+      '--bundle',
+      '--format=iife',
+      `--outfile=${path.join(outDir, 'page.js')}`,
+      '--minify',
+      '--log-level=warning'
+    ],
+    { stdio: 'inherit', cwd: root }
+  );
+}
+
 function copyAssets() {
   const katexSource = path.join(root, 'node_modules', 'katex', 'dist');
   const katexTarget = path.join(outDir, 'katex');
@@ -132,6 +153,7 @@ function build() {
 
   fs.mkdirSync(outDir, { recursive: true });
   copyAssets();
+  buildPageScript();
   fs.writeFileSync(path.join(outDir, 'index.html'), page);
   console.log('Wrote', path.relative(root, path.join(outDir, 'index.html')));
 }
@@ -302,6 +324,7 @@ ${content}
 </div>
 ${footer}
 <script src="mermaid.min.js"></script>
+<script src="page.js"></script>
 <script>
 var MERMAID_THEMES = ${JSON.stringify(mermaidThemes)};
 var MERMAID_BASE = ${JSON.stringify(mermaidBase.base)};
@@ -327,7 +350,10 @@ var MERMAID_CONFIG_FOR = ${mermaidBase.fn.toString()};
       layout.insertBefore(panel, content);
     }
   }
-  tocSelect.addEventListener('change', placeToc);
+  tocSelect.addEventListener('change', function () {
+    placeToc();
+    if (window.strataEnhance) { window.strataEnhance(); }
+  });
   // Run it once so the page starts wherever the select does, rather than the
   // markup having to repeat the default placement and drift from it.
   placeToc();

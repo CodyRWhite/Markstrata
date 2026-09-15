@@ -164,10 +164,21 @@ else should keep them.
 The name resolves against the folder the document lives in, the same rule
 images follow, and `.md` is added when the name has no extension.
 
-> [!NOTE]
-> Whether the page exists is not checked. Finding out means asking SharePoint
-> once per link, which cannot happen while the document is being rendered, so
-> every link is written and a missing page is a 404 when it is followed.
+**Mark links to pages that are not there** checks them. The folder is listed
+once and every link into it answered from that listing, so it costs one request
+per folder rather than one per link. It needs a library file, since that is what
+gives the document a folder to look in.
+
+A marked link still goes where it said it would, since following a broken link
+is how the missing page gets written. It is marked in colour and with a raised
+question mark, and carries a note that a screen reader reads out.
+
+> [!NOTE] A folder that cannot be read leaves its links alone
+> Not knowing whether a page is there is different from knowing it is not, so a
+> folder that fails to list marks nothing. A reader without access to a folder
+> is never told the author's links are broken. For the same reason a marked
+> link says the page was not found *in this library*, which covers both not
+> being there and not being visible to whoever is reading.
 
 ## Callouts
 
@@ -197,7 +208,16 @@ with a keyboard, and print expanded.
 Tables (including colspan, rowspan and alignment), task lists, footnotes,
 definition lists, abbreviations, emoji, sub/sup, `==highlighted==` text, heading
 anchors, [Mermaid](https://mermaid.js.org/) diagrams themed to match the page,
-and KaTeX maths.
+and KaTeX maths, which needs **Math (KaTeX)** on.
+
+YAML frontmatter at the top of a file, the way Obsidian, Hugo and Jekyll write
+it, is taken off rather than rendered: `title`, `author` and `tags` are shown in
+the file footer instead.
+
+> [!TIP] Every piece of syntax, with examples
+> The [syntax page](../syntax/) lists everything the web part renders, with the
+> markdown you write beside what it turns into. It is built through the same
+> pipeline, so nothing on it can claim a feature that has stopped working.
 
 ```mermaid
 flowchart LR

@@ -29,6 +29,7 @@ needed.
 
 > **Documentation lives on the site.**
 > [Install and settings](https://codywhite.me/Markstrata/docs/) ·
+> [Syntax reference](https://codywhite.me/Markstrata/syntax/) ·
 > [Themes](https://codywhite.me/Markstrata/themes/) ·
 > [Why it exists](https://codywhite.me/Markstrata/about/) ·
 > [Support the project](https://codywhite.me/Markstrata/support/)
@@ -52,14 +53,22 @@ longer does.
 GitHub alerts, all 15 Obsidian callout types with foldable support, and the
 Wiki.js `{.is-info}` classes. Code blocks with per-theme syntax colours, an
 optional language header and filename, a copy button that never takes the line
-numbers, and per-fence flags (` ```python wrap `, `nowrap`, `numbers`,
-`nonumbers`). Tables with colspan and rowspan, task lists, footnotes, definition
-lists, abbreviations, emoji, sub/sup, `==highlighted==` text, heading anchors, a
-table of contents, [Mermaid](https://mermaid.js.org/) diagrams themed to match,
-KaTeX math, and images resolved against the folder the markdown lives in, the
-way GitHub resolves them.
+numbers, per-fence flags (` ```python wrap `, `nowrap`, `numbers`, `nonumbers`)
+and called-out lines (` ```js {2,4-6} `). Tables with colspan and rowspan, task
+lists, footnotes, definition lists, abbreviations, emoji, sub/sup,
+`==highlighted==` text, heading anchors, a table of contents,
+[Mermaid](https://mermaid.js.org/) diagrams themed to match and KaTeX math.
 
-Full syntax reference, every setting and the fence flags:
+Images are resolved against the folder the markdown lives in, the way GitHub
+resolves them, and can be sized (`![alt|300]`), captioned, placed left, centred
+or right, and clicked to see full size. YAML frontmatter is taken off the front
+rather than rendered as a heading of its own keys, and what it holds names the
+document in the footer. `[[Wiki links]]` resolve to files in the same folder,
+with links to pages that are not there marked. A reading time can sit in the
+toolbar and a back-to-top button can float above the page.
+
+Every piece of syntax, with what you write beside what it turns into:
+**[the syntax page](https://codywhite.me/Markstrata/syntax/)**. Every setting:
 **[the documentation page](https://codywhite.me/Markstrata/docs/)**.
 
 ## Why it exists

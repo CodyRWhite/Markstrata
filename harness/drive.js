@@ -666,6 +666,54 @@ const demoUrl = 'file://' + path.join(__dirname, '..', 'site', 'demo', 'index.ht
     }
   });
 
+  /*
+   * The site's pages are rendered ahead of time, but everything the web part
+   * does after rendering is behaviour and does not survive being written to a
+   * file. They ran none of it: a contents that did not follow the reading
+   * position, code blocks nobody could copy from, and no way back to the top,
+   * while the demo page beside them had all three.
+   */
+  await step('the site pages run the same behaviour as the web part', async () => {
+    await page.goto('file://' + path.join(__dirname, '..', 'site', 'docs', 'index.html'),
+      { waitUntil: 'load' });
+    await page.waitForTimeout(700);
+
+    const wired = await page.evaluate(() => ({
+      copy: document.querySelectorAll('.strata-code-copy').length,
+      toTop: document.querySelectorAll('.strata-to-top').length,
+      newTab: document.querySelectorAll('.strata-content a[target="_blank"]').length
+    }));
+    if (!wired.copy) throw new Error('no copy buttons on the code blocks');
+    if (!wired.toTop) throw new Error('no back to top button');
+    if (!wired.newTab) throw new Error('external links do not leave the page');
+
+    /* The half that cannot be written to a file: the contents keeping up. */
+    await page.evaluate(() => window.scrollTo(0, 1500));
+    await page.waitForTimeout(700);
+    const reading = await page.evaluate(() => {
+      const current = document.querySelector('.strata-toc a[aria-current="true"]');
+      return current ? current.textContent.trim() : null;
+    });
+    if (!reading) throw new Error('the contents does not follow the reading position');
+
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await page.waitForTimeout(300);
+  });
+
+  await step('a site page with pictures gets the picture behaviour too', async () => {
+    await page.goto('file://' + path.join(__dirname, '..', 'site', 'themes', 'index.html'),
+      { waitUntil: 'load' });
+    await page.waitForTimeout(900);
+    const pictures = await page.evaluate(() => ({
+      figures: document.querySelectorAll('.strata-figure').length,
+      zoomable: document.querySelectorAll('img.strata-zoomable').length,
+      blocks: document.querySelectorAll('.strata-image-block').length
+    }));
+    if (!pictures.figures) throw new Error('no captions');
+    if (!pictures.zoomable) throw new Error('no image can be opened full size');
+    if (!pictures.blocks) throw new Error('no image is placed by the page setting');
+  });
+
   await step('the property pane opens on four pages', async () => {
     await page.setViewportSize({ width: 1200, height: 900 });
     await page.goto(demoUrl, { waitUntil: 'load' });
