@@ -47,8 +47,10 @@ function structure(text, pageMark, groupMark) {
 }
 
 const webPart = structure(
-  read('src/webparts/markstrata/MarkstrataWebPart.ts')
-    .split('getPropertyPaneConfiguration')[1],
+  /* The pane is its own file now: 380 lines of literal describing settings,
+     which is not what the web part is for. */
+  read('src/webparts/markstrata/propertyPane.ts')
+    .split('export function paneConfiguration')[1],
   'header: \\{ description: strings\\.(\\w+)',
   'groupName: strings\\.(\\w+)'
 ).map((page) => ({

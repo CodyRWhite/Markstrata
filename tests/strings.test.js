@@ -48,13 +48,26 @@ test('loc/en-us.js is what the generator would write', () => {
     + '`node scripts/build-strings.js`.');
 });
 
+/* Every .ts under the web part, rather than the one file that used to hold
+   them all: this check read MarkstrataWebPart.ts, and when the property pane
+   moved out it went on passing while guarding almost nothing. */
+function sources(dir) {
+  return fs.readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+    const full = path.join(dir, entry.name);
+    if (entry.isDirectory()) { return sources(full); }
+    return entry.name.endsWith('.ts') ? [full] : [];
+  });
+}
+
 /* A string the pane asks for but nothing defines renders as blank. */
 test('every strings.X the web part reads exists', () => {
-  const src = fs.readFileSync(
-    path.join(ROOT, 'src/webparts/markstrata/MarkstrataWebPart.ts'), 'utf8'
-  );
-  const used = [...new Set([...src.matchAll(/\bstrings\.([A-Za-z]+)/g)].map((m) => m[1]))];
+  const files = sources(path.join(ROOT, 'src/webparts/markstrata'));
+  const used = [...new Set(files.flatMap((file) =>
+    [...fs.readFileSync(file, 'utf8').matchAll(/\bstrings\.([A-Za-z]+)/g)].map((m) => m[1])))];
 
+  /* If this ever reads as a handful, something that reads strings has moved
+     out from under it again. */
+  assert.ok(used.length > 40, `only ${used.length} strings are read at all`);
   assert.deepEqual(used.filter((key) => fromLoc.indexOf(key) === -1), [],
     'the web part reads a string that is not defined');
 });
