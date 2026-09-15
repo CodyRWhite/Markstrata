@@ -1894,6 +1894,63 @@ const webPartUrl = 'file://' + path.join(HARNESS_DIST, 'webpart.html');
     }
   });
 
+  /*
+   * The same web part in a different frame. Nothing about a Teams tab can be
+   * driven here - there is no Teams to stand in for - so what is checked is
+   * the one thing that is this web part's own: that it reads which host it is
+   * in without assuming any part of the way there exists, and writes the
+   * answer where a tenant test can read it back. The differences between the
+   * hosts are then a question that has an answer rather than a guess.
+   */
+  await step('it says which host it is in, and says SharePoint by default', async () => {
+    const host = await page.evaluate(async () => {
+      window.webPartHarness.inTeams(undefined);
+      await window.webPartHarness.start();
+      return document.getElementById('host').getAttribute('data-strata-host');
+    });
+    if (host !== 'sharepoint') throw new Error('it reports ' + host);
+  });
+
+  await step('and names the Teams client when there is one', async () => {
+    const hosts = await page.evaluate(async () => {
+      const seen = [];
+      for (const client of ['desktop', 'web', 'ios']) {
+        window.webPartHarness.inTeams(client);
+        await window.webPartHarness.start();
+        seen.push(document.getElementById('host').getAttribute('data-strata-host'));
+      }
+      window.webPartHarness.inTeams(undefined);
+      return seen;
+    });
+    const expected = ['teams-desktop', 'teams-web', 'teams-ios'];
+    if (hosts.join(' ') !== expected.join(' ')) {
+      throw new Error('it reported ' + JSON.stringify(hosts));
+    }
+  });
+
+  await step('and still draws the document in a Teams tab', async () => {
+    const drawn = await page.evaluate(async () => {
+      window.webPartHarness.inTeams('desktop');
+      const result = await window.webPartHarness.start({
+        contentSource: 'library',
+        selectedLibrary: '/sites/demo/Documents',
+        selectedFile: '/sites/demo/Documents/Runbooks/deploy.md'
+      });
+      window.webPartHarness.inTeams(undefined);
+      const heading = document.querySelector('#host h1');
+      return {
+        started: result.started,
+        heading: heading ? heading.textContent : '',
+        toolbar: !!document.querySelector('.strata-toolbar')
+      };
+    });
+    if (!drawn.started) throw new Error('it did not start in a Teams tab');
+    if (drawn.heading.indexOf('Deploying') === -1) {
+      throw new Error('it is showing ' + JSON.stringify(drawn.heading));
+    }
+    if (!drawn.toolbar) throw new Error('no toolbar in a Teams tab');
+  });
+
   await step('a library that will not answer is a message, not a broken page', async () => {
     const shown = await page.evaluate(async () => {
       window.webPartHarness.refuse(true);

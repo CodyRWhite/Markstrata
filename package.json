@@ -1,6 +1,6 @@
 {
   "name": "markstrata",
-  "version": "0.0.17.2",
+  "version": "0.0.18.0",
   "private": true,
   "main": "lib/index.js",
   "engines": {

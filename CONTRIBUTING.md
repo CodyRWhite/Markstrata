@@ -62,6 +62,47 @@ SPFx removed the local workbench and the hosted one needs a tenant, so this is
 as close to running the web part as you get locally. CI runs `harness:drive` on
 every push.
 
+## Hosts the harness cannot reach
+
+The web part declares three hosts, and the harness covers one of them. A
+SharePoint page is what `harness/spfx/` stands in for; a Teams tab and a
+full-page app are not, because there is nothing standing in for Teams and
+nothing standing in for the page-template picker. Both are checked by hand, in
+a tenant, or they are not checked at all - which is what happened to the
+lifecycle before 0.0.17.1.
+
+So a release that touches rendering, the toolbar, theming or start-up gets this
+list run against it in a tenant before it is recommended:
+
+**Teams tab**
+
+1. Add the app to a channel as a tab, point it at a markdown file in the
+   channel's own Files.
+2. The document renders, with its toolbar and contents.
+3. Open the browser tools on the tab and read `data-strata-host` on the web
+   part's element. It should say `teams-desktop`, `teams-web` or similar. This
+   is the diagnostic the web part writes for exactly this purpose; a page in
+   SharePoint says `sharepoint`.
+4. With the colour mode set to **Follow the page**, switch Teams between light
+   and dark. Whether SPFx passes a Teams theme change through to the web part
+   is the open question - record what happens rather than assuming either way.
+5. Try the print button. In the Teams desktop client printing an embedded frame
+   may do nothing. If it does nothing, that is worth knowing before deciding
+   whether to hide the button there; nothing has been guessed about it in code.
+6. Follow a link to another markdown document, then use the browser's or the
+   client's back gesture. The history entry is pushed inside the tab's frame,
+   and Teams has a router of its own.
+
+**Full-page app**
+
+1. New page in a site, **Full-page apps**, Markstrata.
+2. It renders edge to edge and the property pane configures it.
+
+Record what you find in the release's notes. A host nobody checked is a host
+nobody supports, whatever the manifest says - `TeamsPersonalApp` was claimed
+for four versions and never worked, because a personal app has no site behind
+it and every picker in the pane is a picker over a site.
+
 ## Releasing
 
 Releases are built by `.github/workflows/release.yml` when a `v*.*.*` tag is

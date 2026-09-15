@@ -143,6 +143,44 @@ async function renderTile(browser) {
   return 'data:image/jpeg;base64,' + inline.toString('base64');
 }
 
+/*
+ * The two icons a Teams app package needs, named for the web part's component
+ * id, which is how SharePoint's Sync to Teams finds them: without them it
+ * generates its own and the app in the Teams rail is not ours.
+ *
+ * The colour one is delivered at 192 and copied. The outline one has to be
+ * drawn here, because Teams asks for something the brand package has no reason
+ * to contain: 32 pixels square, transparent, and white all through. It is the
+ * app bar icon, and Teams tints the whole thing itself, so anything other than
+ * white comes out as a silhouette of the wrong shape.
+ */
+const TEAMS_COMPONENT_ID = '74aecd51-7619-4ca6-b81a-6c670d6098b3';
+
+async function renderTeamsIcons(browser) {
+  const teams = path.join(root, 'teams');
+  fs.mkdirSync(teams, { recursive: true });
+
+  const colour = path.join(teams, `${TEAMS_COMPONENT_ID}_color.png`);
+  fs.copyFileSync(path.join(BRAND, 'export/markstrata-icon-192.png'), colour);
+  console.log(`${TEAMS_COMPONENT_ID}_color.png`.padEnd(30),
+    String(fs.statSync(colour).size).padStart(6), 'bytes');
+
+  const outline = path.join(teams, `${TEAMS_COMPONENT_ID}_outline.png`);
+  const page = await browser.newPage({ deviceScaleFactor: 1 });
+  await page.setViewportSize({ width: 32, height: 32 });
+  /* The glyph is wider than it is tall, so it is fitted rather than stretched,
+     with a little room around it: Teams draws this inside a small circle. */
+  await page.setContent('<body style="margin:0;width:32px;height:32px;background:transparent;'
+    + 'display:flex;align-items:center;justify-content:center">'
+    + `<img src="${dataUri(path.join(assets, 'mark-mono-light.svg'))}" style="width:26px"></body>`);
+  await page.waitForFunction(() =>
+    [...document.images].every((image) => image.complete && image.naturalWidth));
+  await page.screenshot({ path: outline, omitBackground: true });
+  await page.close();
+  console.log(`${TEAMS_COMPONENT_ID}_outline.png`.padEnd(30),
+    String(fs.statSync(outline).size).padStart(6), 'bytes');
+}
+
 /* Social preview, at the 1.91:1 GitHub, Slack and Teams all crop to. */
 async function renderSocialCard(browser) {
   const page = await browser.newPage({ deviceScaleFactor: 1 });
@@ -164,6 +202,7 @@ async function build() {
   );
   try {
     await renderSocialCard(browser);
+    await renderTeamsIcons(browser);
     stampManifestIcon(await renderTile(browser));
   } finally {
     await browser.close();

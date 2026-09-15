@@ -45,6 +45,16 @@ export interface IWebPartContext {
   pageContext: { web: { serverRelativeUrl: string } };
   propertyPane: { refresh: () => void };
   serviceScope: { consume: <TService>(key: string) => TService };
+  /**
+   * Present only in Teams, and only in an SPFx new enough to offer it - which
+   * is why the web part reads it one optional step at a time, and why the
+   * harness can leave the whole thing out.
+   */
+  sdks?: {
+    microsoftTeams?: {
+      context?: { hostClientType?: string };
+    };
+  };
 }
 
 /** The name the SharePoint service is written against. */

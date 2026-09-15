@@ -8,6 +8,32 @@ is normally zero. `scripts/set-version.js` stamps it when a release is cut.
 
 Entries below 0.0.10.0 were written before the switch and are three-part.
 
+## 0.0.18.0
+
+- Markstrata runs as a **Teams tab**. A channel's Files are a SharePoint
+  document library, so the same web part pointed at the same libraries works
+  in a channel with nothing new underneath it: the Teams app package is
+  generated from the solution by Sync to Teams in the app catalog, using the
+  two icons now built into it from the brand package. The colour one is
+  delivered at 192; the outline one is drawn here, because Teams wants
+  something the brand package has no reason to hold - 32 square, transparent,
+  and white all through, since Teams tints it itself.
+- It stopped claiming to be a Teams **personal app**. That was in the manifest
+  for four versions and never worked: a personal app has no site behind it, and
+  every picker in the property pane is a picker over a site, so installing it
+  personally got a pane that could not configure anything. Supporting it
+  properly means a different content source, not a different manifest line.
+- The web part records which host it is running in, as the host reports it, on
+  its own element as `data-strata-host`: `sharepoint`, or `teams-desktop` and
+  the like. The differences between the two - whether the page theme follows
+  the client, whether printing does anything - are the ones nothing here can
+  reach, so rather than guess at them in code the question is made answerable
+  from a tenant. Nothing has been changed on a guess.
+- Which is the other half: the hosts the harness cannot reach now have a manual
+  check list in CONTRIBUTING.md, to be run in a tenant before a release is
+  recommended. A host nobody checked is a host nobody supports, whatever the
+  manifest says - which is how the personal app claim survived four versions.
+
 ## 0.0.17.2
 
 - Working out how far below the page's chrome a heading has to land no longer

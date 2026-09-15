@@ -67,8 +67,15 @@ function startingProperties(configured?: Partial<IMarkstrataWebPartProps>): IMar
   return { ...(configured || {}) } as IMarkstrataWebPartProps;
 }
 
+/**
+ * Which host to pretend to be. Undefined is a SharePoint page, which is what
+ * the SPFx context looks like there: no Teams SDK at all, rather than one
+ * reporting that it is not Teams.
+ */
+let pretendTeamsClient: string | undefined;
+
 function context(): IWebPartContext {
-  return {
+  const built: IWebPartContext = {
     instanceId: 'harness-web-part',
     pageContext: { web: { serverRelativeUrl: '/sites/demo' } },
     propertyPane: { refresh: () => { if (pane) { pane.refresh(); } } },
@@ -76,6 +83,13 @@ function context(): IWebPartContext {
       consume: <TService>(): TService => themeProvider as unknown as TService
     }
   };
+
+  if (pretendTeamsClient) {
+    built.sdks = {
+      microsoftTeams: { context: { hostClientType: pretendTeamsClient } }
+    };
+  }
+  return built;
 }
 
 // ------------------------------------------------------------------ status
@@ -250,6 +264,13 @@ const harness = {
     return select
       ? Array.from(select.options).map((option: HTMLOptionElement) => option.text)
       : [];
+  },
+  /**
+   * Start the next web part as though the page were a Teams tab. 'desktop',
+   * 'web', 'android', 'ios' are what Teams reports; undefined is SharePoint.
+   */
+  inTeams: (hostClientType: string | undefined): void => {
+    pretendTeamsClient = hostClientType;
   },
   /** Something SharePoint provides stops working, part way through starting. */
   breakTheme: (broken: boolean): void => themeProvider.breakTheme(broken),

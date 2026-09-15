@@ -167,6 +167,13 @@ the live preview. A second page runs the web part itself - its start-up, its
 property pane and its disposal - against stand-ins for SharePoint. CI runs both
 on every push.
 
+Markstrata also runs as a **Teams tab**: a channel's Files are a SharePoint
+library, so the same web part configured against the same libraries works
+there. The Teams app package is generated from the solution by **Sync to
+Teams** in the SharePoint app catalog, using the icons in `teams/`. What the
+harness cannot cover - Teams, and the full-page app host - is a manual check
+list in [CONTRIBUTING.md](./CONTRIBUTING.md).
+
 Branch, commit and release conventions are in
 [CONTRIBUTING.md](./CONTRIBUTING.md). Adding a theme is documented in
 [THEMES.md](./THEMES.md), which also has the full token list and the colour

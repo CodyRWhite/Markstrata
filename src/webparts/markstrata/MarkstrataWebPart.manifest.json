@@ -9,7 +9,6 @@
   "supportsFullBleed": true,
   "supportedHosts": [
     "SharePointWebPart",
-    "TeamsPersonalApp",
     "TeamsTab",
     "SharePointFullPage"
   ],

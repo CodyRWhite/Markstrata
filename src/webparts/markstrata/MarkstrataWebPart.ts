@@ -387,6 +387,11 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
    * page's own render, and an exception here is the page's exception.
    */
   public render(): void {
+    /* Before anything is drawn, and on the failure path too: when the only
+       report from a host the harness cannot reach is a screenshot, the first
+       question is which host it was. */
+    this.domElement.setAttribute('data-strata-host', this.hostName());
+
     if (this.startUpError) {
       this.drawFailure();
       return;
@@ -399,6 +404,32 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
       console.error('[Markstrata] The web part could not draw itself', error);
       this.drawFailure();
     }
+  }
+
+  /**
+   * Which host this is running in, as the host itself reports it.
+   *
+   * SharePoint pages and Teams tabs are the same web part in different frames,
+   * and the differences between them - whether the page theme follows the
+   * client, whether printing does anything - are exactly the things the
+   * harness cannot reach, because it stands in for SharePoint and there is
+   * nothing standing in for Teams. So rather than guess at those differences
+   * in code, the host is written onto the element where a tenant test can read
+   * it back, and the guessing waits for the answer.
+   *
+   * Every step is optional. Outside Teams there is no Teams SDK, in an older
+   * SPFx there is no sdks at all, and neither is a reason to fail to draw.
+   */
+  private hostName(): string {
+    const teams: { context?: { hostClientType?: string } } | undefined =
+      this.context.sdks ? this.context.sdks.microsoftTeams : undefined;
+
+    if (!teams || !teams.context) {
+      return 'sharepoint';
+    }
+    return teams.context.hostClientType
+      ? `teams-${teams.context.hostClientType}`
+      : 'teams';
   }
 
   /**
