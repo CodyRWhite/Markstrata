@@ -57,8 +57,9 @@ the page.
 the SharePoint site theme so a dark intranet gets a dark web part.
 
 **Let readers switch theme**: adds a theme list to the left of the toolbar and
-a light-or-dark button to the right of it. A reader's choice is remembered per
-web part in their own browser and never changes what anyone else sees.
+a dark mode switch to the right of it, which shows a sun on a light page and a
+moon on a dark one. A reader's choice is remembered per web part in their own
+browser and never changes what anyone else sees.
 
 **Content width, spacing and text size**: independent of theme, so you can run
 GitHub's look at a narrower measure or a larger size without editing anything.

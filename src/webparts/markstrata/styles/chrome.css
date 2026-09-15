@@ -64,37 +64,41 @@
   transform-origin: center;
 }
 
-/* Light page: a moon, because dark is what the click gives. */
+/* A light page is a sun. The icon says which mode the page is in, so it turns
+   with the page rather than against it when the reader switches. */
 .strata-theme-disc {
-  transform: scale(1.2);
+  transform: scale(0.85);
   transition: transform 0.5s cubic-bezier(0.25, 0, 0.3, 1);
 }
 
 .strata-theme-bite {
-  transform: translateX(-9px);
+  transform: translateX(0);
   transition: transform 0.5s cubic-bezier(0, 0, 0, 1);
 }
 
 .strata-theme-beams {
-  opacity: 0;
-  transform: rotate(-25deg) scale(0.6);
+  opacity: 1;
+  transform: rotate(0deg) scale(1);
   transition: transform 0.5s cubic-bezier(0.5, 1.25, 0.75, 1.25), opacity 0.35s ease;
 }
 
-/* Dark page: the bite slides off the disc and the beams come out. */
+/* A dark page is a moon: the beams draw in, the disc swells, and the bite
+   slides across it. */
 .strata-mode-toggle--dark .strata-theme-disc {
-  transform: scale(0.85);
+  transform: scale(1.2);
 }
 
 .strata-mode-toggle--dark .strata-theme-bite {
-  transform: translateX(0);
-  /* Out of the way before the beams arrive, so they never cross a crescent. */
-  transition-duration: 0.25s;
+  transform: translateX(-9px);
+  /* It starts across only once the beams are on their way in, so the crescent
+     is never drawn with rays still coming off it. */
+  transition-delay: 0.1s;
 }
 
 .strata-mode-toggle--dark .strata-theme-beams {
-  opacity: 1;
-  transform: rotate(0deg) scale(1);
+  opacity: 0;
+  transform: rotate(-25deg) scale(0.6);
+  transition-duration: 0.25s, 0.2s;
 }
 
 /* Asked for less movement: the icon still changes, it just does not travel. */

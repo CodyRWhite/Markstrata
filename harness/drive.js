@@ -87,7 +87,7 @@ const demoUrl = 'file://' + path.join(__dirname, '..', 'site', 'demo', 'index.ht
     if (bar.order.join(' ') !== expected.join(' ')) {
       throw new Error('the bar holds ' + JSON.stringify(bar.order));
     }
-    if (bar.actions.join(' ') !== 'Reload History Print Dark') {
+    if (bar.actions.join(' ') !== 'Reload History Print Dark mode') {
       throw new Error('the actions are ' + JSON.stringify(bar.actions));
     }
     if (Math.abs(bar.top - bar.bottom) > 0.5) {
@@ -533,16 +533,24 @@ const demoUrl = 'file://' + path.join(__dirname, '..', 'site', 'demo', 'index.ht
 
   await step('dark mode toggle repaints', async () => {
     const toggle = page.locator('.strata-mode-toggle');
-    /* It says what the click gives, not what the page is, so on a light page
-       it offers the dark one. */
-    const offered = (await toggle.textContent() || '').trim();
-    if (offered !== 'Dark') throw new Error('the toggle offers "' + offered + '"');
+    /* It is a switch: named for what it switches, and saying whether that is
+       on. A button that renamed itself would be a second, quieter claim about
+       which way round it is, and the two would have to agree forever. */
+    const named = (await toggle.textContent() || '').trim();
+    if (named !== 'Dark mode') throw new Error('the toggle reads "' + named + '"');
+    if (await toggle.getAttribute('aria-pressed') !== 'false') {
+      throw new Error('a light page reports dark mode as on');
+    }
     await toggle.click();
     await page.waitForTimeout(600);
     const mode = await page.locator('.strata-root').getAttribute('data-strata-mode');
     if (mode !== 'dark') throw new Error('mode is ' + mode);
-    const now = (await toggle.textContent() || '').trim();
-    if (now !== 'Light') throw new Error('after the click it offers "' + now + '"');
+    if ((await toggle.textContent() || '').trim() !== 'Dark mode') {
+      throw new Error('the toggle renamed itself to "' + await toggle.textContent() + '"');
+    }
+    if (await toggle.getAttribute('aria-pressed') !== 'true') {
+      throw new Error('a dark page reports dark mode as off');
+    }
   });
 
   /*
@@ -553,6 +561,14 @@ const demoUrl = 'file://' + path.join(__dirname, '..', 'site', 'demo', 'index.ht
    * markup is identical either way, and what differs is whether it moves.
    */
   await step('the sun and moon travel rather than swap', async () => {
+    /* Which way round they are matters as much as that they move: the icon
+       shows the mode the page is in, so a dark page is a moon. Shown the other
+       way round, the icon would turn away from the page while the reader
+       watched it change. */
+    const moonNow = await page.evaluate(() =>
+      document.querySelector('.strata-mode-toggle').classList.contains('strata-mode-toggle--dark'));
+    if (!moonNow) throw new Error('a dark page is not showing the moon');
+
     const reading = () => page.evaluate(() => {
       const disc = document.querySelector('.strata-theme-disc');
       const bite = document.querySelector('.strata-theme-bite');

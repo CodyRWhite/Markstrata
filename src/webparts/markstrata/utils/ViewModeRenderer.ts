@@ -311,8 +311,12 @@ export class ViewModeRenderer {
    */
   private buildModeToggle(options: IViewOptions): HTMLButtonElement {
     const dark: boolean = options.resolvedMode === 'dark';
+    /* A switch, so it is named for the thing it switches and says whether that
+       thing is on, rather than renaming itself every time it is used. The icon
+       shows the mode the page is in and the tooltip says what a click does, so
+       nothing on the button contradicts anything else on it. */
     const toggle: HTMLButtonElement = this.button(
-      dark ? 'Light' : 'Dark',
+      'Dark mode',
       dark ? 'Switch to the light theme' : 'Switch to the dark theme',
       () =>
         this.callbacks.onThemeOverride(
@@ -322,6 +326,7 @@ export class ViewModeRenderer {
       themeIcon(`${this.uid}-mode-mask`)
     );
     toggle.classList.add('strata-mode-toggle');
+    toggle.setAttribute('aria-pressed', String(dark));
 
     /* The sun and the moon are one drawing that travels between the two, and a
        transition only runs on a change. Choosing a mode re-renders the whole
@@ -329,8 +334,10 @@ export class ViewModeRenderer {
        its finished state with nothing to animate. When the mode is what
        changed, it is mounted in the state the reader is leaving and moved to
        the new one once the browser has drawn it - two frames, because a style
-       set in the first one is still the element's first style. A first load
-       has no previous mode and simply paints the right icon. */
+       set in the first one is still the element's first style. The sun setting
+       as the page goes dark is the point of it: the icon and the page turn
+       together. A first load has no previous mode and simply paints the mode
+       it opens in. */
     const settled: () => void = () =>
       toggle.classList.toggle('strata-mode-toggle--dark', dark);
     if (this.lastMode !== undefined && this.lastMode !== options.resolvedMode) {
