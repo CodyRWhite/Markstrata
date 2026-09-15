@@ -62,6 +62,33 @@ SPFx removed the local workbench and the hosted one needs a tenant, so this is
 as close to running the web part as you get locally. CI runs `harness:drive` on
 every push.
 
+## Where this pushes
+
+Markstrata lives at `CodyRWhite/Markstrata` and is private. It was forked out
+of `Markdown-Formatter-SPO`, which is still what a Claude Code session clones
+from, so that session's environment rewrites `origin` back to the fork between
+turns. There is no second remote to delete - there is one remote whose URL
+changes underneath you, and a push that looked right when you checked it can
+land in the fork minutes later. That has happened.
+
+The guard is a pre-push hook, which git hands the URL it is actually about to
+use. Turn it on once per clone:
+
+```bash
+git config core.hooksPath .githooks
+```
+
+It refuses anything that is not Markstrata and prints the command to put the
+remote back. To push somewhere else deliberately:
+
+```bash
+MARKSTRATA_ALLOW_ANY_REMOTE=1 git push <remote> <branch>
+```
+
+Setting `core.hooksPath` is local config, so a fresh clone or a fresh session
+container needs that one line again. The hook itself is in the repository, so
+it is always there to be turned on.
+
 ## Releasing
 
 Releases are built by `.github/workflows/release.yml` when a `v*.*.*` tag is
