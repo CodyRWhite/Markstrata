@@ -60,6 +60,7 @@ const state: any = {
   diagramWidth: 'fit',
   enableImageZoom: true,
   enableTableSort: true,
+  followDocumentLinks: true,
   enableWikiLinks: true,
   checkWikiLinks: true,
   libraryBase: '',
@@ -112,6 +113,46 @@ function listFolder(): Promise<string[] | undefined> {
 }
 
 /*
+ * What a followed link opens. The real web part fetches the file from
+ * SharePoint; here the document is written out so the behaviour around it -
+ * the bar above it, the way back, landing on a heading - can be driven without
+ * a tenant.
+ */
+const DEPLOY: string = [
+  '# Deploying',
+  '',
+  'This page stands in for another document in the same folder.',
+  '',
+  /* Long enough that a heading further down can actually reach the top of the
+     window: a document shorter than the screen cannot be scrolled, and a check
+     on where a heading landed would be measuring that instead. */
+  ...new Array(60).fill('Filler, so there is something to scroll past.'),
+  '',
+  '## Rollback',
+  '',
+  'Roll back by redeploying the previous package.',
+  '',
+  ...new Array(20).fill('More filler, so the heading can sit at the top.'),
+  '',
+  'Back to [[handbook]].'
+].join('\n\n');
+
+/** The document being read, and the one the harness is configured to show. */
+let opened: string = '';
+
+function openDocument(path: string, heading: string): void {
+  opened = path;
+  log(`Open ${path}${heading ? '#' + heading : ''}`);
+  draw(DEPLOY, heading);
+}
+
+function closeDocument(): void {
+  opened = '';
+  log('Back to the configured document');
+  draw();
+}
+
+/*
  * Checking a link needs a folder to ask about, and a folder needs the base
  * path a library file would have given the document. Without one a wiki link
  * resolves to a bare name, which is a perfectly good relative link and a
@@ -120,6 +161,9 @@ function listFolder(): Promise<string[] | undefined> {
  * relative image paths with it, which is why it is not on by default.
  */
 function setLibraryBase(base: string, markdown?: string): void {
+  /* Changing the document is starting again: whatever was open was opened from
+     the old one. */
+  opened = '';
   state.libraryBase = base;
   if (markdown !== undefined) {
     state.markdown = markdown || SAMPLE;
@@ -166,7 +210,7 @@ function settings(): any {
   };
 }
 
-function draw(): void {
+function draw(showing?: string, heading?: string): void {
   const mode = ThemeManager.resolveMode(state.mode);
   /* The page's own canvas caps the web part like a SharePoint section does, so
      it has to step aside when the reader asks for full width. */
@@ -185,7 +229,7 @@ function draw(): void {
     return;
   }
 
-  view.render(host, state.markdown, {
+  view.render(host, showing !== undefined ? showing : (opened ? DEPLOY : state.markdown), {
     settings: settings(),
     resolvedMode: mode,
     showToolbar: state.showToolbar,
@@ -201,6 +245,12 @@ function draw(): void {
     showReadingTime: state.showReadingTime,
     backToTop: state.backToTop,
     listFolder: state.enableWikiLinks && state.checkWikiLinks ? listFolder : undefined,
+    documentBase: state.libraryBase || undefined,
+    openDocument: state.followDocumentLinks ? openDocument : undefined,
+    openDocumentName: opened ? opened.split('/').pop() : '',
+    homeDocumentName: 'handbook.md',
+    onCloseDocument: closeDocument,
+    landOnHeading: heading,
     canReload: state.canReload,
     canShowVersions: state.canShowVersions,
     isPageEditing: false,
@@ -448,7 +498,13 @@ const PANEL_PAGES: IPanelPage[] = [
               + 'There is no document library behind this page, so the links here go '
               + 'nowhere, but the syntax renders.' },
           { key: 'checkWikiLinks', label: 'Mark links to pages that are not there',
-            type: 'toggle', showIf: (state) => state.enableWikiLinks === true }
+            type: 'toggle', showIf: (state) => state.enableWikiLinks === true },
+          { key: 'followDocumentLinks', label: 'Open a linked document here',
+            type: 'toggle',
+            hint: 'A link to another markdown file opens that document in the web part '
+              + 'instead of handing the reader the file. A bar above the document says '
+              + 'which one is open and goes back. This page stands a document in for '
+              + 'the library it does not have.' }
         ]
       }
     ]

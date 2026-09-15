@@ -234,6 +234,39 @@
   color: rgb(var(--strata-color-green));
 }
 
+/*
+ * The bar that appears over a document the reader followed a link to. It says
+ * which one is open and offers the way back, and it sits above everything else
+ * because it is the answer to "where am I".
+ */
+.strata-open-doc {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+  padding: 6px 6px 6px 12px;
+  border: 1px solid var(--strata-border);
+  border-radius: var(--strata-radius-sm);
+  background-color: var(--strata-bg-elevated);
+  font-size: 0.8125em;
+  color: var(--strata-text-muted);
+}
+
+.strata-open-doc-name {
+  font-weight: 600;
+  color: var(--strata-text);
+}
+
+.strata-open-doc-back {
+  margin-left: auto;
+}
+
+/* On paper the bar is chrome, and the document is the point. */
+@media print {
+  .strata-open-doc { display: none; }
+}
+
 /* ------------------------------------------------------------------ editor */
 
 .strata-editor {

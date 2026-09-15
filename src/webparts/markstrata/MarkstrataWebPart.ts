@@ -35,6 +35,7 @@ import './styles/print.css';
 
 import { MarkdownProcessor, IMarkdownProcessorOptions } from './utils/MarkdownProcessor';
 import { folderOf } from './utils/imagePaths';
+import { fileOf } from './utils/wikiLinks';
 import { DiagramWidth } from './utils/mermaidConfig';
 import { BackToTop } from './utils/backToTop';
 import { TocWidthMode, TocWidthUnit, ITocWidthRange, TOC_WIDTH_RANGES, tocWidthCss,
@@ -92,6 +93,7 @@ export interface IMarkstrataWebPartProps {
   diagramWidth: DiagramWidth;
   enableImageZoom: boolean;
   enableTableSort: boolean;
+  followDocumentLinks: boolean;
   enableWikiLinks: boolean;
   checkWikiLinks: boolean;
   showReadingTime: boolean;
@@ -149,6 +151,21 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
   private previewBanner: string | undefined;
   private previewContent: string | undefined;
 
+  /*
+   * A document the reader followed a link to.
+   *
+   * Kept apart from the properties on purpose. Properties are the page's
+   * configuration and are saved with it, so writing a followed document into
+   * selectedFile would change what everyone sees the next time the page is
+   * saved. Reading is not configuring.
+   */
+  private openPath: string | undefined;
+  private openMarkdown: string | undefined;
+  private openMetadata: IFileMetadata | undefined;
+  /** A heading to land on once the followed document has been drawn. */
+  private openHeading: string | undefined;
+  private onPopState: ((event: PopStateEvent) => void) | undefined;
+
   private libraryOptions: IPropertyPaneDropdownOption[] = [];
   private folderOptions: IPropertyPaneDropdownOption[] = [];
   private fileOptions: IPropertyPaneDropdownOption[] = [];
@@ -178,7 +195,9 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
     this.enhancer = new ContentEnhancer();
 
     this.viewRenderer = new ViewModeRenderer(this.processor, this.mermaid, this.enhancer, {
-      onReload: () => void this.loadContent(true),
+      onReload: () => void (this.openPath
+        ? this.openDocument(this.openPath, '', false)
+        : this.loadContent(true)),
       onShowVersions: () => void this.showVersions(),
       onThemeOverride: (family: ThemeFamily, mode: 'light' | 'dark') => this.setThemeOverride(family, mode),
       onPrint: () => window.print()
@@ -213,6 +232,10 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
       this.themeProvider.themeChangedEvent.remove(this, this.handleThemeChanged);
     }
     this.sharePoint.unwatchFile();
+    if (this.onPopState) {
+      window.removeEventListener('popstate', this.onPopState);
+      this.onPopState = undefined;
+    }
     this.enhancer.dispose();
     this.editManager.dispose();
     super.onDispose();
@@ -262,6 +285,7 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
       diagramWidth: 'fit',
       enableImageZoom: true,
       enableTableSort: true,
+      followDocumentLinks: true,
       enableWikiLinks: false,
       checkWikiLinks: true,
       showReadingTime: false,
@@ -302,7 +326,11 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
 
     const settings: IThemeSettings = this.themeSettings();
     const mode: ResolvedMode = this.resolvedMode();
-    const markdown: string = this.previewContent !== undefined ? this.previewContent : this.properties.markdownContent;
+    /* A version being previewed wins over a document being read, which wins
+       over the one the page is configured to show. */
+    const markdown: string = this.previewContent !== undefined
+      ? this.previewContent
+      : (this.openMarkdown !== undefined ? this.openMarkdown : this.properties.markdownContent);
 
     if (this.displayMode === DisplayMode.Edit && this.previewContent === undefined) {
       this.editManager.render(this.domElement, markdown, {
@@ -320,6 +348,11 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
       this.updateSearchText();
       return;
     }
+
+    /* Read once and cleared here: a re-render for a theme change must not send
+       the reader back to a heading they have since scrolled away from. */
+    const landOn: string | undefined = this.openHeading;
+    this.openHeading = undefined;
 
     this.viewRenderer.render(this.domElement, markdown, {
       settings: settings,
@@ -342,10 +375,29 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
         && this.properties.contentSource === 'library'
         ? (folder: string) => this.sharePoint.listFolderFileNames(folder)
         : undefined,
+      documentBase: this.imageBasePath(),
+      /* Drawn by the renderer with everything else on the page, rather than
+         pushed in over the top of it afterwards. */
+      openDocumentName: this.openMetadata ? this.openMetadata.name : fileOf(this.openPath || ''),
+      homeDocumentName: this.properties.fileMetadata
+        ? this.properties.fileMetadata.name : '',
+      onCloseDocument: () => this.closeDocument(true),
+      landOnHeading: landOn,
+      /* Only a library can hand over another document, and only a reader is
+         reading: in page edit mode a click on a link belongs to the author
+         editing the page, not to somebody following it. */
+      openDocument: this.properties.followDocumentLinks
+        && this.properties.contentSource === 'library'
+        && this.displayMode !== DisplayMode.Edit
+        ? (path: string, heading: string) => void this.openDocument(path, heading, true)
+        : undefined,
       canReload: this.properties.contentSource !== 'manual',
-      canShowVersions: this.properties.enableVersionHistory && this.canSaveToSharePoint(),
+      /* Versions are the configured file's. While another document is open the
+         button would offer that file's history for the one on screen. */
+      canShowVersions: !this.openPath
+        && this.properties.enableVersionHistory && this.canSaveToSharePoint(),
       isPageEditing: this.displayMode === DisplayMode.Edit,
-      fileMetadata: this.properties.fileMetadata
+      fileMetadata: this.openMetadata || this.properties.fileMetadata
     });
 
     this.updateSearchText();
@@ -492,6 +544,11 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
    * someone writing a path by hand in a web part most likely means.
    */
   private imageBasePath(): string | undefined {
+    /* A followed document resolves its own pictures and links against its own
+       folder, which is rarely the configured file's. */
+    if (this.openPath) {
+      return folderOf(this.openPath);
+    }
     if (this.properties.contentSource === 'library' && this.properties.selectedFile) {
       return folderOf(this.properties.selectedFile);
     }
@@ -564,6 +621,109 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
     this.contentLoadedOnce = true;
   }
 
+  /*
+   * Opens a document the reader followed a link to.
+   *
+   * A history entry is pushed at the same URL rather than at the document's, so
+   * Back comes here rather than to SharePoint's router, which would treat a new
+   * URL as a page of its own and leave. The entry carries this web part's own
+   * id, so two of them on one page do not answer for each other.
+   *
+   * Nothing is written to the properties: see openPath.
+   */
+  private async openDocument(path: string, heading: string, push: boolean): Promise<void> {
+    if (!path) {
+      return;
+    }
+
+    let markdown: string;
+    let metadata: IFileMetadata | undefined;
+    try {
+      markdown = await this.sharePoint.getFileContent(path);
+      metadata = await this.sharePoint.getFileMetadata(path);
+    } catch (error) {
+      /* The link stays where it is and so does the reader: a document that
+         cannot be opened is not a reason to lose the one being read. */
+      this.loadError = `Could not open ${fileOf(path) || path}: ${(error as Error).message}`;
+      this.render();
+      return;
+    }
+
+    this.loadError = undefined;
+    this.previewContent = undefined;
+    this.previewBanner = undefined;
+    this.openPath = path;
+    this.openMarkdown = markdown;
+    this.openMetadata = metadata;
+    this.openHeading = heading;
+
+    if (push) {
+      this.pushHistory(path);
+    }
+    this.processor.updateOptions(this.processorOptions());
+    this.render();
+  }
+
+  /** Back to the document the page is configured to show. */
+  private closeDocument(push: boolean): void {
+    if (!this.openPath) {
+      return;
+    }
+    this.openPath = undefined;
+    this.openMarkdown = undefined;
+    this.openMetadata = undefined;
+    this.openHeading = undefined;
+    if (push) {
+      this.pushHistory(undefined);
+    }
+    this.processor.updateOptions(this.processorOptions());
+    this.render();
+  }
+
+  private pushHistory(path: string | undefined): void {
+    try {
+      window.history.pushState(
+        { strata: this.context.instanceId, path: path },
+        '',
+        window.location.href
+      );
+      this.watchHistory();
+    } catch {
+      /* Some hosts refuse to be pushed to. The bar above the document is the
+         way back either way; this only adds the browser's own button to it. */
+    }
+  }
+
+  private watchHistory(): void {
+    if (this.onPopState) {
+      return;
+    }
+    /*
+     * Back and forward both arrive here. An entry of ours names the document to
+     * show; anything else means the reader has stepped back past the point
+     * where they started following links, so the configured document comes
+     * back. Two navigated web parts on one page share the browser's single
+     * history, so one stepping back can send the other home as well - which is
+     * recoverable, and the alternative is a history entry per web part per
+     * click.
+     */
+    this.onPopState = (event: PopStateEvent): void => {
+      const state: { strata?: string; path?: string } =
+        (event.state || {}) as { strata?: string; path?: string };
+      const mine: boolean = state.strata === this.context.instanceId;
+      const path: string | undefined = mine ? state.path : undefined;
+
+      if (!path) {
+        this.closeDocument(false);
+        return;
+      }
+      if (path !== this.openPath) {
+        void this.openDocument(path, '', false);
+      }
+    };
+    window.addEventListener('popstate', this.onPopState);
+  }
+
   private setupAutoRefresh(): void {
     this.sharePoint.unwatchFile();
     if (!this.properties.enableAutoRefresh || !this.properties.selectedFile) {
@@ -572,6 +732,12 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
     this.sharePoint.watchFile(this.properties.selectedFile, () => {
       if (this.displayMode === DisplayMode.Edit && this.editManager.hasUnsavedChanges) {
         // Never overwrite what the author is typing.
+        return;
+      }
+      if (this.openPath) {
+        /* The configured file changed, but the reader is reading another one.
+           Loading it now would pull the page out from under them; they will
+           get the new text when they come back to it. */
         return;
       }
       void this.loadContent(true);
@@ -1045,6 +1211,13 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
                       })
                     ]
                   : []),
+                PropertyPaneToggle('followDocumentLinks', {
+                  label: strings.FollowLinksLabel,
+                  onText: 'On',
+                  offText: 'Off',
+                  disabled: this.properties.contentSource !== 'library'
+                }),
+                PropertyPaneLabel('followLinksHint', { text: strings.FollowLinksHint }),
                 PropertyPaneLabel('wikiLinksHint', { text: strings.WikiLinksHint })
               ]
             }

@@ -389,6 +389,116 @@ const demoUrl = 'file://' + path.join(__dirname, '..', 'site', 'demo', 'index.ht
   });
 
   /*
+   * Where a relative link points. A document saying [deploy](deploy.md) means
+   * the folder it is in, but the browser resolves that against the page it is
+   * on - an .aspx in SitePages - and lands somewhere the document never meant.
+   * Images have been resolved against the document's folder from the start;
+   * links never were.
+   */
+  await step('a relative link points from the document, not from the page', async () => {
+    await page.evaluate(() => window.harness.setLibraryBase('/sites/demo/runbooks',
+      '# Links\n\nOrdinary: [deploy](deploy.md) and [a file](notes/spec.pdf).\n'));
+    await page.waitForTimeout(600);
+    const hrefs = await page.evaluate(() =>
+      [...document.querySelectorAll('.strata-content a')].map((link) => link.getAttribute('href')));
+    if (hrefs.indexOf('/sites/demo/runbooks/deploy.md') === -1) {
+      throw new Error('the markdown link reads ' + JSON.stringify(hrefs));
+    }
+    /* Not only markdown: a relative link to anything else was just as wrong. */
+    if (hrefs.indexOf('/sites/demo/runbooks/notes/spec.pdf') === -1) {
+      throw new Error('the file link reads ' + JSON.stringify(hrefs));
+    }
+  });
+
+  await step('a link to another document opens it here, and there is a way back', async () => {
+    await page.evaluate(() => window.harness.setLibraryBase('/sites/demo/runbooks',
+      '# Handbook\n\nSee [[deploy]] for how we ship.\n'));
+    await page.waitForTimeout(600);
+
+    await page.locator('.strata-content a.strata-wiki-link').first().click();
+    await page.waitForTimeout(600);
+
+    const opened = await page.evaluate(() => ({
+      heading: ((document.querySelector('.strata-content h1') || {}).textContent || '')
+        .replace('#', '').trim(),
+      bar: !!document.querySelector('.strata-open-doc'),
+      name: (document.querySelector('.strata-open-doc-name') || {}).textContent,
+      back: (document.querySelector('.strata-open-doc-back') || {}).textContent
+    }));
+    if (opened.heading !== 'Deploying') {
+      throw new Error('the document on screen is "' + opened.heading + '"');
+    }
+    if (!opened.bar) throw new Error('nothing says which document is open');
+    if (opened.name !== 'deploy.md') throw new Error('the bar names "' + opened.name + '"');
+    if (!/^Back to /.test(opened.back || '')) {
+      throw new Error('the way back reads "' + opened.back + '"');
+    }
+
+    await page.locator('.strata-open-doc-back').click();
+    await page.waitForTimeout(600);
+    const home = await page.evaluate(() => ({
+      heading: ((document.querySelector('.strata-content h1') || {}).textContent || '')
+        .replace('#', '').trim(),
+      bar: !!document.querySelector('.strata-open-doc')
+    }));
+    if (home.heading !== 'Handbook') throw new Error('back gave "' + home.heading + '"');
+    if (home.bar) throw new Error('the bar is still there at home');
+  });
+
+  await step('a link to a heading in another document lands on it', async () => {
+    await page.evaluate(() => window.harness.setLibraryBase('/sites/demo/runbooks',
+      '# Handbook\n\nStraight to [[deploy#Rollback]].\n'
+      + '\n' + 'Filler.\n'.repeat(80)));
+    await page.waitForTimeout(600);
+    await page.evaluate(() => window.scrollTo(0, 0));
+
+    await page.locator('.strata-content a.strata-wiki-link').first().click();
+    await page.waitForTimeout(800);
+
+    const landed = await page.evaluate(() => {
+      const heading = document.getElementById('rollback');
+      if (!heading) { return { error: 'the heading is not in the opened document' }; }
+      const root = document.querySelector('.strata-root');
+      const offset = parseFloat(getComputedStyle(root).getPropertyValue('--strata-scroll-offset')) || 0;
+      return { top: heading.getBoundingClientRect().top, offset: offset };
+    });
+    if (landed.error) throw new Error(landed.error);
+    /* Not under whatever is stuck above, and not left at the top of the
+       document either. */
+    if (landed.top < landed.offset - 2 || landed.top > landed.offset + 40) {
+      throw new Error('the heading sits at ' + Math.round(landed.top)
+        + ' with the line at ' + Math.round(landed.offset));
+    }
+    await page.locator('.strata-open-doc-back').click();
+    await page.waitForTimeout(400);
+  });
+
+  /* Ctrl, Shift and the middle button are how people open things in a new tab.
+     Taking those away would be worse than what this fixes, so the href stays
+     on the link and a modified click is left to the browser. */
+  await step('a modified click is left to the browser, with the real file behind it', async () => {
+    await page.evaluate(() => window.harness.setLibraryBase('/sites/demo/runbooks',
+      '# Handbook\n\nSee [[deploy]].\n'));
+    await page.waitForTimeout(600);
+
+    const link = page.locator('.strata-content a.strata-wiki-link').first();
+    const href = await link.getAttribute('href');
+    if (href !== '/sites/demo/runbooks/deploy.md') {
+      throw new Error('the link points at ' + href);
+    }
+    await link.click({ modifiers: ['Control'] });
+    await page.waitForTimeout(400);
+    if (await page.locator('.strata-open-doc').count() !== 0) {
+      throw new Error('a ctrl-click opened the document here');
+    }
+
+    /* Put back for the checks that follow. */
+    await page.evaluate(() => window.harness.setLibraryBase('', ''));
+    await page.waitForTimeout(600);
+  });
+
+
+  /*
    * Captioned images used to centre themselves while plain ones sat left,
    * because the figure rule set text-align and nothing else did. So this
    * measures where the pictures actually are, not what classes they carry.

@@ -10,6 +10,27 @@ Entries below 0.0.10.0 were written before the switch and are three-part.
 
 ## Unreleased
 
+- A link to another markdown document opens that document in the web part
+  instead of handing the reader the file. Wiki links, link checking and
+  `[[Page#Heading]]` all shipped already; what none of them did was let you
+  read the page at the other end, because SharePoint answers a click on a .md
+  with raw text or a download. A bar above the document says which one is open
+  and goes back to the configured one, the browser's Back button works, and a
+  link naming a heading lands on it. Opening in a new tab still goes to the
+  file. New on the Contents page of the pane as **Open a linked document here**;
+  it needs a document library.
+- Nothing about following a link is written into the page's configuration. The
+  web part still shows the file it was configured with, and the next reader
+  starts there. Version history is hidden while another document is open, since
+  the versions it lists are the configured file's, and auto-refresh no longer
+  pulls a reader off a document they followed to.
+- A relative link now points from the folder the document is in rather than
+  from the page hosting the web part. `[deploy](deploy.md)` in a document in
+  /Runbooks meant /Runbooks/deploy.md and resolved to /SitePages/deploy.md.
+  Images have been resolved against the document's folder from the start;
+  links never were. This applies to every relative link, not only markdown
+  ones.
+
 - A long table keeps its header row in view while the rows go past, so the
   columns still mean something halfway down. It holds under whatever is stuck
   above the page, the same offset a heading scrolled to clears itself by. A

@@ -181,6 +181,40 @@ question mark, and carries a note that a screen reader reads out.
 > link says the page was not found *in this library*, which covers both not
 > being there and not being visible to whoever is reading.
 
+### Following a link to another document
+
+**Open a linked document here** is what makes a folder of markdown readable as
+a set rather than as files. Without it, clicking a link to another `.md` hands
+the reader the file: SharePoint shows raw markdown or downloads it, and the page
+they were reading is gone. With it, the linked document is loaded and rendered
+in the web part, with a bar above it saying which one is open and a button back
+to the one the page is configured to show. The browser's Back button works too.
+
+It applies to any link to a markdown file, a wiki link or an ordinary one, and a
+link that names a heading lands on that heading. It needs a document library,
+since that is where the other documents are.
+
+Opening a link in a new tab - Ctrl, Shift, the middle button - still goes to the
+file itself, because taking that away would be worse than what this fixes.
+
+> [!NOTE] What stays with the configured file
+> Nothing about following a link is saved into the page: the web part is still
+> configured to show the file you chose, and the next reader starts there.
+> Version history is hidden while another document is open, because the
+> versions it would list are the configured file's. If the configured file
+> changes underneath while somebody is reading a document they followed to,
+> they get the new text when they come back rather than having the page pulled
+> out from under them.
+
+### Where a relative link points
+
+A relative link points from the folder the document is in, not from the page
+that hosts the web part. A document in `/Runbooks` saying `[deploy](deploy.md)`
+means `/Runbooks/deploy.md`, which is what it now resolves to - before, the
+browser resolved it against the `.aspx` page in SitePages and landed somewhere
+the document never meant. This applies to every relative link, not only ones to
+markdown: a link to `notes/spec.pdf` finds the PDF beside the document.
+
 ## Callouts
 
 Three syntaxes, one rendering, so markdown written for GitHub, for Obsidian or

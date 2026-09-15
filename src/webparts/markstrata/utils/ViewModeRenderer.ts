@@ -21,7 +21,7 @@ import type { IFileMetadata } from './SharePointService';
 import { splitFrontMatter, IFrontMatter } from './frontMatter';
 import { BackToTop } from './backToTop';
 import {
-  CLOCK_ICON, RELOAD_ICON, HISTORY_ICON, PRINT_ICON, themeIcon
+  BACK_ICON, CLOCK_ICON, RELOAD_ICON, HISTORY_ICON, PRINT_ICON, themeIcon
 } from './icons';
 
 export type TocPosition = 'left' | 'right' | 'inline' | 'off';
@@ -43,6 +43,17 @@ export interface IViewOptions {
   showReadingTime?: boolean;
   /* Given only when there is a library behind the page to ask. */
   listFolder?: (folder: string) => Promise<string[] | undefined>;
+  /** The folder this document is in, which its relative links point from. */
+  documentBase?: string;
+  /** Given when a link to another document should open here rather than leave. */
+  openDocument?: (path: string, heading: string) => void;
+  /** The followed document being read, when one is: empty when at home. */
+  openDocumentName?: string;
+  /** What the way back goes back to. */
+  homeDocumentName?: string;
+  onCloseDocument?: () => void;
+  /** A heading in the document to land on once it is drawn, from a link. */
+  landOnHeading?: string;
   backToTop?: BackToTop;
   canReload: boolean;
   canShowVersions: boolean;
@@ -88,6 +99,12 @@ export class ViewModeRenderer {
     const host: HTMLElement = ThemeManager.mount(container, options.settings, options.resolvedMode);
     host.setAttribute('data-strata-editing', String(options.isPageEditing));
 
+    /* Above the toolbar, because it answers "where am I", which comes before
+       anything a reader might do here. */
+    if (options.openDocumentName && options.onCloseDocument) {
+      host.appendChild(this.buildOpenDocumentBar(options));
+    }
+
     let toolbar: HTMLElement | undefined;
     if (options.showToolbar) {
       toolbar = this.buildToolbar(options);
@@ -129,6 +146,7 @@ export class ViewModeRenderer {
 
     this.enhancer.attachCopyButtons(article);
     this.enhancer.secureExternalLinks(article);
+    this.enhancer.followDocumentLinks(article, options.documentBase, options.openDocument);
     this.enhancer.enhanceImages(article, options.enableImageZoom !== false);
     this.enhancer.enhanceTables(article, options.enableTableSort !== false);
 
@@ -154,6 +172,20 @@ export class ViewModeRenderer {
     /* So a heading scrolled to clears whatever SharePoint has stuck above the
        web part, by any route: the contents, a link, or a restored fragment. */
     this.enhancer.trackScrollOffset(host);
+
+    /* A link that named a heading in another document: the document is here
+       now, so this is the moment it can be scrolled to. The offset above is
+       what keeps it clear of the chrome, so it has to be set first. */
+    if (options.landOnHeading) {
+      const landing: HTMLElement | null = article.querySelector(
+        `#${(window.CSS && window.CSS.escape
+          ? window.CSS.escape(options.landOnHeading)
+          : options.landOnHeading)}`
+      );
+      if (landing) {
+        landing.scrollIntoView();
+      }
+    }
 
     /* Left to settle in on its own: the document is readable while this is in
        flight, and a link that turns out to be missing is marked when the
@@ -223,6 +255,38 @@ export class ViewModeRenderer {
     }
 
     this.enhancer.trackActiveHeading(article, nav);
+  }
+
+  /*
+   * The bar over a document the reader followed a link to.
+   *
+   * It is the reliable way back. The browser's own Back button works too, but
+   * that depends on a history the host page also writes to, and this does not.
+   */
+  private buildOpenDocumentBar(options: IViewOptions): HTMLElement {
+    const bar: HTMLElement = document.createElement('div');
+    bar.className = 'strata-open-doc';
+
+    const label: HTMLElement = document.createElement('span');
+    label.textContent = 'Reading';
+    bar.appendChild(label);
+
+    const name: HTMLElement = document.createElement('span');
+    name.className = 'strata-open-doc-name';
+    name.textContent = options.openDocumentName as string;
+    bar.appendChild(name);
+
+    const home: string = options.homeDocumentName || 'this page';
+    const back: HTMLButtonElement = this.button(
+      `Back to ${home}`,
+      `Go back to ${home}`,
+      () => (options.onCloseDocument as () => void)(),
+      BACK_ICON
+    );
+    back.classList.add('strata-open-doc-back');
+    bar.appendChild(back);
+
+    return bar;
   }
 
   private buildToolbar(options: IViewOptions): HTMLElement {
