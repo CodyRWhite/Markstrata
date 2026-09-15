@@ -27,24 +27,24 @@ const MARKER: RegExp = /^\s{0,3}\[!([\w-]+)\]([+-]?)[ \t]*(.*)$/;
 /** Finds the blockquote_close that matches the open token at `start`. */
 function findClose(tokens: IToken[], start: number): number {
   const level: number = tokens[start].level;
-  for (let i: number = start + 1; i < tokens.length; i++) {
-    if (tokens[i].type === 'blockquote_close' && tokens[i].level === level) {
-      return i;
+  for (let index: number = start + 1; index < tokens.length; index++) {
+    if (tokens[index].type === 'blockquote_close' && tokens[index].level === level) {
+      return index;
     }
   }
   return -1;
 }
 
-function toCallout(tokens: IToken[], openIdx: number, meta: ICalloutMeta): void {
-  const closeIdx: number = findClose(tokens, openIdx);
-  if (closeIdx === -1) {
+function toCallout(tokens: IToken[], openIndex: number, meta: ICalloutMeta): void {
+  const closeIndex: number = findClose(tokens, openIndex);
+  if (closeIndex === -1) {
     return;
   }
-  tokens[openIdx].type = 'mdf_callout_open';
-  tokens[openIdx].meta = { callout: meta };
+  tokens[openIndex].type = 'mdf_callout_open';
+  tokens[openIndex].meta = { callout: meta };
   // The close renderer needs the same meta to know which tag to close.
-  tokens[closeIdx].type = 'mdf_callout_close';
-  tokens[closeIdx].meta = { callout: meta };
+  tokens[closeIndex].type = 'mdf_callout_close';
+  tokens[closeIndex].meta = { callout: meta };
 }
 
 /**
@@ -55,13 +55,13 @@ function toCallout(tokens: IToken[], openIdx: number, meta: ICalloutMeta): void 
 function calloutRule(state: IStateCore): void {
   const tokens: IToken[] = state.tokens;
 
-  for (let i: number = 0; i < tokens.length; i++) {
-    if (tokens[i].type !== 'blockquote_open') {
+  for (let index: number = 0; index < tokens.length; index++) {
+    if (tokens[index].type !== 'blockquote_open') {
       continue;
     }
 
-    const paragraph: IToken = tokens[i + 1];
-    const inline: IToken = tokens[i + 2];
+    const paragraph: IToken = tokens[index + 1];
+    const inline: IToken = tokens[index + 2];
     if (!paragraph || paragraph.type !== 'paragraph_open' || !inline || inline.type !== 'inline') {
       continue;
     }
@@ -87,12 +87,12 @@ function calloutRule(state: IStateCore): void {
     const body: string = lines.slice(1).join('\n').replace(/^\s+/, '');
     if (body.length === 0) {
       // Title-only callout: drop the now empty paragraph entirely.
-      tokens.splice(i + 1, 3);
+      tokens.splice(index + 1, 3);
     } else {
       inline.content = body;
     }
 
-    toCallout(tokens, i, meta);
+    toCallout(tokens, index, meta);
   }
 }
 
@@ -104,12 +104,12 @@ function calloutRule(state: IStateCore): void {
 function legacyClassRule(state: IStateCore): void {
   const tokens: IToken[] = state.tokens;
 
-  for (let i: number = 0; i < tokens.length; i++) {
-    if (tokens[i].type !== 'blockquote_open') {
+  for (let index: number = 0; index < tokens.length; index++) {
+    if (tokens[index].type !== 'blockquote_open') {
       continue;
     }
 
-    const classes: string = tokens[i].attrGet('class') || '';
+    const classes: string = tokens[index].attrGet('class') || '';
     let matched: ICalloutType | undefined;
 
     classes.split(/\s+/).forEach((name: string) => {
@@ -119,35 +119,35 @@ function legacyClassRule(state: IStateCore): void {
     });
 
     if (matched) {
-      toCallout(tokens, i, { type: matched.type, title: matched.title, icon: matched.icon, fold: '' });
+      toCallout(tokens, index, { type: matched.type, title: matched.title, icon: matched.icon, fold: '' });
     }
   }
 }
 
-export function calloutPlugin(md: IMarkdownIt): void {
-  md.core.ruler.after('block', 'mdf_callout', calloutRule);
+export function calloutPlugin(markdownIt: IMarkdownIt): void {
+  markdownIt.core.ruler.after('block', 'mdf_callout', calloutRule);
 
   // markdown-it-attrs registers `curly_attributes` before `linkify`; sit after
   // it when it is present so the class is already on the token.
-  const ruleNames: string[] = md.core.ruler.__rules__
-    ? md.core.ruler.__rules__.map((rule: { name: string }) => rule.name)
+  const ruleNames: string[] = markdownIt.core.ruler.__rules__
+    ? markdownIt.core.ruler.__rules__.map((rule: { name: string }) => rule.name)
     : [];
   if (ruleNames.indexOf('curly_attributes') !== -1) {
-    md.core.ruler.after('curly_attributes', 'mdf_legacy_callout', legacyClassRule);
+    markdownIt.core.ruler.after('curly_attributes', 'mdf_legacy_callout', legacyClassRule);
   } else {
-    md.core.ruler.before('linkify', 'mdf_legacy_callout', legacyClassRule);
+    markdownIt.core.ruler.before('linkify', 'mdf_legacy_callout', legacyClassRule);
   }
 
-  md.renderer.rules.mdf_callout_open = (tokens: IToken[], idx: number): string => {
-    const meta: ICalloutMeta = (tokens[idx].meta as { callout: ICalloutMeta }).callout;
+  markdownIt.renderer.rules.mdf_callout_open = (tokens: IToken[], index: number): string => {
+    const meta: ICalloutMeta = (tokens[index].meta as { callout: ICalloutMeta }).callout;
     const foldable: boolean = meta.fold === '+' || meta.fold === '-';
 
     let title: string;
     try {
-      title = md.renderInline(meta.title);
+      title = markdownIt.renderInline(meta.title);
     } catch {
       // A title that cannot be parsed as inline markdown is still shown, as text.
-      title = md.utils.escapeHtml(meta.title);
+      title = markdownIt.utils.escapeHtml(meta.title);
     }
 
     const parts: string[] = [];
@@ -170,8 +170,8 @@ export function calloutPlugin(md: IMarkdownIt): void {
     return parts.join('');
   };
 
-  md.renderer.rules.mdf_callout_close = (tokens: IToken[], idx: number): string => {
-    const meta: ICalloutMeta | undefined = (tokens[idx].meta as { callout?: ICalloutMeta } | undefined)?.callout;
+  markdownIt.renderer.rules.mdf_callout_close = (tokens: IToken[], index: number): string => {
+    const meta: ICalloutMeta | undefined = (tokens[index].meta as { callout?: ICalloutMeta } | undefined)?.callout;
     const foldable: boolean = !!meta && (meta.fold === '+' || meta.fold === '-');
     return `</div></${foldable ? 'details' : 'div'}>`;
   };

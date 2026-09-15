@@ -81,7 +81,7 @@ export function parseWikiLink(inner: string): IWikiTarget | undefined {
  */
 export function wikiHref(
   target: IWikiTarget,
-  resolve: (src: string) => string | undefined
+  resolve: (path: string) => string | undefined
 ): string {
   if (!target.page) {
     return `#${headingAnchor(target.heading)}`;
@@ -109,8 +109,8 @@ export function folderOf(href: string): string {
     return '';
   }
   const path: string = href.split('#')[0].split('?')[0];
-  const cut: number = path.lastIndexOf('/');
-  return cut <= 0 ? '' : path.slice(0, cut);
+  const lastSlash: number = path.lastIndexOf('/');
+  return lastSlash <= 0 ? '' : path.slice(0, lastSlash);
 }
 
 /** The file name a href ends in, decoded back to how SharePoint reports it. */

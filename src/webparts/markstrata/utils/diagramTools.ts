@@ -129,11 +129,11 @@ function openDiagram(host: HTMLElement, zoom: ZoomOverlay): void {
      height caps then settle which of the two the window runs out of first. The
      proportions come from the viewBox, or from what the diagram measures on
      the page when it has none. */
-  const box: DOMRect = svg.getBoundingClientRect();
+  const drawn: DOMRect = svg.getBoundingClientRect();
   const view: number[] = (svg.getAttribute('viewBox') || '').trim().split(/[\s,]+/)
     .map((part: string) => Number(part));
-  const wide: number = view.length === 4 && view[2] > 0 ? view[2] : box.width;
-  const tall: number = view.length === 4 && view[3] > 0 ? view[3] : box.height;
+  const wide: number = view.length === 4 && view[2] > 0 ? view[2] : drawn.width;
+  const tall: number = view.length === 4 && view[3] > 0 ? view[3] : drawn.height;
   if (wide > 0 && tall > 0) {
     panel.style.aspectRatio = `${wide} / ${tall}`;
   }
@@ -186,9 +186,9 @@ async function copyDiagram(
  * light text on black, so the host's own background colour is painted first.
  */
 function diagramToPng(host: HTMLElement, svg: SVGSVGElement): Promise<Blob> {
-  const box: DOMRect = svg.getBoundingClientRect();
-  const width: number = Math.max(1, Math.round(box.width));
-  const height: number = Math.max(1, Math.round(box.height));
+  const drawn: DOMRect = svg.getBoundingClientRect();
+  const width: number = Math.max(1, Math.round(drawn.width));
+  const height: number = Math.max(1, Math.round(drawn.height));
 
   /* A clone, because the copy needs explicit pixel dimensions and the one on
      the page is sized by the layout. */

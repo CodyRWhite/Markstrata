@@ -7,16 +7,16 @@
  */
 
 /**
- * True when `src` points somewhere of its own accord and must be left alone:
+ * True when `source` points somewhere of its own accord and must be left alone:
  * an absolute URL, a protocol-relative one, a data URI, a fragment, or an
  * already server-relative path.
  */
-export function isAbsoluteSource(src: string): boolean {
+export function isAbsoluteSource(source: string): boolean {
   return (
-    /^[a-z][a-z0-9+.-]*:/i.test(src) ||   // http:, https:, data:, mailto:
-    src.indexOf('//') === 0 ||            // protocol-relative
-    src.charAt(0) === '/' ||              // already server-relative
-    src.charAt(0) === '#'
+    /^[a-z][a-z0-9+.-]*:/i.test(source) ||   // http:, https:, data:, mailto:
+    source.indexOf('//') === 0 ||            // protocol-relative
+    source.charAt(0) === '/' ||              // already server-relative
+    source.charAt(0) === '#'
   );
 }
 
@@ -35,29 +35,29 @@ export function encodePath(rawPath: string): string {
 }
 
 /**
- * Joins a relative `src` onto `basePath`, honouring `.` and `..`.
+ * Joins a relative `source` onto `basePath`, honouring `.` and `..`.
  *
  * The base arrives raw, the way SharePoint reports it, and is encoded here.
- * The src arrives already percent-encoded, because markdown-it encodes it
+ * The source arrives already percent-encoded, because markdown-it encodes it
  * before any render rule sees it, so it is passed through untouched - encoding
  * it again would turn every %20 into %2520.
  *
- * Returns undefined when the src should be left as it is.
+ * Returns undefined when the source should be left as it is.
  */
-export function resolveAgainst(basePath: string, src: string): string | undefined {
-  if (!src || !basePath || isAbsoluteSource(src)) {
+export function resolveAgainst(basePath: string, source: string): string | undefined {
+  if (!source || !basePath || isAbsoluteSource(source)) {
     return undefined;
   }
 
   const base: string[] = encodePath(basePath).split('/').filter((part) => part.length > 0);
-  const [path, suffix] = splitSuffix(src);
+  const [path, suffix] = splitSuffix(source);
 
   for (const segment of path.split('/')) {
     if (segment === '.' || segment === '') {
       continue;
     }
     if (segment === '..') {
-      // Refuse to climb past the site: a src with enough ../ to escape is
+      // Refuse to climb past the site: a source with enough ../ to escape is
       // more likely a mistake than an attempt to reach the server root.
       if (base.length === 0) {
         return undefined;
@@ -72,18 +72,18 @@ export function resolveAgainst(basePath: string, src: string): string | undefine
 }
 
 /** Keeps any ?query or #fragment out of the segment walking. */
-function splitSuffix(src: string): [string, string] {
-  const cut: number = Math.min(
+function splitSuffix(source: string): [string, string] {
+  const firstMark: number = Math.min(
     ...['?', '#'].map((mark) => {
-      const at: number = src.indexOf(mark);
-      return at === -1 ? src.length : at;
+      const found: number = source.indexOf(mark);
+      return found === -1 ? source.length : found;
     })
   );
-  return [src.slice(0, cut), src.slice(cut)];
+  return [source.slice(0, firstMark), source.slice(firstMark)];
 }
 
 /** The folder part of a file's path: everything before the last separator. */
 export function folderOf(filePath: string): string {
-  const at: number = filePath.lastIndexOf('/');
-  return at === -1 ? '' : filePath.slice(0, at);
+  const lastSlash: number = filePath.lastIndexOf('/');
+  return lastSlash === -1 ? '' : filePath.slice(0, lastSlash);
 }

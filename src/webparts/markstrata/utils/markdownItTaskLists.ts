@@ -33,8 +33,8 @@ function taskListRule(state: IStateCore): void {
   const taskLists: IToken[] = [];
   const openLists: IToken[] = [];
 
-  for (let i: number = 0; i < tokens.length; i++) {
-    const token: IToken = tokens[i];
+  for (let index: number = 0; index < tokens.length; index++) {
+    const token: IToken = tokens[index];
 
     if (token.type === 'bullet_list_open') {
       openLists.push(token);
@@ -44,11 +44,11 @@ function taskListRule(state: IStateCore): void {
       openLists.pop();
       continue;
     }
-    if (!isInlineStart(tokens, i)) {
+    if (!isInlineStart(tokens, index)) {
       continue;
     }
 
-    const inline: IToken = tokens[i + 2];
+    const inline: IToken = tokens[index + 2];
     const match: RegExpExecArray | null = MARKER.exec(inline.content);
     if (!match || !inline.children || inline.children.length === 0) {
       continue;
@@ -80,11 +80,11 @@ function taskListRule(state: IStateCore): void {
   taskLists.forEach((list: IToken) => list.attrJoin('class', 'strata-task-list'));
 }
 
-export function taskListPlugin(md: IMarkdownIt): void {
-  md.core.ruler.after('inline', 'mdf_task_lists', taskListRule);
+export function taskListPlugin(markdownIt: IMarkdownIt): void {
+  markdownIt.core.ruler.after('inline', 'mdf_task_lists', taskListRule);
 
-  md.renderer.rules.mdf_task_checkbox = (tokens: IToken[], idx: number): string => {
-    const checked: boolean = !!(tokens[idx].meta as { checked?: boolean } | undefined)?.checked;
+  markdownIt.renderer.rules.mdf_task_checkbox = (tokens: IToken[], index: number): string => {
+    const checked: boolean = !!(tokens[index].meta as { checked?: boolean } | undefined)?.checked;
     return (
       '<input class="strata-task-checkbox" type="checkbox" disabled' +
       (checked ? ' checked' : '') +

@@ -97,4 +97,4 @@ export interface IMarkdownIt {
   renderInline(source: string, env?: unknown): string;
 }
 
-export type MarkdownItPlugin = (md: IMarkdownIt, options?: unknown) => void;
+export type MarkdownItPlugin = (markdownIt: IMarkdownIt, options?: unknown) => void;

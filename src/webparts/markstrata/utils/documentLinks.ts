@@ -81,9 +81,9 @@ export function followDocumentLinks(
         return;
       }
       event.preventDefault();
-      const cut: number = target.indexOf('#');
-      open(cut === -1 ? target : target.slice(0, cut),
-        cut === -1 ? '' : target.slice(cut + 1));
+      const hash: number = target.indexOf('#');
+      open(hash === -1 ? target : target.slice(0, hash),
+        hash === -1 ? '' : target.slice(hash + 1));
     });
   });
 }

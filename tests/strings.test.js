@@ -25,7 +25,7 @@ function keys(file, pattern) {
 const generator = fs.readFileSync(path.join(ROOT, 'scripts/build-strings.js'), 'utf8')
   .split('const banner')[0];
 
-const fromGenerator = [...generator.matchAll(/^ {2}([A-Za-z]+):/gm)].map((m) => m[1]);
+const fromGenerator = [...generator.matchAll(/^ {2}([A-Za-z]+):/gm)].map((match) => match[1]);
 const fromLoc = keys('src/webparts/markstrata/loc/en-us.js', /^ {4}"([A-Za-z]+)":/gm);
 const fromTypes = keys('src/webparts/markstrata/loc/mystrings.d.ts', /^ {2}([A-Za-z]+): string;/gm);
 
@@ -51,9 +51,9 @@ test('loc/en-us.js is what the generator would write', () => {
 /* Every .ts under the web part, rather than the one file that used to hold
    them all: this check read MarkstrataWebPart.ts, and when the property pane
    moved out it went on passing while guarding almost nothing. */
-function sources(dir) {
-  return fs.readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
-    const full = path.join(dir, entry.name);
+function sources(directory) {
+  return fs.readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
+    const full = path.join(directory, entry.name);
     if (entry.isDirectory()) { return sources(full); }
     return entry.name.endsWith('.ts') ? [full] : [];
   });
@@ -63,7 +63,7 @@ function sources(dir) {
 test('every strings.X the web part reads exists', () => {
   const files = sources(path.join(ROOT, 'src/webparts/markstrata'));
   const used = [...new Set(files.flatMap((file) =>
-    [...fs.readFileSync(file, 'utf8').matchAll(/\bstrings\.([A-Za-z]+)/g)].map((m) => m[1])))];
+    [...fs.readFileSync(file, 'utf8').matchAll(/\bstrings\.([A-Za-z]+)/g)].map((match) => match[1])))];
 
   /* If this ever reads as a handful, something that reads strings has moved
      out from under it again. */

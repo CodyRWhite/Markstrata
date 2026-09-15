@@ -73,9 +73,9 @@ async function capture() {
      cannot be operated. */
   await page.evaluate(() => {
     window.setControl = (id, value) => {
-      const el = document.getElementById(id);
-      el.value = value;
-      el.dispatchEvent(new Event('change', { bubbles: true }));
+      const element = document.getElementById(id);
+      element.value = value;
+      element.dispatchEvent(new Event('change', { bubbles: true }));
     };
   });
   await page.evaluate(() => window.setControl('toc', 'off'));
@@ -91,10 +91,10 @@ async function capture() {
       /* The page paints the surface behind the web part, so it has to follow
          the theme too - otherwise the shot picks up white at the edges. */
       const surface = await page.evaluate(() => {
-        const el = document.getElementById('root');
-        const bg = getComputedStyle(el).backgroundColor;
-        document.body.style.background = bg;
-        return bg;
+        const element = document.getElementById('root');
+        const background = getComputedStyle(element).backgroundColor;
+        document.body.style.background = background;
+        return background;
       });
       if (/rgba\(0, 0, 0, 0\)|transparent/.test(surface)) {
         throw new Error(`${theme}/${mode}: the theme paints no background, so the shot would show the page behind it`);

@@ -81,16 +81,17 @@ export function columnKind(values: string[]): ColumnKind {
  * reverses the comparison for a descending sort, so this returns the empties
  * marked rather than ordered, and the caller leaves them where they are.
  */
-export function compareCells(a: string, b: string, kind: ColumnKind): number {
+export function compareCells(first: string, second: string, kind: ColumnKind): number {
   if (kind === 'number') {
-    return (asNumber(a) as number) - (asNumber(b) as number);
+    return (asNumber(first) as number) - (asNumber(second) as number);
   }
   if (kind === 'date') {
-    return (asTime(a) as number) - (asTime(b) as number);
+    return (asTime(first) as number) - (asTime(second) as number);
   }
   /* numeric: true so "item 2" comes before "item 10", which is the order a
      reader means by those names even though the text does not say so. */
-  return a.trim().localeCompare(b.trim(), undefined, { numeric: true, sensitivity: 'base' });
+  return first.trim()
+    .localeCompare(second.trim(), undefined, { numeric: true, sensitivity: 'base' });
 }
 
 export interface ISortableRow {
@@ -115,13 +116,14 @@ export function sortedOrder(
   const filled: ISortableRow[] = rows.filter((row: ISortableRow) => row.value.trim().length > 0);
   const blank: ISortableRow[] = rows.filter((row: ISortableRow) => row.value.trim().length === 0);
 
-  const ordered: ISortableRow[] = filled.slice().sort((a: ISortableRow, b: ISortableRow) => {
-    const decided: number = compareCells(a.value, b.value, kind);
-    if (decided !== 0) {
-      return descending ? -decided : decided;
-    }
-    return a.index - b.index;
-  });
+  const ordered: ISortableRow[] = filled.slice()
+    .sort((first: ISortableRow, second: ISortableRow) => {
+      const decided: number = compareCells(first.value, second.value, kind);
+      if (decided !== 0) {
+        return descending ? -decided : decided;
+      }
+      return first.index - second.index;
+    });
 
   return ordered.concat(blank).map((row: ISortableRow) => row.index);
 }

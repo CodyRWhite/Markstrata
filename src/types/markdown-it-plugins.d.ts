@@ -7,53 +7,53 @@
  */
 
 declare module 'markdown-it-attrs' {
-  const plugin: (md: unknown, options?: unknown) => void;
+  const plugin: (markdownIt: unknown, options?: unknown) => void;
   export = plugin;
 }
 
 declare module 'markdown-it-footnote' {
-  const plugin: (md: unknown) => void;
+  const plugin: (markdownIt: unknown) => void;
   export = plugin;
 }
 
 declare module 'markdown-it-emoji' {
-  export const full: (md: unknown, options?: unknown) => void;
-  export const light: (md: unknown, options?: unknown) => void;
-  export const bare: (md: unknown, options?: unknown) => void;
+  export const full: (markdownIt: unknown, options?: unknown) => void;
+  export const light: (markdownIt: unknown, options?: unknown) => void;
+  export const bare: (markdownIt: unknown, options?: unknown) => void;
 }
 
 declare module 'markdown-it-abbr' {
-  const plugin: (md: unknown) => void;
+  const plugin: (markdownIt: unknown) => void;
   export = plugin;
 }
 
 declare module 'markdown-it-deflist' {
-  const plugin: (md: unknown) => void;
+  const plugin: (markdownIt: unknown) => void;
   export = plugin;
 }
 
 declare module 'markdown-it-sub' {
-  const plugin: (md: unknown) => void;
+  const plugin: (markdownIt: unknown) => void;
   export = plugin;
 }
 
 declare module 'markdown-it-sup' {
-  const plugin: (md: unknown) => void;
+  const plugin: (markdownIt: unknown) => void;
   export = plugin;
 }
 
 declare module 'markdown-it-mark' {
-  const plugin: (md: unknown) => void;
+  const plugin: (markdownIt: unknown) => void;
   export = plugin;
 }
 
 declare module 'markdown-it-multimd-table' {
-  const plugin: (md: unknown, options?: unknown) => void;
+  const plugin: (markdownIt: unknown, options?: unknown) => void;
   export = plugin;
 }
 
 declare module 'markdown-it-table-of-contents' {
-  const plugin: (md: unknown, options?: unknown) => void;
+  const plugin: (markdownIt: unknown, options?: unknown) => void;
   export = plugin;
 }
 
@@ -74,7 +74,7 @@ declare module 'markdown-it-anchor' {
   ) => void;
 
   interface IAnchorPlugin {
-    (md: unknown, options?: unknown): void;
+    (markdownIt: unknown, options?: unknown): void;
     permalink: {
       linkInsideHeader(options: IPermalinkOptions): PermalinkRenderer;
       headerLink(options?: IPermalinkOptions): PermalinkRenderer;

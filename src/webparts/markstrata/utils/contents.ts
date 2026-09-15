@@ -105,8 +105,8 @@ function findAuthoredToc(container: HTMLElement):
   const headings: HTMLElement[] =
     Array.prototype.slice.call(container.querySelectorAll('h1,h2,h3,h4'));
 
-  for (let i: number = 0; i < headings.length; i += 1) {
-    const heading: HTMLElement = headings[i];
+  for (let index: number = 0; index < headings.length; index += 1) {
+    const heading: HTMLElement = headings[index];
     const text: string = (heading.textContent || '').replace(/^#/, '').trim();
     if (!/^(table of )?contents$/i.test(text) && !/^on this page$/i.test(text)) {
       continue;

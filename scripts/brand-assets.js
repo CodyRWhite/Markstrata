@@ -105,13 +105,13 @@ function brandHead(title, description) {
  * reader's colour scheme.
  */
 function brandLogo(height, surface = 'auto') {
-  const img = (file) =>
+  const image = (file) =>
     `<img src="brand/${file}" alt="Markstrata" style="height:${height}px;display:block">`;
-  if (surface === 'dark') { return img('lockup-horizontal-dark.svg'); }
-  if (surface === 'light') { return img('lockup-horizontal.svg'); }
+  if (surface === 'dark') { return image('lockup-horizontal-dark.svg'); }
+  if (surface === 'light') { return image('lockup-horizontal.svg'); }
   return '<picture>'
     + '<source media="(prefers-color-scheme: dark)" srcset="brand/lockup-horizontal-dark.svg">'
-    + img('lockup-horizontal.svg')
+    + image('lockup-horizontal.svg')
     + '</picture>';
 }
 

@@ -79,7 +79,7 @@ function resolvePlugin(plugin: unknown): unknown {
 }
 
 export class MarkdownProcessor {
-  private md: IMarkdownIt;
+  private markdownIt: IMarkdownIt;
   private options: IMarkdownProcessorOptions;
   private mermaidCounter: number = 0;
 
@@ -109,7 +109,7 @@ export class MarkdownProcessor {
          document. Left in, it renders as a rule and a heading of its own keys.
          What it held is read back separately, by whoever wants the footer. */
       const document: ISplitDocument = splitFrontMatter(markdown || '');
-      return this.unwrapToc(this.md.render(document.body));
+      return this.unwrapToc(this.markdownIt.render(document.body));
     } catch (error) {
       const message: string = (error as Error).message || 'Unknown error';
       return `<div class="strata-error">Could not render this markdown: ${escapeHtml(message)}</div>`;
@@ -128,7 +128,7 @@ export class MarkdownProcessor {
   // ----------------------------------------------------------------- build
 
   private build(): void {
-    this.md = (new MarkdownIt({
+    this.markdownIt = (new MarkdownIt({
       html: this.options.allowHtml,
       linkify: true,
       typographer: true,
@@ -149,15 +149,15 @@ export class MarkdownProcessor {
 
     // Callouts must be registered after markdown-it-attrs so the Wiki.js
     // `{.is-info}` classes have already landed on the blockquote token.
-    this.md.use(calloutPlugin);
-    this.md.use(taskListPlugin);
+    this.markdownIt.use(calloutPlugin);
+    this.markdownIt.use(taskListPlugin);
 
     if (this.options.enableWikiLinks) {
       /* Given the same resolver as images, so a link and a picture beside it
          agree about which folder this document is in. */
-      this.md.use(wikiLinkPlugin, {
-        resolve: (src: string): string | undefined =>
-          this.options.imageBasePath ? resolveAgainst(this.options.imageBasePath, src) : undefined
+      this.markdownIt.use(wikiLinkPlugin, {
+        resolve: (path: string): string | undefined =>
+          this.options.imageBasePath ? resolveAgainst(this.options.imageBasePath, path) : undefined
       });
     }
   }
@@ -165,21 +165,21 @@ export class MarkdownProcessor {
   private addPlugins(): void {
     // markdown-it 15 removed `utils.assign`, which markdown-it-multimd-table
     // still calls. It only ever delegated to Object.assign.
-    if (!this.md.utils.assign) {
-      this.md.utils.assign = Object.assign;
+    if (!this.markdownIt.utils.assign) {
+      this.markdownIt.utils.assign = Object.assign;
     }
 
     // A plugin that throws must not take the whole render with it, but it must
     // also not fail quietly - a missing plugin is a missing feature.
-    const use = (name: string, plugin: unknown, opts?: unknown): void => {
+    const register = (name: string, plugin: unknown, options?: unknown): void => {
       try {
-        this.md.use(resolvePlugin(plugin), opts);
+        this.markdownIt.use(resolvePlugin(plugin), options);
       } catch (error) {
         console.error(`[Markstrata] the ${name} plugin did not load; that feature is off.`, error);
       }
     };
 
-    use('attributes', markdownItAttrs, { leftDelimiter: '{', rightDelimiter: '}', allowedAttributes: ['id', 'class'] });
+    register('attributes', markdownItAttrs, { leftDelimiter: '{', rightDelimiter: '}', allowedAttributes: ['id', 'class'] });
 
     /*
      * A fence's line spec has to be taken before markdown-it-attrs runs.
@@ -192,17 +192,17 @@ export class MarkdownProcessor {
      * front: the order has to be said, not assumed.
      */
     this.claimFenceLineSpecs();
-    use('footnotes', markdownItFootnote);
+    register('footnotes', markdownItFootnote);
     // markdown-it-emoji 3 exports `full`, `light` and `bare` rather than a
     // single default plugin.
-    use('emoji', markdownItEmoji.full || markdownItEmoji);
-    use('abbreviations', markdownItAbbr);
-    use('definition lists', markdownItDeflist);
-    use('subscript', markdownItSub);
-    use('superscript', markdownItSup);
+    register('emoji', markdownItEmoji.full || markdownItEmoji);
+    register('abbreviations', markdownItAbbr);
+    register('definition lists', markdownItDeflist);
+    register('subscript', markdownItSub);
+    register('superscript', markdownItSup);
     // ==highlight==, which Obsidian users write a lot of.
-    use('highlight', markdownItMark);
-    use('tables', markdownItMultimdTable, {
+    register('highlight', markdownItMark);
+    register('tables', markdownItMultimdTable, {
       multiline: true,
       rowspan: true,
       headerless: false,
@@ -227,11 +227,11 @@ export class MarkdownProcessor {
               space: false
             })
           : undefined;
-      use('heading anchors', anchor, { level: [1, 2, 3, 4], permalink: permalink, tabIndex: false });
+      register('heading anchors', anchor, { level: [1, 2, 3, 4], permalink: permalink, tabIndex: false });
     }
 
     if (this.options.enableToc) {
-      use('table of contents', markdownItTOC, {
+      register('table of contents', markdownItTOC, {
         includeLevel: [2, 3],
         containerClass: 'strata-toc',
         listType: 'ul'
@@ -247,15 +247,15 @@ export class MarkdownProcessor {
       wrap: this.options.wrapCodeLines
     });
 
-    this.md.renderer.rules.fence = (tokens: IToken[], idx: number): string => {
-      const token: IToken = tokens[idx];
+    this.markdownIt.renderer.rules.fence = (tokens: IToken[], index: number): string => {
+      const token: IToken = tokens[index];
       return renderCodeBlock(token.content,
         this.fenceInfo(token) + this.fenceLines(token), codeOptions());
     };
 
     // Indented code blocks get the same treatment, just without a language.
-    this.md.renderer.rules.code_block = (tokens: IToken[], idx: number): string =>
-      renderCodeBlock(tokens[idx].content, '', codeOptions());
+    this.markdownIt.renderer.rules.code_block = (tokens: IToken[], index: number): string =>
+      renderCodeBlock(tokens[index].content, '', codeOptions());
   }
 
   /*
@@ -274,19 +274,21 @@ export class MarkdownProcessor {
         if (!braces) {
           return;
         }
-        const raw: { info?: string; meta?: { [key: string]: unknown } } =
+        /* The token's own type says nothing about info or meta, which is
+           where the claim has to be written. */
+        const writable: { info?: string; meta?: { [key: string]: unknown } } =
           (token as unknown) as { info?: string; meta?: { [key: string]: unknown } };
-        raw.meta = { ...(raw.meta || {}), strataLines: braces[0] };
-        raw.info = info.replace(braces[0], '').replace(/\s+/g, ' ').trim();
+        writable.meta = { ...(writable.meta || {}), strataLines: braces[0] };
+        writable.info = info.replace(braces[0], '').replace(/\s+/g, ' ').trim();
       });
     };
 
     /* Before attrs where it loaded, and before linkify otherwise, which is
        where attrs would have put itself. */
     try {
-      this.md.core.ruler.before('curly_attributes', 'strata_fence_lines', claim);
+      this.markdownIt.core.ruler.before('curly_attributes', 'strata_fence_lines', claim);
     } catch {
-      this.md.core.ruler.before('linkify', 'strata_fence_lines', claim);
+      this.markdownIt.core.ruler.before('linkify', 'strata_fence_lines', claim);
     }
   }
 
@@ -307,23 +309,23 @@ export class MarkdownProcessor {
    * fetching them.
    */
   private addImages(): void {
-    const previous: RenderRule | undefined = this.md.renderer.rules.image;
+    const previous: RenderRule | undefined = this.markdownIt.renderer.rules.image;
     const base: string | undefined = this.options.imageBasePath;
 
-    this.md.renderer.rules.image = (
+    this.markdownIt.renderer.rules.image = (
       tokens: IToken[],
-      idx: number,
+      index: number,
       options: unknown,
-      env: unknown,
+      environment: unknown,
       self: IRenderer
     ): string => {
-      const token: IToken = tokens[idx];
-      const src: string | null = token.attrGet ? token.attrGet('src') : null;
+      const token: IToken = tokens[index];
+      const source: string | null = token.attrGet ? token.attrGet('src') : null;
 
       this.sizeImage(token);
 
-      if (src && base) {
-        const resolved: string | undefined = resolveAgainst(base, src);
+      if (source && base) {
+        const resolved: string | undefined = resolveAgainst(base, source);
         if (resolved !== undefined && token.attrSet) {
           token.attrSet('src', resolved);
         }
@@ -337,8 +339,8 @@ export class MarkdownProcessor {
       }
 
       return previous
-        ? previous(tokens, idx, options, env, self)
-        : self.renderToken(tokens, idx, options);
+        ? previous(tokens, index, options, environment, self)
+        : self.renderToken(tokens, index, options);
     };
   }
 
@@ -364,8 +366,8 @@ export class MarkdownProcessor {
       return;
     }
 
-    const alt: string = this.altText(token);
-    const match: RegExpMatchArray | null = alt.match(/^([\s\S]*?)\s*\|\s*(\d+)(?:\s*[x\u00d7]\s*(\d+))?\s*$/);
+    const altText: string = this.altText(token);
+    const match: RegExpMatchArray | null = altText.match(/^([\s\S]*?)\s*\|\s*(\d+)(?:\s*[x\u00d7]\s*(\d+))?\s*$/);
     if (!match) {
       return;
     }
@@ -403,34 +405,34 @@ export class MarkdownProcessor {
   private addTableWrapper(): void {
     const renderDefault = (rule: RenderRule | undefined): RenderRule =>
       rule ||
-      ((tokens: IToken[], idx: number, options: unknown, env: unknown, self: IRenderer) =>
-        self.renderToken(tokens, idx, options));
+      ((tokens: IToken[], index: number, options: unknown, environment: unknown, self: IRenderer) =>
+        self.renderToken(tokens, index, options));
 
-    const defaultOpen: RenderRule = renderDefault(this.md.renderer.rules.table_open);
-    const defaultClose: RenderRule = renderDefault(this.md.renderer.rules.table_close);
+    const defaultOpen: RenderRule = renderDefault(this.markdownIt.renderer.rules.table_open);
+    const defaultClose: RenderRule = renderDefault(this.markdownIt.renderer.rules.table_close);
 
-    this.md.renderer.rules.table_open = (
+    this.markdownIt.renderer.rules.table_open = (
       tokens: IToken[],
-      idx: number,
+      index: number,
       options: unknown,
-      env: unknown,
+      environment: unknown,
       self: IRenderer
-    ): string => '<div class="strata-table-scroll">' + defaultOpen(tokens, idx, options, env, self);
+    ): string => '<div class="strata-table-scroll">' + defaultOpen(tokens, index, options, environment, self);
 
-    this.md.renderer.rules.table_close = (
+    this.markdownIt.renderer.rules.table_close = (
       tokens: IToken[],
-      idx: number,
+      index: number,
       options: unknown,
-      env: unknown,
+      environment: unknown,
       self: IRenderer
-    ): string => defaultClose(tokens, idx, options, env, self) + '</div>';
+    ): string => defaultClose(tokens, index, options, environment, self) + '</div>';
   }
 
   // ------------------------------------------------------------------ math
 
   private addMath(): void {
     // Inline: $...$ with guards so prices ("$5 and $10") are not swallowed.
-    this.md.inline.ruler.before('escape', 'mdf_math_inline', (state: IStateInline, silent: boolean): boolean => {
+    this.markdownIt.inline.ruler.before('escape', 'mdf_math_inline', (state: IStateInline, silent: boolean): boolean => {
       const start: number = state.pos;
       if (state.src.charCodeAt(start) !== 0x24 /* $ */) {
         return false;
@@ -470,7 +472,7 @@ export class MarkdownProcessor {
     });
 
     // Block: $$ ... $$
-    this.md.block.ruler.before(
+    this.markdownIt.block.ruler.before(
       'fence',
       'mdf_math_block',
       (state: IStateBlock, startLine: number, endLine: number, silent: boolean): boolean => {
@@ -492,9 +494,9 @@ export class MarkdownProcessor {
 
         while (!closed && nextLine + 1 < endLine) {
           nextLine++;
-          const pos: number = state.bMarks[nextLine] + state.tShift[nextLine];
-          const max: number = state.eMarks[nextLine];
-          const line: string = state.src.slice(pos, max);
+          const lineStart: number = state.bMarks[nextLine] + state.tShift[nextLine];
+          const lineEnd: number = state.eMarks[nextLine];
+          const line: string = state.src.slice(lineStart, lineEnd);
           if (line.trim().slice(-2) === '$$') {
             lastLine = line.trim().slice(0, -2);
             closed = true;
@@ -521,24 +523,24 @@ export class MarkdownProcessor {
       }
     );
 
-    this.md.renderer.rules.mdf_math_inline = (tokens: IToken[], idx: number): string => {
+    this.markdownIt.renderer.rules.mdf_math_inline = (tokens: IToken[], index: number): string => {
       try {
-        return katex.renderToString(tokens[idx].content, { throwOnError: false, output: 'html' });
+        return katex.renderToString(tokens[index].content, { throwOnError: false, output: 'html' });
       } catch {
-        return `<span class="strata-math-error-inline">${escapeHtml(tokens[idx].content)}</span>`;
+        return `<span class="strata-math-error-inline">${escapeHtml(tokens[index].content)}</span>`;
       }
     };
 
-    this.md.renderer.rules.mdf_math_block = (tokens: IToken[], idx: number): string => {
+    this.markdownIt.renderer.rules.mdf_math_block = (tokens: IToken[], index: number): string => {
       try {
-        const html: string = katex.renderToString(tokens[idx].content, {
+        const html: string = katex.renderToString(tokens[index].content, {
           throwOnError: false,
           displayMode: true,
           output: 'html'
         });
         return `<div class="strata-math-block">${html}</div>`;
       } catch {
-        return `<div class="strata-math-error">${escapeHtml(tokens[idx].content)}</div>`;
+        return `<div class="strata-math-error">${escapeHtml(tokens[index].content)}</div>`;
       }
     };
   }
@@ -546,16 +548,16 @@ export class MarkdownProcessor {
   // --------------------------------------------------------------- mermaid
 
   private addMermaid(): void {
-    const defaultFence: RenderRule = this.md.renderer.rules.fence as RenderRule;
+    const defaultFence: RenderRule = this.markdownIt.renderer.rules.fence as RenderRule;
 
-    this.md.renderer.rules.fence = (
+    this.markdownIt.renderer.rules.fence = (
       tokens: IToken[],
-      idx: number,
+      index: number,
       options: unknown,
-      env: unknown,
+      environment: unknown,
       self: IRenderer
     ): string => {
-      const token: IToken = tokens[idx];
+      const token: IToken = tokens[index];
       if (this.fenceInfo(token).trim().toLowerCase() === 'mermaid') {
         this.mermaidCounter += 1;
         const id: string = `strata-mermaid-${Date.now().toString(36)}-${this.mermaidCounter}`;
@@ -564,7 +566,7 @@ export class MarkdownProcessor {
           `<pre class="mermaid" id="${id}">${escapeHtml(token.content)}</pre></div>`
         );
       }
-      return defaultFence(tokens, idx, options, env, self);
+      return defaultFence(tokens, index, options, environment, self);
     };
   }
 }

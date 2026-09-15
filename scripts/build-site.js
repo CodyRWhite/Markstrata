@@ -25,12 +25,12 @@ fs.rmSync(siteDir, { recursive: true, force: true });
 fs.mkdirSync(siteDir, { recursive: true });
 
 PAGES.forEach((page) => {
-  const out = page.dir ? path.join(siteDir, page.dir) : siteDir;
-  console.log(`\nBuilding /${page.dir ? `${page.dir}/` : ''} ...`);
+  const outDir = page.folder ? path.join(siteDir, page.folder) : siteDir;
+  console.log(`\nBuilding /${page.folder ? `${page.folder}/` : ''} ...`);
   if (page.source) {
-    run('demo/build-demo.js', [page.source, '--out', out, '--page', page.id]);
+    run('demo/build-demo.js', [page.source, '--out', outDir, '--page', page.id]);
   } else {
-    run('harness/build.js', ['--standalone', '--out', out, '--page', page.id]);
+    run('harness/build.js', ['--standalone', '--out', outDir, '--page', page.id]);
   }
 });
 
@@ -38,4 +38,4 @@ PAGES.forEach((page) => {
 fs.writeFileSync(path.join(siteDir, '.nojekyll'), '');
 
 console.log(`\nSite written to ${path.relative(root, siteDir) || '.'}`);
-console.log(PAGES.map((p) => `  /${p.dir ? `${p.dir}/` : ''}`).join('\n'));
+console.log(PAGES.map((entry) => `  /${entry.folder ? `${entry.folder}/` : ''}`).join('\n'));

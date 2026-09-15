@@ -30,10 +30,10 @@ test('every page has a title and a description for link previews', () => {
  */
 test('links between pages are relative', () => {
   for (const from of PAGES) {
-    for (const to of PAGES) {
-      const href = linkTo(from.id, to.id);
-      assert.ok(!href.startsWith('/'), `${from.id} -> ${to.id} is root-relative: ${href}`);
-      assert.ok(href.length > 0, `${from.id} -> ${to.id} is empty`);
+    for (const target of PAGES) {
+      const href = linkTo(from.id, target.id);
+      assert.ok(!href.startsWith('/'), `${from.id} -> ${target.id} is root-relative: ${href}`);
+      assert.ok(href.length > 0, `${from.id} -> ${target.id} is empty`);
     }
   }
 });

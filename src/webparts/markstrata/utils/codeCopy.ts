@@ -69,9 +69,9 @@ function legacyCopy(text: string): boolean {
     area.style.opacity = '0';
     document.body.appendChild(area);
     area.select();
-    const ok: boolean = document.execCommand('copy');
+    const copied: boolean = document.execCommand('copy');
     document.body.removeChild(area);
-    return ok;
+    return copied;
   } catch {
     return false;
   }

@@ -25,9 +25,9 @@ test('a relative source resolves against the markdown file, not the page', () =>
  * it. Encoding the whole result would turn %20 into %2520.
  */
 test('the base is encoded, the already-encoded source is not encoded twice', () => {
-  const src = srcOf(render('![d](<my folder/flow.png>)'));
-  assert.equal(src, '/sites/it/Shared%20Documents/runbooks/my%20folder/flow.png');
-  assert.ok(!src.includes('%2520'), 'the source was encoded a second time');
+  const source = srcOf(render('![d](<my folder/flow.png>)'));
+  assert.equal(source, '/sites/it/Shared%20Documents/runbooks/my%20folder/flow.png');
+  assert.ok(!source.includes('%2520'), 'the source was encoded a second time');
 });
 
 /* encodeURI would leave these alone, and all three are legal in SharePoint. */
@@ -48,15 +48,15 @@ test('a source that climbs past the site is left alone rather than guessed at', 
 });
 
 test('sources that already point somewhere are untouched', () => {
-  for (const src of [
+  for (const source of [
     'https://example.com/a.png',
     'http://example.com/a.png',
     '//example.com/a.png',
     '/sites/it/absolute/a.png',
     'data:image/png;base64,iVBORw0KGgo='
   ]) {
-    assert.ok(isAbsoluteSource(src), `${src} should count as absolute`);
-    assert.equal(resolveAgainst(LIBRARY, src), undefined, `${src} should not be rewritten`);
+    assert.ok(isAbsoluteSource(source), `${source} should count as absolute`);
+    assert.equal(resolveAgainst(LIBRARY, source), undefined, `${source} should not be rewritten`);
   }
 });
 
@@ -101,12 +101,15 @@ test('encodePath leaves the separators alone', () => {
  */
 test('changing the base path re-resolves; repeating it does not rebuild', () => {
   const processor = new MarkdownProcessor({ imageBasePath: LIBRARY });
-  const before = processor.md;
+  /* Reaching for the markdown-it instance itself, because "did it rebuild" is
+     not a question the rendered output can answer. */
+  const before = processor.markdownIt;
+  assert.ok(before, 'the processor no longer has a markdownIt to compare');
 
   processor.updateOptions({ imageBasePath: LIBRARY });
-  assert.equal(processor.md, before, 'rebuilt for an unchanged option');
+  assert.equal(processor.markdownIt, before, 'rebuilt for an unchanged option');
 
   processor.updateOptions({ imageBasePath: '/sites/it/Policies' });
-  assert.notEqual(processor.md, before, 'did not rebuild for a changed option');
+  assert.notEqual(processor.markdownIt, before, 'did not rebuild for a changed option');
   assert.equal(srcOf(processor.render('![d](a.png)')), '/sites/it/Policies/a.png');
 });

@@ -88,18 +88,18 @@ function parse(block: string): IFrontMatter {
     }
 
     const key: string = match[1].toLowerCase();
-    const raw: string = match[2].trim();
-    if (!raw) {
+    const value: string = match[2].trim();
+    if (!value) {
       return;
     }
 
     if (SCALARS.indexOf(key) !== -1) {
-      (data as { [name: string]: unknown })[key] = unquote(raw);
+      (data as { [name: string]: unknown })[key] = unquote(value);
       return;
     }
 
     if (LISTS.indexOf(key) !== -1) {
-      const items: string[] = readList(raw);
+      const items: string[] = readList(value);
       if (items.length) {
         data.tags = (data.tags || []).concat(items);
       }
@@ -110,8 +110,8 @@ function parse(block: string): IFrontMatter {
 }
 
 /** `[one, two]` or `one, two`, which is how tags are usually written. */
-function readList(raw: string): string[] {
-  const inner: string = raw.replace(/^\[/, '').replace(/\]$/, '');
+function readList(written: string): string[] {
+  const inner: string = written.replace(/^\[/, '').replace(/\]$/, '');
   return inner
     .split(',')
     .map((item: string) => unquote(item.trim()))

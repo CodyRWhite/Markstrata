@@ -37,7 +37,7 @@ test('empty brackets are not a link', () => {
 });
 
 test('a page gets .md, and one that has an extension keeps it', () => {
-  const resolve = (src) => `/base/${src}`;
+  const resolve = (source) => `/base/${source}`;
   assert.equal(wikiHref(parseWikiLink('Runbook'), resolve), '/base/Runbook.md');
   assert.equal(wikiHref(parseWikiLink('notes.txt'), resolve), '/base/notes.txt');
 });

@@ -22,9 +22,9 @@ function read(file) {
 
 /* The pane names its text through strings.X; the demo writes it out. */
 const STRINGS = (() => {
-  const loc = read('src/webparts/markstrata/loc/en-us.js');
+  const localised = read('src/webparts/markstrata/loc/en-us.js');
   const table = {};
-  [...loc.matchAll(/^ {4}"([A-Za-z]+)": "((?:[^"\\]|\\.)*)"/gm)].forEach((match) => {
+  [...localised.matchAll(/^ {4}"([A-Za-z]+)": "((?:[^"\\]|\\.)*)"/gm)].forEach((match) => {
     table[match[1]] = JSON.parse(`"${match[2]}"`);
   });
   return table;

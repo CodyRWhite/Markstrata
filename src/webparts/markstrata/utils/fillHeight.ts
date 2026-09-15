@@ -27,7 +27,7 @@ export class HeightFiller {
   public fill(root: HTMLElement): void {
     this.stop();
 
-    const fit = (): void => {
+    const fitToRoomBelow = (): void => {
       const room: number = Math.round(roomBelow(root));
       if (room < FILL_MIN_HEIGHT) {
         root.style.removeProperty('min-height');
@@ -42,12 +42,12 @@ export class HeightFiller {
       }
       this.frame = window.requestAnimationFrame(() => {
         this.frame = undefined;
-        fit();
+        fitToRoomBelow();
       });
     };
 
     window.addEventListener('resize', this.onResize, { passive: true });
-    fit();
+    fitToRoomBelow();
   }
 
   public stop(): void {

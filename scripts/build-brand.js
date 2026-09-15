@@ -81,21 +81,21 @@ function copyDelivered() {
 }
 
 /* Writes the manifest's icon from the data URI the tile render produced. */
-function stampManifestIcon(uri) {
+function stampManifestIcon(dataUri) {
   const manifest = path.join(root, 'src', 'webparts', 'markstrata',
     'MarkstrataWebPart.manifest.json');
   const json = JSON.parse(fs.readFileSync(manifest, 'utf8'));
   let changed = false;
   json.preconfiguredEntries.forEach((entry) => {
-    if (entry.iconImageUrl !== uri) {
-      entry.iconImageUrl = uri;
+    if (entry.iconImageUrl !== dataUri) {
+      entry.iconImageUrl = dataUri;
       changed = true;
     }
   });
   if (changed) {
     fs.writeFileSync(manifest, JSON.stringify(json, null, 2) + '\n');
   }
-  console.log('manifest iconImageUrl'.padEnd(30), String(uri.length).padStart(6), 'chars',
+  console.log('manifest iconImageUrl'.padEnd(30), String(dataUri.length).padStart(6), 'chars',
     changed ? '(updated)' : '(unchanged)');
 }
 
@@ -116,7 +116,7 @@ async function renderTile(browser) {
   await page.setViewportSize({ width: tile.WIDTH, height: tile.HEIGHT });
   await page.setContent('<body>'
     + tile.tileHtml(dataUri(path.join(assets, 'mark-mono-light.svg'))) + '</body>');
-  await page.waitForFunction(() => [...document.images].every((i) => i.complete && i.naturalWidth));
+  await page.waitForFunction(() => [...document.images].every((image) => image.complete && image.naturalWidth));
   await page.screenshot({ path: dest, type: 'jpeg', quality: 82, scale: 'css' });
   /* The same frame, encoded for the manifest rather than for the site. */
   const inline = await page.screenshot({
@@ -135,7 +135,7 @@ async function renderSocialCard(browser) {
   await page.setContent('<body style="margin:0;width:1200px;height:630px;background:#F7FAFA;'
     + 'display:flex;align-items:center;justify-content:center">'
     + `<img src="${dataUri(path.join(assets, 'lockup-tagline.svg'))}" style="width:760px"></body>`);
-  await page.waitForFunction(() => [...document.images].every((i) => i.complete && i.naturalWidth));
+  await page.waitForFunction(() => [...document.images].every((image) => image.complete && image.naturalWidth));
   await page.screenshot({ path: dest });
   await page.close();
   console.log('social-card.png'.padEnd(30), String(fs.statSync(dest).size).padStart(6), 'bytes');

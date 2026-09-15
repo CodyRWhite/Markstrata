@@ -82,7 +82,7 @@ function tocWidthFields(properties: IMarkstrataWebPartProps): IPropertyPaneField
     }),
     PropertyPaneTextField('tocWidthValue', {
       label: `${strings.TocWidthValueLabel} (${properties.tocWidthUnit})`,
-      onGetErrorMessage: (raw: string): string => checkTocWidth(properties, raw)
+      onGetErrorMessage: (typed: string): string => checkTocWidth(properties, typed)
     })
   ] as IPropertyPaneField<unknown>[];
 }
@@ -92,10 +92,10 @@ function tocWidthRange(properties: IMarkstrataWebPartProps): ITocWidthRange {
 }
 
 /** Keeps a typed width inside the range its unit makes sense in. */
-function checkTocWidth(properties: IMarkstrataWebPartProps, raw: string): string {
+function checkTocWidth(properties: IMarkstrataWebPartProps, typed: string): string {
   const range: ITocWidthRange = tocWidthRange(properties);
-  const value: number = Number(raw);
-  if (raw.trim().length === 0 || isNaN(value)) {
+  const value: number = Number(typed);
+  if (typed.trim().length === 0 || isNaN(value)) {
     return 'Enter a number.';
   }
   if (value < range.min || value > range.max) {

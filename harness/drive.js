@@ -18,8 +18,8 @@ try {
   process.exit(2);
 }
 
-const OUT = path.join(__dirname, 'dist');
-const pageUrl = 'file://' + path.join(OUT, 'index.html');
+const HARNESS_DIST = path.join(__dirname, 'dist');
+const pageUrl = 'file://' + path.join(HARNESS_DIST, 'index.html');
 /*
  * The property pane only exists on the page the documentation site publishes:
  * the bare harness page is the web part with no chrome around it. So the pane
@@ -40,15 +40,15 @@ const demoUrl = 'file://' + path.join(__dirname, '..', 'site', 'demo', 'index.ht
   const page = await browser.newPage({ viewport: { width: 1200, height: 900 }, deviceScaleFactor: 1.5 });
 
   const problems = [];
-  page.on('pageerror', (e) => problems.push('pageerror: ' + e.message));
-  page.on('console', (m) => { if (m.type() === 'error') problems.push('console: ' + m.text()); });
+  page.on('pageerror', (error) => problems.push('pageerror: ' + error.message));
+  page.on('console', (message) => { if (message.type() === 'error') problems.push('console: ' + message.text()); });
 
   await page.goto(pageUrl, { waitUntil: 'load' });
   await page.waitForTimeout(2000);
 
-  const step = async (name, fn) => {
+  const step = async (name, check) => {
     try {
-      await fn();
+      await check();
       console.log('  ok   ' + name);
     } catch (error) {
       console.log('  FAIL ' + name + ' :: ' + error.message.split('\n')[0]);
@@ -130,12 +130,12 @@ const demoUrl = 'file://' + path.join(__dirname, '..', 'site', 'demo', 'index.ht
     const seen = await page.evaluate(() => {
       const svg = document.querySelector('.strata-mermaid svg[aria-roledescription="gantt"]');
       if (!svg) { return { error: 'no gantt in the sample' }; }
-      const box = parseFloat(svg.getAttribute('viewBox').split(/\s+/)[2]);
-      const scale = svg.getBoundingClientRect().width / box;
+      const viewBoxWidth = parseFloat(svg.getAttribute('viewBox').split(/\s+/)[2]);
+      const scale = svg.getBoundingClientRect().width / viewBoxWidth;
       const body = parseFloat(getComputedStyle(document.querySelector('.strata-content p')).fontSize);
-      const onScreen = (sel) => {
-        const el = document.querySelector('.strata-mermaid ' + sel);
-        return el ? parseFloat(getComputedStyle(el).fontSize) * scale : 0;
+      const onScreen = (selector) => {
+        const element = document.querySelector('.strata-mermaid ' + selector);
+        return element ? parseFloat(getComputedStyle(element).fontSize) * scale : 0;
       };
       return { scale: scale, body: body, tick: onScreen('.tick text'),
                task: onScreen('.taskText'), section: onScreen('.sectionTitle') };
@@ -163,23 +163,23 @@ const demoUrl = 'file://' + path.join(__dirname, '..', 'site', 'demo', 'index.ht
        this measures where the images are rather than whether they load. */
     await page.evaluate(async () => {
       const images = [...document.querySelectorAll('.strata-content img')];
-      for (const img of images) {
-        img.scrollIntoView();
+      for (const image of images) {
+        image.scrollIntoView();
         await new Promise((done) => setTimeout(done, 60));
       }
       window.scrollTo(0, 0);
     });
     await page.waitForTimeout(400);
-    const imgs = await page.evaluate(() => [...document.querySelectorAll('.strata-content img')]
-      .map((img) => ({ src: img.getAttribute('src'), loading: img.getAttribute('loading'),
-                       width: img.naturalWidth })));
-    if (imgs.length < 3) throw new Error('only ' + imgs.length + ' images');
-    for (const img of imgs) {
-      if (img.loading !== 'lazy') throw new Error('loading=' + img.loading + ' on ' + img.src.slice(0, 40));
-      if (!img.width) throw new Error('did not decode: ' + img.src.slice(0, 60));
+    const images = await page.evaluate(() => [...document.querySelectorAll('.strata-content img')]
+      .map((image) => ({ src: image.getAttribute('src'), loading: image.getAttribute('loading'),
+                       width: image.naturalWidth })));
+    if (images.length < 3) throw new Error('only ' + images.length + ' images');
+    for (const image of images) {
+      if (image.loading !== 'lazy') throw new Error('loading=' + image.loading + ' on ' + image.src.slice(0, 40));
+      if (!image.width) throw new Error('did not decode: ' + image.src.slice(0, 60));
     }
     /* The data URI must survive untouched; resolving it would corrupt it. */
-    if (!imgs.some((i) => i.src.indexOf('data:image/png;base64,') === 0)) {
+    if (!images.some((image) => image.src.indexOf('data:image/png;base64,') === 0)) {
       throw new Error('the data URI was rewritten');
     }
   });
@@ -206,24 +206,26 @@ const demoUrl = 'file://' + path.join(__dirname, '..', 'site', 'demo', 'index.ht
        lifting it into a figure would break the sentence around it. */
     const inline = await page.evaluate(() => {
       const images = Array.prototype.slice.call(document.querySelectorAll('.strata-content img'));
-      return images.some((img) => img.closest('p') && (img.closest('p').textContent || '').trim().length > 0);
+      return images.some((image) => image.closest('p') && (image.closest('p').textContent || '').trim().length > 0);
     });
     if (!inline) throw new Error('no inline image left to check');
   });
 
   await step('a sized image keeps its aspect ratio', async () => {
-    const box = await page.evaluate(() => {
-      const img = document.querySelector('.strata-content img[width="240"]');
-      if (!img) return null;
-      const rect = img.getBoundingClientRect();
-      return { w: Math.round(rect.width), h: Math.round(rect.height),
-               natural: img.naturalWidth / img.naturalHeight };
+    const bounds = await page.evaluate(() => {
+      const image = document.querySelector('.strata-content img[width="240"]');
+      if (!image) return null;
+      const rect = image.getBoundingClientRect();
+      return { width: Math.round(rect.width), height: Math.round(rect.height),
+               natural: image.naturalWidth / image.naturalHeight };
     });
-    if (!box) throw new Error('the sized image is missing');
-    if (box.w !== 240) throw new Error('rendered ' + box.w + 'px wide, asked for 240');
-    const ratio = box.w / box.h;
-    if (Math.abs(ratio - box.natural) > 0.02) {
-      throw new Error('drawn at ' + ratio.toFixed(3) + ', the picture is ' + box.natural.toFixed(3));
+    if (!bounds) throw new Error('the sized image is missing');
+    if (bounds.width !== 240) {
+      throw new Error('rendered ' + bounds.width + 'px wide, asked for 240');
+    }
+    const ratio = bounds.width / bounds.height;
+    if (Math.abs(ratio - bounds.natural) > 0.02) {
+      throw new Error('drawn at ' + ratio.toFixed(3) + ', the picture is ' + bounds.natural.toFixed(3));
     }
   });
 
@@ -283,28 +285,28 @@ const demoUrl = 'file://' + path.join(__dirname, '..', 'site', 'demo', 'index.ht
     const button = page.locator('.strata-to-top');
     if (await button.count() !== 1) throw new Error('no button');
     if (!(await button.isHidden())) {
-      const why = await page.evaluate(() => {
-        const btn = document.querySelector('.strata-to-top');
+      const showing = await page.evaluate(() => {
+        const button = document.querySelector('.strata-to-top');
         const root = document.querySelector('.strata-root');
         return { scrollY: Math.round(window.scrollY),
                  rootTop: root ? Math.round(root.getBoundingClientRect().top) : 'no root',
-                 hiddenAttr: btn.hidden, buttons: document.querySelectorAll('.strata-to-top').length,
+                 hiddenAttr: button.hidden, buttons: document.querySelectorAll('.strata-to-top').length,
                  editing: !!document.querySelector('[data-strata-editing]') };
       });
-      throw new Error('showing: ' + JSON.stringify(why));
+      throw new Error('showing: ' + JSON.stringify(showing));
     }
 
     await page.evaluate(() => window.scrollTo(0, 1400));
     await page.waitForTimeout(400);
     if (await button.isHidden()) {
-      const why = await page.evaluate(() => {
+      const showing = await page.evaluate(() => {
         const root = document.querySelector('.strata-root');
         return { scrollY: Math.round(window.scrollY),
                  docHeight: document.documentElement.scrollHeight,
                  viewport: window.innerHeight,
                  rootTop: root ? Math.round(root.getBoundingClientRect().top) : 'none' };
       });
-      throw new Error('still hidden: ' + JSON.stringify(why));
+      throw new Error('still hidden: ' + JSON.stringify(showing));
     }
 
     const side = await button.getAttribute('data-strata-side');
@@ -376,11 +378,11 @@ const demoUrl = 'file://' + path.join(__dirname, '..', 'site', 'demo', 'index.ht
   await step('a missing link is marked visibly, not just in the markup', async () => {
     const colours = await page.evaluate(() => {
       const gone = document.querySelector('a.strata-wiki-link--missing');
-      const ok = [...document.querySelectorAll('a.strata-wiki-link')]
+      const present = [...document.querySelectorAll('a.strata-wiki-link')]
         .find((link) => !link.classList.contains('strata-wiki-link--missing'));
-      return { gone: getComputedStyle(gone).color, ok: getComputedStyle(ok).color };
+      return { gone: getComputedStyle(gone).color, present: getComputedStyle(present).color };
     });
-    if (colours.gone === colours.ok) {
+    if (colours.gone === colours.present) {
       throw new Error('a missing link paints the same as a working one: ' + colours.gone);
     }
     /* Both put back, so the later checks see the sample they expect. */
@@ -508,10 +510,10 @@ const demoUrl = 'file://' + path.join(__dirname, '..', 'site', 'demo', 'index.ht
       const blocks = [...document.querySelectorAll('.strata-content .strata-image-block')]
         .filter((block) => !block.hasAttribute('data-strata-align'));
       return blocks.map((block) => {
-        const img = block.querySelector('img').getBoundingClientRect();
-        const box = block.getBoundingClientRect();
+        const image = block.querySelector('img').getBoundingClientRect();
+        const bounds = block.getBoundingClientRect();
         /* Positive means a gap on the left, so equal values mean lined up. */
-        return Math.round(img.left - box.left);
+        return Math.round(image.left - bounds.left);
       });
     });
 
@@ -537,9 +539,9 @@ const demoUrl = 'file://' + path.join(__dirname, '..', 'site', 'demo', 'index.ht
     const placed = await page.evaluate(() => {
       const block = document.querySelector('.strata-image-block[data-strata-align="center"]');
       if (!block) return null;
-      const img = block.querySelector('img').getBoundingClientRect();
-      const box = block.getBoundingClientRect();
-      return Math.round(img.left - box.left);
+      const image = block.querySelector('img').getBoundingClientRect();
+      const bounds = block.getBoundingClientRect();
+      return Math.round(image.left - bounds.left);
     });
     if (placed === null) throw new Error('no picture asked to place itself');
     /* The page is left aligned, so a gap on the left means the class won. */
@@ -554,8 +556,12 @@ const demoUrl = 'file://' + path.join(__dirname, '..', 'site', 'demo', 'index.ht
       const lines = [...node.querySelectorAll('.strata-code-line')];
       const called = lines.filter((line) => line.classList.contains('strata-code-line--called'));
       const rest = lines.filter((line) => !line.classList.contains('strata-code-line--called'));
-      const of = (line) => parseFloat(getComputedStyle(line).opacity);
-      return { called: called.map(of), rest: rest.map(of), counts: [called.length, rest.length] };
+      const opacityOf = (line) => parseFloat(getComputedStyle(line).opacity);
+      return {
+        called: called.map(opacityOf),
+        rest: rest.map(opacityOf),
+        counts: [called.length, rest.length]
+      };
     });
     if (!opacity.counts[0] || !opacity.counts[1]) {
       throw new Error('nothing to compare: ' + JSON.stringify(opacity.counts));
@@ -676,23 +682,23 @@ const demoUrl = 'file://' + path.join(__dirname, '..', 'site', 'demo', 'index.ht
       const wrap = document.querySelector('.strata-table-scroll--fits');
       if (!wrap) { return { error: 'no table is out of its box' }; }
       const table = wrap.querySelector('table');
-      const th = table.querySelector('thead th');
+      const header = table.querySelector('thead th');
       const root = document.querySelector('.strata-root');
       const offset = parseFloat(getComputedStyle(root).getPropertyValue('--strata-scroll-offset')) || 0;
 
       /* Far enough that the table's own top has gone past the line the header
          should hold, while its last row is still below it. */
-      const head = th.getBoundingClientRect().height;
+      const head = header.getBoundingClientRect().height;
       window.scrollBy(0, table.getBoundingClientRect().top - offset + head);
       await new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done)));
 
-      const box = table.getBoundingClientRect();
+      const bounds = table.getBoundingClientRect();
       return {
         offset: offset,
-        header: th.getBoundingClientRect().top,
-        tableTop: box.top,
-        tableBottom: box.bottom,
-        position: getComputedStyle(th).position
+        header: header.getBoundingClientRect().top,
+        tableTop: bounds.top,
+        tableBottom: bounds.bottom,
+        position: getComputedStyle(header).position
       };
     });
     if (stuck.error) throw new Error(stuck.error);
@@ -716,7 +722,7 @@ const demoUrl = 'file://' + path.join(__dirname, '..', 'site', 'demo', 'index.ht
       const order = (table) => [...table.tBodies[0].rows]
         .map((row) => (row.cells[0].textContent || '').trim());
       const sorted = (list) => list.slice()
-        .sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
+        .sort((first, second) => first.localeCompare(second, undefined, { numeric: true, sensitivity: 'base' }));
       const tables = [...document.querySelectorAll('.strata-table-sortable')];
       const index = tables.findIndex((table) => {
         const written = order(table);
@@ -733,13 +739,13 @@ const demoUrl = 'file://' + path.join(__dirname, '..', 'site', 'demo', 'index.ht
       return [...table.tBodies[0].rows].map((row) => (row.cells[0].textContent || '').trim());
     });
     const head = page.locator('[data-drive-sort] thead th').first();
-    const expected = which.written.slice().sort((a, b) =>
-      a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
+    const expected = which.written.slice().sort((first, second) =>
+      first.localeCompare(second, undefined, { numeric: true, sensitivity: 'base' }));
 
     await head.locator('.strata-th-sort').click();
-    const up = await column();
-    if (up.join('|') !== expected.join('|')) {
-      throw new Error('ascending gave ' + JSON.stringify(up));
+    const ascending = await column();
+    if (ascending.join('|') !== expected.join('|')) {
+      throw new Error('ascending gave ' + JSON.stringify(ascending));
     }
     if (await head.getAttribute('aria-sort') !== 'ascending') {
       throw new Error('the header does not say it is sorted');
@@ -795,9 +801,9 @@ const demoUrl = 'file://' + path.join(__dirname, '..', 'site', 'demo', 'index.ht
 
   await step('foldable callout opens on click', async () => {
     const details = page.locator('details.strata-callout').first();
-    if (await details.evaluate((el) => el.open)) throw new Error('started open');
+    if (await details.evaluate((element) => element.open)) throw new Error('started open');
     await details.locator('summary').click();
-    if (!(await details.evaluate((el) => el.open))) throw new Error('did not open');
+    if (!(await details.evaluate((element) => element.open))) throw new Error('did not open');
   });
 
   await step('scroll spy marks the heading in view', async () => {
@@ -883,8 +889,8 @@ const demoUrl = 'file://' + path.join(__dirname, '..', 'site', 'demo', 'index.ht
       throw new Error('the two states look the same: '
         + JSON.stringify(sun) + ' then ' + JSON.stringify(moon));
     }
-    const between = (value, a, b) =>
-      value > Math.min(a, b) + 0.001 && value < Math.max(a, b) - 0.001;
+    const between = (value, first, second) =>
+      value > Math.min(first, second) + 0.001 && value < Math.max(first, second) - 0.001;
     if (!between(flight.scale, sun.scale, moon.scale)) {
       throw new Error('the disc jumped: ' + JSON.stringify(flight));
     }
@@ -909,20 +915,20 @@ const demoUrl = 'file://' + path.join(__dirname, '..', 'site', 'demo', 'index.ht
       const root = host.querySelector('.strata-root');
       if (!root) { return { error: 'no .strata-root inside the host' }; }
       if (root === host) { return { error: '.strata-root is the host itself' }; }
-      const bg = getComputedStyle(root).backgroundColor;
-      const rgb = /(\d+), (\d+), (\d+)/.exec(bg);
+      const background = getComputedStyle(root).backgroundColor;
+      const channels = /(\d+), (\d+), (\d+)/.exec(background);
       return {
-        bg,
-        transparent: /rgba\(0, 0, 0, 0\)|transparent/.test(bg),
-        luminance: rgb ? (Number(rgb[1]) + Number(rgb[2]) + Number(rgb[3])) / 3 : null
+        background,
+        transparent: /rgba\(0, 0, 0, 0\)|transparent/.test(background),
+        luminance: channels ? (Number(channels[1]) + Number(channels[2]) + Number(channels[3])) / 3 : null
       };
     });
     if (state.error) { throw new Error(state.error); }
     if (state.transparent) { throw new Error('the root paints no background, so the page shows through'); }
-    if (state.luminance > 128) { throw new Error('dark mode but the root is light: ' + state.bg); }
+    if (state.luminance > 128) { throw new Error('dark mode but the root is light: ' + state.background); }
   });
 
-  await page.screenshot({ path: path.join(OUT, 'harness-view-obsidian-dark.png'), fullPage: false });
+  await page.screenshot({ path: path.join(HARNESS_DIST, 'harness-view-obsidian-dark.png'), fullPage: false });
 
   /*
    * Auto sizes the sidebar to its longest entry; a fixed width is whatever it
@@ -1032,13 +1038,13 @@ const demoUrl = 'file://' + path.join(__dirname, '..', 'site', 'demo', 'index.ht
     await page.waitForTimeout(700);
     const end = await page.evaluate(() => {
       const links = [...document.querySelectorAll('.strata-toc-sidebar a, .strata-toc-inline a')];
-      const at = links.findIndex((link) => link.getAttribute('aria-current') === 'true');
-      return { at: at + 1, of: links.length };
+      const activeIndex = links.findIndex((link) => link.getAttribute('aria-current') === 'true');
+      return { activeIndex: activeIndex + 1, of: links.length };
     });
     /* The last few headings never pass the reading line, because the page runs
        out before they can, so the highlight used to stop short of the end. */
-    if (end.at !== end.of) {
-      throw new Error('marked ' + end.at + ' of ' + end.of + ' at the very bottom');
+    if (end.activeIndex !== end.of) {
+      throw new Error('marked ' + end.activeIndex + ' of ' + end.of + ' at the very bottom');
     }
     await page.evaluate(() => window.scrollTo(0, 0));
     await page.waitForTimeout(300);
@@ -1062,7 +1068,7 @@ const demoUrl = 'file://' + path.join(__dirname, '..', 'site', 'demo', 'index.ht
     if (callouts !== 1) throw new Error('preview callouts: ' + callouts);
   });
 
-  await page.screenshot({ path: path.join(OUT, 'harness-edit-split.png'), fullPage: false });
+  await page.screenshot({ path: path.join(HARNESS_DIST, 'harness-edit-split.png'), fullPage: false });
 
   await step('Ctrl+S saves', async () => {
     await page.locator('.strata-editor-input').press('Control+s');
@@ -1083,9 +1089,9 @@ const demoUrl = 'file://' + path.join(__dirname, '..', 'site', 'demo', 'index.ht
     await page.waitForTimeout(300);
     await page.setViewportSize({ width: 560, height: 900 });
     await page.waitForTimeout(400);
-    const box = await page.locator('.strata-content').boundingBox();
+    const bounds = await page.locator('.strata-content').boundingBox();
     const toc = await page.locator('.strata-toc-sidebar').boundingBox();
-    if (toc.y + toc.height > box.y + 8) throw new Error('contents overlap the text');
+    if (toc.y + toc.height > bounds.y + 8) throw new Error('contents overlap the text');
   });
 
   /*
@@ -1185,7 +1191,7 @@ const demoUrl = 'file://' + path.join(__dirname, '..', 'site', 'demo', 'index.ht
         const seen = [];
         await fresh.goto('file://' + path.join(__dirname, '..', 'site', name),
           { waitUntil: 'commit' });
-        for (let i = 0; i < 16; i += 1) {
+        for (let image = 0; image < 16; image += 1) {
           try {
             /* Only once there is a body, because that is the first moment
                anything can be on screen: an instant with no body is not a
@@ -1220,7 +1226,7 @@ const demoUrl = 'file://' + path.join(__dirname, '..', 'site', 'demo', 'index.ht
    * pane is most likely to see.
    */
   const paneTo = async (control) => {
-    for (let i = 0; i < 8; i += 1) {
+    for (let image = 0; image < 8; image += 1) {
       if (await page.locator(control).count() > 0) return;
       const next = page.locator('.pp-step', { hasText: 'Next' });
       if (await next.isDisabled()) break;
@@ -1233,7 +1239,7 @@ const demoUrl = 'file://' + path.join(__dirname, '..', 'site', 'demo', 'index.ht
   };
 
   const paneToStart = async () => {
-    for (let i = 0; i < 8; i += 1) {
+    for (let image = 0; image < 8; image += 1) {
       const back = page.locator('.pp-step', { hasText: 'Back' });
       if (await back.isDisabled()) return;
       await back.click();
@@ -1253,10 +1259,10 @@ const demoUrl = 'file://' + path.join(__dirname, '..', 'site', 'demo', 'index.ht
 
   await step('every pane page names its groups', async () => {
     const seen = [];
-    for (let i = 0; i < 5; i += 1) {
+    for (let image = 0; image < 5; image += 1) {
       const groups = await page.locator('.pp-group').allTextContents();
       seen.push(groups.join(', '));
-      if (i < 4) {
+      if (image < 4) {
         await page.locator('.pp-step', { hasText: 'Next' }).click();
         await page.waitForTimeout(120);
       }
@@ -1268,10 +1274,10 @@ const demoUrl = 'file://' + path.join(__dirname, '..', 'site', 'demo', 'index.ht
       'Contents, Links between documents',
       'Toolbar, File information'
     ];
-    for (let i = 0; i < 5; i += 1) {
-      if (seen[i] !== expected[i]) {
-        throw new Error('page ' + (i + 1) + ' has "' + seen[i] + '", expected "'
-          + expected[i] + '"');
+    for (let image = 0; image < 5; image += 1) {
+      if (seen[image] !== expected[image]) {
+        throw new Error('page ' + (image + 1) + ' has "' + seen[image] + '", expected "'
+          + expected[image] + '"');
       }
     }
   });
@@ -1297,13 +1303,13 @@ const demoUrl = 'file://' + path.join(__dirname, '..', 'site', 'demo', 'index.ht
     await page.selectOption('#pp-diagramWidth', 'scroll');
     await page.waitForTimeout(900);
     const mode = await page.evaluate(() => {
-      const box = document.querySelector('.strata-mermaid[data-strata-diagram]');
-      return box ? box.getAttribute('data-strata-diagram') : null;
+      const bounds = document.querySelector('.strata-mermaid[data-strata-diagram]');
+      return bounds ? bounds.getAttribute('data-strata-diagram') : null;
     });
     if (mode !== 'scroll') throw new Error('diagram box reports ' + mode);
   });
 
-  await page.screenshot({ path: path.join(OUT, 'harness-narrow.png'), fullPage: false });
+  await page.screenshot({ path: path.join(HARNESS_DIST, 'harness-narrow.png'), fullPage: false });
 
   /*
    * A short document leaves the page canvas showing under the web part, which
@@ -1325,7 +1331,7 @@ const demoUrl = 'file://' + path.join(__dirname, '..', 'site', 'demo', 'index.ht
     await page.locator('#pp-fillHeight').click();
     await page.waitForTimeout(500);
 
-    const box = await page.evaluate(() => {
+    const bounds = await page.evaluate(() => {
       const root = document.querySelector('.strata-root');
       const meta = document.querySelector('.strata-meta');
       return {
@@ -1337,17 +1343,17 @@ const demoUrl = 'file://' + path.join(__dirname, '..', 'site', 'demo', 'index.ht
       };
     });
 
-    if (box.fill !== 'window') throw new Error('the root reports fill=' + box.fill);
-    if (!/^[0-9]+px$/.test(box.minHeight)) {
-      throw new Error('nothing was measured; min-height is "' + box.minHeight + '"');
+    if (bounds.fill !== 'window') throw new Error('the root reports fill=' + bounds.fill);
+    if (!/^[0-9]+px$/.test(bounds.minHeight)) {
+      throw new Error('nothing was measured; min-height is "' + bounds.minHeight + '"');
     }
-    if (box.viewport - box.bottom > 4) {
-      throw new Error('the web part stops ' + Math.round(box.viewport - box.bottom)
+    if (bounds.viewport - bounds.bottom > 4) {
+      throw new Error('the web part stops ' + Math.round(bounds.viewport - bounds.bottom)
         + 'px above the bottom of the window');
     }
-    if (box.metaBottom === null) throw new Error('the file footer is not shown');
-    if (box.bottom - box.metaBottom > 40) {
-      throw new Error('the file footer sits ' + Math.round(box.bottom - box.metaBottom)
+    if (bounds.metaBottom === null) throw new Error('the file footer is not shown');
+    if (bounds.bottom - bounds.metaBottom > 40) {
+      throw new Error('the file footer sits ' + Math.round(bounds.bottom - bounds.metaBottom)
         + 'px above the bottom of the web part');
     }
   });

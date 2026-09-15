@@ -148,7 +148,7 @@ function build() {
   const rendered = adoptAuthoredToc(processor.render(sample));
   const html = rendered.html;
   const page = template(readCss(), html, rendered.toc || buildToc(html), mermaidThemes,
-    { fn: mermaidConfigFor, base: MERMAID_BASE_CONFIG },
+    { configFor: mermaidConfigFor, base: MERMAID_BASE_CONFIG },
     pageId ? site.page(pageId).title : pageTitle(html));
 
   fs.mkdirSync(outDir, { recursive: true });
@@ -233,7 +233,7 @@ function pageTitle(html) {
   return text || 'Markstrata';
 }
 
-function template(css, content, toc, mermaidThemes, mermaidBase, title) {
+function template(stylesheet, content, toc, mermaidThemes, mermaidBase, title) {
   const header = pageId ? site.header(pageId) : '';
   const footer = pageId ? site.footer(pageId) : '';
   return `<!DOCTYPE html>
@@ -266,7 +266,7 @@ body { margin: 0; background: var(--site-canvas);
 ${pageId ? site.CHROME_CSS : ''}
 </style>
 <style>
-${css}
+${stylesheet}
 </style>
 ${site.MODE_BOOTSTRAP}
 </head>
@@ -337,7 +337,7 @@ ${footer}
 <script>
 var MERMAID_THEMES = ${JSON.stringify(mermaidThemes)};
 var MERMAID_BASE = ${JSON.stringify(mermaidBase.base)};
-var MERMAID_CONFIG_FOR = ${mermaidBase.fn.toString()};
+var MERMAID_CONFIG_FOR = ${mermaidBase.configFor.toString()};
 </script>
 <script>
 (function () {
@@ -443,8 +443,8 @@ var MERMAID_CONFIG_FOR = ${mermaidBase.fn.toString()};
     var input = document.getElementById(id);
     input.addEventListener('change', function () {
       var blocks = document.querySelectorAll('.strata-code');
-      for (var i = 0; i < blocks.length; i++) {
-        blocks[i].classList.toggle(className, input.checked);
+      for (var index = 0; index < blocks.length; index++) {
+        blocks[index].classList.toggle(className, input.checked);
       }
     });
   }
@@ -458,7 +458,9 @@ var MERMAID_CONFIG_FOR = ${mermaidBase.fn.toString()};
     var block = button.closest('.strata-code');
     var lines = block.querySelectorAll('.strata-code-line-text');
     var text = [];
-    for (var i = 0; i < lines.length; i++) { text.push(lines[i].textContent); }
+    for (var index = 0; index < lines.length; index++) {
+      text.push(lines[index].textContent);
+    }
     navigator.clipboard.writeText(text.join('\\n'));
     button.setAttribute('data-state', 'done');
     setTimeout(function () { button.removeAttribute('data-state'); }, 1500);
@@ -469,15 +471,15 @@ var MERMAID_CONFIG_FOR = ${mermaidBase.fn.toString()};
   function renderDiagrams() {
     if (typeof mermaid === 'undefined') { return; }
     var hosts = document.querySelectorAll('.strata-mermaid');
-    for (var i = 0; i < hosts.length; i++) {
-      if (sources[i] === undefined) {
-        var pre = hosts[i].querySelector('pre.mermaid');
-        sources[i] = pre ? pre.textContent : '';
+    for (var index = 0; index < hosts.length; index++) {
+      if (sources[index] === undefined) {
+        var source = hosts[index].querySelector('pre.mermaid');
+        sources[index] = source ? source.textContent : '';
       }
     }
     var key = document.getElementById('theme').value + '-' + document.getElementById('mode').value;
     var config = mermaidThemes[key];
-    for (var j = 0; j < hosts.length; j++) {
+    for (var next = 0; next < hosts.length; next++) {
       (function (host, source, index) {
         /* Configured per diagram, as the web part does it: fitting a gantt to
            its column needs the width of that column. */
@@ -489,7 +491,7 @@ var MERMAID_CONFIG_FOR = ${mermaidBase.fn.toString()};
         mermaid.render('demo-mermaid-' + index + '-' + Date.now(), source).then(function (result) {
           host.innerHTML = result.svg;
         }).catch(function () {});
-      })(hosts[j], sources[j], j);
+      })(hosts[next], sources[next], next);
     }
   }
   renderDiagrams();

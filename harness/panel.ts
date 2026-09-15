@@ -147,13 +147,13 @@ export class PropertyPanel {
     return foot;
   }
 
-  private step(label: string, enabled: boolean, go: () => void): HTMLElement {
+  private step(label: string, enabled: boolean, onPress: () => void): HTMLElement {
     const button: HTMLElement = el('button', 'pp-step', label);
     button.setAttribute('type', 'button');
     if (!enabled) {
       button.setAttribute('disabled', 'disabled');
     } else {
-      button.addEventListener('click', go);
+      button.addEventListener('click', onPress);
     }
     return button;
   }
@@ -239,9 +239,9 @@ export class PropertyPanel {
     button.setAttribute('role', 'switch');
     const word: HTMLElement = el('span', 'pp-toggle-word');
 
-    const paint = (on: boolean): void => {
-      button.setAttribute('aria-checked', String(on));
-      word.textContent = on ? 'On' : 'Off';
+    const paint = (isOn: boolean): void => {
+      button.setAttribute('aria-checked', String(isOn));
+      word.textContent = isOn ? 'On' : 'Off';
     };
     paint(Boolean(this.state[field.key]));
 

@@ -27,36 +27,36 @@ const REPO = 'https://github.com/CodyRWhite/Markstrata';
  */
 const PAGES = [
   {
-    id: 'home', dir: '', label: 'Home', title: 'Markstrata',
+    id: 'home', folder: '', label: 'Home', title: 'Markstrata',
     source: 'docs/site/home.md',
     description: 'Markdown for SharePoint, themed like the editors you write it in - GitHub, Obsidian and VS Code, in light and dark.'
   },
   {
-    id: 'demo', dir: 'demo', label: 'Demo', title: 'Demo - Markstrata',
+    id: 'demo', folder: 'demo', label: 'Demo', title: 'Demo - Markstrata',
     description: 'The web part itself, running in your browser: toolbar, contents, copy buttons, theme switcher and the split editor.'
   },
   {
-    id: 'themes', dir: 'themes', label: 'Themes', title: 'Themes - Markstrata',
+    id: 'themes', folder: 'themes', label: 'Themes', title: 'Themes - Markstrata',
     source: 'samples/kitchen-sink.md',
     description: 'Every feature at once - callouts, code, tables, diagrams and maths - in each theme, so you can judge one at a glance.'
   },
   {
-    id: 'docs', dir: 'docs', label: 'Documentation', title: 'Documentation - Markstrata',
+    id: 'docs', folder: 'docs', label: 'Documentation', title: 'Documentation - Markstrata',
     source: 'docs/site/documentation.md',
     description: 'Install, content sources, themes, code block flags, callout syntaxes, the table of contents and editing in the page.'
   },
   {
-    id: 'syntax', dir: 'syntax', label: 'Syntax', title: 'Syntax - Markstrata',
+    id: 'syntax', folder: 'syntax', label: 'Syntax', title: 'Syntax - Markstrata',
     source: 'docs/site/syntax.md',
     description: 'Every piece of markdown Markstrata renders, with what you write beside what it turns into.'
   },
   {
-    id: 'about', dir: 'about', label: 'About', title: 'About - Markstrata',
+    id: 'about', folder: 'about', label: 'About', title: 'About - Markstrata',
     source: 'docs/site/about.md',
     description: 'Why Markstrata exists, how it is built, and what it borrows from the web part that prompted it.'
   },
   {
-    id: 'support', dir: 'support', label: 'Support', title: 'Support - Markstrata',
+    id: 'support', folder: 'support', label: 'Support', title: 'Support - Markstrata',
     source: 'docs/site/support.md',
     description: 'Markstrata is free and MIT licensed. Ways to help - most of which cost nothing.'
   }
@@ -76,14 +76,14 @@ function page(id) {
  * domain root. Every page but the home page sits one directory down.
  */
 function linkTo(fromId, toId) {
-  const up = page(fromId).dir ? '../' : '';
-  const target = page(toId).dir;
-  return `${up}${target ? `${target}/` : ''}` || './';
+  const toRoot = page(fromId).folder ? '../' : '';
+  const target = page(toId).folder;
+  return `${toRoot}${target ? `${target}/` : ''}` || './';
 }
 
 /* The site header: the logo, the navigation, and the call to action. */
 function header(currentId) {
-  const up = page(currentId).dir ? '../' : '';
+  const toRoot = page(currentId).folder ? '../' : '';
   const links = PAGES
     .map((entry) => {
       const current = entry.id === currentId;
@@ -96,7 +96,7 @@ function header(currentId) {
      dark wordmark on the dark bar for anyone browsing in light mode. */
   return `<header class="site-header">
   <a class="site-brand" href="${linkTo(currentId, 'home')}" aria-label="Markstrata">
-    <img src="${up}brand/lockup-horizontal-dark.svg" alt="Markstrata">
+    <img src="${toRoot}brand/lockup-horizontal-dark.svg" alt="Markstrata">
   </a>
   <nav class="site-nav" aria-label="Site">${links}</nav>
   <a class="site-cta" href="${REPO}/releases/latest">Download</a>
@@ -132,7 +132,7 @@ const MODE_KEY = 'markstrata-site-mode';
 const MODE_BOOTSTRAP = `<script>
 (function () {
   var mode;
-  try { mode = window.localStorage.getItem(${JSON.stringify(MODE_KEY)}); } catch (e) { mode = null; }
+  try { mode = window.localStorage.getItem(${JSON.stringify(MODE_KEY)}); } catch (error) { mode = null; }
   if (mode !== 'light' && mode !== 'dark') {
     mode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
       ? 'dark' : 'light';

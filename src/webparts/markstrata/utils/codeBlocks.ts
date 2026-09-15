@@ -178,12 +178,12 @@ export function parseHighlightedLines(info: string): number[] {
   braces[1].split(',').forEach((part: string) => {
     const range: RegExpMatchArray | null = part.trim().match(/^(\d+)\s*-\s*(\d+)$/);
     if (range) {
-      const from: number = parseInt(range[1], 10);
-      const to: number = parseInt(range[2], 10);
+      const first: number = parseInt(range[1], 10);
+      const last: number = parseInt(range[2], 10);
       /* Written either way round, because 6-4 is a slip, not a request for
          nothing. */
-      for (let n: number = Math.min(from, to); n <= Math.max(from, to); n += 1) {
-        lines.push(n);
+      for (let line: number = Math.min(first, last); line <= Math.max(first, last); line += 1) {
+        lines.push(line);
       }
       return;
     }
@@ -266,8 +266,9 @@ export function renderCodeBlock(code: string, info: string, options: ICodeBlockO
     .map((line: string, index: number) => {
       /* Numbered from one, the way a fence names them and a gutter shows them. */
       const marked: boolean = called.indexOf(index + 1) !== -1;
-      const cls: string = marked ? 'strata-code-line strata-code-line--called' : 'strata-code-line';
-      return `<span class="${cls}"><span class="strata-code-ln" aria-hidden="true"></span>` +
+      const className: string = marked
+        ? 'strata-code-line strata-code-line--called' : 'strata-code-line';
+      return `<span class="${className}"><span class="strata-code-ln" aria-hidden="true"></span>` +
         `<span class="strata-code-line-text">${line}</span></span>`;
     })
     .join('');

@@ -100,9 +100,9 @@ function digest(token) {
 CONTENT.forEach((file) => {
   test(`${file} does not name a known internal host`, () => {
     const text = fs.readFileSync(path.join(ROOT, file), 'utf8').toLowerCase();
-    const hit = (text.match(TOKEN) || []).some((token) => BANNED.has(digest(token)));
+    const banned = (text.match(TOKEN) || []).some((token) => BANNED.has(digest(token)));
 
-    assert.equal(hit, false,
+    assert.equal(banned, false,
       `${file} names a host or database from a real tenant. Example data `
       + 'belongs on example.com.');
   });

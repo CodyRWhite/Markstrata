@@ -15,10 +15,10 @@ const { splitFrontMatter } = frontMatter;
  */
 
 test('the block is removed and read', () => {
-  const doc = splitFrontMatter('---\ntitle: Deploy runbook\nauthor: Ops\n---\n\n# Real title\n');
-  assert.equal(doc.data.title, 'Deploy runbook');
-  assert.equal(doc.data.author, 'Ops');
-  assert.equal(doc.body, '\n# Real title\n');
+  const split = splitFrontMatter('---\ntitle: Deploy runbook\nauthor: Ops\n---\n\n# Real title\n');
+  assert.equal(split.data.title, 'Deploy runbook');
+  assert.equal(split.data.author, 'Ops');
+  assert.equal(split.body, '\n# Real title\n');
 });
 
 test('tags are read as a list, bracketed or not', () => {
@@ -34,18 +34,18 @@ test('quoted values lose their quotes', () => {
 });
 
 test('a TOML fence works the same way', () => {
-  const doc = splitFrontMatter('+++\ntitle: Notes\n+++\n\nBody\n');
-  assert.equal(doc.data.title, 'Notes');
-  assert.equal(doc.body, '\nBody\n');
+  const split = splitFrontMatter('+++\ntitle: Notes\n+++\n\nBody\n');
+  assert.equal(split.data.title, 'Notes');
+  assert.equal(split.body, '\nBody\n');
 });
 
 /* The ways it must not fire. */
 
 test('a rule further down the document stays a rule', () => {
   const source = '# Title\n\nSome text.\n\n---\n\nMore text.\n';
-  const doc = splitFrontMatter(source);
-  assert.equal(doc.body, source, 'only the very top of the file is frontmatter');
-  assert.deepEqual(doc.data, {});
+  const split = splitFrontMatter(source);
+  assert.equal(split.body, source, 'only the very top of the file is frontmatter');
+  assert.deepEqual(split.data, {});
 });
 
 test('an opening fence with no closing one is left alone', () => {
@@ -59,8 +59,8 @@ test('a fence that is closed by the other kind is left alone', () => {
 });
 
 test('nested keys are skipped rather than guessed at', () => {
-  const doc = splitFrontMatter('---\ntitle: Top\nnested:\n  title: Inner\n---\n');
-  assert.equal(doc.data.title, 'Top', 'an indented key must not overwrite a real one');
+  const split = splitFrontMatter('---\ntitle: Top\nnested:\n  title: Inner\n---\n');
+  assert.equal(split.data.title, 'Top', 'an indented key must not overwrite a real one');
 });
 
 /* What the reader actually gets. */
@@ -85,7 +85,7 @@ test('the frontmatter does not reach the table of contents', () => {
 
 test('a document with no frontmatter is untouched', () => {
   const source = '# Title\n\nBody.\n';
-  const doc = splitFrontMatter(source);
-  assert.equal(doc.body, source);
-  assert.deepEqual(doc.data, {});
+  const split = splitFrontMatter(source);
+  assert.equal(split.body, source);
+  assert.deepEqual(split.data, {});
 });

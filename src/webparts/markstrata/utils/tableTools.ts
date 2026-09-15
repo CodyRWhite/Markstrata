@@ -31,7 +31,7 @@ export class TableTools {
     }
 
     this.stop();
-    const fit: (wrap: HTMLElement) => void = (wrap: HTMLElement) => {
+    const letOutIfItFits: (wrap: HTMLElement) => void = (wrap: HTMLElement) => {
       const table: HTMLTableElement | null = wrap.querySelector(':scope > table');
       if (!table) {
         return;
@@ -42,11 +42,12 @@ export class TableTools {
       wrap.classList.toggle('strata-table-scroll--fits', fits);
     };
 
-    wraps.forEach(fit);
+    wraps.forEach(letOutIfItFits);
 
     if (typeof ResizeObserver !== 'undefined') {
       this.fitObserver = new ResizeObserver((entries: ResizeObserverEntry[]) => {
-        entries.forEach((entry: ResizeObserverEntry) => fit(entry.target as HTMLElement));
+        entries.forEach((entry: ResizeObserverEntry) =>
+          letOutIfItFits(entry.target as HTMLElement));
       });
       wraps.forEach((wrap: HTMLElement) =>
         (this.fitObserver as ResizeObserver).observe(wrap));
@@ -127,15 +128,17 @@ function sortBy(
   rows: HTMLTableRowElement[],
   column: number
 ): void {
-  const was: string = headers[column].getAttribute('aria-sort') || 'none';
-  const now: string = was === 'none' ? 'ascending' : (was === 'ascending' ? 'descending' : 'none');
+  const sortedBefore: string = headers[column].getAttribute('aria-sort') || 'none';
+  const sortedNow: string = sortedBefore === 'none'
+    ? 'ascending'
+    : (sortedBefore === 'ascending' ? 'descending' : 'none');
 
   headers.forEach((cell: HTMLTableCellElement, index: number) => {
-    cell.setAttribute('aria-sort', index === column ? now : 'none');
+    cell.setAttribute('aria-sort', index === column ? sortedNow : 'none');
   });
 
   const body: HTMLTableSectionElement = rows[0].parentElement as HTMLTableSectionElement;
-  if (now === 'none') {
+  if (sortedNow === 'none') {
     rows.forEach((row: HTMLTableRowElement) => body.appendChild(row));
     return;
   }
@@ -149,6 +152,6 @@ function sortBy(
     index: index
   }));
 
-  sortedOrder(sortable, kind, now === 'descending')
+  sortedOrder(sortable, kind, sortedNow === 'descending')
     .forEach((index: number) => body.appendChild(rows[index]));
 }

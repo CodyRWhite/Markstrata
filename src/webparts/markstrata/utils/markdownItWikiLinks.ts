@@ -19,7 +19,7 @@ export interface IWikiLinkOptions {
 
 const OPEN: number = 0x5b; /* [ */
 
-export function wikiLinkPlugin(md: IMarkdownIt, options?: unknown): void {
+export function wikiLinkPlugin(markdownIt: IMarkdownIt, options?: unknown): void {
   const settings: IWikiLinkOptions = (options as IWikiLinkOptions)
     || { resolve: () => undefined };
 
@@ -66,7 +66,7 @@ export function wikiLinkPlugin(md: IMarkdownIt, options?: unknown): void {
   };
 
   /* Before `link`, which would otherwise take the first bracket. */
-  md.inline.ruler.before('link', 'strata_wiki_link', rule);
+  markdownIt.inline.ruler.before('link', 'strata_wiki_link', rule);
 }
 
 export const plugin: MarkdownItPlugin = wikiLinkPlugin;

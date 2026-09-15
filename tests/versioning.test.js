@@ -46,16 +46,16 @@ test('an unknown version falls back rather than picking a neighbour', () => {
 test('set-version writes four parts, from either spelling', () => {
   const work = fs.mkdtempSync(path.join(os.tmpdir(), 'ver-'));
   for (const [given, expected] of [['1.2.3', '1.2.3.0'], ['1.2.3.4', '1.2.3.4']]) {
-    const pkg = path.join(work, 'package.json');
-    const cfg = path.join(work, 'config');
-    fs.mkdirSync(cfg, { recursive: true });
-    fs.writeFileSync(pkg, JSON.stringify({ name: 'x', version: '0.0.0.0' }));
-    fs.writeFileSync(path.join(cfg, 'package-solution.json'),
+    const packageJson = path.join(work, 'package.json');
+    const solutionConfig = path.join(work, 'config');
+    fs.mkdirSync(solutionConfig, { recursive: true });
+    fs.writeFileSync(packageJson, JSON.stringify({ name: 'x', version: '0.0.0.0' }));
+    fs.writeFileSync(path.join(solutionConfig, 'package-solution.json'),
       JSON.stringify({ solution: { version: '0.0.0.0', features: [{ version: '0.0.0.0' }] } }));
     execFileSync(process.execPath, [path.join(root, 'scripts', 'set-version.js'), given],
       { env: { ...process.env, SET_VERSION_ROOT: work }, stdio: 'pipe' });
-    const solution = JSON.parse(fs.readFileSync(path.join(cfg, 'package-solution.json'), 'utf8'));
-    assert.equal(JSON.parse(fs.readFileSync(pkg, 'utf8')).version, expected, `package.json for ${given}`);
+    const solution = JSON.parse(fs.readFileSync(path.join(solutionConfig, 'package-solution.json'), 'utf8'));
+    assert.equal(JSON.parse(fs.readFileSync(packageJson, 'utf8')).version, expected, `package.json for ${given}`);
     assert.equal(solution.solution.version, expected, `solution for ${given}`);
     assert.equal(solution.solution.features[0].version, expected, `feature for ${given}`);
   }

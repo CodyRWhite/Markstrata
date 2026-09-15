@@ -30,11 +30,11 @@ const svgs = GENERATED.filter((file) => file.endsWith('.svg'));
 /* A PNG's dimensions are in the IHDR chunk, at a fixed offset - enough to
  * check a size without pulling in an image library. */
 function pngSize(file) {
-  const buf = fs.readFileSync(file);
-  if (buf.toString('ascii', 1, 4) !== 'PNG') {
+  const bytes = fs.readFileSync(file);
+  if (bytes.toString('ascii', 1, 4) !== 'PNG') {
     throw new Error(`${file} is not a PNG`);
   }
-  return { width: buf.readUInt32BE(16), height: buf.readUInt32BE(20) };
+  return { width: bytes.readUInt32BE(16), height: bytes.readUInt32BE(20) };
 }
 
 test('the brand package is present', () => {
@@ -141,9 +141,9 @@ test('the icon PNGs are the sizes their names claim', () => {
  */
 test('the web part tile is a JPEG at its intended size', () => {
   const file = path.join(ASSETS, 'webpart-tile.jpg');
-  const buf = fs.readFileSync(file);
-  assert.equal(buf.readUInt16BE(0), 0xffd8, 'expected a JPEG');
-  assert.ok(buf.length < 40 * 1024, `tile is ${buf.length} bytes; it is inlined into the manifest`);
+  const bytes = fs.readFileSync(file);
+  assert.equal(bytes.readUInt16BE(0), 0xffd8, 'expected a JPEG');
+  assert.ok(bytes.length < 40 * 1024, `tile is ${bytes.length} bytes; it is inlined into the manifest`);
 });
 
 /*
@@ -208,9 +208,9 @@ test('gantt text is sized to survive the scaling, and layout agrees with it', ()
  */
 test('each diagram width mode asks mermaid for the right thing', () => {
   const { mermaidConfigFor, MERMAID_BASE_CONFIG } = require('./helpers').mermaidConfig;
-  const fit = mermaidConfigFor('fit', 900, MERMAID_BASE_CONFIG).gantt;
-  assert.equal(fit.useMaxWidth, false, 'fitting must not let mermaid scale the drawing');
-  assert.equal(fit.useWidth, 900, 'fitting lays the chart out at the width it was given');
+  const fitted = mermaidConfigFor('fit', 900, MERMAID_BASE_CONFIG).gantt;
+  assert.equal(fitted.useMaxWidth, false, 'fitting must not let mermaid scale the drawing');
+  assert.equal(fitted.useWidth, 900, 'fitting lays the chart out at the width it was given');
 
   const scroll = mermaidConfigFor('scroll', 900, MERMAID_BASE_CONFIG).gantt;
   assert.equal(scroll.useMaxWidth, false);

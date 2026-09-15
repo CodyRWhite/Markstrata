@@ -23,11 +23,11 @@ function read(file) {
   return fs.readFileSync(path.join(STYLES, file), 'utf8');
 }
 
-function declaredTokens(css) {
+function declaredTokens(stylesheet) {
   const tokens = new Set();
   const pattern = /(--strata-[a-z0-9-]+)\s*:/g;
   let match;
-  while ((match = pattern.exec(css)) !== null) {
+  while ((match = pattern.exec(stylesheet)) !== null) {
     tokens.add(match[1]);
   }
   return tokens;
@@ -38,8 +38,8 @@ function declaredTokens(css) {
  * colour blocks - ignoring per-element overrides such as the callout hue rules,
  * which are not part of the theme contract.
  */
-function themeBlockTokens(css) {
-  const blocks = css.match(/\.strata-root\[data-strata-theme=[^{]*\{[^}]*\}/g) || [];
+function themeBlockTokens(stylesheet) {
+  const blocks = stylesheet.match(/\.strata-root\[data-strata-theme=[^{]*\{[^}]*\}/g) || [];
   const tokens = new Set();
   blocks
     .filter((block) => block.indexOf('.strata-callout') === -1)
@@ -48,11 +48,11 @@ function themeBlockTokens(css) {
 }
 
 /** Tokens used as `var(--x)` with no fallback value. */
-function requiredTokens(css) {
+function requiredTokens(stylesheet) {
   const tokens = new Set();
   const pattern = /var\(\s*(--strata-[a-z0-9-]+)\s*\)/g;
   let match;
-  while ((match = pattern.exec(css)) !== null) {
+  while ((match = pattern.exec(stylesheet)) !== null) {
     tokens.add(match[1]);
   }
   return tokens;
@@ -72,10 +72,10 @@ test('every theme declares the same set of tokens', () => {
 
 test('every theme defines both a light and a dark block', () => {
   THEME_FILES.forEach((file) => {
-    const css = read(`themes/${file}`);
+    const stylesheet = read(`themes/${file}`);
     const name = file.replace('.css', '');
-    assert.match(css, new RegExp(`\\[data-strata-theme='${name}'\\]\\[data-strata-mode='light'\\]`), `${file} light block`);
-    assert.match(css, new RegExp(`\\[data-strata-theme='${name}'\\]\\[data-strata-mode='dark'\\]`), `${file} dark block`);
+    assert.match(stylesheet, new RegExp(`\\[data-strata-theme='${name}'\\]\\[data-strata-mode='light'\\]`), `${file} light block`);
+    assert.match(stylesheet, new RegExp(`\\[data-strata-theme='${name}'\\]\\[data-strata-mode='dark'\\]`), `${file} dark block`);
   });
 });
 
@@ -100,9 +100,9 @@ test('no rule depends on a token nothing defines', () => {
 test('the accent palette is complete and stored as RGB triples', () => {
   const hues = ['blue', 'cyan', 'green', 'yellow', 'orange', 'red', 'purple', 'pink', 'gray'];
   THEME_FILES.forEach((file) => {
-    const css = read(`themes/${file}`);
+    const stylesheet = read(`themes/${file}`);
     hues.forEach((hue) => {
-      const matches = css.match(new RegExp(`--strata-color-${hue}:\\s*\\d+,\\s*\\d+,\\s*\\d+;`, 'g')) || [];
+      const matches = stylesheet.match(new RegExp(`--strata-color-${hue}:\\s*\\d+,\\s*\\d+,\\s*\\d+;`, 'g')) || [];
       assert.equal(matches.length, 2, `${file} should set --strata-color-${hue} in both light and dark`);
     });
   });
@@ -110,11 +110,11 @@ test('the accent palette is complete and stored as RGB triples', () => {
 
 test('no structural rule hard-codes a hex colour', () => {
   STRUCTURAL_FILES.forEach((file) => {
-    const css = read(file)
+    const stylesheet = read(file)
       // print.css deliberately forces black on white for paper.
       .replace(/@media print[\s\S]*$/, '');
-    const hex = css.match(/#[0-9a-fA-F]{3,8}\b/g) || [];
-    assert.deepEqual(hex, [], `${file} should take its colours from tokens`);
+    const colour = stylesheet.match(/#[0-9a-fA-F]{3,8}\b/g) || [];
+    assert.deepEqual(colour, [], `${file} should take its colours from tokens`);
   });
 });
 

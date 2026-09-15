@@ -2,7 +2,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const { MarkdownProcessor, codeBlocks } = require('./helpers');
 
-const md = new MarkdownProcessor();
+const markdown = new MarkdownProcessor();
 
 test('fence info parsing', () => {
   assert.deepEqual(codeBlocks.parseInfo('ts'), { lang: 'ts', filename: '' });
@@ -37,7 +37,7 @@ test('language label is humanised', () => {
 });
 
 test('every line becomes one block element with no separating newline', () => {
-  const html = md.render('```js\nconst a = 1;\nconst b = 2;\n```');
+  const html = markdown.render('```js\nconst a = 1;\nconst b = 2;\n```');
   const lines = html.match(/<span class="strata-code-line">/g);
   assert.equal(lines.length, 2);
   // A newline between the line elements would render as a blank line in <pre>.
@@ -45,7 +45,7 @@ test('every line becomes one block element with no separating newline', () => {
 });
 
 test('highlight spans are reopened across line breaks', () => {
-  const html = md.render('```js\n/* a\n   multi line comment */\nconst x = 1;\n```');
+  const html = markdown.render('```js\n/* a\n   multi line comment */\nconst x = 1;\n```');
   const openTags = (html.match(/<span class="hljs-comment">/g) || []).length;
   const lineCount = (html.match(/<span class="strata-code-line">/g) || []).length;
   assert.equal(lineCount, 3);
@@ -65,7 +65,7 @@ test('line numbers are not part of the text content', () => {
 });
 
 test('code content is escaped, never live markup', () => {
-  const html = md.render('```html\n<script>alert(1)</script>\n```');
+  const html = markdown.render('```html\n<script>alert(1)</script>\n```');
   // highlight.js wraps the tag parts in spans, so assert on the escaping
   // itself rather than on an exact string.
   assert.doesNotMatch(html, /<script/);
@@ -75,13 +75,13 @@ test('code content is escaped, never live markup', () => {
 });
 
 test('an unknown language still renders a block', () => {
-  const html = md.render('```notalanguage\nsome text\n```');
+  const html = markdown.render('```notalanguage\nsome text\n```');
   assert.match(html, /strata-code/);
   assert.match(html, /some text/);
 });
 
 test('indented code blocks render through the same path', () => {
-  const html = md.render('    indented code\n');
+  const html = markdown.render('    indented code\n');
   assert.match(html, /strata-code/);
   assert.match(html, /indented code/);
 });
@@ -94,6 +94,6 @@ test('the header can be turned off, leaving only the copy button', () => {
 });
 
 test('trailing newline does not add an empty line', () => {
-  const html = md.render('```\none\n```');
+  const html = markdown.render('```\none\n```');
   assert.equal((html.match(/strata-code-line"/g) || []).length, 1);
 });

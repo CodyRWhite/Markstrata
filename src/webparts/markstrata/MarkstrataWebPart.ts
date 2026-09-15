@@ -440,8 +440,8 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
 
   private readThemeOverride(): void {
     try {
-      const raw: string | null = window.localStorage.getItem(this.overrideStorageKey());
-      this.themeOverride = raw ? (JSON.parse(raw) as IThemeOverride) : undefined;
+      const stored: string | null = window.localStorage.getItem(this.overrideStorageKey());
+      this.themeOverride = stored ? (JSON.parse(stored) as IThemeOverride) : undefined;
     } catch {
       // Storage can be blocked; the author's theme is then simply used as-is.
       this.themeOverride = undefined;

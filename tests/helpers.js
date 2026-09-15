@@ -4,7 +4,7 @@
  */
 const path = require('path');
 
-const LIB = path.join(__dirname, '..', 'temp', 'test-lib');
+const TEST_LIB = path.join(__dirname, '..', 'temp', 'test-lib');
 
 /*
  * A module missing from the build is a missing entry in tsconfig.test.json's
@@ -14,7 +14,7 @@ const LIB = path.join(__dirname, '..', 'temp', 'test-lib');
  */
 function lib(name) {
   try {
-    return require(path.join(LIB, name));
+    return require(path.join(TEST_LIB, name));
   } catch (error) {
     if (error.code !== 'MODULE_NOT_FOUND') {
       throw error;
