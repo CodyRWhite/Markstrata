@@ -73,9 +73,24 @@ export class ThemeProvider {
 
   public readonly themeChangedEvent: ThemeChangedEvent = new ThemeChangedEvent();
   private theme: IReadonlyTheme | undefined = { isInverted: false };
+  private broken: boolean = false;
 
   public tryGetTheme(): IReadonlyTheme | undefined {
+    if (this.broken) {
+      throw new Error('The harness theme provider was told to fail');
+    }
     return this.theme;
+  }
+
+  /**
+   * Harness only: something SharePoint hands the web part stops working.
+   *
+   * It is the theme rather than anything else because the theme is asked for
+   * early in starting up, so the web part is at its least built when it
+   * fails - which is the state that has to be survivable.
+   */
+  public breakTheme(broken: boolean): void {
+    this.broken = broken;
   }
 
   /** Harness only: the site switched between light and dark. */

@@ -132,6 +132,11 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
   private handleThemeChanged: (args: { theme?: IReadonlyTheme }) => void;
 
   private isInverted: boolean | undefined;
+  /**
+   * Why the web part could not start, or could not draw. Set instead of
+   * thrown: see onInit.
+   */
+  private startUpError: string | undefined;
   /** The theme this reader chose for themselves, if they chose one. */
   private themeOverride: ThemeOverride;
   private loadError: string | undefined;
@@ -148,9 +153,32 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
 
   // --------------------------------------------------------------- lifecycle
 
+  /**
+   * Nothing gets out of here.
+   *
+   * SharePoint puts many web parts on one page and hosts them in one React
+   * tree, so an exception that escapes a web part is not that web part's
+   * problem: it is the page's. A failure to start that is thrown lands in the
+   * host, which then disposes a half-built web part, and if that throws too it
+   * is the disposal the page reports and the real cause is gone. 0.0.17.0 did
+   * exactly that, and the page it did it on was whatever page happened to be
+   * rendering this web part.
+   *
+   * So a web part that cannot start says so, in its own box, in its own
+   * corner of the page, and the page carries on without it.
+   */
   protected async onInit(): Promise<void> {
     await super.onInit();
 
+    try {
+      await this.startUp();
+    } catch (error) {
+      this.startUpError = (error as Error).message || String(error);
+      console.error('[Markstrata] The web part could not start', error);
+    }
+  }
+
+  private async startUp(): Promise<void> {
     this.applyDefaults();
     this.themeOverride = new ThemeOverride(this.context.instanceId);
     this.themeOverride.read();
@@ -248,22 +276,32 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
    * an element that is going away regardless.
    */
   protected onDispose(): void {
-    if (this.themeProvider && this.handleThemeChanged) {
-      this.themeProvider.themeChangedEvent.remove(this, this.handleThemeChanged);
-    }
-    if (this.sharePoint) {
-      this.sharePoint.unwatchFile();
-    }
-    if (this.navigator) {
-      this.navigator.dispose();
-    }
-    if (this.enhancer) {
-      this.enhancer.dispose();
-    }
-    if (this.editManager) {
-      this.editManager.dispose();
-    }
+    this.stopping(() => {
+      if (this.themeProvider && this.handleThemeChanged) {
+        this.themeProvider.themeChangedEvent.remove(this, this.handleThemeChanged);
+      }
+    });
+    this.stopping(() => { if (this.sharePoint) { this.sharePoint.unwatchFile(); } });
+    this.stopping(() => { if (this.navigator) { this.navigator.dispose(); } });
+    this.stopping(() => { if (this.enhancer) { this.enhancer.dispose(); } });
+    this.stopping(() => { if (this.editManager) { this.editManager.dispose(); } });
     super.onDispose();
+  }
+
+  /**
+   * One thing being stopped, and whatever it does about it kept to itself.
+   *
+   * Each is separate so one that fails does not leave the rest running, and
+   * none of them throws, because this runs inside the page's own teardown: an
+   * exception here is reported as the page's, in place of whatever actually
+   * went wrong, and can take the page's other web parts with it.
+   */
+  private stopping(stop: () => void): void {
+    try {
+      stop();
+    } catch (error) {
+      console.error('[Markstrata] Something would not stop', error);
+    }
   }
 
   protected get dataVersion(): Version {
@@ -344,7 +382,48 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
 
   // ------------------------------------------------------------------ render
 
+  /**
+   * Drawing is wrapped for the same reason starting is: this runs inside the
+   * page's own render, and an exception here is the page's exception.
+   */
   public render(): void {
+    if (this.startUpError) {
+      this.drawFailure();
+      return;
+    }
+
+    try {
+      this.draw();
+    } catch (error) {
+      this.startUpError = (error as Error).message || String(error);
+      console.error('[Markstrata] The web part could not draw itself', error);
+      this.drawFailure();
+    }
+  }
+
+  /**
+   * What a reader sees instead of a document. Plain DOM on purpose: whatever
+   * went wrong may have been the renderer, so nothing here goes through one.
+   */
+  private drawFailure(): void {
+    this.domElement.textContent = '';
+
+    const box: HTMLElement = document.createElement('div');
+    box.className = 'strata-status';
+    box.setAttribute('data-tone', 'error');
+    /* Styled inline as well as by class: the stylesheet dresses this up inside
+       the themed root, and there is no themed root to be inside. */
+    box.style.padding = '12px 16px';
+    box.style.borderRadius = '4px';
+    box.style.border = '1px solid #d13438';
+    box.style.color = '#a4262c';
+    box.style.font = '14px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+    box.textContent = `Markstrata could not start: ${this.startUpError}`;
+
+    this.domElement.appendChild(box);
+  }
+
+  private draw(): void {
     // The panel lives inside the element we are about to rebuild, so drop it
     // rather than leave the toggle thinking it is still open.
     this.versionPanel.close();
@@ -629,6 +708,12 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
   protected onPropertyPaneFieldChanged(propertyPath: string, oldValue: any, newValue: any): void {
     super.onPropertyPaneFieldChanged(propertyPath, oldValue, newValue);
 
+    if (this.startUpError) {
+      /* There is nothing below to tell. The value is kept, so an author who
+         fixes whatever broke and reloads the page gets what they set. */
+      return;
+    }
+
     if (REBUILDS_THE_PROCESSOR.indexOf(propertyPath) !== -1) {
       this.processor.updateOptions(this.processorOptions());
     }
@@ -692,11 +777,20 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
     }
   }
 
+  /**
+   * A web part that could not start still has a pane, because an author will
+   * open one to find out why. Nothing here may assume the web part got as far
+   * as building the thing that fetches these lists: an exception thrown while
+   * describing the pane lands in the page, not in the pane.
+   */
   protected getPropertyPaneConfiguration(): IPropertyPaneConfiguration {
+    const sources: PaneSources | { libraries: []; folders: []; files: [] } =
+      this.paneSources || { libraries: [], folders: [], files: [] };
+
     return paneConfiguration(this.properties, {
-      libraries: this.paneSources.libraries,
-      folders: this.paneSources.folders,
-      files: this.paneSources.files
+      libraries: sources.libraries,
+      folders: sources.folders,
+      files: sources.files
     });
   }
 }

@@ -182,7 +182,11 @@ function methodsOf(source) {
     const body = lines.slice(index + 1, end).join('\n');
     methods.set(heading[1], {
       line: index + 1,
+      /* Both, because they answer different questions: `immediate` is what
+         runs the moment the method is called, and `body` is everything the
+         method contains, callbacks included. */
       immediate: blankDeferredBodies(body),
+      body: body,
       firstLine: index + 1
     });
     index = end;

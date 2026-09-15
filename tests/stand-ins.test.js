@@ -42,6 +42,19 @@ function read(...parts) {
   return fs.readFileSync(path.join(ROOT, ...parts), 'utf8');
 }
 
+/** Every member the class declares, whatever it is declared as. */
+function allMembers(source) {
+  const found = [];
+  const pattern = /^ {2}(?:(?:public|private|protected|static|abstract|async|readonly|get|set)\s+)*([A-Za-z_$][\w$]*)\s*[(:<]/gm;
+
+  let match = pattern.exec(source);
+  while (match) {
+    found.push(match[1]);
+    match = pattern.exec(source);
+  }
+  return found;
+}
+
 /** Public methods, getters and static methods, in the order they appear. */
 function publicMembers(source) {
   const found = [];
@@ -107,4 +120,32 @@ test('every SPFx module the web part imports has something behind it', () => {
 
   const unmapped = Array.from(imported).filter((name) => build.indexOf(`'${name}'`) === -1);
   assert.deepEqual(unmapped, [], 'the harness build has no stand-in for these');
+});
+
+test('nothing the harness adds to the base class collides with the web part', () => {
+  /* The harness base class carries methods the real SPFx one does not - the
+     page's side of the lifecycle. A web part member of the same name silently
+     overrides one, and nothing catches it: the harness is not typechecked, and
+     the tenant build never sees this class. It happened within an hour of the
+     file being written, and cost an afternoon's confusion. */
+  const base = allMembers(read('harness', 'spfx', 'webPartBase.ts'));
+  const webPart = allMembers(read('src', 'webparts', 'markstrata', 'MarkstrataWebPart.ts'));
+
+  /* What both are meant to have in common: the lifecycle the web part
+     overrides on purpose, and the fields SPFx gives it. */
+  const shared = [
+    'render', 'onInit', 'onDispose', 'onPropertyPaneFieldChanged',
+    'getPropertyPaneConfiguration', 'context', 'properties', 'domElement',
+    'displayMode'
+  ];
+
+  const added = base.filter((name) => shared.indexOf(name) === -1);
+  const collisions = added.filter((name) => webPart.indexOf(name) !== -1);
+
+  assert.ok(added.length > 4, `only found ${added.length} harness-only members`);
+  assert.deepEqual(
+    collisions,
+    [],
+    'the web part would be overriding these without meaning to'
+  );
 });

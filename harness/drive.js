@@ -63,7 +63,18 @@ const webPartUrl = 'file://' + path.join(HARNESS_DIST, 'webpart.html');
 
   const problems = [];
   page.on('pageerror', (error) => problems.push('pageerror: ' + error.message));
-  page.on('console', (message) => { if (message.type() === 'error') problems.push('console: ' + message.text()); });
+  /*
+   * A console error is a problem unless a check has said it is expecting one.
+   * Two of them break something on purpose, and a web part that says so on the
+   * console is the behaviour being checked, not a fault.
+   */
+  const expected = [];
+  page.on('console', (message) => {
+    if (message.type() !== 'error') return;
+    const text = message.text();
+    if (expected.some((pattern) => pattern.test(text))) return;
+    problems.push('console: ' + text);
+  });
 
   await page.goto(pageUrl, { waitUntil: 'load' });
   await page.waitForTimeout(2000);
@@ -1511,10 +1522,21 @@ const webPartUrl = 'file://' + path.join(HARNESS_DIST, 'webpart.html');
 
     const state = await page.evaluate(() => {
       const strip = document.getElementById('wp-status');
-      return { state: strip.dataset.state, text: (strip.textContent || '').trim() };
+      const failure = document.querySelector('#host .strata-status[data-tone="error"]');
+      return {
+        state: strip.dataset.state,
+        text: (strip.textContent || '').trim(),
+        failure: failure ? (failure.textContent || '').trim() : ''
+      };
     });
     if (state.state !== 'started') {
       throw new Error(state.text || ('the status strip reads ' + state.state));
+    }
+    /* onInit keeps its own failures to itself now, so a web part that could not
+       start still resolves: it says so by drawing a box instead of a document,
+       and that is what has to be absent here. */
+    if (state.failure) {
+      throw new Error(state.failure);
     }
   });
 
@@ -1640,6 +1662,45 @@ const webPartUrl = 'file://' + path.join(HARNESS_DIST, 'webpart.html');
       return error ? error.message : '';
     });
     if (failure) throw new Error('disposing mid-start threw: ' + failure);
+  });
+
+  /*
+   * The rule the release broke: whatever happens to this web part happens to
+   * this web part. SharePoint hosts many of them in one React tree, so an
+   * exception that escapes lands in the page - which is how a web part that
+   * could not start took its whole page down with it.
+   */
+  await step('a web part that cannot start keeps it to itself', async () => {
+    /* The web part is meant to say so on the console: that is where an
+       administrator looks, and it is all that is left of the real cause once
+       the reader has been handed a box instead of a document. */
+    expected.push(/The web part could not start/);
+
+    const shown = await page.evaluate(async () => {
+      window.webPartHarness.breakTheme(true);
+      const result = await window.webPartHarness.start();
+      window.webPartHarness.breakTheme(false);
+
+      const failure = document.querySelector('#host .strata-status[data-tone="error"]');
+      return {
+        threw: result.started ? '' : 'the failure was thrown at the page',
+        message: failure ? (failure.textContent || '').trim() : '',
+        stillThere: !!document.getElementById('host')
+      };
+    });
+    if (shown.threw) throw new Error(shown.threw);
+    if (shown.message.indexOf('could not start') === -1) {
+      throw new Error('the web part shows ' + JSON.stringify(shown.message));
+    }
+    if (!shown.stillThere) throw new Error('the page around it is gone');
+  });
+
+  await step('and can still be put away afterwards', async () => {
+    const failure = await page.evaluate(() => {
+      const error = window.webPartHarness.dispose();
+      return error ? error.message : '';
+    });
+    if (failure) throw new Error('disposing a failed web part threw: ' + failure);
   });
 
   await step('a library that will not answer is a message, not a broken page', async () => {

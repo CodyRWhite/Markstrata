@@ -130,7 +130,7 @@ async function start(configured?: Partial<IMarkstrataWebPartProps>): Promise<ISt
   outcome = undefined;
   showStatus();
 
-  outcome = await webPart.startUp({
+  outcome = await webPart.hostStart({
     context: context(),
     properties: startingProperties(configured),
     domElement: host,
@@ -145,7 +145,7 @@ async function start(configured?: Partial<IMarkstrataWebPartProps>): Promise<ISt
 /** Puts the web part away the way closing the page does. */
 function dispose(): Error | undefined {
   if (!webPart) { return undefined; }
-  const failure: Error | undefined = webPart.shutDown();
+  const failure: Error | undefined = webPart.hostStop();
   webPart = undefined;
   host.textContent = '';
   showStatus();
@@ -165,7 +165,7 @@ async function disposeWhileStarting(delayMs: number): Promise<Error | undefined>
     selectedFile: `${LIBRARY}/handbook.md`
   });
 
-  const failure: Error | undefined = webPart ? webPart.shutDown() : undefined;
+  const failure: Error | undefined = webPart ? webPart.hostStop() : undefined;
   await starting;
   SharePointService.answerAfter(0);
   return failure;
@@ -178,7 +178,7 @@ async function disposeWhileStarting(delayMs: number): Promise<Error | undefined>
  */
 function disposeBeforeStarting(): Error | undefined {
   const neverStarted: MarkstrataWebPart = new MarkstrataWebPart();
-  return neverStarted.shutDown();
+  return neverStarted.hostStop();
 }
 
 // -------------------------------------------------------------------- page
@@ -189,12 +189,12 @@ function wireButtons(): void {
   const away: HTMLElement | null = document.getElementById('demo-away');
 
   pane = new WebPartPane(paneHost, {
-    read: () => (webPart ? webPart.pane() : { pages: [] }),
+    read: () => (webPart ? webPart.hostPane() : { pages: [] }),
     value: (path: string) => (webPart
-      ? (webPart.settings() as unknown as Record<string, unknown>)[path]
+      ? (webPart.hostSettings() as unknown as Record<string, unknown>)[path]
       : undefined),
     change: (path: string, value: unknown) => {
-      if (webPart) { webPart.changeProperty(path, value); }
+      if (webPart) { webPart.hostChangeProperty(path, value); }
     },
     close: () => {
       pane!.hide();
@@ -216,7 +216,7 @@ function wireButtons(): void {
       if (!webPart) { return; }
       const editing: boolean = edit.getAttribute('aria-pressed') === 'true';
       edit.setAttribute('aria-pressed', editing ? 'false' : 'true');
-      webPart.setDisplayMode(editing ? DisplayMode.Read : DisplayMode.Edit);
+      webPart.hostSetDisplayMode(editing ? DisplayMode.Read : DisplayMode.Edit);
     });
   }
 
@@ -237,9 +237,9 @@ const harness = {
   outcome: (): IStartUpOutcome | undefined => outcome,
   running: (): boolean => webPart !== undefined,
   settings: (): Record<string, unknown> =>
-    (webPart ? webPart.settings() : {}) as unknown as Record<string, unknown>,
+    (webPart ? webPart.hostSettings() : {}) as unknown as Record<string, unknown>,
   change: (path: string, value: unknown): void => {
-    if (webPart) { webPart.changeProperty(path, value); }
+    if (webPart) { webPart.hostChangeProperty(path, value); }
   },
   openPane: (): void => { if (pane) { pane.show(); } },
   closePane: (): void => { if (pane) { pane.hide(); } },
@@ -251,6 +251,8 @@ const harness = {
       ? Array.from(select.options).map((option: HTMLOptionElement) => option.text)
       : [];
   },
+  /** Something SharePoint provides stops working, part way through starting. */
+  breakTheme: (broken: boolean): void => themeProvider.breakTheme(broken),
   /** The site switched between light and dark under the web part. */
   siteTheme: (isInverted: boolean): void => themeProvider.setTheme({ isInverted: isInverted }),
   /** Listeners still attached to the page's theme: nought once disposed. */

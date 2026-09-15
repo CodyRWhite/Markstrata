@@ -27,9 +27,9 @@
  *   import { BaseClientSideWebPart } from '@microsoft/sp-webpart-base';
  *
  *   const part = new MarkstrataWebPart();
- *   const outcome = await part.startUp({ context, properties, host, displayMode });
- *   part.changeProperty('themeFamily', 'obsidian');
- *   part.shutDown();
+ *   const outcome = await part.hostStart({ context, properties, host, displayMode });
+ *   part.hostChangeProperty('themeFamily', 'obsidian');
+ *   part.hostStop();
  *
  * .NOTES
  * Since:     unreleased
@@ -105,11 +105,21 @@ export abstract class BaseClientSideWebPart<TProperties> {
 
   // ------------------------------------------------- what the page does
 
+  /*
+   * Everything below is named for the host, and the prefix is not decoration.
+   * These methods exist only here, so a web part that happens to define a
+   * method of the same name silently overrides one - which is not a compile
+   * error in a build that does not typecheck the harness, and shows up as the
+   * page calling the web part's method with the host's arguments. It happened
+   * once, within an hour of this file existing. A test now compares the two
+   * lists of names so it cannot happen quietly again.
+   */
+
   /**
    * Hands the web part its surroundings, starts it, and draws it - in that
    * order, because the order is the thing being tested.
    */
-  public async startUp(start: IStartUp<TProperties>): Promise<IStartUpOutcome> {
+  public async hostStart(start: IStartUp<TProperties>): Promise<IStartUpOutcome> {
     this.context = start.context;
     this.properties = start.properties;
     this.domElement = start.domElement;
@@ -126,7 +136,7 @@ export abstract class BaseClientSideWebPart<TProperties> {
       /* A web part that failed to start is still disposed. This is the path
          that hid the real error in 0.0.17.0, so it is the path the harness
          drives most carefully. */
-      const disposalError: Error | undefined = this.shutDown();
+      const disposalError: Error | undefined = this.hostStop();
       return { started: false, startUpError: startUpError, disposalError: disposalError };
     }
 
@@ -144,7 +154,7 @@ export abstract class BaseClientSideWebPart<TProperties> {
    * failed without the page it is running in falling over - which is what a
    * throwing disposal does to a real SharePoint page.
    */
-  public shutDown(): Error | undefined {
+  public hostStop(): Error | undefined {
     try {
       this.onDispose();
       return undefined;
@@ -157,7 +167,7 @@ export abstract class BaseClientSideWebPart<TProperties> {
    * A setting changed in the pane. SharePoint writes the value, tells the web
    * part, and draws it again; so does this.
    */
-  public changeProperty(propertyPath: string, newValue: unknown): void {
+  public hostChangeProperty(propertyPath: string, newValue: unknown): void {
     const properties: Record<string, unknown> = this.properties as Record<string, unknown>;
     const oldValue: unknown = properties[propertyPath];
     properties[propertyPath] = newValue;
@@ -166,18 +176,18 @@ export abstract class BaseClientSideWebPart<TProperties> {
   }
 
   /** The pane as the web part describes it, for the harness to draw. */
-  public pane(): { pages: unknown[] } {
+  public hostPane(): { pages: unknown[] } {
     return this.getPropertyPaneConfiguration();
   }
 
   /** The settings as they stand, for the harness to read back. */
-  public settings(): TProperties {
+  public hostSettings(): TProperties {
     return this.properties;
   }
 
   /** Read mode or edit mode, changed the way opening the page for editing
       changes it. */
-  public setDisplayMode(mode: DisplayMode): void {
+  public hostSetDisplayMode(mode: DisplayMode): void {
     this.displayMode = mode;
     this.render();
   }

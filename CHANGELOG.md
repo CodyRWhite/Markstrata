@@ -8,6 +8,19 @@ is normally zero. `scripts/set-version.js` stamps it when a release is cut.
 
 Entries below 0.0.10.0 were written before the switch and are three-part.
 
+- Whatever happens to this web part now happens to this web part. SharePoint
+  hosts many of them in one page and one React tree, so an exception that
+  escapes a web part is the page's exception, not the web part's - which is
+  how 0.0.17.0 managed to take whole pages down rather than just showing
+  nothing where it was. Starting, drawing and stopping are each wrapped now: a
+  web part that cannot start draws a short message in its own box and says why
+  on the console, the page carries on around it, and an author can still open
+  the property pane on it to see what is set.
+- The pane and the settings on it survive that too. Describing the pane read
+  the lists it offers straight off the thing that fetches them, which a web
+  part that failed to start never built, so opening the pane on a broken web
+  part threw a second exception into the page. It now offers empty lists.
+
 - The harness can now run the web part, not only the classes underneath it.
   `npm run harness` builds a second page that starts `MarkstrataWebPart` the
   way a SharePoint page starts it - onInit awaited, render called, onDispose on

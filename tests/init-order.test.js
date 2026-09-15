@@ -41,8 +41,16 @@ const WEB_PART = path.join(
 );
 const source = fs.readFileSync(WEB_PART, 'utf8');
 
+/*
+ * startUp rather than onInit: onInit's whole body is now a try/catch around
+ * it, so that a failure to start stays inside this web part instead of landing
+ * in the page. The building is in startUp, and the order of the building is
+ * what this reads.
+ */
+const BUILDS_IT = 'startUp';
+
 test('the web part builds every collaborator before it uses one', () => {
-  const problems = analyse(source, 'onInit');
+  const problems = analyse(source, BUILDS_IT);
   const described = problems.map((problem) =>
     `${problem.field} is used on line ${problem.usedOnLine} (by ${problem.usedBy})` +
     ` but is not built until line ${problem.builtOnLine}`
@@ -59,7 +67,15 @@ test('the reading is actually reading something', () => {
 
   assert.ok(fields.size > 8, `only found ${fields.size} fields`);
   assert.ok(methods.has('onInit'), 'onInit was not found');
+  assert.ok(methods.has(BUILDS_IT), `${BUILDS_IT} was not found`);
   assert.ok(methods.has('processorOptions'), 'processorOptions was not found');
+
+  /* And onInit still reaches it, or the method read above is not the one that
+     runs when SharePoint starts the web part. */
+  assert.ok(
+    methods.get('onInit').immediate.indexOf(`this.${BUILDS_IT}(`) !== -1,
+    `onInit does not call ${BUILDS_IT}`
+  );
   ['navigator', 'sharePoint', 'processor', 'enhancer'].forEach((field) => {
     assert.ok(fields.has(field), `${field} was not recognised as a field`);
   });
@@ -115,19 +131,31 @@ test('onDispose shuts nothing down without checking it is there', () => {
 
   assert.ok(dispose, 'onDispose was not found');
 
+  /* The whole body, not just what runs immediately: each thing being stopped
+     is stopped inside a callback, so blanking those out would leave nothing to
+     read and this would pass by finding nothing. */
+  const body = dispose.body;
   const unguarded = [];
+  const inspected = [];
   const use = /this\.([A-Za-z_$][\w$]*)\s*\./g;
-  let match = use.exec(dispose.immediate);
+  let match = use.exec(body);
 
   while (match) {
     const field = match[1];
-    const before = dispose.immediate.slice(0, match.index);
+    const before = body.slice(0, match.index);
     const guarded = new RegExp(`if\\s*\\(\\s*(?:[^)]*&&\\s*)?this\\.${field}\\b`).test(before);
 
-    if (fields.has(field) && !guarded) { unguarded.push(field); }
-    match = use.exec(dispose.immediate);
+    if (fields.has(field)) {
+      inspected.push(field);
+      if (!guarded) { unguarded.push(field); }
+    }
+    match = use.exec(body);
   }
 
+  assert.ok(
+    inspected.length >= 4,
+    `only ${inspected.length} collaborators were found in onDispose to check`
+  );
   assert.deepEqual(
     [...new Set(unguarded)],
     [],
