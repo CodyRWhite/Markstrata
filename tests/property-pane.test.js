@@ -63,7 +63,7 @@ const demo = structure(
 );
 
 test('the pane has the pages this test knows about', () => {
-  assert.equal(webPart.length, 4, 'the web part should declare four pane pages');
+  assert.equal(webPart.length, 5, 'the web part should declare five pane pages');
   assert.ok(webPart.every((page) => page.description && page.groups.every(Boolean)),
     'a page description or group name did not resolve to a string');
 });

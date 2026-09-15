@@ -19,6 +19,8 @@ declare interface IMarkstrataWebPartStrings {
   ThemeSwitcherLabel: string;
   ThemeHint: string;
   ReadingGroupName: string;
+  PicturesGroupName: string;
+  PageGroupName: string;
   ContentWidthLabel: string;
   DensityLabel: string;
   TextSizeLabel: string;
@@ -35,6 +37,7 @@ declare interface IMarkstrataWebPartStrings {
 
   ContentsPageDescription: string;
   ContentsGroupName: string;
+  LinksGroupName: string;
   TocPositionLabel: string;
   TocLevelLabel: string;
   TocWidthUnitLabel: string;
@@ -43,8 +46,10 @@ declare interface IMarkstrataWebPartStrings {
   TocWidthHint: string;
   AnchorsLabel: string;
 
-  FeaturesPageDescription: string;
-  RenderingGroupName: string;
+  CodePageDescription: string;
+  ChromePageDescription: string;
+  DiagramsGroupName: string;
+  MathGroupName: string;
   MermaidLabel: string;
   DiagramWidthLabel: string;
   DiagramWidthHint: string;

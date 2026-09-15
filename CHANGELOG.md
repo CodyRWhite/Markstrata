@@ -10,6 +10,12 @@ Entries below 0.0.10.0 were written before the switch and are three-part.
 
 ## Unreleased
 
+- The property pane is laid out in five pages of comparable length instead of
+  four that ran 8, 16, 5 and 18 fields. Settings that belong together are
+  together now: picture alignment sat under Reading while opening a picture
+  full size sat two pages away under Features, and Features itself was a grab
+  bag holding diagrams, maths, raw HTML, wiki links, the toolbar and the file
+  footer. Nothing changed its meaning or its default, only where it is found.
 - Mermaid 12. Flowcharts, state and class diagrams are laid out by ELK now
   rather than dagre, which routes edges as right angles instead of curves and
   rounds the node corners. Every diagram this project ships was rendered

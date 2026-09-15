@@ -289,7 +289,7 @@ const PANEL_PAGES: IPanelPage[] = [
     ]
   },
   {
-    description: 'Theme and reading options.',
+    description: 'How the page looks: theme, measure, and pictures.',
     groups: [
       {
         name: 'Theme',
@@ -318,18 +318,30 @@ const PANEL_PAGES: IPanelPage[] = [
             { value: 'compact', text: 'Compact' },
             { value: 'comfortable', text: 'Comfortable' },
             { value: 'relaxed', text: 'Relaxed' }] },
-          { key: 'imageAlign', label: 'Picture alignment', type: 'dropdown', options: [
-            { value: 'left', text: 'Left' },
-            { value: 'center', text: 'Centred' },
-            { value: 'right', text: 'Right' }],
-            hint: 'Applies to a picture that is a paragraph of its own. One inside a '
-              + 'sentence stays on the line it is in, and a document can place a single '
-              + 'picture itself with ![alt](x.png){.center}.' },
           { key: 'textSize', label: 'Text size', type: 'dropdown', options: [
             { value: 'small', text: 'Small' },
             { value: 'normal', text: 'Normal' },
             { value: 'large', text: 'Large' },
-            { value: 'xlarge', text: 'Extra large' }] },
+            { value: 'xlarge', text: 'Extra large' }] }
+        ]
+      },
+      {
+        name: 'Pictures',
+        fields: [
+          { key: 'imageAlign', label: 'Picture alignment', type: 'dropdown', options: [
+            { value: 'left', text: 'Left' },
+            { value: 'center', text: 'Centred' },
+            { value: 'right', text: 'Right' }] },
+          { key: 'enableImageZoom', label: 'Click an image to see it full size',
+            type: 'toggle',
+            hint: 'Alignment applies to a picture that is a paragraph of its own. One '
+              + 'inside a sentence stays on the line it is in, and a document can place '
+              + 'a single picture itself with ![alt](x.png){.center}.' }
+        ]
+      },
+      {
+        name: 'The page',
+        fields: [
           { key: 'fillHeight', label: 'Fill the available height', type: 'toggle',
             hint: 'Gives the web part at least the room below it, so a short document '
               + 'does not stop halfway down the page and leave the canvas showing under '
@@ -338,6 +350,11 @@ const PANEL_PAGES: IPanelPage[] = [
               + 'placed below other content on a long page is left alone.' }
         ]
       },
+    ]
+  },
+  {
+    description: 'Code blocks, diagrams and maths.',
+    groups: [
       {
         name: 'Code blocks',
         fields: [
@@ -350,11 +367,35 @@ const PANEL_PAGES: IPanelPage[] = [
             { value: 'normal', text: 'Normal' },
             { value: 'large', text: 'Large' }] }
         ]
+      },
+      {
+        name: 'Diagrams',
+        fields: [
+          { key: 'enableMermaid', label: 'Mermaid diagrams', type: 'toggle' },
+          { key: 'diagramWidth', label: 'Wide diagrams', type: 'dropdown',
+            showIf: (state) => state.enableMermaid === true,
+            options: [
+              { value: 'fit', text: 'Fit to the column' },
+              { value: 'scroll', text: 'Keep their size and scroll' },
+              { value: 'scale', text: 'Scale down to fit' }],
+            hint: 'Gantt charts lay out from their time axis rather than wrapping, so '
+              + 'they often want more width than a column gives. Fitting compresses the '
+              + 'axis and keeps the text readable.' }
+        ]
+      },
+      {
+        name: 'Maths and HTML',
+        fields: [
+          { key: 'enableMath', label: 'Math (KaTeX)', type: 'toggle' },
+          { key: 'allowHtml', label: 'Allow raw HTML in markdown', type: 'toggle',
+            hint: 'Leave off unless you trust everyone who can edit the source. With it '
+              + 'on, HTML in the markdown is rendered as-is.' }
+        ]
       }
     ]
   },
   {
-    description: 'The table of contents, and links to headings.',
+    description: 'Finding your way around a document, and between documents.',
     groups: [
       {
         name: 'Contents',
@@ -384,39 +425,23 @@ const PANEL_PAGES: IPanelPage[] = [
               + 'on a fixed width. Stacked above the content they are always full width.' },
           { key: 'enableAnchors', label: 'Heading link anchors', type: 'toggle' }
         ]
-      }
-    ]
-  },
-  {
-    description: 'What is rendered, and what is shown around it.',
-    groups: [
+      },
       {
-        name: 'Rendering',
+        name: 'Links between documents',
         fields: [
-          { key: 'enableMermaid', label: 'Mermaid diagrams', type: 'toggle' },
-          { key: 'diagramWidth', label: 'Wide diagrams', type: 'dropdown',
-            showIf: (state) => state.enableMermaid === true,
-            options: [
-              { value: 'fit', text: 'Fit to the column' },
-              { value: 'scroll', text: 'Keep their size and scroll' },
-              { value: 'scale', text: 'Scale down to fit' }],
-            hint: 'Gantt charts lay out from their time axis rather than wrapping, so '
-              + 'they often want more width than a column gives. Fitting compresses the '
-              + 'axis and keeps the text readable.' },
-          { key: 'enableImageZoom', label: 'Click an image to see it full size',
-            type: 'toggle' },
           { key: 'enableWikiLinks', label: 'Wiki links', type: 'toggle',
             hint: 'Turns [[Another page]] into a link to that file in the same folder. '
               + 'There is no document library behind this page, so the links here go '
               + 'nowhere, but the syntax renders.' },
           { key: 'checkWikiLinks', label: 'Mark links to pages that are not there',
-            type: 'toggle', showIf: (state) => state.enableWikiLinks === true },
-          { key: 'enableMath', label: 'Math (KaTeX)', type: 'toggle' },
-          { key: 'allowHtml', label: 'Allow raw HTML in markdown', type: 'toggle',
-            hint: 'Leave off unless you trust everyone who can edit the source. With it '
-              + 'on, HTML in the markdown is rendered as-is.' }
+            type: 'toggle', showIf: (state) => state.enableWikiLinks === true }
         ]
-      },
+      }
+    ]
+  },
+  {
+    description: 'What is shown around the document.',
+    groups: [
       {
         name: 'Toolbar',
         fields: [

@@ -819,33 +819,62 @@ const demoUrl = 'file://' + path.join(__dirname, '..', 'site', 'demo', 'index.ht
     }
   });
 
-  await step('the property pane opens on four pages', async () => {
+  /*
+   * Walks the pane to the page carrying a control, rather than relying on
+   * wherever the previous step left it. Steps that inherited a page broke the
+   * moment the pane was laid out differently, which is exactly the change the
+   * pane is most likely to see.
+   */
+  const paneTo = async (control) => {
+    for (let i = 0; i < 8; i += 1) {
+      if (await page.locator(control).count() > 0) return;
+      const next = page.locator('.pp-step', { hasText: 'Next' });
+      if (await next.isDisabled()) break;
+      await next.click();
+      await page.waitForTimeout(120);
+    }
+    if (await page.locator(control).count() === 0) {
+      throw new Error('no pane page carries ' + control);
+    }
+  };
+
+  const paneToStart = async () => {
+    for (let i = 0; i < 8; i += 1) {
+      const back = page.locator('.pp-step', { hasText: 'Back' });
+      if (await back.isDisabled()) return;
+      await back.click();
+      await page.waitForTimeout(120);
+    }
+  };
+
+  await step('the property pane opens on five pages', async () => {
     await page.setViewportSize({ width: 1200, height: 900 });
     await page.goto(demoUrl, { waitUntil: 'load' });
     await page.waitForTimeout(1500);
     await page.locator('#demo-configure').click();
     await page.waitForTimeout(200);
     const count = await page.locator('.pp-count').textContent();
-    if (!/of 4$/.test(count.trim())) throw new Error('pane reports ' + count);
+    if (!/of 5$/.test(count.trim())) throw new Error('pane reports ' + count);
   });
 
   await step('every pane page names its groups', async () => {
     const seen = [];
-    for (let i = 0; i < 4; i += 1) {
+    for (let i = 0; i < 5; i += 1) {
       const groups = await page.locator('.pp-group').allTextContents();
       seen.push(groups.join(', '));
-      if (i < 3) {
+      if (i < 4) {
         await page.locator('.pp-step', { hasText: 'Next' }).click();
         await page.waitForTimeout(120);
       }
     }
     const expected = [
       'Content',
-      'Theme, Reading, Code blocks',
-      'Contents',
-      'Rendering, Toolbar, File information'
+      'Theme, Reading, Pictures, The page',
+      'Code blocks, Diagrams, Maths and HTML',
+      'Contents, Links between documents',
+      'Toolbar, File information'
     ];
-    for (let i = 0; i < 4; i += 1) {
+    for (let i = 0; i < 5; i += 1) {
       if (seen[i] !== expected[i]) {
         throw new Error('page ' + (i + 1) + ' has "' + seen[i] + '", expected "'
           + expected[i] + '"');
@@ -854,7 +883,8 @@ const demoUrl = 'file://' + path.join(__dirname, '..', 'site', 'demo', 'index.ht
   });
 
   await step('turning diagrams off hides the width that depends on them', async () => {
-    // Left on the Features page by the walk above.
+    await paneToStart();
+    await paneTo('#pp-diagramWidth');
     const width = page.locator('#pp-diagramWidth');
     if (await width.count() === 0) throw new Error('Wide diagrams is missing');
     await page.locator('#pp-enableMermaid').click();
@@ -889,15 +919,10 @@ const demoUrl = 'file://' + path.join(__dirname, '..', 'site', 'demo', 'index.ht
    * browser can show whether the measurement lands.
    */
   await step('filling the height reaches the bottom, and carries the footer', async () => {
-    // Back to Appearance, where the setting lives; the walk above ended on Features.
-    await page.locator('.pp-step', { hasText: 'Back' }).click();
-    await page.waitForTimeout(120);
-    await page.locator('.pp-step', { hasText: 'Back' }).click();
-    await page.waitForTimeout(120);
-    const groups = (await page.locator('.pp-group').allTextContents()).join(', ');
-    if (groups !== 'Theme, Reading, Code blocks') {
-      throw new Error('expected the Appearance page, found "' + groups + '"');
-    }
+    /* Asked for by the control it needs, rather than counted in clicks from
+       wherever the last step finished. */
+    await paneToStart();
+    await paneTo('#pp-fillHeight');
 
     await page.evaluate(() => {
       window.scrollTo(0, 0);

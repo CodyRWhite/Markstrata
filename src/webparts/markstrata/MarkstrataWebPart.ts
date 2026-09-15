@@ -856,7 +856,12 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
                   label: strings.TextSizeLabel,
                   options: this.toDropdown(TEXT_SIZES),
                   selectedKey: this.properties.textSize
-                }),
+                })
+              ]
+            },
+            {
+              groupName: strings.PicturesGroupName,
+              groupFields: [
                 PropertyPaneDropdown('imageAlign', {
                   label: strings.ImageAlignLabel,
                   options: [
@@ -866,7 +871,17 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
                   ],
                   selectedKey: this.properties.imageAlign
                 }),
-                PropertyPaneLabel('imageAlignHint', { text: strings.ImageAlignHint }),
+                PropertyPaneToggle('enableImageZoom', {
+                  label: strings.ImageZoomLabel,
+                  onText: 'On',
+                  offText: 'Off'
+                }),
+                PropertyPaneLabel('imageAlignHint', { text: strings.ImageAlignHint })
+              ]
+            },
+            {
+              groupName: strings.PageGroupName,
+              groupFields: [
                 PropertyPaneToggle('fillHeight', {
                   label: strings.FillHeightLabel,
                   onText: 'On',
@@ -875,6 +890,11 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
                 PropertyPaneLabel('fillHeightHint', { text: strings.FillHeightHint })
               ]
             },
+          ]
+        },
+        {
+          header: { description: strings.CodePageDescription },
+          groups: [
             {
               groupName: strings.CodeGroupName,
               groupFields: [
@@ -903,6 +923,43 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
                   options: this.toDropdown(CODE_SIZES),
                   selectedKey: this.properties.codeSize
                 })
+              ]
+            },
+            {
+              groupName: strings.DiagramsGroupName,
+              groupFields: [
+                PropertyPaneToggle('enableMermaid', {
+                  label: strings.MermaidLabel,
+                  onText: 'On',
+                  offText: 'Off'
+                }),
+                PropertyPaneDropdown('diagramWidth', {
+                  label: strings.DiagramWidthLabel,
+                  options: [
+                    { key: 'fit', text: 'Fit to the column' },
+                    { key: 'scroll', text: 'Keep their size and scroll' },
+                    { key: 'scale', text: 'Scale down to fit' }
+                  ],
+                  selectedKey: this.properties.diagramWidth,
+                  disabled: !this.properties.enableMermaid
+                }),
+                PropertyPaneLabel('diagramWidthHint', { text: strings.DiagramWidthHint })
+              ]
+            },
+            {
+              groupName: strings.MathGroupName,
+              groupFields: [
+                PropertyPaneToggle('enableMath', {
+                  label: strings.MathLabel,
+                  onText: 'On',
+                  offText: 'Off'
+                }),
+                PropertyPaneToggle('allowHtml', {
+                  label: strings.AllowHtmlLabel,
+                  onText: 'On',
+                  offText: 'Off'
+                }),
+                PropertyPaneLabel('htmlHint', { text: strings.AllowHtmlHint })
               ]
             }
           ]
@@ -952,41 +1009,17 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
                   offText: 'Off'
                 })
               ]
-            }
-          ]
-        },
-        {
-          header: { description: strings.FeaturesPageDescription },
-          groups: [
+            },
             {
-              groupName: strings.RenderingGroupName,
+              groupName: strings.LinksGroupName,
               groupFields: [
-                PropertyPaneToggle('enableMermaid', {
-                  label: strings.MermaidLabel,
-                  onText: 'On',
-                  offText: 'Off'
-                }),
-                PropertyPaneDropdown('diagramWidth', {
-                  label: strings.DiagramWidthLabel,
-                  options: [
-                    { key: 'fit', text: 'Fit to the column' },
-                    { key: 'scroll', text: 'Keep their size and scroll' },
-                    { key: 'scale', text: 'Scale down to fit' }
-                  ],
-                  selectedKey: this.properties.diagramWidth,
-                  disabled: !this.properties.enableMermaid
-                }),
-                PropertyPaneLabel('diagramWidthHint', { text: strings.DiagramWidthHint }),
-                PropertyPaneToggle('enableImageZoom', {
-                  label: strings.ImageZoomLabel,
-                  onText: 'On',
-                  offText: 'Off'
-                }),
                 PropertyPaneToggle('enableWikiLinks', {
                   label: strings.WikiLinksLabel,
                   onText: 'On',
                   offText: 'Off'
                 }),
+                /* Checking only means anything once there is something to
+                   check, so it appears with the thing it checks. */
                 ...(this.properties.enableWikiLinks
                   ? [
                       PropertyPaneToggle('checkWikiLinks', {
@@ -997,20 +1030,14 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
                       })
                     ]
                   : []),
-                PropertyPaneLabel('wikiLinksHint', { text: strings.WikiLinksHint }),
-                PropertyPaneToggle('enableMath', {
-                  label: strings.MathLabel,
-                  onText: 'On',
-                  offText: 'Off'
-                }),
-                PropertyPaneToggle('allowHtml', {
-                  label: strings.AllowHtmlLabel,
-                  onText: 'On',
-                  offText: 'Off'
-                }),
-                PropertyPaneLabel('htmlHint', { text: strings.AllowHtmlHint })
+                PropertyPaneLabel('wikiLinksHint', { text: strings.WikiLinksHint })
               ]
-            },
+            }
+          ]
+        },
+        {
+          header: { description: strings.ChromePageDescription },
+          groups: [
             {
               groupName: strings.ToolbarGroupName,
               groupFields: [

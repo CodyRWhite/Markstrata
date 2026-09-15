@@ -36,7 +36,7 @@ npm run package          # writes sharepoint/solution/markstrata.sppkg
 
 ## Where the content comes from
 
-The **Content** page of the property pane, the first of its four, offers three
+The **Content** page of the property pane, the first of its five, offers three
 sources.
 
 | Source | What it does |
@@ -78,7 +78,7 @@ turning it on.
 
 ## The toolbar and the file footer
 
-Both are on the **Features** page of the pane, under **Toolbar** and **File
+Both are on the last page of the pane, under **Toolbar** and **File
 information**: they are what shows around the document rather than part of it.
 
 **Show toolbar** carries the reload, version history, theme and print controls,
