@@ -1,3 +1,18 @@
+/**
+ * .SYNOPSIS
+ * The syntax page is built through the real pipeline, so it cannot claim a
+ * feature that has stopped working.
+ *
+ * .USAGE
+ *   npm test                                every test
+ *   node --test tests/syntax-page.test.js   this one
+ *
+ * .NOTES
+ * Since:     0.0.14.0
+ * Ships in:  nothing - it runs at test time only
+ * Requires:  helpers.ts
+ */
+
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');

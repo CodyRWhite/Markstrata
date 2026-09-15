@@ -1,7 +1,24 @@
-/*
+/**
+ * .SYNOPSIS
  * The table of contents: where its entries come from, what it is built into,
  * and which one is being read.
+ *
+ * .USAGE
+ *   import { collectHeadings, adoptAuthoredToc, buildToc, HeadingTracker } from './utils/contents';
+ *
+ *   // A contents the document wrote for itself wins over one built from headings.
+ *   const entries: ITocEntry[] = adoptAuthoredToc(article) || collectHeadings(article, 3);
+ *   const nav: HTMLElement | undefined = buildToc(entries, article);
+ *
+ *   const tracker: HeadingTracker = new HeadingTracker();
+ *   tracker.track(article, nav);
+ *
+ * .NOTES
+ * Since:     unreleased
+ * Ships in:  the web part bundle
+ * Requires:  scrolling.ts
  */
+
 import { scroller, visibleBottom } from './scrolling';
 
 export interface ITocEntry {

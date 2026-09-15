@@ -1,3 +1,18 @@
+/**
+ * .SYNOPSIS
+ * The version has to be in step in package.json and in the solution
+ * package, because that is the number a tenant compares.
+ *
+ * .USAGE
+ *   npm test                               every test
+ *   node --test tests/versioning.test.js   this one
+ *
+ * .NOTES
+ * Since:     0.0.10.0
+ * Ships in:  nothing - it runs at test time only
+ * Requires:  nothing else in this project
+ */
+
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { execFileSync } = require('node:child_process');

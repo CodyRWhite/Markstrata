@@ -1,11 +1,27 @@
-/*
+/**
+ * .SYNOPSIS
  * Runs the web part's real renderer classes in a plain browser page.
  *
+ * .DESCRIPTION
  * SPFx 1.21 has no local workbench any more, and the hosted one needs a
  * tenant. Everything below the web part shell is plain DOM code, so this
  * drives those classes directly: the same ViewModeRenderer, EditModeManager,
  * ContentEnhancer, MermaidRenderer and MarkdownProcessor a deployed page uses.
+ *
+ * .USAGE
+ *   npm run harness        builds harness/dist/index.html
+ *   npm run harness:drive  builds it, builds the site, then drives both
+ *
+ *   Open harness/dist/index.html in a browser to use it by hand.
+ *
+ * .NOTES
+ * Since:     0.0.6
+ * Ships in:  nothing - it builds or drives what ships
+ * Requires:  MarkdownProcessor.ts, MermaidRenderer.ts, ContentEnhancer.ts,
+ *            ViewModeRenderer.ts, EditModeManager.ts, ThemeManager.ts,
+ *            panel.ts, tocWidth.ts
  */
+
 import { MarkdownProcessor } from '../src/webparts/markstrata/utils/MarkdownProcessor';
 import { MermaidRenderer } from '../src/webparts/markstrata/utils/MermaidRenderer';
 import { ContentEnhancer } from '../src/webparts/markstrata/utils/ContentEnhancer';

@@ -1,6 +1,8 @@
 /*
+ * .SYNOPSIS
  * code.css - inline code and fenced code blocks.
  *
+ * .DESCRIPTION
  * The readability problems this replaces (from the web part this project is
  * based on) were: a hard-coded near-black block background in every theme, a
  * text-shadow over the code, an inset black box-shadow, line-height:0 on the
@@ -8,6 +10,18 @@
  * long lines. None of that is here: colours come from the theme, the gutter is
  * a sticky column that survives horizontal scrolling, and the numbers are CSS
  * counters so "copy" never picks them up.
+ *
+ * .USAGE
+ *   Loaded in this order by MarkstrataWebPart.ts, because later rules
+ *   override earlier ones:
+ *
+ *     base, typography, code, syntax, callouts, tables-lists, extras,
+ *     chrome, the three themes, modifiers, print
+ *
+ * .NOTES
+ * Since:     0.0.6
+ * Ships in:  the web part bundle
+ * Requires:  nothing else in this project
  */
 
 /* ------------------------------------------------------------ inline code */

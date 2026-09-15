@@ -1,10 +1,23 @@
-/*
+/**
+ * .SYNOPSIS
  * The copy button on a code block.
  *
+ * .DESCRIPTION
  * What gets copied is the source, not what is on screen: line numbers are CSS
  * counters, so the text in the DOM is already clean and each line element only
  * needs its newline put back.
+ *
+ * .USAGE
+ *   import { attachCopyButtons } from './utils/codeCopy';
+ *
+ *   attachCopyButtons(article, copyFeedback);
+ *
+ * .NOTES
+ * Since:     unreleased
+ * Ships in:  the web part bundle
+ * Requires:  copyFeedback.ts
  */
+
 import { CopyFeedback } from './copyFeedback';
 
 /** Wires every copy button inside `container` exactly once. */

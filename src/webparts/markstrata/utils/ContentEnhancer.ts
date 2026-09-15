@@ -1,6 +1,8 @@
 /**
+ * .SYNOPSIS
  * Everything done to a document after the markdown has been turned into HTML.
  *
+ * .DESCRIPTION
  * This is a facade, not an implementation: each behaviour lives in a file of
  * its own beside this one, and what is here is the list of them, the objects
  * that outlive a single render, and one place to shut all of it down again.
@@ -10,7 +12,26 @@
  * all have to be findable when the web part goes away, and a caller holding
  * one enhancer is a simpler bargain than a caller remembering to stop six
  * separate things.
+ *
+ * .USAGE
+ *   import { ContentEnhancer } from './utils/ContentEnhancer';
+ *
+ *   const enhancer: ContentEnhancer = new ContentEnhancer();
+ *   enhancer.attachCopyButtons(article);
+ *   enhancer.enhanceImages(article, true);
+ *   enhancer.trackActiveHeading(article, nav);
+ *
+ *   // Once, when the web part goes away:
+ *   enhancer.dispose();
+ *
+ * .NOTES
+ * Since:     0.0.6
+ * Ships in:  the web part bundle
+ * Requires:  backToTop.ts, chromeOffset.ts, codeCopy.ts, contents.ts,
+ *            copyFeedback.ts, diagramTools.ts, documentLinks.ts,
+ *            fillHeight.ts
  */
+
 import { BackToTop, BackToTopButton } from './backToTop';
 import { ScrollOffset, chromeAbove } from './chromeOffset';
 import { attachCopyButtons } from './codeCopy';

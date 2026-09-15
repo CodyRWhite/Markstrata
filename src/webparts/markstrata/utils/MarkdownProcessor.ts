@@ -1,8 +1,26 @@
 /**
+ * .SYNOPSIS
  * Markdown -> HTML pipeline.
  *
+ * .DESCRIPTION
  * Deliberately free of SharePoint imports so it can be unit tested and used by
  * the static theme preview under /demo.
+ *
+ * .USAGE
+ *   import { MarkdownProcessor } from './utils/MarkdownProcessor';
+ *
+ *   const processor: MarkdownProcessor = new MarkdownProcessor({ enableMermaid: true });
+ *   const html: string = processor.render('# Hello');
+ *
+ *   // Rebuilt only when an option actually changes:
+ *   processor.updateOptions({ imageBasePath: '/sites/team/Shared Documents' });
+ *
+ * .NOTES
+ * Since:     0.0.6
+ * Ships in:  the web part bundle
+ * Requires:  markdownItCallouts.ts, markdownItTaskLists.ts, codeBlocks.ts,
+ *            imagePaths.ts, frontMatter.ts, markdownItWikiLinks.ts,
+ *            markdownItTypes.ts
  */
 
 import { calloutPlugin } from './markdownItCallouts';

@@ -1,11 +1,27 @@
-/*
+/**
+ * .SYNOPSIS
  * What an author has configured, as one shape.
  *
+ * .DESCRIPTION
  * Apart on its own because two files need it and neither should have to import
  * the other for it: the web part, which owns the values, and the property
  * pane, which draws them. It is also the one place to read to see everything
  * the web part can be told to do.
+ *
+ * .USAGE
+ *   import { IMarkstrataWebPartProps } from './webPartProps';
+ *
+ *   // The web part owns the values; the property pane draws them.
+ *   export default class MarkstrataWebPart
+ *     extends BaseClientSideWebPart<IMarkstrataWebPartProps> { }
+ *
+ * .NOTES
+ * Since:     unreleased
+ * Ships in:  the web part bundle
+ * Requires:  ThemeManager.ts, mermaidConfig.ts, backToTop.ts,
+ *            ViewModeRenderer.ts, tocWidth.ts, SharePointService.ts
  */
+
 import { ThemeFamily, ColorMode } from './utils/ThemeManager';
 import { DiagramWidth } from './utils/mermaidConfig';
 import { BackToTop } from './utils/backToTop';

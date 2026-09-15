@@ -1,3 +1,17 @@
+/**
+ * .SYNOPSIS
+ * The demo pane and the real one have to show the same pages and groups.
+ *
+ * .USAGE
+ *   npm test                                  every test
+ *   node --test tests/property-pane.test.js   this one
+ *
+ * .NOTES
+ * Since:     0.0.12.0
+ * Ships in:  nothing - it runs at test time only
+ * Requires:  nothing else in this project
+ */
+
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');

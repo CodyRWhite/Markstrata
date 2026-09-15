@@ -1,17 +1,24 @@
-/*
- * What a static page of the documentation site runs once it has loaded.
+/**
+ * .SYNOPSIS
+ * Runs the web part's own ContentEnhancer on a static site page.
  *
- * The pages are rendered ahead of time, but everything the web part does after
- * rendering is behaviour, not markup: the copy button on a code block, the
- * contents following the reading position, a picture opening full size, the
- * button back to the top. None of that survives being written to a file.
+ * .DESCRIPTION
+ * The site used to carry a second, simpler copy of this behaviour, which
  *
- * So the real class is bundled and called here, rather than the site growing
- * its own copy of each behaviour. It had one for the contents and nothing for
- * the rest, which is how the documentation page ended up with a sidebar that
- * did not track and code blocks nobody could copy from, while the demo page
- * beside it had both.
+ * drifted from the web part every time the web part changed. Bundling the real
+ *
+ * class means the pages cannot claim a behaviour the product does not have.
+ *
+ * .USAGE
+ *   // Bundled into the site pages by demo/build-demo.js, not imported by hand.
+ *   window.strataEnhance(document.querySelector('.strata-root'));
+ *
+ * .NOTES
+ * Since:     0.0.14.0
+ * Ships in:  nothing - it builds or drives what ships
+ * Requires:  ContentEnhancer.ts
  */
+
 import { ContentEnhancer } from '../src/webparts/markstrata/utils/ContentEnhancer';
 
 const enhancer: ContentEnhancer = new ContentEnhancer();

@@ -1,10 +1,24 @@
-/*
+/**
+ * .SYNOPSIS
  * Marking wiki links whose target is not in the library, the way Obsidian
  * marks an unresolved link.
  *
+ * .DESCRIPTION
  * Done after rendering rather than during it, because it needs SharePoint and
  * rendering is a string going in and a string coming out.
+ *
+ * .USAGE
+ *   import { validateWikiLinks } from './utils/linkCheck';
+ *
+ *   // Left to settle on its own: the document is readable while this is in flight.
+ *   void validateWikiLinks(article, (folder) => sharePoint.listFolderFileNames(folder));
+ *
+ * .NOTES
+ * Since:     unreleased
+ * Ships in:  the web part bundle
+ * Requires:  wikiLinks.ts
  */
+
 import { byFolder, folderOf, fileOf } from './wikiLinks';
 
 /**

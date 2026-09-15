@@ -1,3 +1,18 @@
+/**
+ * .SYNOPSIS
+ * The kitchen sink document, which the screenshots, the demo and the themes
+ * page are all built from, has to keep rendering every feature it claims.
+ *
+ * .USAGE
+ *   npm test                                 every test
+ *   node --test tests/kitchen-sink.test.js   this one
+ *
+ * .NOTES
+ * Since:     0.0.12.0
+ * Ships in:  nothing - it runs at test time only
+ * Requires:  helpers.ts
+ */
+
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');

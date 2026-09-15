@@ -1,12 +1,28 @@
 /**
+ * .SYNOPSIS
  * The slice of markdown-it's internals this web part relies on.
  *
+ * .DESCRIPTION
  * markdown-it's published types do not cover plugin authoring in a way that
  * survives the TypeScript version SPFx pins, so the contract is written out
  * here instead of spreading `any` through the plugins. It doubles as the list
  * of things to re-check when markdown-it is upgraded: if one of these members
  * disappears, the compiler says so instead of the renderer failing silently in
  * a browser.
+ *
+ * .USAGE
+ *   import { IMarkdownIt, IStateCore, IToken } from './utils/markdownItTypes';
+ *
+ *   export function myPlugin(markdownIt: IMarkdownIt): void {
+ *     markdownIt.core.ruler.after('block', 'mine', (state: IStateCore) => {
+ *       state.tokens.forEach((token: IToken) => token.attrSet('data-mine', 'yes'));
+ *     });
+ *   }
+ *
+ * .NOTES
+ * Since:     0.0.6
+ * Ships in:  the web part bundle
+ * Requires:  nothing else in this project
  */
 
 // markdown-it really does hand back null for these, so the types say so.

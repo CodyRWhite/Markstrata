@@ -1,11 +1,24 @@
-/*
+/**
+ * .SYNOPSIS
  * Shared brand wiring for the generated pages.
  *
+ * .DESCRIPTION
  * The demo builder and the harness builder each write a standalone HTML file
  * into their own output directory, so both need the icon set beside them and
  * the same tags in <head>. Keeping that in one place means the docs site and
  * the harness cannot end up with different favicons.
+ *
+ * .USAGE
+ *   const { lockup, favicon } = require('./brand-assets');
+ *
+ *   html += lockup('dark');   // the horizontal lockup, for a dark header
+ *
+ * .NOTES
+ * Since:     0.0.6
+ * Ships in:  nothing - it builds or drives what ships
+ * Requires:  nothing else in this project
  */
+
 const fs = require('fs');
 const path = require('path');
 

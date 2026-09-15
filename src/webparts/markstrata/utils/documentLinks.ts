@@ -1,7 +1,20 @@
-/*
+/**
+ * .SYNOPSIS
  * Where the links in a rendered document point, and what happens when one is
  * followed.
+ *
+ * .USAGE
+ *   import { secureExternalLinks, followDocumentLinks } from './utils/documentLinks';
+ *
+ *   secureExternalLinks(article);
+ *   followDocumentLinks(article, documentFolder, (path, heading) => openDocument(path, heading));
+ *
+ * .NOTES
+ * Since:     unreleased
+ * Ships in:  the web part bundle
+ * Requires:  imagePaths.ts
  */
+
 import { resolveAgainst } from './imagePaths';
 
 /** Opens off-site links in a new tab without handing over window.opener. */

@@ -1,6 +1,8 @@
-/*
+/**
+ * .SYNOPSIS
  * Sorting a table a document wrote.
  *
+ * .DESCRIPTION
  * A markdown table has no types: every cell is text, and what a column holds
  * has to be worked out from the column itself. So each is read as a whole -
  * numbers only if every filled cell in it is a number, dates only if every
@@ -14,6 +16,17 @@
  * way round would sort into a confident wrong order. Only shapes that mean one
  * thing are treated as dates; everything else is text, where the ordering is at
  * least the one the reader can see.
+ *
+ * .USAGE
+ *   import { columnKind, sortedOrder } from './utils/tables';
+ *
+ *   const kind: ColumnKind = columnKind(values);        // number, date or text
+ *   const order: number[] = sortedOrder(rows, kind, descending);
+ *
+ * .NOTES
+ * Since:     unreleased
+ * Ships in:  the web part bundle
+ * Requires:  nothing else in this project
  */
 
 export type ColumnKind = 'number' | 'date' | 'text';

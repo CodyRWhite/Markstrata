@@ -1,3 +1,18 @@
+/**
+ * .SYNOPSIS
+ * Taking YAML frontmatter off the front of a document, which markdown
+ * itself has no concept of.
+ *
+ * .USAGE
+ *   npm test                                 every test
+ *   node --test tests/front-matter.test.js   this one
+ *
+ * .NOTES
+ * Since:     0.0.14.0
+ * Ships in:  nothing - it runs at test time only
+ * Requires:  helpers.ts
+ */
+
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { MarkdownProcessor, frontMatter } = require('./helpers');

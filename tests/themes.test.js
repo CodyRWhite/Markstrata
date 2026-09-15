@@ -1,3 +1,18 @@
+/**
+ * .SYNOPSIS
+ * Every theme has to define every token base.css declares, or a document
+ * renders with holes in it.
+ *
+ * .USAGE
+ *   npm test                           every test
+ *   node --test tests/themes.test.js   this one
+ *
+ * .NOTES
+ * Since:     0.0.6
+ * Ships in:  nothing - it runs at test time only
+ * Requires:  helpers.ts
+ */
+
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('fs');

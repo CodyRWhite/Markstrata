@@ -1,10 +1,23 @@
 /**
+ * .SYNOPSIS
  * Theme selection.
  *
+ * .DESCRIPTION
  * The stylesheets do the work; this class only decides which data-* attributes
  * the root element carries, resolves "follow SharePoint" into a real light or
  * dark value, and hands Mermaid a matching set of colours (Mermaid draws to
  * SVG, so it cannot read the CSS variables itself).
+ *
+ * .USAGE
+ *   import { ThemeManager } from './utils/ThemeManager';
+ *
+ *   const mode: ResolvedMode = ThemeManager.resolveMode(settings.colorMode);
+ *   const root: HTMLElement = ThemeManager.mount(container, settings, mode);
+ *
+ * .NOTES
+ * Since:     0.0.6
+ * Ships in:  the web part bundle
+ * Requires:  nothing else in this project
  */
 
 export type ThemeFamily = 'github' | 'obsidian' | 'vscode';

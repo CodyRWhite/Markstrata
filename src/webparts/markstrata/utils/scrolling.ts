@@ -1,12 +1,25 @@
-/*
+/**
+ * .SYNOPSIS
  * What is actually scrolling, and how much room there is inside it.
  *
+ * .DESCRIPTION
  * Every answer here exists because the window is not the scroller on a
  * SharePoint page: it scrolls an inner container that sits under a header and
  * a command bar. Anything measured against `window.innerHeight` is right on a
  * bare page and wrong on a real one, so the container is found and measured
  * instead. The sidebar, the fill-height setting and the reading position all
  * ask the same question, which is why they ask it in one place.
+ *
+ * .USAGE
+ *   import { roomBelow, scroller } from './scrolling';
+ *
+ *   const room: number = roomBelow(webPartRoot);
+ *   const container: HTMLElement | undefined = scroller(article);
+ *
+ * .NOTES
+ * Since:     unreleased
+ * Ships in:  the web part bundle
+ * Requires:  nothing else in this project
  */
 
 /**

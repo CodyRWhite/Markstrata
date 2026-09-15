@@ -1,3 +1,17 @@
+/**
+ * .SYNOPSIS
+ * Calling out named lines in a fence, written {2,4-6} after the language.
+ *
+ * .USAGE
+ *   npm test                                   every test
+ *   node --test tests/code-highlight.test.js   this one
+ *
+ * .NOTES
+ * Since:     0.0.14.0
+ * Ships in:  nothing - it runs at test time only
+ * Requires:  helpers.ts
+ */
+
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { MarkdownProcessor, codeBlocks } = require('./helpers');

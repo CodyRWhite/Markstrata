@@ -1,12 +1,26 @@
 /*
+ * .SYNOPSIS
  * callouts.css - GitHub alerts, Obsidian callouts and legacy Wiki.js
  * blockquote classes, all rendered from one markup shape.
  *
+ * .DESCRIPTION
  * Colour comes from --strata-callout-rgb, an "R, G, B" triple set per callout
  * type below, so backgrounds can be a low-alpha tint of the same hue used for
  * the icon and title. Shape (tint strength, accent bar, radius, padding) is
  * supplied by the theme, which is how the same callout reads as a GitHub
  * alert, an Obsidian callout or a VS Code notice.
+ *
+ * .USAGE
+ *   Loaded in this order by MarkstrataWebPart.ts, because later rules
+ *   override earlier ones:
+ *
+ *     base, typography, code, syntax, callouts, tables-lists, extras,
+ *     chrome, the three themes, modifiers, print
+ *
+ * .NOTES
+ * Since:     0.0.6
+ * Ships in:  the web part bundle
+ * Requires:  nothing else in this project
  */
 
 .strata-callout {

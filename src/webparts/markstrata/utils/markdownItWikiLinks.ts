@@ -1,12 +1,26 @@
 /**
+ * .SYNOPSIS
  * markdown-it plugin: wiki links, `[[Another page]]`.
  *
+ * .DESCRIPTION
  * Registered before markdown-it's own `link` rule so the two brackets are
  * claimed here first. Left to markdown-it, `[[Page]]` is a link whose text is
  * `[Page]` and which has no destination, so it renders as literal brackets.
  *
  * The href is worked out by the caller, which is the only place that knows
  * where this document lives in the library.
+ *
+ * .USAGE
+ *   import { wikiLinkPlugin } from './utils/markdownItWikiLinks';
+ *
+ *   markdownIt.use(wikiLinkPlugin, {
+ *     resolve: (path: string) => resolveAgainst(documentFolder, path)
+ *   });
+ *
+ * .NOTES
+ * Since:     0.0.14.0
+ * Ships in:  the web part bundle
+ * Requires:  markdownItTypes.ts, wikiLinks.ts
  */
 
 import { IMarkdownIt, IStateInline, MarkdownItPlugin } from './markdownItTypes';

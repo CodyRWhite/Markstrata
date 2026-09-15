@@ -1,11 +1,23 @@
-/*
+/**
+ * .SYNOPSIS
  * The shape of the documentation site: which pages exist, what they are built
  * from, and the header and footer they share.
  *
+ * .DESCRIPTION
  * Every page is generated - the markdown ones through the web part's own
  * pipeline, the demo through its real renderer classes - so this file is the
  * only place the navigation is written down. Adding a page is an entry here
  * and a markdown file.
+ *
+ * .USAGE
+ *   const { PAGES, page, linkTo, header, footer } = require('./site');
+ *
+ *   const href = linkTo('home', 'docs');   // '../docs/', relative on purpose
+ *
+ * .NOTES
+ * Since:     0.0.6
+ * Ships in:  nothing - it builds or drives what ships
+ * Requires:  nothing else in this project
  */
 
 /*

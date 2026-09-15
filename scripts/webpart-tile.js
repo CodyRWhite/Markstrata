@@ -1,6 +1,8 @@
-/*
+/**
+ * .SYNOPSIS
  * The web part's tile: a markdown document open in an editor, at an angle.
  *
+ * .DESCRIPTION
  * SharePoint shows this in the web part toolbox and on the full-page apps
  * picker, where the alternatives are a Fluent glyph and a grey gradient
  * placeholder. The document is invented - a fictional service, made-up
@@ -10,6 +12,16 @@
  * Colours are VS Code's Dark+, one of the three themes the web part ships,
  * because a product whose pitch is "themed like the editors you write it in"
  * may as well argue that in an editor's own palette.
+ *
+ * .USAGE
+ *   const { tileHtml } = require('./webpart-tile');
+ *
+ *   // Drawn in a headless browser by scripts/build-brand.js and saved as a JPEG.
+ *
+ * .NOTES
+ * Since:     0.0.6
+ * Ships in:  nothing - it builds or drives what ships
+ * Requires:  nothing else in this project
  */
 
 const LINES = [

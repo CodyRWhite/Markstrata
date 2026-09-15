@@ -1,6 +1,8 @@
-/*
+/**
+ * .SYNOPSIS
  * Stamps a version into package.json and config/package-solution.json.
  *
+ * .DESCRIPTION
  *   node scripts/set-version.js 1.2.0.0
  *
  * Versions are written the way SharePoint writes them, four-part, because that
@@ -10,7 +12,20 @@
  *
  * A three-part number is still accepted and gets a .0 appended, so tags cut
  * before this and anyone typing out of habit both still work.
+ *
+ * .USAGE
+ *   node scripts/set-version.js 0.0.17.0
+ *
+ *   Writes the four-part version into package.json and
+ *   config/package-solution.json, which is what a tenant compares when deciding
+ *   whether a package is an upgrade.
+ *
+ * .NOTES
+ * Since:     0.0.6
+ * Ships in:  nothing - it builds or drives what ships
+ * Requires:  nothing else in this project
  */
+
 const fs = require('fs');
 const path = require('path');
 

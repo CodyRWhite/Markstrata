@@ -1,3 +1,21 @@
+/**
+ * .SYNOPSIS
+ * The type of the strings file, so a missing string is a compile error.
+ *
+ * .DESCRIPTION
+ * Declared rather than generated: this is what makes a name that nothing
+ * defines fail to compile, instead of rendering as blank in the property pane
+ * where only a person looking at it would notice.
+ *
+ * .USAGE
+ *   import * as strings from 'MarkstrataWebPartStrings';
+ *   label: strings.ThemeSwitcherLabel
+ *
+ * .NOTES
+ * Since:     0.0.6
+ * Ships in:  the web part bundle
+ * Requires:  nothing else in this project
+ */
 declare interface IMarkstrataWebPartStrings {
   ContentPageDescription: string;
   ContentGroupName: string;

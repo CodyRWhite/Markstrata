@@ -1,6 +1,8 @@
-/*
+/**
+ * .SYNOPSIS
  * The overlay that shows one thing at the size of the window.
  *
+ * .DESCRIPTION
  * It takes a node and a label rather than an image, because a picture and a
  * diagram want to be shown differently and dismissed identically. Everything
  * here is the identical half: the ground behind it, Escape, a click outside,
@@ -9,6 +11,18 @@
  * It is built inside the themed root rather than on the body, so it is painted
  * from the same --strata-* values as the document behind it and follows a
  * reader's theme choice without being told about it.
+ *
+ * .USAGE
+ *   import { ZoomOverlay } from './utils/zoomOverlay';
+ *
+ *   const zoom: ZoomOverlay = new ZoomOverlay();
+ *   zoom.open(image, fullSizeCopy, 'Diagram of the pipeline');
+ *   zoom.close();
+ *
+ * .NOTES
+ * Since:     unreleased
+ * Ships in:  the web part bundle
+ * Requires:  nothing else in this project
  */
 
 export class ZoomOverlay {

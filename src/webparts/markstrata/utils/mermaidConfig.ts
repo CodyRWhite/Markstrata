@@ -1,6 +1,8 @@
-/*
+/**
+ * .SYNOPSIS
  * The mermaid configuration, minus the palette.
  *
+ * .DESCRIPTION
  * It lives on its own because two places initialise mermaid: the web part,
  * through MermaidRenderer, and the documentation site's static pages, which
  * render their diagrams in an inline script rather than loading the renderer
@@ -9,6 +11,17 @@
  *
  * Nothing here imports mermaid itself, which keeps it compilable by the site
  * build on its own, without the web part's ambient typings.
+ *
+ * .USAGE
+ *   import { mermaidConfigFor, MERMAID_BASE_CONFIG } from './utils/mermaidConfig';
+ *
+ *   const config = mermaidConfigFor('fit', usableWidth, MERMAID_BASE_CONFIG);
+ *   mermaid.initialize({ ...config, ...palette });
+ *
+ * .NOTES
+ * Since:     0.0.9
+ * Ships in:  the web part bundle
+ * Requires:  nothing else in this project
  */
 
 /*

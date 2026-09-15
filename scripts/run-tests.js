@@ -1,11 +1,26 @@
-/*
+/**
+ * .SYNOPSIS
  * Compiles the SharePoint-free half of the web part and runs the unit tests
  * against it.
  *
+ * .DESCRIPTION
  * The markdown pipeline, the code block renderer and the theme resolution have
  * no SPFx imports precisely so they can be tested in plain Node - everything
  * that talks to SharePoint or the DOM sits behind them.
+ *
+ * .USAGE
+ *   npm test
+ *
+ *   Compiles the SharePoint-free half of the web part into temp/test-lib, then
+ *   runs node's test runner over tests/. A module missing from tsconfig.test.json
+ *   shows up here as a missing file rather than as a confusing failure.
+ *
+ * .NOTES
+ * Since:     0.0.6
+ * Ships in:  nothing - it builds or drives what ships
+ * Requires:  nothing else in this project
  */
+
 const { execFileSync } = require('child_process');
 const path = require('path');
 

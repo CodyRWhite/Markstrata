@@ -1,13 +1,29 @@
-/*
+/**
+ * .SYNOPSIS
  * Drives the harness in Chromium and checks the things only a running page can
  * show: that the toolbar wires up, that the contents track the reading
  * position, that copy copies the source rather than the line numbers, that a
  * theme change re-renders diagrams, and that the editor previews as you type.
  *
+ * .DESCRIPTION
  *   npm run harness:drive
  *
  * Needs Playwright:  npm install --no-save playwright && npx playwright install chromium
+ *
+ * .USAGE
+ *   npm run harness:drive
+ *
+ *   Needs Playwright:
+ *     npm install --no-save playwright && npx playwright install chromium
+ *
+ *   PLAYWRIGHT_CHROMIUM=/path/to/chrome node harness/drive.js   uses that browser.
+ *
+ * .NOTES
+ * Since:     0.0.6
+ * Ships in:  nothing - it builds or drives what ships
+ * Requires:  nothing else in this project
  */
+
 const path = require('path');
 
 let chromium;

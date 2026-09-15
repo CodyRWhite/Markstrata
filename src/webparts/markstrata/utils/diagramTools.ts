@@ -1,12 +1,26 @@
-/*
+/**
+ * .SYNOPSIS
  * The two things a reader wants to do with a diagram: see it bigger, and take
  * it away.
  *
+ * .DESCRIPTION
  * Both sit in a group over the drawing, revealed on hover and always there to
  * a keyboard that has reached them. The host is never made a button itself: it
  * holds these, and a control inside a control is a thing neither a screen
  * reader nor a keyboard can describe.
+ *
+ * .USAGE
+ *   import { attachDiagramTools } from './utils/diagramTools';
+ *
+ *   // Called again after every mermaid render: the host is rebuilt each time.
+ *   attachDiagramTools(article, allowZoom, zoomOverlay, copyFeedback);
+ *
+ * .NOTES
+ * Since:     unreleased
+ * Ships in:  the web part bundle
+ * Requires:  copyFeedback.ts, zoomOverlay.ts
  */
+
 import { CopyFeedback } from './copyFeedback';
 import { ZoomOverlay } from './zoomOverlay';
 

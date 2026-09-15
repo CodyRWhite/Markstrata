@@ -1,6 +1,8 @@
-/*
+/**
+ * .SYNOPSIS
  * Wiki links: [[Another page]].
  *
+ * .DESCRIPTION
  * Not markdown. CommonMark has no such thing and GitHub renders it only inside
  * a GitHub Wiki, but Obsidian, Logseq, Foam, Dendron and every wiki since the
  * first one write links this way, and a folder of notes moved into a document
@@ -19,6 +21,17 @@
  * being rendered, so a link is written for every one of them and a missing
  * page is a 404 when it is followed. Marking them as broken without checking
  * would be worse than saying nothing.
+ *
+ * .USAGE
+ *   import { parseWikiLink, wikiHref } from './utils/wikiLinks';
+ *
+ *   const target = parseWikiLink('Deploy runbook#Rollback');
+ *   const href: string = wikiHref(target, (path) => resolveAgainst(folder, path));
+ *
+ * .NOTES
+ * Since:     0.0.14.0
+ * Ships in:  the web part bundle
+ * Requires:  imagePaths.ts
  */
 
 /** How a heading becomes the id that markdown-it-anchor gave it. */

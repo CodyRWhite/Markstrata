@@ -1,8 +1,21 @@
-/*
+/**
+ * .SYNOPSIS
  * How wide the contents sidebar is, when it is a sidebar at all.
  *
+ * .DESCRIPTION
  * Stacked above the content in a narrow column the setting does not apply: the
  * contents are full width there, which is the only thing that makes sense.
+ *
+ * .USAGE
+ *   import { tocWidthCss, tocWidthForUnit, TOC_WIDTH_RANGES } from './utils/tocWidth';
+ *
+ *   tocWidthCss('fixed', 'em', 15);   // '15em'
+ *   tocWidthCss('auto', 'em', 15);    // 'auto'
+ *
+ * .NOTES
+ * Since:     0.0.12.0
+ * Ships in:  the web part bundle
+ * Requires:  nothing else in this project
  */
 
 export type TocWidthMode = 'auto' | 'fixed';

@@ -1,3 +1,18 @@
+/**
+ * .SYNOPSIS
+ * What a callout is made of: the three syntaxes that mean one thing, the
+ * markup they render to, and the icon that goes with each type.
+ *
+ * .USAGE
+ *   npm test                             every test
+ *   node --test tests/callouts.test.js   this one
+ *
+ * .NOTES
+ * Since:     0.0.6
+ * Ships in:  nothing - it runs at test time only
+ * Requires:  helpers.ts
+ */
+
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { MarkdownProcessor } = require('./helpers');

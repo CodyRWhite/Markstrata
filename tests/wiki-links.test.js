@@ -1,3 +1,18 @@
+/**
+ * .SYNOPSIS
+ * Wiki links: the four shapes, where each resolves to, and which ones are
+ * worth asking SharePoint about.
+ *
+ * .USAGE
+ *   npm test                               every test
+ *   node --test tests/wiki-links.test.js   this one
+ *
+ * .NOTES
+ * Since:     0.0.14.0
+ * Ships in:  nothing - it runs at test time only
+ * Requires:  helpers.ts
+ */
+
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { MarkdownProcessor, wikiLinks } = require('./helpers');

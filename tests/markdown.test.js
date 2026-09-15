@@ -1,3 +1,18 @@
+/**
+ * .SYNOPSIS
+ * The pipeline end to end: every syntax the processor claims to render,
+ * rendered.
+ *
+ * .USAGE
+ *   npm test                             every test
+ *   node --test tests/markdown.test.js   this one
+ *
+ * .NOTES
+ * Since:     0.0.6
+ * Ships in:  nothing - it runs at test time only
+ * Requires:  helpers.ts
+ */
+
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { MarkdownProcessor } = require('./helpers');

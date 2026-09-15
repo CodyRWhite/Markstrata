@@ -1,10 +1,23 @@
-/*
+/**
+ * .SYNOPSIS
  * The prose of a rendered document, as opposed to everything else in it.
  *
+ * .DESCRIPTION
  * Kept apart from readingTime.ts on purpose: the arithmetic there is plain
  * strings and numbers and is unit tested as such, while pulling the words out
  * of a rendered document is a DOM question and is checked in the browser.
+ *
+ * .USAGE
+ *   import { readingTime, prose } from './utils/documentText';
+ *
+ *   const label: string = readingTime(article);   // '4 min read', or '' when empty
+ *
+ * .NOTES
+ * Since:     unreleased
+ * Ships in:  the web part bundle
+ * Requires:  readingTime.ts
  */
+
 import { countWords, readingTimeLabel } from './readingTime';
 
 /**

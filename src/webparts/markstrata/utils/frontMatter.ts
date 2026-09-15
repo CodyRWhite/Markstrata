@@ -1,6 +1,8 @@
-/*
+/**
+ * .SYNOPSIS
  * YAML frontmatter, taken off the front of a document.
  *
+ * .DESCRIPTION
  * Markdown has no concept of frontmatter: `---` is a thematic break, and a
  * `---` under a line of text is a setext underline. So a file carrying the
  * block every static site generator puts there renders as a horizontal rule
@@ -20,6 +22,18 @@
  * dependency and a parser is an attack surface; all that is wanted is the
  * handful of scalar keys a document actually sets, and anything else is
  * skipped rather than guessed at.
+ *
+ * .USAGE
+ *   import { splitFrontMatter } from './utils/frontMatter';
+ *
+ *   const { body, data } = splitFrontMatter(markdown);
+ *   processor.render(body);          // the document, without its frontmatter
+ *   console.log(data.title, data.author, data.tags);
+ *
+ * .NOTES
+ * Since:     0.0.14.0
+ * Ships in:  the web part bundle
+ * Requires:  nothing else in this project
  */
 
 export interface IFrontMatter {

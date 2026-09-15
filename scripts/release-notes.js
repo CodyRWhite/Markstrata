@@ -1,10 +1,23 @@
-/*
+/**
+ * .SYNOPSIS
  * Prints the release notes for a version by pulling its section out of
  * CHANGELOG.md. Falls back to a one-liner when the version has no entry, so a
  * release never fails just because the changelog was not updated.
  *
+ * .DESCRIPTION
  *   node scripts/release-notes.js 1.2.0
+ *
+ * .USAGE
+ *   node scripts/release-notes.js 0.0.16.0
+ *
+ *   Used by the release workflow to fill in the GitHub release body.
+ *
+ * .NOTES
+ * Since:     0.0.6
+ * Ships in:  nothing - it builds or drives what ships
+ * Requires:  nothing else in this project
  */
+
 const fs = require('fs');
 const path = require('path');
 

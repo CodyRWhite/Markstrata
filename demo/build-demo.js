@@ -1,13 +1,28 @@
-/*
+/**
+ * .SYNOPSIS
  * Builds demo/dist/index.html - a self-contained preview of every theme.
  *
+ * .DESCRIPTION
  * It runs the real pipeline: the same MarkdownProcessor the web part uses and
  * the same stylesheets, inlined into one file. That makes it useful for two
  * things: checking a theme change without deploying to SharePoint, and showing
  * someone what the themes look like.
  *
  *   npm run demo && open demo/dist/index.html
+ *
+ * .USAGE
+ *   npm run demo
+ *   node demo/build-demo.js docs/site/home.md --out site --page home
+ *
+ *   Renders a markdown file through the real pipeline and writes a page that
+ *   carries the result, the stylesheets and the demo controls.
+ *
+ * .NOTES
+ * Since:     0.0.6
+ * Ships in:  nothing - it builds or drives what ships
+ * Requires:  brand-assets.ts, site.ts
  */
+
 const fs = require('fs');
 const path = require('path');
 const { execFileSync } = require('child_process');

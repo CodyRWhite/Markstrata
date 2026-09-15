@@ -1,3 +1,17 @@
+/**
+ * .SYNOPSIS
+ * Every generated asset paints from the palette assets/brand.md documents.
+ *
+ * .USAGE
+ *   npm test                          every test
+ *   node --test tests/brand.test.js   this one
+ *
+ * .NOTES
+ * Since:     0.0.6
+ * Ships in:  nothing - it runs at test time only
+ * Requires:  helpers.ts
+ */
+
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('fs');

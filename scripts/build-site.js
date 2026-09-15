@@ -1,6 +1,8 @@
-/*
+/**
+ * .SYNOPSIS
  * Builds the documentation site published to GitHub Pages.
  *
+ * .DESCRIPTION
  * The pages, their order and the navigation between them live in
  * scripts/site.js; this walks that list and builds each one. Markdown pages go
  * through the web part's own pipeline and stylesheets, and the demo runs its
@@ -8,7 +10,19 @@
  * SharePoint page actually does.
  *
  *   node scripts/build-site.js [output directory]
+ *
+ * .USAGE
+ *   npm run site
+ *
+ *   Writes site/ - one folder per page, each built by the demo builder or the
+ *   harness builder depending on what the page is.
+ *
+ * .NOTES
+ * Since:     0.0.6
+ * Ships in:  nothing - it builds or drives what ships
+ * Requires:  site.ts
  */
+
 const fs = require('fs');
 const path = require('path');
 const { execFileSync } = require('child_process');

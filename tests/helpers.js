@@ -1,7 +1,18 @@
-/*
+/**
+ * .SYNOPSIS
  * One place that knows where the compiled test build lives, so the tests do
  * not each carry a long relative path. scripts/run-tests.js builds it.
+ *
+ * .USAGE
+ *   npm test                       every test
+ *   node --test tests/helpers.js   this one
+ *
+ * .NOTES
+ * Since:     0.0.6
+ * Ships in:  nothing - it runs at test time only
+ * Requires:  nothing else in this project
  */
+
 const path = require('path');
 
 const TEST_LIB = path.join(__dirname, '..', 'temp', 'test-lib');

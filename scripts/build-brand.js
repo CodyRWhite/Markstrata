@@ -1,6 +1,8 @@
-/*
+/**
+ * .SYNOPSIS
  * Puts the brand package to work.
  *
+ * .DESCRIPTION
  *   node scripts/build-brand.js
  *
  * assets/markstrata-brand-v1/ is the delivered brand system and is never
@@ -12,7 +14,21 @@
  *
  * Needs Playwright, for the composites:
  *   npm install --no-save playwright && npx playwright install chromium
+ *
+ * .USAGE
+ *   npm run brand
+ *
+ *   Copies the brand package into assets/, redraws the social card and the web
+ *   part tile, and stamps the tile into the web part's manifest.
+ *
+ *   Needs Playwright, because the card and the tile are drawn in a browser.
+ *
+ * .NOTES
+ * Since:     0.0.6
+ * Ships in:  nothing - it builds or drives what ships
+ * Requires:  webpart-tile.ts
  */
+
 const fs = require('fs');
 const path = require('path');
 const tile = require('./webpart-tile');

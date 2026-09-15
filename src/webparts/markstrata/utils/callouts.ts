@@ -1,6 +1,8 @@
 /**
+ * .SYNOPSIS
  * Callout registry.
  *
+ * .DESCRIPTION
  * One set of types covers three syntaxes that users actually paste into
  * SharePoint:
  *
@@ -11,6 +13,17 @@
  *
  * Colour per type is decided in CSS (callouts.css) from the type name, so
  * adding a type here only needs an icon and a default title.
+ *
+ * .USAGE
+ *   import { resolveCallout, buildIcon } from './utils/callouts';
+ *
+ *   const type: ICalloutType | undefined = resolveCallout('warning');
+ *   const icon: string = buildIcon(type.icon);
+ *
+ * .NOTES
+ * Since:     0.0.6
+ * Ships in:  the web part bundle
+ * Requires:  nothing else in this project
  */
 
 export interface ICalloutType {

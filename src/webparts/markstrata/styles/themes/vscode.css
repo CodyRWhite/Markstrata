@@ -1,12 +1,26 @@
 /*
+ * .SYNOPSIS
  * vscode.css - VS Code theme (Dark+ / Light+ token colours on the Dark Modern
  * and Light Modern editor surfaces).
  *
+ * .DESCRIPTION
  * Matches what the built-in markdown preview looks like next to the editor:
  * square-ish corners, a bordered code block on the editor background, gold
  * (dark) / red (light) inline code from textPreformat.foreground, and the
  * familiar Dark+ palette - #569CD6 keywords, #CE9178 strings, #6A9955
  * comments, #DCDCAA functions, #4EC9B0 types, #9CDCFE variables.
+ *
+ * .USAGE
+ *   One of three theme files. A theme only redefines the tokens base.css
+ *   declares; it never writes a rule of its own.
+ *
+ *     data-strata-theme="vscode" on the web part's root selects it,
+ *     and data-strata-mode="light|dark" picks the half.
+ *
+ * .NOTES
+ * Since:     0.0.6
+ * Ships in:  the web part bundle
+ * Requires:  nothing else in this project
  */
 
 .strata-root[data-strata-theme='vscode'] {

@@ -1,6 +1,23 @@
 /**
+ * .SYNOPSIS
  * Read mode: toolbar, optional table of contents sidebar, rendered markdown
  * and an optional source footer.
+ *
+ * .USAGE
+ *   import { ViewModeRenderer } from './utils/ViewModeRenderer';
+ *
+ *   const view: ViewModeRenderer = new ViewModeRenderer(processor, mermaid, enhancer, {
+ *     onReload: () => load(), onShowVersions: () => versions(),
+ *     onThemeOverride: (family, mode) => override(family, mode), onPrint: () => window.print()
+ *   });
+ *   view.render(container, markdown, options);
+ *
+ * .NOTES
+ * Since:     0.0.6
+ * Ships in:  the web part bundle
+ * Requires:  MarkdownProcessor.ts, MermaidRenderer.ts, mermaidConfig.ts,
+ *            ContentEnhancer.ts, ThemeManager.ts, SharePointService.ts,
+ *            frontMatter.ts, backToTop.ts
  */
 
 import { MarkdownProcessor } from './MarkdownProcessor';

@@ -1,6 +1,8 @@
 /**
+ * .SYNOPSIS
  * Fenced code block rendering.
  *
+ * .DESCRIPTION
  * Produces the markup code.css styles: an optional header carrying the
  * language label, an optional filename, a copy button, and one block element
  * per source line so line numbers can be CSS counters in a sticky gutter.
@@ -8,6 +10,18 @@
  * Highlighting runs through highlight.js but none of its stylesheets are
  * imported - the token classes are coloured by syntax.css from theme
  * variables, which is what lets one rendered block follow the selected theme.
+ *
+ * .USAGE
+ *   import { renderCodeBlock, parseInfo } from './utils/codeBlocks';
+ *
+ *   const html: string = renderCodeBlock(source, 'ts {2,4-6}', {
+ *     highlight: true, showHeader: true, showLineNumbers: true
+ *   });
+ *
+ * .NOTES
+ * Since:     0.0.6
+ * Ships in:  the web part bundle
+ * Requires:  nothing else in this project
  */
 
 // `lib/common` carries ~35 languages instead of highlight.js' full 190+, which

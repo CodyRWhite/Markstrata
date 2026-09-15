@@ -1,10 +1,27 @@
 /**
+ * .SYNOPSIS
  * Edit mode: a plain textarea next to a live preview.
  *
+ * .DESCRIPTION
  * This is deliberately not Monaco. Monaco costs a large lazy-loaded bundle and
  * a loader shim, and in a SharePoint page the editing that actually happens is
  * short edits to prose - so the trade is a textarea that always loads against
  * an editor that sometimes does not.
+ *
+ * .USAGE
+ *   import { EditModeManager } from './utils/EditModeManager';
+ *
+ *   const editor: EditModeManager = new EditModeManager(processor, mermaid, enhancer, {
+ *     onChange: (markdown: string) => { properties.markdownContent = markdown; },
+ *     onSave: (markdown: string) => saveToSharePoint(markdown)
+ *   });
+ *   editor.render(container, markdown, options);
+ *
+ * .NOTES
+ * Since:     0.0.6
+ * Ships in:  the web part bundle
+ * Requires:  MarkdownProcessor.ts, MermaidRenderer.ts, ContentEnhancer.ts,
+ *            mermaidConfig.ts, ThemeManager.ts
  */
 
 import { MarkdownProcessor } from './MarkdownProcessor';

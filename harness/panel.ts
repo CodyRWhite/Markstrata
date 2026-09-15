@@ -1,4 +1,8 @@
-/*
+/**
+ * .SYNOPSIS
+ * A stand-in for the SharePoint property pane, drawn in a plain page.
+ *
+ * .DESCRIPTION
  * A stand-in for the SharePoint property pane, for the demo page.
  *
  * The demo runs the web part's real renderer classes but there is no
@@ -10,6 +14,19 @@
  * It deliberately leaves out the Content page. Source, document library,
  * folder and file only mean something against a real tenant, and a pane full
  * of controls that quietly do nothing is worse than a shorter honest one.
+ *
+ * .USAGE
+ *   import { PropertyPanel, IPanelPage } from './panel';
+ *
+ *   const panel: PropertyPanel = new PropertyPanel(PANEL_PAGES, state, {
+ *     onChange: (key, value) => { state[key] = value; draw(); }
+ *   });
+ *   panel.mount(document.body);
+ *
+ * .NOTES
+ * Since:     0.0.8
+ * Ships in:  nothing - it builds or drives what ships
+ * Requires:  nothing else in this project
  */
 
 export type FieldType = 'dropdown' | 'toggle' | 'slider';

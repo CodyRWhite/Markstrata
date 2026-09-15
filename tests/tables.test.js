@@ -1,3 +1,17 @@
+/**
+ * .SYNOPSIS
+ * Reading a column: what a markdown table holds, and the order it sorts in.
+ *
+ * .USAGE
+ *   npm test                           every test
+ *   node --test tests/tables.test.js   this one
+ *
+ * .NOTES
+ * Since:     unreleased
+ * Ships in:  nothing - it runs at test time only
+ * Requires:  helpers.ts
+ */
+
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { tables } = require('./helpers');

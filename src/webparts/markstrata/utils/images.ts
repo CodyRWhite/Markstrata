@@ -1,12 +1,25 @@
-/*
+/**
+ * .SYNOPSIS
  * What happens to a picture after the markdown has been rendered.
  *
+ * .DESCRIPTION
  * All of it is done here rather than in the markdown pipeline because all of
  * it turns on where the image sits: a caption only makes sense for an image
  * that is a block of its own, an image inside a link has somewhere to go
  * already, and aligning is a property of the block rather than of the picture.
  * Those are questions about the rendered document, not about the tokens.
+ *
+ * .USAGE
+ *   import { enhanceImages } from './utils/images';
+ *
+ *   enhanceImages(article, allowZoom, zoomOverlay);
+ *
+ * .NOTES
+ * Since:     unreleased
+ * Ships in:  the web part bundle
+ * Requires:  zoomOverlay.ts
  */
+
 import { ZoomOverlay } from './zoomOverlay';
 
 export function enhanceImages(

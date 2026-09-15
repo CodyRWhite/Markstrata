@@ -1,6 +1,8 @@
-/*
+/**
+ * .SYNOPSIS
  * Builds the runtime harness into harness/dist.
  *
+ * .DESCRIPTION
  * SPFx removed the local workbench, and the hosted one needs a tenant, so
  * there is no way to open this web part in a browser without deploying it.
  * Everything below the web part shell is plain DOM code, though, so the
@@ -10,7 +12,20 @@
  *
  *   npm run harness         build it, then open harness/dist/index.html
  *   npm run harness:drive   build it and drive it with Playwright
+ *
+ * .USAGE
+ *   node harness/build.js
+ *   node harness/build.js --standalone --out site/demo --page demo
+ *
+ *   Bundles the real renderer classes with esbuild and writes one HTML file
+ *   that carries the web part, the stylesheets and the sample document.
+ *
+ * .NOTES
+ * Since:     0.0.6
+ * Ships in:  nothing - it builds or drives what ships
+ * Requires:  brand-assets.ts, site.ts
  */
+
 const fs = require('fs');
 const path = require('path');
 const { execFileSync } = require('child_process');

@@ -1,6 +1,8 @@
-/*
+/**
+ * .SYNOPSIS
  * The toolbar's icons.
  *
+ * .DESCRIPTION
  * Drawn here as inline SVG rather than pulled from a font or a package: the
  * web part loads nothing from a CDN, and an icon font would be a second
  * request and a flash of the wrong glyph before it arrived.
@@ -8,6 +10,18 @@
  * All of them are 24x24 outlines on the same grid and inherit `currentColor`,
  * so one rule in the stylesheet sizes and colours the lot, and each follows
  * the theme it is sitting in without being told.
+ *
+ * .USAGE
+ *   import { CLOCK_ICON, themeIcon } from './utils/icons';
+ *
+ *   pill.innerHTML = CLOCK_ICON;
+ *   // The mask needs an id of its own, or two web parts animate as one:
+ *   button.innerHTML = themeIcon(`${uid}-mode-mask`);
+ *
+ * .NOTES
+ * Since:     unreleased
+ * Ships in:  the web part bundle
+ * Requires:  nothing else in this project
  */
 
 const SVG_OPEN: string =

@@ -1,3 +1,18 @@
+/**
+ * .SYNOPSIS
+ * The shape of the documentation site: its pages, the links between them,
+ * and the header and footer every page carries.
+ *
+ * .USAGE
+ *   npm test                         every test
+ *   node --test tests/site.test.js   this one
+ *
+ * .NOTES
+ * Since:     0.0.6
+ * Ships in:  nothing - it runs at test time only
+ * Requires:  site.ts
+ */
+
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('fs');

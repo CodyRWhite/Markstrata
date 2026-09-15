@@ -1,6 +1,8 @@
-/*
+/**
+ * .SYNOPSIS
  * Regenerates the theme screenshots in docs/images/.
  *
+ * .DESCRIPTION
  *   node scripts/build-screenshots.js [--out <directory>]
  *
  * Each shot is the kitchen sink document rendered by the web part's own
@@ -15,7 +17,20 @@
  *
  * Needs Playwright:
  *   npm install --no-save playwright && npx playwright install chromium
+ *
+ * .USAGE
+ *   npm run screenshots
+ *   node scripts/build-screenshots.js --out /tmp/shots
+ *
+ *   Needs Playwright:
+ *     npm install --no-save playwright && npx playwright install chromium
+ *
+ * .NOTES
+ * Since:     0.0.6
+ * Ships in:  nothing - it builds or drives what ships
+ * Requires:  nothing else in this project
  */
+
 const fs = require('fs');
 const path = require('path');
 const { execFileSync } = require('child_process');

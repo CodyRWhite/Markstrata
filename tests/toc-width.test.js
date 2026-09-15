@@ -1,3 +1,18 @@
+/**
+ * .SYNOPSIS
+ * The contents sidebar width: what each unit means, and what a value
+ * typed into the box is allowed to be.
+ *
+ * .USAGE
+ *   npm test                              every test
+ *   node --test tests/toc-width.test.js   this one
+ *
+ * .NOTES
+ * Since:     0.0.12.0
+ * Ships in:  nothing - it runs at test time only
+ * Requires:  helpers.ts
+ */
+
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { tocWidth } = require('./helpers');

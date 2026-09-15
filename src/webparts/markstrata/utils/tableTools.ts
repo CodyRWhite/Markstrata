@@ -1,11 +1,26 @@
-/*
+/**
+ * .SYNOPSIS
  * What a reader can do with a table the document wrote: read its header
  * halfway down, and sort by a column.
  *
+ * .DESCRIPTION
  * The comparisons themselves are in tables.ts, which knows nothing about the
  * DOM and is unit tested on its own. This is the half that has to touch the
  * page.
+ *
+ * .USAGE
+ *   import { TableTools } from './utils/tableTools';
+ *
+ *   const tables: TableTools = new TableTools();
+ *   tables.enhance(article, allowSort);
+ *   tables.stop();
+ *
+ * .NOTES
+ * Since:     unreleased
+ * Ships in:  the web part bundle
+ * Requires:  tables.ts
  */
+
 import { ColumnKind, ISortableRow, columnKind, sortedOrder } from './tables';
 
 export class TableTools {

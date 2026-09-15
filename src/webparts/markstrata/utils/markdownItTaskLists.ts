@@ -1,6 +1,8 @@
 /**
+ * .SYNOPSIS
  * markdown-it plugin: GitHub style task lists.
  *
+ * .DESCRIPTION
  * Replaces the unmaintained markdown-it-task-lists (last released in 2019),
  * which also emitted slightly malformed markup - `class="x"type="checkbox"` -
  * and wrapped every item in a <label> whose `for` pointed nowhere.
@@ -10,6 +12,16 @@
  *
  * becomes a list marked `strata-task-list` whose items carry `data-checked`, with
  * a disabled checkbox that screen readers still announce as checked or not.
+ *
+ * .USAGE
+ *   import { taskListPlugin } from './utils/markdownItTaskLists';
+ *
+ *   markdownIt.use(taskListPlugin);
+ *
+ * .NOTES
+ * Since:     0.0.6
+ * Ships in:  the web part bundle
+ * Requires:  markdownItTypes.ts
  */
 
 import { IMarkdownIt, IStateCore, IToken } from './markdownItTypes';

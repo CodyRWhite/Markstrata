@@ -1,13 +1,27 @@
-/*
+/**
+ * .SYNOPSIS
  * How far down the screen a heading has to land to clear whatever is stuck
  * above it.
  *
+ * .DESCRIPTION
  * A stylesheet can only guess at this, and the guess was 24px, which is right
  * for a bare page and wrong everywhere else: the documentation site puts a
  * header and a controls bar across the top, and a SharePoint page has a header
  * and a command bar of its own. Clicking a contents entry sent the heading to
  * 24px from the top of the window and the chrome then covered it, which reads
  * as scrolling too far.
+ *
+ * .USAGE
+ *   import { ScrollOffset, chromeAbove } from './utils/chromeOffset';
+ *
+ *   const offset: ScrollOffset = new ScrollOffset();
+ *   offset.track(webPartRoot);   // sets --strata-scroll-offset on the root
+ *   offset.stop();
+ *
+ * .NOTES
+ * Since:     unreleased
+ * Ships in:  the web part bundle
+ * Requires:  nothing else in this project
  */
 
 /* Breathing room under whatever is stuck above, so a heading scrolled to sits

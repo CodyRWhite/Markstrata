@@ -1,6 +1,8 @@
 /*
+ * .SYNOPSIS
  * base.css - token contract + structural layout
  *
+ * .DESCRIPTION
  * Everything in this web part is styled through CSS custom properties that are
  * declared here and given values by the theme files in ./themes. A theme only
  * has to supply colours and a few shape/typography choices; nothing in the
@@ -20,6 +22,19 @@
  *   --strata-syn-* ......................... syntax highlighting tokens
  *   --strata-callout-* ..................... callout shape (colour comes from the
  *                                         per-type --strata-callout-rgb)
+ *
+ * .USAGE
+ *   Loaded in this order by MarkstrataWebPart.ts, because later rules
+ *   override earlier ones:
+ *
+ *     base, typography, code, syntax, callouts, tables-lists, extras,
+ *     chrome, the three themes, modifiers, print
+ *
+ * .NOTES
+ * Since:     0.0.6
+ * Ships in:  the web part bundle
+ * Requires:  nothing else in this project
+ * Loaded:    first, so every later rule can read its tokens
  */
 
 .strata-root {

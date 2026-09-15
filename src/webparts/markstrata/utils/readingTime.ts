@@ -1,10 +1,22 @@
-/*
+/**
+ * .SYNOPSIS
  * How long a document takes to read.
  *
+ * .DESCRIPTION
  * Split from the element it is measured on so the arithmetic can be tested
  * without a browser: pulling the prose out of a rendered document is a DOM
  * question and is checked there, while what counts as a word and how the
  * number is worded are decided here.
+ *
+ * .USAGE
+ *   import { countWords, readingTimeLabel } from './utils/readingTime';
+ *
+ *   readingTimeLabel(countWords(text));   // '4 min read', or '' for nothing to read
+ *
+ * .NOTES
+ * Since:     0.0.14.0
+ * Ships in:  the web part bundle
+ * Requires:  nothing else in this project
  */
 
 /*

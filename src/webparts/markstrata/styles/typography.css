@@ -1,4 +1,19 @@
-/* typography.css - headings, text, links, quotes, rules, images */
+/*
+ * .SYNOPSIS
+ * typography.css - headings, text, links, quotes, rules and pictures.
+ *
+ * .USAGE
+ *   Loaded in this order by MarkstrataWebPart.ts, because later rules
+ *   override earlier ones:
+ *
+ *     base, typography, code, syntax, callouts, tables-lists, extras,
+ *     chrome, the three themes, modifiers, print
+ *
+ * .NOTES
+ * Since:     0.0.6
+ * Ships in:  the web part bundle
+ * Requires:  nothing else in this project
+ */
 
 .strata-content h1,
 .strata-content h2,

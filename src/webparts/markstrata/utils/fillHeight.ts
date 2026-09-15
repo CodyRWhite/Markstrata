@@ -1,14 +1,29 @@
-/*
+/**
+ * .SYNOPSIS
  * "Fill the available height": gives the web part at least the room below
  * where it starts, so a short document does not stop halfway down and leave
  * the page looking broken.
  *
+ * .DESCRIPTION
  * This is what the setting costs. The room is the distance from where the web
  * part starts to the bottom of whatever is scrolling, and neither of those is
  * a number a stylesheet can reach. `100vh` is the tempting shortcut and it is
  * wrong on a SharePoint page, which scrolls an inner container under a header
  * and a command bar rather than the window.
+ *
+ * .USAGE
+ *   import { HeightFiller } from './utils/fillHeight';
+ *
+ *   const height: HeightFiller = new HeightFiller();
+ *   height.fill(webPartRoot);   // min-height = the room below, re-measured on resize
+ *   height.stop();
+ *
+ * .NOTES
+ * Since:     unreleased
+ * Ships in:  the web part bundle
+ * Requires:  scrolling.ts
  */
+
 import { roomBelow } from './scrolling';
 
 /* Below this there is not enough room below the web part to be worth filling,

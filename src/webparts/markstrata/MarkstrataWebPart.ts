@@ -1,3 +1,36 @@
+/**
+ * .SYNOPSIS
+ * The web part itself: what SharePoint loads, configures and renders.
+ *
+ * .DESCRIPTION
+ * The only file here that knows it is inside SharePoint. It holds the settings
+ * an author chose, fetches the document they pointed at, and hands both to the
+ * renderers, which know nothing about any of that - which is what lets the same
+ * renderers run in a plain browser page under harness/ and on the documentation
+ * site.
+ *
+ * It also owns everything that outlives a render: the reader's theme override
+ * in local storage, the auto-refresh watcher, the history entries a followed
+ * document pushes, and the enhancer whose listeners have to be stopped when the
+ * page puts the web part away.
+ *
+ * .USAGE
+ *   // SharePoint builds this: it is the web part the manifest points at.
+ *   // Everything below is what it does once SPFx has handed it a DOM element.
+ *
+ *   onInit()      builds the processor, the renderers and the SharePoint service
+ *   render()      draws read mode, edit mode, or a version being previewed
+ *   onDispose()   stops every listener the renderers started
+ *
+ * .NOTES
+ * Since:     0.0.6
+ * Ships in:  the web part bundle
+ * Requires:  MarkdownProcessor.ts, imagePaths.ts, wikiLinks.ts, tocWidth.ts,
+ *            MermaidRenderer.ts, ContentEnhancer.ts, ViewModeRenderer.ts,
+ *            EditModeManager.ts
+ * Runs in:   a SharePoint page, through @microsoft/sp-webpart-base
+ */
+
 import { Version, DisplayMode } from '@microsoft/sp-core-library';
 import {
   IPropertyPaneConfiguration,

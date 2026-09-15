@@ -1,6 +1,8 @@
 /**
+ * .SYNOPSIS
  * markdown-it plugin: blockquote callouts.
  *
+ * .DESCRIPTION
  * Recognises
  *   > [!NOTE]                       GitHub alert
  *   > [!tip] Custom title           Obsidian callout with a title
@@ -10,6 +12,16 @@
  *
  * and renders them all as the markup callouts.css expects. Anything that is
  * not a known callout type is left alone and stays an ordinary blockquote.
+ *
+ * .USAGE
+ *   import { calloutPlugin } from './utils/markdownItCallouts';
+ *
+ *   markdownIt.use(calloutPlugin);
+ *
+ * .NOTES
+ * Since:     0.0.6
+ * Ships in:  the web part bundle
+ * Requires:  callouts.ts, markdownItTypes.ts
  */
 
 import { resolveCallout, buildIcon, FOLD_ICON, ICalloutType } from './callouts';

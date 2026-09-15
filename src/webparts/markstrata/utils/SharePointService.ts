@@ -1,6 +1,19 @@
 /**
+ * .SYNOPSIS
  * SharePoint access: browsing libraries for markdown files, reading and
  * writing file content, version history and change polling.
+ *
+ * .USAGE
+ *   import { SharePointService } from './utils/SharePointService';
+ *
+ *   const sharePoint: SharePointService = new SharePointService(this.context);
+ *   const markdown: string = await sharePoint.getFileContent(fileUrl);
+ *   const names: string[] | undefined = await sharePoint.listFolderFileNames(folder);
+ *
+ * .NOTES
+ * Since:     0.0.6
+ * Ships in:  the web part bundle
+ * Requires:  nothing else in this project
  */
 
 import { WebPartContext } from '@microsoft/sp-webpart-base';

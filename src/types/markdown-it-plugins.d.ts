@@ -1,9 +1,26 @@
 /**
- * Declarations for the markdown-it plugins that ship without types.
+ * .SYNOPSIS
+ * Module declarations for the markdown-it plugins that ship no types.
  *
- * Listing them here keeps `require()` calls out of the source and gives each
- * plugin a real (if small) type, so a wrong option name or a renamed export is
- * a compile error rather than a feature that quietly stops working.
+ * .DESCRIPTION
+ * Each of these packages is published without TypeScript types, and without a
+ *
+ * declaration the import is an error under noImplicitAny. They are declared as
+ *
+ * plugin functions rather than as `any`, so the processor still has to call
+ *
+ * them the way markdown-it does.
+ *
+ * .USAGE
+ *   // Nothing imports this file: TypeScript picks it up from src/types and it
+ *   // then covers every markdown-it plugin the processor loads.
+ *
+ *   import markdownItAbbr from 'markdown-it-abbr';   // typed, because of this file
+ *
+ * .NOTES
+ * Since:     0.0.6
+ * Ships in:  the web part bundle
+ * Requires:  nothing else in this project
  */
 
 declare module 'markdown-it-attrs' {

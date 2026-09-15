@@ -1,9 +1,25 @@
-/*
+/**
+ * .SYNOPSIS
  * Resolving relative image sources against the folder the markdown came from.
  *
+ * .DESCRIPTION
  * Kept apart from the processor so it can be reasoned about and tested on its
  * own: the encoding rules here are the fiddly part, and getting them wrong
  * shows up as a broken image rather than an error.
+ *
+ * .USAGE
+ *   import { resolveAgainst, encodePath, folderOf } from './utils/imagePaths';
+ *
+ *   resolveAgainst('/sites/team/Runbooks', 'images/flow.png');
+ *   //  -> '/sites/team/Runbooks/images/flow.png'
+ *
+ *   // Returns undefined when the source already points somewhere of its own:
+ *   resolveAgainst(base, 'https://example.com/a.png');   // undefined
+ *
+ * .NOTES
+ * Since:     0.0.6
+ * Ships in:  the web part bundle
+ * Requires:  nothing else in this project
  */
 
 /**

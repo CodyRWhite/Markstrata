@@ -1,6 +1,8 @@
-/*
+/**
+ * .SYNOPSIS
  * The property pane: what an author sees when they edit the web part.
  *
+ * .DESCRIPTION
  * It lives here rather than in the web part because it is 380 lines of literal
  * that describes settings, while the web part is the thing that renders a
  * document - and because it has no need of anything else in there. Given the
@@ -14,7 +16,22 @@
  * Contents keeps the table of contents and the links between documents,
  * because finding your way inside a document and finding your way between them
  * are the same errand; and what is left is what is drawn around the document.
+ *
+ * .USAGE
+ *   import { paneConfiguration } from './propertyPane';
+ *
+ *   protected getPropertyPaneConfiguration(): IPropertyPaneConfiguration {
+ *     return paneConfiguration(this.properties, {
+ *       libraries: this.libraryOptions, folders: this.folderOptions, files: this.fileOptions
+ *     });
+ *   }
+ *
+ * .NOTES
+ * Since:     unreleased
+ * Ships in:  the web part bundle
+ * Requires:  webPartProps.ts, tocWidth.ts, ThemeManager.ts
  */
+
 import {
   IPropertyPaneConfiguration,
   IPropertyPaneDropdownOption,

@@ -1,7 +1,20 @@
 /*
+ * .SYNOPSIS
  * chrome.css - the web part's own UI (toolbar, theme switcher, editor, version
  * panel). Themed from the same variables as the content so the frame never
  * fights the markdown it wraps.
+ *
+ * .USAGE
+ *   Loaded in this order by MarkstrataWebPart.ts, because later rules
+ *   override earlier ones:
+ *
+ *     base, typography, code, syntax, callouts, tables-lists, extras,
+ *     chrome, the three themes, modifiers, print
+ *
+ * .NOTES
+ * Since:     0.0.6
+ * Ships in:  the web part bundle
+ * Requires:  nothing else in this project
  */
 
 .strata-toolbar {

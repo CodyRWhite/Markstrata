@@ -1,10 +1,23 @@
 /**
+ * .SYNOPSIS
  * Renders the `<pre class="mermaid">` blocks the markdown processor emits.
  *
+ * .DESCRIPTION
  * Mermaid draws to SVG with the colours baked in at render time, so a theme
  * change means re-rendering rather than restyling. The diagram source is kept
  * on the container in `data-strata-source` so that second pass has something to
  * re-render from after the <pre> has been replaced by the SVG.
+ *
+ * .USAGE
+ *   import { MermaidRenderer } from './utils/MermaidRenderer';
+ *
+ *   const mermaid: MermaidRenderer = new MermaidRenderer();
+ *   await mermaid.render(article, 'vscode', 'dark', 'fit');
+ *
+ * .NOTES
+ * Since:     0.0.6
+ * Ships in:  the web part bundle
+ * Requires:  ThemeManager.ts, mermaidConfig.ts
  */
 
 import { IMermaidApi, IMermaidRenderResult } from 'mermaid';

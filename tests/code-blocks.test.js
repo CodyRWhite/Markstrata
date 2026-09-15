@@ -1,3 +1,18 @@
+/**
+ * .SYNOPSIS
+ * Fenced code blocks: the header, the line numbers, the language label,
+ * and the markup code.css is written against.
+ *
+ * .USAGE
+ *   npm test                                every test
+ *   node --test tests/code-blocks.test.js   this one
+ *
+ * .NOTES
+ * Since:     0.0.6
+ * Ships in:  nothing - it runs at test time only
+ * Requires:  helpers.ts
+ */
+
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { MarkdownProcessor, codeBlocks } = require('./helpers');

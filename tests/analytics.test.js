@@ -1,3 +1,18 @@
+/**
+ * .SYNOPSIS
+ * Analytics belongs to the one head both page builders share, so a new page
+ * is measured without anybody remembering to wire it up.
+ *
+ * .USAGE
+ *   npm test                              every test
+ *   node --test tests/analytics.test.js   this one
+ *
+ * .NOTES
+ * Since:     0.0.13.0
+ * Ships in:  nothing - it runs at test time only
+ * Requires:  brand-assets.ts
+ */
+
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { brandHead, ANALYTICS_ID } = require('../scripts/brand-assets');

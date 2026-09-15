@@ -1,4 +1,21 @@
-/* print.css - printing the page or exporting it to PDF from the browser. */
+/*
+ * .SYNOPSIS
+ * print.css - what the document looks like on paper, or in a PDF the
+ * browser exports.
+ *
+ * .USAGE
+ *   Loaded in this order by MarkstrataWebPart.ts, because later rules
+ *   override earlier ones:
+ *
+ *     base, typography, code, syntax, callouts, tables-lists, extras,
+ *     chrome, the three themes, modifiers, print
+ *
+ * .NOTES
+ * Since:     0.0.6
+ * Ships in:  the web part bundle
+ * Requires:  nothing else in this project
+ * Loaded:    last
+ */
 
 @media print {
   .strata-root {

@@ -1,3 +1,18 @@
+/**
+ * .SYNOPSIS
+ * Where a relative image source resolves to, how an image is sized, and
+ * what markdown-it is asked to do with one.
+ *
+ * .USAGE
+ *   npm test                           every test
+ *   node --test tests/images.test.js   this one
+ *
+ * .NOTES
+ * Since:     0.0.6
+ * Ships in:  nothing - it runs at test time only
+ * Requires:  helpers.ts
+ */
+
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { MarkdownProcessor, imagePaths } = require('./helpers');

@@ -1,6 +1,19 @@
 /**
+ * .SYNOPSIS
  * The button back to the top of the document: where it sits, whether it is
  * there at all, and the button itself.
+ *
+ * .USAGE
+ *   import { BackToTop, BackToTopButton } from './utils/backToTop';
+ *
+ *   const toTop: BackToTopButton = new BackToTopButton();
+ *   toTop.attach(webPartRoot, 'right');   // 'left', 'right' or 'off'
+ *   toTop.stop();
+ *
+ * .NOTES
+ * Since:     0.0.14.0
+ * Ships in:  the web part bundle
+ * Requires:  nothing else in this project
  */
 
 /**

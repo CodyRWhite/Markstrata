@@ -1,6 +1,20 @@
 /*
+ * .SYNOPSIS
  * modifiers.css - reading options that apply on top of whichever theme is
  * selected. Loaded last so these always win over the theme defaults.
+ *
+ * .USAGE
+ *   Loaded in this order by MarkstrataWebPart.ts, because later rules
+ *   override earlier ones:
+ *
+ *     base, typography, code, syntax, callouts, tables-lists, extras,
+ *     chrome, the three themes, modifiers, print
+ *
+ * .NOTES
+ * Since:     0.0.6
+ * Ships in:  the web part bundle
+ * Requires:  nothing else in this project
+ * Loaded:    after the themes, so a reader option always wins
  */
 
 /* ----------------------------------------------------------------- density */

@@ -1,4 +1,20 @@
-/* extras.css - math, Mermaid, inline table of contents, loose ends */
+/*
+ * .SYNOPSIS
+ * extras.css - maths, diagrams, the inline contents, the zoom overlay and
+ * the button back to the top.
+ *
+ * .USAGE
+ *   Loaded in this order by MarkstrataWebPart.ts, because later rules
+ *   override earlier ones:
+ *
+ *     base, typography, code, syntax, callouts, tables-lists, extras,
+ *     chrome, the three themes, modifiers, print
+ *
+ * .NOTES
+ * Since:     0.0.6
+ * Ships in:  the web part bundle
+ * Requires:  nothing else in this project
+ */
 
 .strata-math-block {
   margin: 0 0 var(--strata-block-gap);

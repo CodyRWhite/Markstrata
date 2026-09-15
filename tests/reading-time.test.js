@@ -1,3 +1,17 @@
+/**
+ * .SYNOPSIS
+ * The arithmetic behind "4 min read", on plain strings and numbers.
+ *
+ * .USAGE
+ *   npm test                                 every test
+ *   node --test tests/reading-time.test.js   this one
+ *
+ * .NOTES
+ * Since:     0.0.14.0
+ * Ships in:  nothing - it runs at test time only
+ * Requires:  helpers.ts
+ */
+
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { readingTime } = require('./helpers');

@@ -1,6 +1,8 @@
 /*
+ * .SYNOPSIS
  * syntax.css - maps highlight.js token classes onto theme tokens.
  *
+ * .DESCRIPTION
  * highlight.js ships one stylesheet per theme with the colours baked in, which
  * is why the original web part could only ever look like atom-one-dark. Here
  * every token resolves to a --strata-syn-* variable, so switching theme or light/
@@ -8,6 +10,18 @@
  *
  * Class groupings follow highlight.js 11's own themes so language coverage
  * matches what the library actually emits.
+ *
+ * .USAGE
+ *   Loaded in this order by MarkstrataWebPart.ts, because later rules
+ *   override earlier ones:
+ *
+ *     base, typography, code, syntax, callouts, tables-lists, extras,
+ *     chrome, the three themes, modifiers, print
+ *
+ * .NOTES
+ * Since:     0.0.6
+ * Ships in:  the web part bundle
+ * Requires:  nothing else in this project
  */
 
 .strata-code .hljs {

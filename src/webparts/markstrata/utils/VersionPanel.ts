@@ -1,7 +1,22 @@
 /**
+ * .SYNOPSIS
  * Version history panel for a markdown file held in a SharePoint library.
  * Lists the file's versions, previews one, and restores it by writing that
  * text back as a new version (never by deleting history).
+ *
+ * .USAGE
+ *   import { VersionPanel } from './utils/VersionPanel';
+ *
+ *   const panel: VersionPanel = new VersionPanel(sharePoint, {
+ *     onPreview: (content, label) => showPreview(content, label),
+ *     onRestored: () => reload()
+ *   });
+ *   await panel.open(container, fileUrl);
+ *
+ * .NOTES
+ * Since:     0.0.6
+ * Ships in:  the web part bundle
+ * Requires:  SharePointService.ts
  */
 
 import { SharePointService } from './SharePointService';
