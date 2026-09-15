@@ -135,6 +135,9 @@ export class ViewModeRenderer {
     }
 
     this.enhancer.attachBackToTop(host, options.backToTop || 'off');
+    /* So a heading scrolled to clears whatever SharePoint has stuck above the
+       web part, by any route: the contents, a link, or a restored fragment. */
+    this.enhancer.trackScrollOffset(host);
 
     /* Left to settle in on its own: the document is readable while this is in
        flight, and a link that turns out to be missing is marked when the

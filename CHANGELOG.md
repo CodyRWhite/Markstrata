@@ -8,6 +8,23 @@ is normally zero. `scripts/set-version.js` stamps it when a release is cut.
 
 Entries below 0.0.10.0 were written before the switch and are three-part.
 
+## Unreleased
+
+- A heading scrolled to no longer lands under whatever is stuck above it. The
+  clearance was a fixed 24px in the stylesheet, which is right for a bare page
+  and too small for any real one: on the site a header and a controls bar
+  covered the heading, and on a SharePoint page the suite header and command
+  bar do the same. It is measured now, from whatever is actually stuck there,
+  and re-measured when the window changes.
+- The last few entries in the contents can be reached. A heading was marked
+  when it passed the reading line, which needs a screenful of document below it
+  to get there, and the last headings never have one: the page runs out first,
+  so the highlight stopped short of the end however far you scrolled. At the
+  end of a document the last entry is what is being read.
+- Clicking a contents entry marks it even when there is no scroll left to make.
+  Near the end of a document, clicking one of the last entries moved nothing
+  and changed nothing, so the contents appeared to ignore them.
+
 ## 0.0.14.0
 
 - A **Syntax** page on the site lists everything the web part renders, with the

@@ -27,6 +27,9 @@ function enhance(): void {
   enhancer.secureExternalLinks(article);
   enhancer.enhanceImages(article, true);
   enhancer.attachBackToTop(root, 'right');
+  /* The site puts a header and a controls bar across the top, so a heading
+     scrolled to has to clear both. */
+  enhancer.trackScrollOffset(root);
 
   /* The contents is already in the page; this is what makes it follow the
      reading position, which is the half that cannot be written to a file. */

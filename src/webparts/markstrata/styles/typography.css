@@ -12,7 +12,12 @@
   font-weight: var(--strata-heading-weight);
   line-height: 1.25;
   color: var(--strata-heading-color);
-  scroll-margin-top: 24px;
+  /* Measured at runtime from whatever is stuck above the text, because a
+     number written here can only be right for one page: the documentation site
+     has a header and a controls bar, a SharePoint page has a header and a
+     command bar, and a bare page has neither. The fallback is the old value,
+     for a page where nothing is measured yet. */
+  scroll-margin-top: var(--strata-scroll-offset, 24px);
 }
 
 .strata-content > h1:first-child,

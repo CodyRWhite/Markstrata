@@ -30,6 +30,14 @@ const FILL_MIN_HEIGHT: number = 200;
    getting back has become a journey rather than a flick of the wheel. */
 const BACK_TO_TOP_AFTER: number = 600;
 
+/* Breathing room under whatever is stuck above, so a heading scrolled to sits
+   clear of it rather than against it. */
+const HEADING_CLEARANCE: number = 16;
+
+/* Close enough to the end to call it the end. Sub-pixel scroll positions and
+   zoom mean the arithmetic rarely lands exactly on the bottom. */
+const BOTTOM_SLACK: number = 4;
+
 const CHECK_ICON: string =
   '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m20 6-11 11-5-5"/></svg>';
 
@@ -52,6 +60,7 @@ export class ContentEnhancer {
   private backToTop: HTMLElement | undefined;
   private onBackToTopScroll: (() => void) | undefined;
   private backToTopFrame: number | undefined;
+  private onChromeResize: (() => void) | undefined;
   private onResize: (() => void) | undefined;
   private resizeFrame: number | undefined;
 
@@ -573,6 +582,95 @@ export class ContentEnhancer {
    * takes the last heading that has passed the reading line, which is well
    * defined at the top of the document, at the bottom, and everywhere between.
    */
+  /**
+   * How far down the screen a heading has to land to clear whatever is stuck
+   * above it.
+   *
+   * A stylesheet can only guess at this, and the guess was 24px, which is
+   * right for a bare page and wrong everywhere else: the documentation site
+   * puts a header and a controls bar across the top, and a SharePoint page has
+   * a header and a command bar of its own. Clicking a contents entry sent the
+   * heading to 24px from the top of the window and the chrome then covered it,
+   * which reads as scrolling too far.
+   *
+   * So it is measured. Anything stuck to the top of the window and wide enough
+   * to be a bar across it counts; the contents sidebar does not, because it
+   * sits beside the text rather than over it, and neither does a small fixed
+   * control like the button back to the top.
+   */
+  public static chromeAbove(): number {
+    const width: number = window.innerWidth;
+    const elements: HTMLElement[] = Array.prototype.slice.call(
+      document.querySelectorAll('body *')
+    );
+
+    let bottom: number = 0;
+    elements.forEach((element: HTMLElement) => {
+      const style: CSSStyleDeclaration = window.getComputedStyle(element);
+      if (style.position !== 'sticky' && style.position !== 'fixed') {
+        return;
+      }
+      const rect: DOMRect = element.getBoundingClientRect();
+      /* Across the top of the window rather than beside the text: a bar is
+         wide and shallow, which a contents sidebar and a corner button are
+         not. */
+      const isBar: boolean = rect.width > width * 0.6
+        && rect.height < window.innerHeight * 0.4;
+      if (!isBar) {
+        return;
+      }
+
+      if (style.position === 'fixed') {
+        if (rect.top <= 1 && rect.bottom > 0) {
+          bottom = Math.max(bottom, rect.bottom);
+        }
+        return;
+      }
+
+      /*
+       * A sticky bar has to be measured by where it will sit, not where it is.
+       * Measured on a page at rest it has not stuck yet and is wherever the
+       * document put it, which is why measuring the rectangle found nothing at
+       * all and every heading still landed under the chrome. Its own top
+       * offset plus its height is where it comes to rest.
+       */
+      const offset: number = parseFloat(style.top);
+      if (!isNaN(offset) && offset >= 0 && offset < window.innerHeight * 0.4) {
+        bottom = Math.max(bottom, offset + rect.height);
+      }
+    });
+
+    return Math.round(bottom);
+  }
+
+  /**
+   * Publishes that measurement as a custom property, so a heading scrolled to
+   * by any route clears the chrome: the contents, a link from another page, or
+   * the browser restoring a fragment on load. A value the stylesheet can read
+   * rather than a scroll this code performs, because only one of those covers
+   * the cases nobody wrote code for.
+   */
+  public trackScrollOffset(root: HTMLElement): void {
+    this.stopScrollOffset();
+
+    const apply = (): void => {
+      const chrome: number = ContentEnhancer.chromeAbove();
+      root.style.setProperty('--strata-scroll-offset',
+        `${chrome + HEADING_CLEARANCE}px`);
+    };
+
+    this.onChromeResize = apply;
+    window.addEventListener('resize', this.onChromeResize, { passive: true });
+    apply();
+  }
+
+  public stopScrollOffset(): void {
+    if (this.onChromeResize) {
+      window.removeEventListener('resize', this.onChromeResize);
+      this.onChromeResize = undefined;
+    }
+  }
+
   public trackActiveHeading(content: HTMLElement, nav: HTMLElement): void {
     this.stopTracking();
 
@@ -591,7 +689,25 @@ export class ContentEnhancer {
       return;
     }
 
+    const mark = (active: { link: HTMLAnchorElement }): void => {
+      tracked.forEach((entry) => entry.link.removeAttribute('aria-current'));
+      active.link.setAttribute('aria-current', 'true');
+    };
+
     const update = (): void => {
+      /*
+       * At the end of the document, whatever is last is what is being read.
+       *
+       * A heading is marked when it passes the reading line, which needs a
+       * screenful of document below it to get there. The last few headings
+       * never have one: the page runs out first, so they could not be marked
+       * by scrolling and the highlight stuck several entries short of the end.
+       */
+      if (atBottom()) {
+        mark(tracked[tracked.length - 1]);
+        return;
+      }
+
       let active: { link: HTMLAnchorElement; heading: HTMLElement } = tracked[0];
       tracked.forEach((entry) => {
         if (entry.heading.getBoundingClientRect().top <= ACTIVE_HEADING_LINE) {
@@ -599,9 +715,30 @@ export class ContentEnhancer {
         }
       });
 
-      tracked.forEach((entry) => entry.link.removeAttribute('aria-current'));
-      active.link.setAttribute('aria-current', 'true');
+      mark(active);
     };
+
+    /* Whichever thing actually scrolls: the window, or the inner container a
+       SharePoint page scrolls under its own chrome. */
+    const atBottom = (): boolean => {
+      const scroller: HTMLElement | undefined = ContentEnhancer.scroller(content);
+      const position: number = scroller ? scroller.scrollTop : window.scrollY;
+      const visible: number = scroller ? scroller.clientHeight : window.innerHeight;
+      const total: number = scroller
+        ? scroller.scrollHeight : document.documentElement.scrollHeight;
+      return position + visible >= total - BOTTOM_SLACK;
+    };
+
+    /*
+     * Marked on the way in as well as by the scroll that follows.
+     *
+     * Near the end of a document there may be no scroll left to make, so
+     * clicking one of the last entries moved nothing and changed nothing:
+     * from the reader's side the contents simply ignored them.
+     */
+    tracked.forEach((entry) => {
+      entry.link.addEventListener('click', () => mark(entry));
+    });
 
     /*
      * How tall the sidebar may be, measured rather than assumed.
@@ -1013,5 +1150,6 @@ export class ContentEnhancer {
     this.stopFilling();
     this.closeZoom();
     this.stopBackToTop();
+    this.stopScrollOffset();
   }
 }

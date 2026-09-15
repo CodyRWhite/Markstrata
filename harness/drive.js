@@ -590,6 +590,66 @@ const demoUrl = 'file://' + path.join(__dirname, '..', 'site', 'demo', 'index.ht
     await page.waitForTimeout(300);
   });
 
+  /*
+   * A SharePoint page puts a suite header and a command bar across the top and
+   * they stay there. The web part's stylesheet used to clear them with a fixed
+   * 24px, which is right for a bare page and too small for any real one, so a
+   * heading scrolled to landed underneath the chrome. The harness has no
+   * chrome of its own, so one is put there.
+   */
+  await step('a heading scrolled to clears chrome stuck above the web part', async () => {
+    await page.evaluate(() => {
+      const bar = document.createElement('div');
+      bar.id = 'fake-suite-bar';
+      bar.style.cssText = 'position:fixed;top:0;left:0;right:0;height:68px;'
+        + 'background:#333;z-index:900';
+      document.body.appendChild(bar);
+      window.dispatchEvent(new Event('resize'));
+    });
+    await page.waitForTimeout(400);
+
+    const offset = await page.evaluate(() =>
+      getComputedStyle(document.querySelector('.strata-root'))
+        .getPropertyValue('--strata-scroll-offset').trim());
+    if (parseInt(offset, 10) < 68) {
+      throw new Error('measured ' + offset + ' against 68px of chrome');
+    }
+
+    await page.locator('.strata-toc a').nth(4).click();
+    await page.waitForTimeout(900);
+    const landed = await page.evaluate(() => {
+      const link = [...document.querySelectorAll('.strata-toc a')][4];
+      const heading = document.getElementById(
+        decodeURIComponent(link.getAttribute('href')).slice(1));
+      return Math.round(heading.getBoundingClientRect().top);
+    });
+    if (landed < 68) throw new Error('the heading landed at ' + landed + ', under the bar');
+
+    await page.evaluate(() => {
+      document.getElementById('fake-suite-bar').remove();
+      window.dispatchEvent(new Event('resize'));
+      window.scrollTo(0, 0);
+    });
+    await page.waitForTimeout(400);
+  });
+
+  await step('the last contents entry is reachable at the end of the document', async () => {
+    await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+    await page.waitForTimeout(700);
+    const end = await page.evaluate(() => {
+      const links = [...document.querySelectorAll('.strata-toc-sidebar a, .strata-toc-inline a')];
+      const at = links.findIndex((link) => link.getAttribute('aria-current') === 'true');
+      return { at: at + 1, of: links.length };
+    });
+    /* The last few headings never pass the reading line, because the page runs
+       out before they can, so the highlight used to stop short of the end. */
+    if (end.at !== end.of) {
+      throw new Error('marked ' + end.at + ' of ' + end.of + ' at the very bottom');
+    }
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await page.waitForTimeout(300);
+  });
+
   await step('contents move to the right', async () => {
     await page.evaluate(() => window.harness.setToc('right'));
     await page.waitForTimeout(400);
