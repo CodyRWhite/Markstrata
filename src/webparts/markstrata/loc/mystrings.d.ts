@@ -50,6 +50,9 @@ declare interface IMarkstrataWebPartStrings {
   ChromePageDescription: string;
   DiagramsGroupName: string;
   MathGroupName: string;
+  TablesGroupName: string;
+  TableSortLabel: string;
+  TableSortHint: string;
   MermaidLabel: string;
   DiagramWidthLabel: string;
   DiagramWidthHint: string;

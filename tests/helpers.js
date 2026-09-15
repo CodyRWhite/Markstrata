@@ -37,5 +37,6 @@ module.exports = {
   callouts: lib('callouts'),
   frontMatter: lib('frontMatter'),
   readingTime: lib('readingTime'),
-  wikiLinks: lib('wikiLinks')
+  wikiLinks: lib('wikiLinks'),
+  tables: lib('tables')
 };

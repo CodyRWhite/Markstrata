@@ -534,6 +534,141 @@ const demoUrl = 'file://' + path.join(__dirname, '..', 'site', 'demo', 'index.ht
     await page.waitForTimeout(200);
   });
 
+  /*
+   * A sticky header has a condition nothing in the stylesheet can see: the box
+   * a wide table scrolls in is also a scroll container, and a sticky cell
+   * sticks to that rather than to the page - so inside it the header never
+   * moves. Tables that fit are let out of the box by measurement, and this is
+   * that measurement.
+   */
+  await step('a table that fits its column is let out of the scroll box', async () => {
+    const seen = await page.evaluate(() => {
+      const wraps = [...document.querySelectorAll('.strata-table-scroll')];
+      return wraps.map((wrap) => ({
+        fits: wrap.classList.contains('strata-table-scroll--fits'),
+        overflow: getComputedStyle(wrap).overflowX,
+        wider: wrap.querySelector('table').scrollWidth > wrap.clientWidth + 1
+      }));
+    });
+    if (seen.length === 0) throw new Error('no tables in the sample');
+    seen.forEach((wrap, index) => {
+      if (wrap.fits === wrap.wider) {
+        throw new Error('table ' + index + ' is ' + JSON.stringify(wrap));
+      }
+      if (wrap.fits && wrap.overflow !== 'visible') {
+        throw new Error('table ' + index + ' fits but still scrolls: ' + wrap.overflow);
+      }
+    });
+  });
+
+  await step('a table header stays in view while its rows go past', async () => {
+    const stuck = await page.evaluate(async () => {
+      const wrap = document.querySelector('.strata-table-scroll--fits');
+      if (!wrap) { return { error: 'no table is out of its box' }; }
+      const table = wrap.querySelector('table');
+      const th = table.querySelector('thead th');
+      const root = document.querySelector('.strata-root');
+      const offset = parseFloat(getComputedStyle(root).getPropertyValue('--strata-scroll-offset')) || 0;
+
+      /* Far enough that the table's own top has gone past the line the header
+         should hold, while its last row is still below it. */
+      const head = th.getBoundingClientRect().height;
+      window.scrollBy(0, table.getBoundingClientRect().top - offset + head);
+      await new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done)));
+
+      const box = table.getBoundingClientRect();
+      return {
+        offset: offset,
+        header: th.getBoundingClientRect().top,
+        tableTop: box.top,
+        tableBottom: box.bottom,
+        position: getComputedStyle(th).position
+      };
+    });
+    if (stuck.error) throw new Error(stuck.error);
+    if (stuck.position !== 'sticky') throw new Error('the header is ' + stuck.position);
+    if (stuck.tableTop >= stuck.offset || stuck.tableBottom <= stuck.offset) {
+      throw new Error('the table did not straddle the line: ' + JSON.stringify(stuck));
+    }
+    if (Math.abs(stuck.header - stuck.offset) > 2) {
+      throw new Error('the header rode up to ' + Math.round(stuck.header)
+        + ' with the line at ' + Math.round(stuck.offset));
+    }
+    await page.evaluate(() => window.scrollTo(0, 0));
+  });
+
+  await step('clicking a column sorts by it, and a third click puts it back', async () => {
+    /* Not simply the first sortable table: the sample's first one is already in
+       alphabetical order, so sorting it would prove nothing - every state would
+       look like every other. This picks one the document did not write in
+       order. */
+    const which = await page.evaluate(() => {
+      const order = (table) => [...table.tBodies[0].rows]
+        .map((row) => (row.cells[0].textContent || '').trim());
+      const sorted = (list) => list.slice()
+        .sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
+      const tables = [...document.querySelectorAll('.strata-table-sortable')];
+      const index = tables.findIndex((table) => {
+        const written = order(table);
+        return written.length > 1 && written.join('|') !== sorted(written).join('|');
+      });
+      if (index === -1) { return { error: 'every sortable table is already in order' }; }
+      tables[index].setAttribute('data-drive-sort', 'yes');
+      return { written: order(tables[index]) };
+    });
+    if (which.error) throw new Error(which.error);
+
+    const column = async () => page.evaluate(() => {
+      const table = document.querySelector('[data-drive-sort]');
+      return [...table.tBodies[0].rows].map((row) => (row.cells[0].textContent || '').trim());
+    });
+    const head = page.locator('[data-drive-sort] thead th').first();
+    const expected = which.written.slice().sort((a, b) =>
+      a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
+
+    await head.locator('.strata-th-sort').click();
+    const up = await column();
+    if (up.join('|') !== expected.join('|')) {
+      throw new Error('ascending gave ' + JSON.stringify(up));
+    }
+    if (await head.getAttribute('aria-sort') !== 'ascending') {
+      throw new Error('the header does not say it is sorted');
+    }
+
+    await head.locator('.strata-th-sort').click();
+    const down = await column();
+    if (down.join('|') !== expected.slice().reverse().join('|')) {
+      throw new Error('descending gave ' + JSON.stringify(down));
+    }
+
+    /* The third click is the one that matters: a reader who sorted a table of
+       steps by name has no other way back to the steps in order. */
+    await head.locator('.strata-th-sort').click();
+    const back = await column();
+    if (back.join('|') !== which.written.join('|')) {
+      throw new Error('the document order did not come back: ' + JSON.stringify(back));
+    }
+    if (await head.getAttribute('aria-sort') !== 'none') {
+      throw new Error('the header still claims to be sorted');
+    }
+  });
+
+  /* Reordering rows under a merged cell scrambles what the merge says, so a
+     table holding one is left exactly as the document wrote it. */
+  await step('a table with merged cells is not made sortable', async () => {
+    const merged = await page.evaluate(() => {
+      const tables = [...document.querySelectorAll('.strata-content table')];
+      const withSpans = tables.filter((table) => table.querySelector('[colspan], [rowspan]'));
+      return {
+        found: withSpans.length,
+        sortable: withSpans.filter((table) =>
+          table.classList.contains('strata-table-sortable')).length
+      };
+    });
+    if (merged.found === 0) throw new Error('the sample has no merged-cell table to check');
+    if (merged.sortable !== 0) throw new Error('a merged table was made sortable');
+  });
+
   await step('copy button copies the code, without line numbers', async () => {
     await page.context().grantPermissions(['clipboard-read', 'clipboard-write']);
     const block = page.locator('.strata-code[data-lang="typescript"]').first();
@@ -1019,7 +1154,7 @@ const demoUrl = 'file://' + path.join(__dirname, '..', 'site', 'demo', 'index.ht
     const expected = [
       'Content',
       'Theme, Reading, Pictures, The page',
-      'Code blocks, Diagrams, Maths and HTML',
+      'Code blocks, Diagrams, Maths and HTML, Tables',
       'Contents, Links between documents',
       'Toolbar, File information'
     ];

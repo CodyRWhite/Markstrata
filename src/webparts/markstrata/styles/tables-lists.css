@@ -5,6 +5,106 @@
   overflow-x: auto;
 }
 
+/*
+ * A table that fits its column is let out of the box.
+ *
+ * The box exists so a wide table scrolls instead of stretching the page, and
+ * it is also - unavoidably - a scroll container, which is what a sticky header
+ * inside it sticks to. Stuck to a box that never scrolls downwards, a header
+ * never moves at all. Whether a table needs the box is a measurement rather
+ * than something a stylesheet can see, so the class is put on by the enhancer
+ * and taken off again when the column changes width.
+ */
+.strata-table-scroll--fits {
+  overflow: visible;
+}
+
+/*
+ * The header stays in view while the rows go past. The offset is the same one
+ * a heading scrolled to clears itself by, so on a SharePoint page the header
+ * lands under the suite header and the command bar rather than behind them.
+ *
+ * The shadow is doing a border's job: with border-collapse the borders belong
+ * to the table rather than to the cell, so a cell that moves leaves its bottom
+ * border behind, and the rows then slide under a header with nothing beneath
+ * it. Painted inside the cell, it travels.
+ */
+.strata-content thead th {
+  position: sticky;
+  top: var(--strata-scroll-offset, 0px);
+  z-index: 1;
+  box-shadow: inset 0 -1px 0 var(--strata-table-border, var(--strata-border));
+}
+
+/* On paper nothing scrolls, and a stuck header prints over the rows. */
+@media print {
+  .strata-content thead th {
+    position: static;
+  }
+}
+
+/* ------------------------------------------------------------ sorting */
+
+/*
+ * The button fills the cell so the whole header reads as the target, and
+ * carries no styling of its own: it is the header cell's text, and it should
+ * look like it.
+ */
+.strata-th-sort {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: inherit;
+  cursor: pointer;
+}
+
+.strata-th-sort:focus-visible {
+  outline: 2px solid var(--strata-link);
+  outline-offset: 2px;
+}
+
+/*
+ * The arrow holds its space whether or not it is showing anything, so sorting
+ * a column does not shift the header's text sideways. A faint pair of arrows
+ * on hover is what says a column can be sorted at all.
+ */
+.strata-th-arrow {
+  margin-left: auto;
+  opacity: 0;
+  font-size: 0.85em;
+  line-height: 1;
+}
+
+.strata-th-arrow::after {
+  content: '\2195';
+}
+
+.strata-th-sort:hover .strata-th-arrow,
+.strata-th-sort:focus-visible .strata-th-arrow {
+  opacity: 0.55;
+}
+
+.strata-content th[aria-sort='ascending'] .strata-th-arrow,
+.strata-content th[aria-sort='descending'] .strata-th-arrow {
+  opacity: 1;
+  color: var(--strata-link);
+}
+
+.strata-content th[aria-sort='ascending'] .strata-th-arrow::after {
+  content: '\2191';
+}
+
+.strata-content th[aria-sort='descending'] .strata-th-arrow::after {
+  content: '\2193';
+}
+
 .strata-content table {
   width: auto;
   max-width: 100%;

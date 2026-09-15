@@ -10,6 +10,23 @@ Entries below 0.0.10.0 were written before the switch and are three-part.
 
 ## Unreleased
 
+- A long table keeps its header row in view while the rows go past, so the
+  columns still mean something halfway down. It holds under whatever is stuck
+  above the page, the same offset a heading scrolled to clears itself by. A
+  table too wide for its column keeps its sideways scroll box, and a header
+  inside a scroll box has nothing to stick to, so those are unchanged; which
+  tables are which is measured rather than assumed, and measured again when the
+  column changes width.
+- **Let readers sort a table**, new on the Code page of the pane. A click on a
+  column header sorts by it, a second reverses it, and a third puts the rows
+  back in the order the document wrote them. What a column holds is read from
+  the column, since markdown has no types: numbers only if every filled cell is
+  one, dates only if every filled cell is an unambiguous date, text otherwise.
+  01/02/2024 is deliberately not a date - it means two different days to two
+  halves of the world, and sorting it as either is a confident wrong answer.
+  Empty cells go to the end either way, ties keep the document's order, and a
+  table with a merged cell in it is left alone.
+
 - A diagram opens full size when it is clicked, the way a picture already did.
   It was the one thing on a page most likely to be too small to read and the
   one thing that did nothing when clicked. It opens as a drawing rather than as

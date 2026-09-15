@@ -206,7 +206,8 @@ with a keyboard, and print expanded.
 
 ## Also rendered
 
-Tables (including colspan, rowspan and alignment), task lists, footnotes,
+Tables (including colspan, rowspan and alignment, and see [Tables](#tables) for
+what a reader can do with one), task lists, footnotes,
 definition lists, abbreviations, emoji, sub/sup, `==highlighted==` text, heading
 anchors, [Mermaid](https://mermaid.js.org/) diagrams themed to match the page,
 and KaTeX maths, which needs **Math (KaTeX)** on.
@@ -227,6 +228,40 @@ flowchart LR
   B --> D[Obsidian]
   B --> E[VS Code]
 ```
+
+## Tables
+
+A long table loses its header the moment you scroll past it, and then every
+column is a guess. The header row stays in view instead while the rows go past,
+and it holds itself under whatever SharePoint has stuck above the page rather
+than behind it.
+
+That works for a table that fits its column. One too wide for the column keeps
+the sideways scroll box it has always had, and inside a scroll box a stuck
+header has nothing to stick to, so a wide table's header scrolls away as before.
+
+**Let readers sort a table** puts sorting on the column headers. A click sorts
+by that column, a second reverses it, and a third puts the rows back in the
+order the document wrote them - which matters for a table of steps, where the
+author's order is the answer and there is otherwise no way back to it short of
+reloading the page.
+
+What a column holds is worked out from the column itself, since markdown has no
+types: it sorts as numbers only if every filled cell in it is a number, dates
+only if every filled cell is an unambiguous date, and as text otherwise. A
+column of mostly numbers with one "n/a" in it sorts as text, which is honest
+rather than a guess about where the odd one out belongs. Empty cells go to the
+end whichever way the column is sorted.
+
+> [!NOTE]
+> Dates are read narrowly on purpose. `01/02/2024` is the second of January to
+> half the world and the first of February to the other half, so a column of
+> them sorts as text rather than into a confident wrong order. Written
+> `2024-01-02`, or `2 January 2024`, they sort as dates.
+
+A table with a merged cell in it is left as the document wrote it: a row that
+spans two of them says something about its neighbours, and moving it away from
+them turns a table into a mess.
 
 ## Images
 

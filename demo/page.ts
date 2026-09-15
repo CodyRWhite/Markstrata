@@ -26,6 +26,7 @@ function enhance(): void {
   enhancer.attachCopyButtons(article);
   enhancer.secureExternalLinks(article);
   enhancer.enhanceImages(article, true);
+  enhancer.enhanceTables(article, true);
   enhancer.attachBackToTop(root, 'right');
   /* The site puts a header and a controls bar across the top, so a heading
      scrolled to has to clear both. */

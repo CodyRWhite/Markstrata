@@ -91,6 +91,7 @@ export interface IMarkstrataWebPartProps {
   enableMermaid: boolean;
   diagramWidth: DiagramWidth;
   enableImageZoom: boolean;
+  enableTableSort: boolean;
   enableWikiLinks: boolean;
   checkWikiLinks: boolean;
   showReadingTime: boolean;
@@ -260,6 +261,7 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
       enableMermaid: true,
       diagramWidth: 'fit',
       enableImageZoom: true,
+      enableTableSort: true,
       enableWikiLinks: false,
       checkWikiLinks: true,
       showReadingTime: false,
@@ -309,6 +311,7 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
         enableMermaid: this.properties.enableMermaid,
         diagramWidth: this.properties.diagramWidth,
         enableImageZoom: this.properties.enableImageZoom,
+        enableTableSort: this.properties.enableTableSort,
         canSave: this.canSaveToSharePoint(),
         saveTargetName: this.properties.fileMetadata ? this.properties.fileMetadata.name : ''
       });
@@ -330,6 +333,7 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
       enableMermaid: this.properties.enableMermaid,
       diagramWidth: this.properties.diagramWidth,
       enableImageZoom: this.properties.enableImageZoom,
+      enableTableSort: this.properties.enableTableSort,
       showReadingTime: this.properties.showReadingTime,
       backToTop: this.properties.backToTop,
       /* Only a library file has a folder to look in. Markdown typed into the
@@ -960,6 +964,17 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
                   offText: 'Off'
                 }),
                 PropertyPaneLabel('htmlHint', { text: strings.AllowHtmlHint })
+              ]
+            },
+            {
+              groupName: strings.TablesGroupName,
+              groupFields: [
+                PropertyPaneToggle('enableTableSort', {
+                  label: strings.TableSortLabel,
+                  onText: 'On',
+                  offText: 'Off'
+                }),
+                PropertyPaneLabel('tableSortHint', { text: strings.TableSortHint })
               ]
             }
           ]

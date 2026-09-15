@@ -59,6 +59,7 @@ const state: any = {
   enableMermaid: true,
   diagramWidth: 'fit',
   enableImageZoom: true,
+  enableTableSort: true,
   enableWikiLinks: true,
   checkWikiLinks: true,
   libraryBase: '',
@@ -177,6 +178,7 @@ function draw(): void {
       enableMermaid: true,
       diagramWidth: state.diagramWidth,
       enableImageZoom: state.enableImageZoom,
+      enableTableSort: state.enableTableSort,
       canSave: true,
       saveTargetName: 'handbook.md'
     });
@@ -195,6 +197,7 @@ function draw(): void {
     enableMermaid: state.enableMermaid,
     diagramWidth: state.diagramWidth,
     enableImageZoom: state.enableImageZoom,
+    enableTableSort: state.enableTableSort,
     showReadingTime: state.showReadingTime,
     backToTop: state.backToTop,
     listFolder: state.enableWikiLinks && state.checkWikiLinks ? listFolder : undefined,
@@ -353,7 +356,7 @@ const PANEL_PAGES: IPanelPage[] = [
     ]
   },
   {
-    description: 'Code blocks, diagrams and maths.',
+    description: 'Code blocks, diagrams, tables and maths.',
     groups: [
       {
         name: 'Code blocks',
@@ -390,6 +393,17 @@ const PANEL_PAGES: IPanelPage[] = [
           { key: 'allowHtml', label: 'Allow raw HTML in markdown', type: 'toggle',
             hint: 'Leave off unless you trust everyone who can edit the source. With it '
               + 'on, HTML in the markdown is rendered as-is.' }
+        ]
+      },
+      {
+        name: 'Tables',
+        fields: [
+          { key: 'enableTableSort', label: 'Let readers sort a table', type: 'toggle',
+            hint: 'A click on a column header sorts by it, a second reverses it, and a '
+              + 'third puts the rows back in the order the document wrote them. A table '
+              + 'with a merged cell in it is left alone, because reordering rows would '
+              + 'scramble what the merge says. Long tables keep their header row in view '
+              + 'either way.' }
         ]
       }
     ]

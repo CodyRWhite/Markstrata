@@ -39,6 +39,7 @@ export interface IViewOptions {
   /** What a diagram does when it wants more width than the column gives. */
   diagramWidth?: DiagramWidth;
   enableImageZoom?: boolean;
+  enableTableSort?: boolean;
   showReadingTime?: boolean;
   /* Given only when there is a library behind the page to ask. */
   listFolder?: (folder: string) => Promise<string[] | undefined>;
@@ -129,6 +130,7 @@ export class ViewModeRenderer {
     this.enhancer.attachCopyButtons(article);
     this.enhancer.secureExternalLinks(article);
     this.enhancer.enhanceImages(article, options.enableImageZoom !== false);
+    this.enhancer.enhanceTables(article, options.enableTableSort !== false);
 
     /* Measured from the rendered document rather than the markdown, so code
        and diagram source are not counted as prose, which means it can only be
