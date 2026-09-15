@@ -8,7 +8,7 @@ is normally zero. `scripts/set-version.js` stamps it when a release is cut.
 
 Entries below 0.0.10.0 were written before the switch and are three-part.
 
-## Unreleased
+## 0.0.14.0
 
 - A **Syntax** page on the site lists everything the web part renders, with the
   markdown you write beside what it turns into. It is built through the same
