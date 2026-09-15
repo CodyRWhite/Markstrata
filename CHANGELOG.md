@@ -8,7 +8,7 @@ is normally zero. `scripts/set-version.js` stamps it when a release is cut.
 
 Entries below 0.0.10.0 were written before the switch and are three-part.
 
-## Unreleased
+## 0.0.15.0
 
 - A heading scrolled to no longer lands under whatever is stuck above it. The
   clearance was a fixed 24px in the stylesheet, which is right for a bare page
