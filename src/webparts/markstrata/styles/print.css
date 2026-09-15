@@ -47,11 +47,18 @@
   }
 
   /* Code and callouts keep their fill in print - a bordered, tinted block is
-     what makes them legible on paper too - but never split across pages. */
-  .strata-code,
-  .strata-callout,
-  .strata-mermaid,
-  table {
+     what makes them legible on paper too - but never split across pages.
+
+     Every selector in here is scoped to the web part's own root, tables and
+     headings included. SharePoint loads this stylesheet into the page itself,
+     not into anything belonging to the web part, so a bare `table` is every
+     table on the page - and printing a page that merely has this web part
+     somewhere on it would have taken SharePoint's own tables and headings with
+     it. */
+  .strata-root .strata-code,
+  .strata-root .strata-callout,
+  .strata-root .strata-mermaid,
+  .strata-root table {
     break-inside: avoid;
     page-break-inside: avoid;
   }
@@ -65,7 +72,10 @@
     width: auto;
   }
 
-  h1, h2, h3, h4 {
+  .strata-root h1,
+  .strata-root h2,
+  .strata-root h3,
+  .strata-root h4 {
     break-after: avoid;
     page-break-after: avoid;
   }
@@ -74,7 +84,10 @@
     display: block;
   }
 
-  a[href^='http']::after {
+  /* The worst of the three: unscoped, this printed the address after every
+     external link on the page, including SharePoint's own navigation and every
+     other web part on it. */
+  .strata-root a[href^='http']::after {
     content: ' (' attr(href) ')';
     font-size: 0.85em;
     color: #444444;

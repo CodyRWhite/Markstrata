@@ -328,7 +328,7 @@ ${pageStyles(null)}
 ${site.MODE_BOOTSTRAP}
 </head>
 <body>
-<p class="wp-intro">This is <strong>MarkstrataWebPart</strong> itself, started the way a SharePoint page starts it: onInit is awaited, then render is called, and putting it away calls onDispose. SharePoint around it is stood in for; the web part is the real one.</p>
+<p class="wp-intro">This is <strong>MarkstrataWebPart</strong> itself, started the way a SharePoint page starts it: onInit is awaited, then render is called, and putting it away calls onDispose. SharePoint around it is stood in for; the web part is the real one. Here is <a id="wp-outside-link" href="https://example.com/outside">a link outside the web part</a>, which stands in for the rest of a SharePoint page: the web part's stylesheets are loaded into this page, as SharePoint loads them into its own, and nothing in them may reach this.</p>
 <div id="wp-status" data-state="starting">Starting…</div>
 <div class="demo-actions">
   <button type="button" id="demo-configure" aria-expanded="false" aria-controls="demo-panel">Edit web part properties</button>

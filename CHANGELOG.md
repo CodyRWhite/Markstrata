@@ -8,6 +8,18 @@ is normally zero. `scripts/set-version.js` stamps it when a release is cut.
 
 Entries below 0.0.10.0 were written before the switch and are three-part.
 
+- Printing a SharePoint page that has this web part on it no longer reformats
+  the rest of the page. SharePoint loads a web part's stylesheets into the page
+  itself, beside its own, so three rules that named elements rather than this
+  web part's classes were rules about everything there: every table and every
+  heading on the page took the web part's page-break handling, and every
+  external link on it - SharePoint's own navigation included - printed with its
+  address spelled out after it. On screen nothing showed, which is why it sat
+  there since 0.0.6.
+- Every selector in every stylesheet is now checked to be scoped to the web
+  part, and a browser check prints a page and looks at a link outside the web
+  part to prove it.
+
 - Whatever happens to this web part now happens to this web part. SharePoint
   hosts many of them in one page and one React tree, so an exception that
   escapes a web part is the page's exception, not the web part's - which is

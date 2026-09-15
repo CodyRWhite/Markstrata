@@ -1703,6 +1703,45 @@ const webPartUrl = 'file://' + path.join(HARNESS_DIST, 'webpart.html');
     if (failure) throw new Error('disposing a failed web part threw: ' + failure);
   });
 
+  /*
+   * Stylesheets are the other way a web part reaches a page it is not on:
+   * SharePoint loads them into the document head, beside its own, where a
+   * selector naming an element rather than one of this web part's classes is a
+   * rule about everything on the page. Three had got out, all inside a print
+   * media query, so they only ever showed on paper - and the worst of them
+   * printed the address after every external link on the page, SharePoint's
+   * navigation included.
+   */
+  await step('the print rules stay inside the web part', async () => {
+    await page.evaluate(async () => {
+      await window.webPartHarness.start({
+        contentSource: 'manual',
+        markdownContent: 'A link to [an example](https://example.com/inside).'
+      });
+    });
+    await page.emulateMedia({ media: 'print' });
+
+    const printed = await page.evaluate(() => {
+      const after = (element) => element
+        ? window.getComputedStyle(element, '::after').content
+        : 'that element is not on the page';
+      return {
+        inside: after(document.querySelector('#host .strata-root a[href^="http"]')),
+        outside: after(document.getElementById('wp-outside-link'))
+      };
+    });
+    await page.emulateMedia({ media: null });
+
+    /* The feature itself: a printed document says where its links went. */
+    if (printed.inside.indexOf('example.com/inside') === -1) {
+      throw new Error('a link in the document prints as ' + printed.inside);
+    }
+    /* And the page around it is none of the web part's business. */
+    if (printed.outside.indexOf('example.com') !== -1) {
+      throw new Error('a link outside the web part prints as ' + printed.outside);
+    }
+  });
+
   await step('a library that will not answer is a message, not a broken page', async () => {
     const shown = await page.evaluate(async () => {
       window.webPartHarness.refuse(true);
