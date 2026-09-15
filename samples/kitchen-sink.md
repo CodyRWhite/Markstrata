@@ -58,6 +58,15 @@ first time someone meets them.
 > Legacy Wiki.js syntax from the older web part still renders.
 {.is-success}
 
+## Links between pages
+
+With **Wiki links** on, `[[Another page]]` links to that file in the same
+folder, the way Obsidian and older wikis write one. A link to [[deploy]] points
+at a page that is there; a link to [[a page nobody wrote]] is marked, because
+the folder was listed and it was not in it. You can also write
+[[deploy|a label of your own]] or jump to [[deploy#Rollback]], and [[#Images]]
+goes to a heading in this document.
+
 ## Images
 
 A relative source resolves against the folder the markdown lives in, the way it

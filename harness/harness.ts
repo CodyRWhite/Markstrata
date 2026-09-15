@@ -17,6 +17,10 @@ import { TOC_WIDTH_RANGES, tocWidthForUnit } from '../src/webparts/markstrata/ut
 
 declare const SAMPLE: string;
 
+/* Built bare and told the state below once it exists: constructing it from
+   defaults meant the first render ignored anything the demo had set that
+   happened to differ from them, which stayed invisible for as long as every
+   setting agreed with its default. */
 const processor = new MarkdownProcessor({ showLineNumbers: true });
 const mermaid = new MermaidRenderer();
 const enhancer = new ContentEnhancer();
@@ -29,7 +33,7 @@ const state: any = {
   selectedFile: 'handbook.md',
   family: 'vscode',
   mode: 'light',
-  toc: 'inline',
+  toc: 'left',
   editing: false,
   // Content
   canReload: true,
@@ -54,7 +58,9 @@ const state: any = {
   enableMermaid: true,
   diagramWidth: 'fit',
   enableImageZoom: true,
-  enableWikiLinks: false,
+  enableWikiLinks: true,
+  checkWikiLinks: true,
+  libraryBase: '',
   enableMath: true,
   allowHtml: false,
   showToolbar: true,
@@ -82,11 +88,43 @@ function processorOptions(): any {
     enableMath: state.enableMath,
     enableMermaid: state.enableMermaid,
     enableAnchors: state.enableAnchors,
-    enableWikiLinks: state.enableWikiLinks
+    enableWikiLinks: state.enableWikiLinks,
+    imageBasePath: state.libraryBase || undefined
   };
 }
 
+/* Before the first draw, so the page opens showing what the panel says. */
+processor.updateOptions(processorOptions());
+
 const host = document.getElementById('host') as HTMLElement;
+
+/*
+ * There is no document library behind this page, so this stands in for one.
+ * It holds some of the pages the sample links to and not others, which is what
+ * makes the marking visible at all.
+ */
+const LIBRARY: string[] = ['handbook.md', 'deploy.md', 'onboarding.md'];
+
+function listFolder(): Promise<string[] | undefined> {
+  return Promise.resolve(LIBRARY);
+}
+
+/*
+ * Checking a link needs a folder to ask about, and a folder needs the base
+ * path a library file would have given the document. Without one a wiki link
+ * resolves to a bare name, which is a perfectly good relative link and a
+ * question nobody can answer, so it is left alone. Setting this turns the
+ * demo's links into library paths so the marking can be seen; it moves
+ * relative image paths with it, which is why it is not on by default.
+ */
+function setLibraryBase(base: string, markdown?: string): void {
+  state.libraryBase = base;
+  if (markdown !== undefined) {
+    state.markdown = markdown || SAMPLE;
+  }
+  processor.updateOptions(processorOptions());
+  draw();
+}
 
 const view = new ViewModeRenderer(processor, mermaid, enhancer, {
   onReload: () => log('Reload clicked'),
@@ -157,6 +195,7 @@ function draw(): void {
     enableImageZoom: state.enableImageZoom,
     showReadingTime: state.showReadingTime,
     backToTop: state.backToTop,
+    listFolder: state.enableWikiLinks && state.checkWikiLinks ? listFolder : undefined,
     canReload: state.canReload,
     canShowVersions: state.canShowVersions,
     isPageEditing: false,
@@ -186,6 +225,7 @@ function log(message: string): void {
     state.toc = position;
     draw();
   },
+  setLibraryBase: setLibraryBase,
   setBackToTop: (position: any) => {
     state.backToTop = position;
     draw();
@@ -356,6 +396,8 @@ const PANEL_PAGES: IPanelPage[] = [
             hint: 'Turns [[Another page]] into a link to that file in the same folder. '
               + 'There is no document library behind this page, so the links here go '
               + 'nowhere, but the syntax renders.' },
+          { key: 'checkWikiLinks', label: 'Mark links to pages that are not there',
+            type: 'toggle', showIf: (state) => state.enableWikiLinks === true },
           { key: 'enableMath', label: 'Math (KaTeX)', type: 'toggle' },
           { key: 'allowHtml', label: 'Allow raw HTML in markdown', type: 'toggle',
             hint: 'Leave off unless you trust everyone who can edit the source. With it '
@@ -459,7 +501,7 @@ if (panelHost && panelButton) {
       /* These decide whether other fields apply, or what range they take. */
       if (key === 'tocWidthMode' || key === 'tocWidthUnit' || key === 'toc'
         || key === 'showSourceInfo' || key === 'enableMermaid'
-        || key === 'showToolbar') {
+        || key === 'showToolbar' || key === 'enableWikiLinks') {
         panel.refresh();
       }
       if (PROCESSOR_KEYS.indexOf(key) !== -1) {

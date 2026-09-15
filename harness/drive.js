@@ -295,6 +295,60 @@ const demoUrl = 'file://' + path.join(__dirname, '..', 'site', 'demo', 'index.ht
     await page.waitForTimeout(300);
   });
 
+  /*
+   * Checking a link means asking SharePoint, which happens after the document
+   * is on screen rather than during the render. The demo stands in for the
+   * library with a folder holding some of the pages the sample links to and
+   * not others.
+   */
+  await step('a link to a page that is not there is marked', async () => {
+    /* A wiki link only has a folder to ask about once the document has a
+       library path, which is what a library file gives it. The document is
+       swapped for one made of links while that is set, because a base path
+       moves relative image paths with it and there is no library behind this
+       page to serve them. */
+    await page.evaluate(() => window.harness.setLibraryBase('/sites/demo/runbooks',
+      '# Links\n\nHere: [[deploy]], [[handbook|the handbook]], '
+      + '[[a page nobody wrote]], [[deploy#Rollback]] and [[#Links]].\n'));
+    await page.waitForTimeout(800);
+    const links = await page.evaluate(() =>
+      [...document.querySelectorAll('a.strata-wiki-link')].map((link) => ({
+        text: link.textContent.replace(' (page not found)', ''),
+        missing: link.classList.contains('strata-wiki-link--missing'),
+        note: !!link.querySelector('.strata-missing-note')
+      })));
+    if (links.length < 4) throw new Error('only ' + links.length + ' wiki links');
+
+    const gone = links.filter((link) => link.missing);
+    const found = links.filter((link) => !link.missing);
+    if (!gone.length) throw new Error('nothing marked: ' + JSON.stringify(links));
+    if (!found.length) throw new Error('everything marked: ' + JSON.stringify(links));
+    if (!gone.every((link) => link.note)) {
+      throw new Error('a marked link says nothing to a screen reader');
+    }
+    /* The one pointing inside this document is not asked about at all. */
+    const inward = await page.evaluate(() =>
+      [...document.querySelectorAll('a.strata-wiki-link')]
+        .filter((link) => (link.getAttribute('href') || '').charAt(0) === '#')
+        .every((link) => !link.classList.contains('strata-wiki-link--missing')));
+    if (!inward) throw new Error('a link to a heading here was called missing');
+  });
+
+  await step('a missing link is marked visibly, not just in the markup', async () => {
+    const colours = await page.evaluate(() => {
+      const gone = document.querySelector('a.strata-wiki-link--missing');
+      const ok = [...document.querySelectorAll('a.strata-wiki-link')]
+        .find((link) => !link.classList.contains('strata-wiki-link--missing'));
+      return { gone: getComputedStyle(gone).color, ok: getComputedStyle(ok).color };
+    });
+    if (colours.gone === colours.ok) {
+      throw new Error('a missing link paints the same as a working one: ' + colours.gone);
+    }
+    /* Both put back, so the later checks see the sample they expect. */
+    await page.evaluate(() => window.harness.setLibraryBase('', ''));
+    await page.waitForTimeout(600);
+  });
+
   await step('a fence calls out its lines, and dims the rest', async () => {
     const block = page.locator('.strata-code--calling').first();
     if (await block.count() === 0) throw new Error('no block calling out lines');

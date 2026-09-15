@@ -37,6 +37,8 @@ export interface IViewOptions {
   diagramWidth?: DiagramWidth;
   enableImageZoom?: boolean;
   showReadingTime?: boolean;
+  /* Given only when there is a library behind the page to ask. */
+  listFolder?: (folder: string) => Promise<string[] | undefined>;
   backToTop?: BackToTop;
   canReload: boolean;
   canShowVersions: boolean;
@@ -133,6 +135,13 @@ export class ViewModeRenderer {
     }
 
     this.enhancer.attachBackToTop(host, options.backToTop || 'off');
+
+    /* Left to settle in on its own: the document is readable while this is in
+       flight, and a link that turns out to be missing is marked when the
+       answer arrives rather than the page waiting on it. */
+    if (options.listFolder) {
+      void this.enhancer.validateWikiLinks(article, options.listFolder);
+    }
 
     if (options.enableMermaid) {
       void this.mermaid.render(article, options.settings.themeFamily, options.resolvedMode,

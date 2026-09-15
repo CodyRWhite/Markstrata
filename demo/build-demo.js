@@ -245,9 +245,9 @@ ${header}
   </label>
   <label>Contents
     <select id="toc">
-      <option value="left">Left</option>
+      <option value="left" selected>Left</option>
       <option value="right">Right</option>
-      <option value="inline" selected>Above</option>
+      <option value="inline">Above</option>
       <option value="off">Off</option>
     </select>
   </label>
@@ -264,7 +264,7 @@ ${header}
 <div class="demo-stage">
   <div class="strata-root" id="root" data-strata-theme="vscode" data-strata-mode="light"
        data-strata-width="comfortable" data-strata-density="compact" data-strata-size="normal" data-strata-code-size="normal">
-    <div class="strata-layout" id="layout" data-strata-toc="inline">
+    <div class="strata-layout" id="layout" data-strata-toc="left">
       ${toc}
       <article class="strata-content" id="content">
 ${content}

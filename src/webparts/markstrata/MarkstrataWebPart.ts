@@ -91,6 +91,7 @@ export interface IMarkstrataWebPartProps {
   diagramWidth: DiagramWidth;
   enableImageZoom: boolean;
   enableWikiLinks: boolean;
+  checkWikiLinks: boolean;
   showReadingTime: boolean;
   backToTop: BackToTop;
   enableMath: boolean;
@@ -258,6 +259,7 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
       diagramWidth: 'fit',
       enableImageZoom: true,
       enableWikiLinks: false,
+      checkWikiLinks: true,
       showReadingTime: false,
       backToTop: 'right',
       enableMath: true,
@@ -328,6 +330,12 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
       enableImageZoom: this.properties.enableImageZoom,
       showReadingTime: this.properties.showReadingTime,
       backToTop: this.properties.backToTop,
+      /* Only a library file has a folder to look in. Markdown typed into the
+         web part, or fetched from a URL, has no neighbours to check against. */
+      listFolder: this.properties.enableWikiLinks && this.properties.checkWikiLinks
+        && this.properties.contentSource === 'library'
+        ? (folder: string) => this.sharePoint.listFolderFileNames(folder)
+        : undefined,
       canReload: this.properties.contentSource !== 'manual',
       canShowVersions: this.properties.enableVersionHistory && this.canSaveToSharePoint(),
       isPageEditing: this.displayMode === DisplayMode.Edit,
@@ -679,6 +687,10 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
       this.context.propertyPane.refresh();
     }
 
+    if (propertyPath === 'enableWikiLinks') {
+      this.context.propertyPane.refresh();
+    }
+
     if (propertyPath === 'tocPosition') {
       this.context.propertyPane.refresh();
     }
@@ -962,6 +974,16 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
                   onText: 'On',
                   offText: 'Off'
                 }),
+                ...(this.properties.enableWikiLinks
+                  ? [
+                      PropertyPaneToggle('checkWikiLinks', {
+                        label: strings.CheckWikiLinksLabel,
+                        onText: 'On',
+                        offText: 'Off',
+                        disabled: this.properties.contentSource !== 'library'
+                      })
+                    ]
+                  : []),
                 PropertyPaneLabel('wikiLinksHint', { text: strings.WikiLinksHint }),
                 PropertyPaneToggle('enableMath', {
                   label: strings.MathLabel,

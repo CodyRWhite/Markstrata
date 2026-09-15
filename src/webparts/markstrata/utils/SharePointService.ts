@@ -73,6 +73,8 @@ const POLL_INTERVAL_MS: number = 30000;
 
 export class SharePointService {
   private sp: SPFI;
+  /* Keyed by folder, holding the promise so simultaneous links share a request. */
+  private folderListings: { [folder: string]: Promise<string[] | undefined> } = {};
   private webServerRelativeUrl: string;
   private pollTimer: number | undefined;
   private lastSeenModified: string | undefined;
@@ -129,6 +131,51 @@ export class SharePointService {
       console.error('[Markstrata] Could not list markdown files', error);
       return [];
     }
+  }
+
+  /**
+   * Every file name in a folder, for checking whether a link points at
+   * something that is there.
+   *
+   * A whole folder rather than a file at a time, because a document's links
+   * mostly point into the folder it lives in: one listing answers all of them,
+   * where asking per link would be a request per link. The promise is cached
+   * rather than the result, so links resolved at the same moment share one
+   * request instead of racing.
+   *
+   * Returns undefined when the folder cannot be read, which is different from
+   * an empty folder: a reader without access to it must not have their links
+   * called broken on the strength of a failed request.
+   */
+  public listFolderFileNames(folderUrl: string): Promise<string[] | undefined> {
+    const key: string = (folderUrl || '').replace(/\/+$/, '');
+    if (!key) {
+      return Promise.resolve(undefined);
+    }
+
+    const cached: Promise<string[] | undefined> | undefined = this.folderListings[key];
+    if (cached) {
+      return cached;
+    }
+
+    const listing: Promise<string[] | undefined> = this.sp.web
+      .getFolderByServerRelativePath(key)
+      .files.select('Name')()
+      .then((files: { Name: string }[]) => files.map((file) => file.Name))
+      .catch((error: unknown) => {
+        /* Not knowing is a perfectly good answer here, and quieter than a
+           console full of failures for a folder somebody cannot open. */
+        console.warn('[Markstrata] Could not list', key, error);
+        return undefined;
+      });
+
+    this.folderListings[key] = listing;
+    return listing;
+  }
+
+  /** Forgotten when the document changes, so a new file is seen. */
+  public forgetFolderListings(): void {
+    this.folderListings = {};
   }
 
   public async getFileContent(serverRelativeUrl: string): Promise<string> {

@@ -97,3 +97,49 @@ export function wikiHref(
   const href: string = resolved === undefined ? file : resolved;
   return target.heading ? `${href}#${headingAnchor(target.heading)}` : href;
 }
+
+/**
+ * The folder part of a resolved href, which is what a listing is asked for.
+ *
+ * Returns an empty string for anything that is not a path into the library:
+ * a fragment, or a link that went somewhere of its own accord.
+ */
+export function folderOf(href: string): string {
+  if (!href || href.charAt(0) !== '/') {
+    return '';
+  }
+  const path: string = href.split('#')[0].split('?')[0];
+  const cut: number = path.lastIndexOf('/');
+  return cut <= 0 ? '' : path.slice(0, cut);
+}
+
+/** The file name a href ends in, decoded back to how SharePoint reports it. */
+export function fileOf(href: string): string {
+  if (!href) {
+    return '';
+  }
+  const path: string = href.split('#')[0].split('?')[0];
+  const name: string = path.slice(path.lastIndexOf('/') + 1);
+  try {
+    return decodeURIComponent(name);
+  } catch {
+    /* A name that is not valid percent-encoding is compared as written. */
+    return name;
+  }
+}
+
+/**
+ * Groups hrefs by the folder that would answer for them, so a document full of
+ * links to the same folder costs one listing rather than one request each.
+ */
+export function byFolder(hrefs: string[]): { [folder: string]: string[] } {
+  const groups: { [folder: string]: string[] } = {};
+  hrefs.forEach((href: string) => {
+    const folder: string = folderOf(href);
+    if (!folder) {
+      return;
+    }
+    groups[folder] = (groups[folder] || []).concat(fileOf(href));
+  });
+  return groups;
+}

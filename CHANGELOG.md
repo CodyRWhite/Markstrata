@@ -10,6 +10,16 @@ Entries below 0.0.10.0 were written before the switch and are three-part.
 
 ## Unreleased
 
+- Wiki links to pages that are not there are marked, the way Obsidian marks an
+  unresolved link. The links are grouped by folder first, so a document
+  pointing at its neighbours costs one folder listing rather than one request
+  per link, and the listing is cached per folder. A folder that cannot be read
+  leaves its links alone: not knowing whether a page is there is different from
+  knowing it is not, and a reader without access to a folder must not be told
+  the author's links are broken.
+- The documentation site shows the contents in a left sidebar on every page,
+  rather than stacked above the text.
+
 - A fence can call out the lines that matter, ```` ```js {2,4-6} ````, the
   convention Docusaurus and VitePress use. The rest of the block is faded
   rather than the called lines tinted, because a tint has to be a colour and a

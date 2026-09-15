@@ -217,3 +217,41 @@
 @media print {
   .strata-zoom { display: none; }
 }
+
+/*
+ * A wiki link, and one whose page was not found in the library.
+ *
+ * Marked rather than disabled: the link still goes where it said it would, and
+ * an author following it is how a page gets created. Obsidian does the same.
+ */
+/* Scoped to the content, or `.strata-content a` wins on specificity and the
+   link paints as an ordinary one while carrying the class that says it is not. */
+.strata-content a.strata-wiki-link--missing {
+  color: rgb(var(--strata-color-red));
+  text-decoration-style: dotted;
+  text-underline-offset: 2px;
+}
+
+.strata-content a.strata-wiki-link--missing::after {
+  content: '?';
+  margin-left: 1px;
+  font-size: 0.85em;
+  vertical-align: super;
+  opacity: 0.8;
+}
+
+/*
+ * Said to a screen reader and to nobody else. Not display:none, which would
+ * take it out of the accessibility tree along with everything else.
+ */
+.strata-missing-note {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}

@@ -78,3 +78,39 @@ test('nothing happens with the setting off', () => {
   assert.doesNotMatch(html, /<a /);
   assert.match(html, /\[\[Runbook\]\]/);
 });
+
+/*
+ * Checking a link costs one folder listing rather than one request per link,
+ * which is the whole reason it is worth doing at render time at all. These
+ * cover the grouping that makes that true.
+ */
+const { folderOf, fileOf, byFolder } = wikiLinks;
+
+test('the folder is what gets asked, and the file is what is looked for', () => {
+  const href = '/sites/team/Shared%20Documents/runbooks/Deploy%20runbook.md';
+  assert.equal(folderOf(href), '/sites/team/Shared%20Documents/runbooks');
+  assert.equal(fileOf(href), 'Deploy runbook.md', 'compared against SharePoint names, so decoded');
+});
+
+test('a fragment has no folder to ask about', () => {
+  assert.equal(folderOf('#rollback'), '');
+  assert.equal(folderOf(''), '');
+});
+
+test('a heading on another page does not change the file asked for', () => {
+  assert.equal(fileOf('/a/b/Runbook.md#rollback'), 'Runbook.md');
+  assert.equal(folderOf('/a/b/Runbook.md#rollback'), '/a/b');
+});
+
+test('links to one folder are asked for once', () => {
+  const groups = byFolder([
+    '/a/b/One.md', '/a/b/Two.md', '/a/c/Three.md', '#here'
+  ]);
+  assert.deepEqual(Object.keys(groups).sort(), ['/a/b', '/a/c']);
+  assert.deepEqual(groups['/a/b'], ['One.md', 'Two.md']);
+  assert.equal(Object.keys(groups).length, 2, 'four links, two requests');
+});
+
+test('a name that is not valid encoding is compared as written', () => {
+  assert.equal(fileOf('/a/b/100%.md'), '100%.md');
+});
