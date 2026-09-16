@@ -48,3 +48,9 @@ harness/dist/
 # Docs site build output. Anchored: an unanchored `site/` also matches
 # docs/site/, where the pages the site is built *from* live.
 /site/
+
+# Agent worktrees. A subagent given its own git worktree gets it checked out
+# in here, which is a second copy of the whole repository sitting inside the
+# first one - 1.6GB of it while this was written. Ignored so that a `git add`
+# that reaches wider than it meant to cannot sweep one into a commit.
+.claude/
