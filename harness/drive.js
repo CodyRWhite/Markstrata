@@ -715,6 +715,75 @@ const LIBRARY_PATH = '/sites/demo/Documents';
   });
 
   /*
+   * A fence that named an address instead of a body. The address is fetched
+   * after the document is drawn, so this is the one thing about the feature a
+   * unit test cannot see: that the block really is filled in on the page, by
+   * the renderer, without the document waiting on it.
+   *
+   * Nothing here reaches the network. harness/fixtures.ts holds the file the
+   * sample's fence names, keyed by the raw address - so a pass also says the
+   * github.com blob link in the document was translated on the way.
+   */
+  await step('a fence with a src is filled in from that address', async () => {
+    await page.waitForSelector('.strata-code[data-lang="ts"]', { timeout: 5000 });
+    const filled = await page.evaluate(() => {
+      /* The sample writes `ts` on exactly this fence; its other TypeScript
+         blocks are written `typescript`. */
+      const block = document.querySelector('.strata-code[data-lang="ts"]');
+      if (!block) { return { error: 'the fence with a src never rendered' }; }
+      return {
+        waiting: block.classList.contains('strata-code--loading'),
+        failed: block.classList.contains('strata-code--failed'),
+        stillCarriesTheAddress: block.hasAttribute('data-strata-code-src'),
+        note: !!block.querySelector('.strata-code-note'),
+        lines: block.querySelectorAll('.strata-code-line').length,
+        highlighted: block.querySelectorAll('.hljs-keyword').length,
+        first: (block.querySelector('.strata-code-line-text') || {}).textContent,
+        /* Nothing fetched may become markup. */
+        elements: block.querySelectorAll('.strata-code-line-text *').length > 0
+      };
+    });
+    if (filled.error) throw new Error(filled.error);
+    if (filled.waiting || filled.failed) throw new Error('the block is ' + JSON.stringify(filled));
+    if (filled.stillCarriesTheAddress) throw new Error('the address was never claimed');
+    if (filled.note) throw new Error('it still says it is loading');
+    /* The sample asks for #L12-L22, which is the get method and nothing else. */
+    if (filled.lines !== 11) throw new Error('the fragment gave ' + filled.lines + ' lines');
+    if (!/public get\(key/.test(filled.first || '')) {
+      throw new Error('the fragment started at ' + JSON.stringify(filled.first));
+    }
+    if (!filled.highlighted) throw new Error('the fetched code was not highlighted');
+  });
+
+  /* And the other half: an address nothing answers has to say so in the block,
+     because a block that stays empty reads as a fence the author left blank. */
+  await step('a fence whose address does not answer says so in the block', async () => {
+    await page.evaluate(() => window.harness.setMarkdown(
+      '# One block\n\n```ts src="https://github.com/contoso/nothing/blob/main/gone.ts"\n```\n'
+    ));
+    await page.waitForTimeout(500);
+    const said = await page.evaluate(() => {
+      const block = document.querySelector('.strata-code');
+      const note = block ? block.querySelector('.strata-code-note') : null;
+      return block ? {
+        failed: block.classList.contains('strata-code--failed'),
+        waiting: block.classList.contains('strata-code--loading'),
+        note: note ? (note.textContent || '').trim() : null,
+        /* Nothing to copy, so nothing offering to. */
+        copyShown: block.querySelector('.strata-code-actions')
+          ? getComputedStyle(block.querySelector('.strata-code-actions')).visibility : 'gone'
+      } : null;
+    });
+    if (!said) throw new Error('no block at all');
+    if (!said.failed || said.waiting) throw new Error('the block is ' + JSON.stringify(said));
+    if (!said.note || !/raw\.githubusercontent\.com/.test(said.note)) {
+      throw new Error('it said ' + JSON.stringify(said.note));
+    }
+    await page.evaluate(() => window.harness.setMarkdown(''));
+    await page.waitForTimeout(600);
+  });
+
+  /*
    * A diagram is the one thing on the page nobody can copy out by selecting it,
    * so the button hands over a raster. This checks the clipboard actually
    * receives PNG bytes, not that a button exists and says Copied.

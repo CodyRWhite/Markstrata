@@ -10,6 +10,45 @@ Entries below 0.0.10.0 were written before the switch and are three-part.
 
 ## 0.0.18.4
 
+- A fenced code block can name a file instead of carrying one. A fence with no
+  body and a `src="..."` on it shows the file at that address, and a runbook
+  that quotes twenty lines of code no longer has to carry a copy of them - a
+  copy is wrong from the first release after it was pasted.
+
+  ````markdown
+  ```ts src="https://github.com/contoso/tools/blob/main/src/cache.ts#L10-L20"
+  ```
+  ````
+
+  - `#L10-L20` and `#L10` take the named lines out of the fetched file. That is
+    most of the value: a whole file in the middle of a runbook is not what
+    anybody wanted, and both spellings are what GitHub puts in the address bar
+    when you click a line number.
+  - The address is translated by the same code a link to a remote document
+    uses, so a `github.com/.../blob/...` link works. That is the address a
+    browser gives you when you copy a link to a file, so it is the one people
+    paste; the file itself is on the raw host.
+  - Fetched after the document is drawn, not during it. Rendering is a string
+    going in and a string coming out and stays that way, so the block is drawn
+    saying which server it is waiting on and filled in when that server
+    answers, the same shape as wiki link checking and Mermaid.
+  - A fetch that fails says why in the block, in the same words a remote
+    document uses: the file is either not there or that server does not allow
+    pages on this site to read it, and a browser cannot tell those apart. A
+    block that stayed empty and silent would read as a fence the author left
+    blank.
+  - What comes back is somebody else's file, so it goes in as text. It is
+    highlighted with the language on the fence and escaped exactly as a block
+    typed into the document is, never rendered as markup.
+  - A fence with both a body and a `src` shows the body and says nothing about
+    the `src`. Quietly dropping what an author typed in favour of a file
+    somewhere else is the one outcome nobody would choose.
+  - A fence that opens with an attribute rather than a language no longer takes
+    that attribute for one. `` ```src="https://..." `` was headed
+    `SRC="HTTPS://GITHUB.COM/..."`, and the colon in `https://` was read as the
+    `lang:filename` shorthand. The same slip was there for a fence opening with
+    a bare `title="app.ts"`.
+
 - Raw HTML no longer means raw scripting. With "Allow raw HTML in markdown" on,
   whatever an author wrote went onto the page untouched, so `<script>`,
   `<img onerror=...>` and `<a href="javascript:...">` all ran - in the next

@@ -640,6 +640,10 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
         && this.properties.contentSource === 'library'
         ? (folder: string) => this.sharePoint.listFolderFileNames(folder)
         : undefined,
+      /* A fence that named an address is fetched through the same service the
+         "File URL" source uses, so it is one place that knows how this page
+         asks another server for a file. */
+      fetchCode: (url: string) => SharePointService.fetchUrl(url),
       documentBase: this.imageBasePath(),
       /* Drawn by the renderer with everything else on the page, rather than
          pushed in over the top of it afterwards. */

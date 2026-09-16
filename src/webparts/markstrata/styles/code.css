@@ -270,6 +270,61 @@
 }
 
 /*
+ * A block whose fence named an address instead of a body, while that address
+ * is being fetched and after it has failed.
+ *
+ * The note sits where the code will be. It is a line of prose rather than a
+ * spinner because there is something to say: which server is being waited on,
+ * and, if it does not answer, whether the file is missing or the server will
+ * not let this page read it. A block that stayed empty and silent would read
+ * as a fence the author left blank.
+ *
+ * Copy is hidden while there is nothing to copy. It comes back with the code.
+ */
+/*
+ * The note, and the room it holds for the code that is coming.
+ *
+ * A block whose address named a line range already knows how many lines it is
+ * about to show, and says so in --strata-code-reserve. Reserving that room
+ * before the fetch is what stops the document under the block jumping down
+ * when it fills, which for a reader who followed a link to a heading below one
+ * means the heading slides away under them. An address with no range reserves
+ * nothing, because nothing here can know the length of a file it has not read.
+ *
+ * The room is measured in the block's own metrics rather than in pixels:
+ * line-height is a plain multiplier and 1em here is the code font size, so
+ * this is exactly as tall as that many rendered lines will be, in whichever
+ * theme is on. The box is sized by its content so the padding lands outside
+ * those lines, the way it does around the <pre> that replaces it.
+ */
+.strata-code-note {
+  box-sizing: content-box;
+  min-height: calc(var(--strata-code-reserve, 0) * var(--strata-code-line-height) * 1em);
+  padding: var(--strata-code-padding);
+  color: var(--strata-text-muted);
+  font-family: var(--strata-font-mono);
+  font-size: var(--strata-code-font-size);
+  line-height: var(--strata-code-line-height);
+}
+
+/* The <pre> is empty until the code arrives, and an empty one still carries
+   its own padding, which doubles the space above the note. */
+.strata-code--loading .strata-code-pre,
+.strata-code--failed .strata-code-pre {
+  display: none;
+}
+
+/* Nothing to copy in either state, so nothing offering to. */
+.strata-code--loading .strata-code-actions,
+.strata-code--failed .strata-code-actions {
+  visibility: hidden;
+}
+
+.strata-code--failed .strata-code-note {
+  color: rgb(var(--strata-color-red));
+}
+
+/*
  * Lines called out by a fence, `\`\`\`js {2,4-6}`.
  *
  * The called lines are left at full strength and the rest are faded, rather

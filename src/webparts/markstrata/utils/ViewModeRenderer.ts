@@ -60,6 +60,13 @@ export interface IViewOptions {
   showReadingTime?: boolean;
   /* Given only when there is a library behind the page to ask. */
   listFolder?: (folder: string) => Promise<string[] | undefined>;
+  /**
+   * How a fence that named a `src` reaches that address. Given by the host,
+   * because only the host knows whether it is talking to SharePoint or to a
+   * stand-in; without it such a fence stays as it rendered, saying which
+   * server it was waiting for.
+   */
+  fetchCode?: (url: string) => Promise<string>;
   /** The folder this document is in, which its relative links point from. */
   documentBase?: string;
   /** Given when a link to another document should open here rather than leave. */
@@ -219,6 +226,15 @@ export class ViewModeRenderer {
        answer arrives rather than the page waiting on it. */
     if (options.listFolder) {
       void this.enhancer.validateWikiLinks(article, options.listFolder);
+    }
+
+    /* And the same bargain for a fence that named an address: the block is
+       drawn waiting, the document is readable around it, and the code arrives
+       when the other server answers. A fence that named a line range has
+       already reserved the height it will need, so the document around it does
+       not move when it fills. */
+    if (options.fetchCode) {
+      void this.enhancer.fillRemoteCode(article, options.fetchCode);
     }
 
     if (options.enableMermaid) {

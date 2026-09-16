@@ -183,6 +183,33 @@ matter:
 ```
 ````
 
+### Code from a URL
+
+A fence with no body can say where its code is, and the block is filled in once
+that address answers:
+
+````markdown
+```ts src="https://github.com/contoso/tools/blob/main/src/cache.ts#L10-L20"
+```
+````
+
+`#L10-L20` and `#L10` take those lines out of the fetched file, which is what
+makes this worth using: a runbook wants the twenty lines it is talking about,
+not the whole file. Both are what GitHub puts in the address bar when you click
+a line number, so the address you copy out of a browser is the address to
+paste. A `github.com/.../blob/...` link is translated to the raw host that
+returns the file, the same way a link to another document is.
+
+The fetch happens after the document is drawn, so nothing waits on it. Until
+the address answers the block says which server it is waiting for, and if it
+never answers it says that instead of staying empty. The other server decides
+whether this page may read it at all: it has to allow cross-origin requests,
+and most do not. GitHub's raw host does.
+
+What comes back is text. It is highlighted with the language on the fence and
+escaped exactly as a block typed into the document is, never rendered as
+markup. A fence that has both a body and a `src` shows the body.
+
 ## Tables
 
 ```markdown

@@ -30,10 +30,12 @@
  * .NOTES
  * Since:     0.0.18.0
  * Ships in:  nothing - it stands in for SharePoint at harness time
- * Requires:  webPartBase.ts
+ * Requires:  webPartBase.ts, fixtures.ts
  */
 
 import { WebPartContext } from '@microsoft/sp-webpart-base';
+
+import { REMOTE_CODE } from '../fixtures';
 
 export interface IFileMetadata {
   name: string;
@@ -147,6 +149,15 @@ const REMOTE_DEPLOY: string = [
 
 put(`${REMOTE_RAW}/Home.md`, REMOTE_HOME);
 put(`${REMOTE_RAW}/Deploy%20runbook.md`, REMOTE_DEPLOY);
+
+/*
+ * And a source file at an address, for a fence that names a `src` instead of
+ * writing a body. It is not markdown and is not in any library; fetchUrl reads
+ * the same map by address, which is all such a fence asks for. Stored under
+ * the raw host, because that is where fetchableUrl sends the request once it
+ * has translated the github.com blob link the document writes.
+ */
+Object.keys(REMOTE_CODE).forEach((url: string) => put(url, REMOTE_CODE[url]));
 
 put(`${LIBRARY}/handbook.md`, typeof SAMPLE === 'string' ? SAMPLE : '# Handbook\n');
 put(`${LIBRARY}/index.md`, INDEX);

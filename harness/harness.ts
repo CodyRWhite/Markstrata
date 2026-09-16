@@ -19,7 +19,7 @@
  * Ships in:  nothing - it builds or drives what ships
  * Requires:  MarkdownProcessor.ts, MermaidRenderer.ts, ContentEnhancer.ts,
  *            ViewModeRenderer.ts, EditModeManager.ts, ThemeManager.ts,
- *            panel.ts, tocWidth.ts
+ *            panel.ts, tocWidth.ts, fixtures.ts
  */
 
 import { MarkdownProcessor } from '../src/webparts/markstrata/utils/MarkdownProcessor';
@@ -30,6 +30,7 @@ import { EditModeManager } from '../src/webparts/markstrata/utils/EditModeManage
 import { ThemeManager } from '../src/webparts/markstrata/utils/ThemeManager';
 import { DocumentNavigator } from '../src/webparts/markstrata/utils/documentNavigator';
 import { PropertyPanel, IPanelPage } from './panel';
+import { fetchRemoteCode } from './fixtures';
 import { TOC_WIDTH_RANGES, tocWidthForUnit } from '../src/webparts/markstrata/utils/tocWidth';
 
 declare const SAMPLE: string;
@@ -275,6 +276,9 @@ function draw(showing?: string, heading?: string): void {
     showReadingTime: state.showReadingTime,
     backToTop: state.backToTop,
     listFolder: state.enableWikiLinks && state.checkWikiLinks ? listFolder : undefined,
+    /* Nothing here reaches the network: fixtures.ts holds the file the sample's
+       `src` fence names, keyed by the address the fetch asks for. */
+    fetchCode: fetchRemoteCode,
     documentBase: state.libraryBase || undefined,
     openDocument: state.followDocumentLinks
       ? (path: string, heading: string) => void navigator.open(path, heading, true)
@@ -319,6 +323,13 @@ function log(message: string): void {
     draw();
   },
   setLibraryBase: setLibraryBase,
+  /* Swaps the document being shown, for a check that needs markdown the sample
+     does not carry - a fence pointed at an address nothing answers, say. */
+  setMarkdown: (markdown: string) => {
+    navigator.close(false);
+    state.markdown = markdown || SAMPLE;
+    draw();
+  },
   setBackToTop: (position: any) => {
     state.backToTop = position;
     draw();

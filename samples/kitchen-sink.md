@@ -184,6 +184,14 @@ export function resolveMode(mode: ColorMode, isInverted?: boolean): ResolvedMode
 }
 ```
 
+A fence can also point at a file somewhere else instead of carrying a body,
+and quote a few lines out of it by the fragment GitHub puts in the address bar.
+The block is drawn waiting and filled in once that server answers, so nothing
+in the document is held up by it:
+
+```ts src="https://github.com/contoso/tools/blob/main/src/cache.ts#L12-L22"
+```
+
 ```diff
 - --strata-code-bg: #212121;
 - text-shadow: 0 -0.1em 0.2em #000;

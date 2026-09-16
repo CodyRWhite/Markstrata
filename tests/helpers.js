@@ -64,5 +64,6 @@ module.exports = {
   wikiLinks: lib('wikiLinks'),
   documentParameter: lib('documentParameter'),
   remoteDocuments: lib('remoteDocuments'),
+  remoteCode: lib('remoteCode'),
   tables: lib('tables')
 };

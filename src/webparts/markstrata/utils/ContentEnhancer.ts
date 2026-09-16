@@ -29,7 +29,7 @@
  * Ships in:  the web part bundle
  * Requires:  backToTop.ts, chromeOffset.ts, codeCopy.ts, contents.ts,
  *            copyFeedback.ts, diagramTools.ts, documentLinks.ts,
- *            fillHeight.ts
+ *            fillHeight.ts, remoteCode.ts
  */
 
 import { BackToTop, BackToTopButton } from './backToTop';
@@ -43,6 +43,7 @@ import { HeightFiller } from './fillHeight';
 import { enhanceImages } from './images';
 import { validateWikiLinks } from './linkCheck';
 import { readingTime } from './documentText';
+import { FetchCode, fillRemoteCode } from './remoteCode';
 import { TableTools } from './tableTools';
 import { ZoomOverlay } from './zoomOverlay';
 
@@ -70,6 +71,11 @@ export class ContentEnhancer {
   /** Puts Expand and Copy over every diagram. */
   public attachDiagramTools(container: HTMLElement, allowZoom: boolean): void {
     attachDiagramTools(container, allowZoom, this.zoom, this.feedback);
+  }
+
+  /** Fetches the code for every fence that named an address instead of a body. */
+  public async fillRemoteCode(container: HTMLElement, fetchCode: FetchCode): Promise<void> {
+    return fillRemoteCode(container, fetchCode);
   }
 
   // ----------------------------------------------------------------- links
