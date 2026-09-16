@@ -26,6 +26,15 @@ Entries below 0.0.10.0 were written before the switch and are three-part.
   that quietly disagreed with Teams would be worse than an honest partial
   check.
 
+- A release publishes one file again, the `.sppkg`. The Teams app zip was a
+  second asset from when Sync to Teams was failing and the only way into Teams
+  was to upload the zip by hand in the admin centre. Sync works now, and the zip
+  that matters is the one inside the package, which is where SharePoint looks
+  for it. A second copy on the release is the Teams half of the app installable
+  on its own, without the SharePoint half it talks to, and stale the first time
+  anybody uses it. It is still built, because the package needs it; it is no
+  longer handed out.
+
 - A line that ends in braces keeps them. `${HOME}` at the end of a list item,
   `{env}` at the end of a heading, a shell variable in the last cell of a table
   and the `\end{align}` closing a LaTeX environment were all being deleted, and

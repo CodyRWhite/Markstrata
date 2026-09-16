@@ -71,13 +71,17 @@ jobs:
       # generating a manifest of its own - so it has to be sitting in teams/ by
       # the time package-solution sweeps that folder up. The version it stamps
       # is the one set-version wrote a step earlier.
+      #
+      # Built, but not published beside the .sppkg. It used to be a second
+      # release asset, from when Sync to Teams was failing and the only way in
+      # was to upload the zip to the Teams admin centre by hand. Sync works, so
+      # the zip that matters is the one inside the package: a second copy on the
+      # release is a version of the app that can be installed without the
+      # SharePoint side it talks to, and drifts the moment anybody uses it.
       - name: Build the Teams app package
-        id: teams
         run: |
           npm run teams
-          PATH_TO_TEAMS=teams/TeamsSPFxApp.zip
-          test -f "$PATH_TO_TEAMS"
-          echo "path=$PATH_TO_TEAMS" >> "$GITHUB_OUTPUT"
+          test -f teams/TeamsSPFxApp.zip
 
       - name: Build the solution package
         run: npm run package
@@ -100,7 +104,6 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           VERSION: ${{ steps.version.outputs.version }}
           PACKAGE: ${{ steps.package.outputs.path }}
-          TEAMS: ${{ steps.teams.outputs.path }}
           # The solution version stays four-part numeric either way: SharePoint
           # will not install a package whose version carries a semver suffix, so
           # a pre-release is marked on the GitHub release, not in the number.
@@ -116,9 +119,9 @@ jobs:
             gh release delete "v$VERSION" --yes --cleanup-tag
           fi
           if gh release view "v$VERSION" >/dev/null 2>&1; then
-            gh release upload "v$VERSION" "$PACKAGE" "$TEAMS" --clobber
+            gh release upload "v$VERSION" "$PACKAGE" --clobber
           else
-            gh release create "v$VERSION" "$PACKAGE" "$TEAMS" \
+            gh release create "v$VERSION" "$PACKAGE" \
               --title "v$VERSION" \
               --notes "$NOTES" \
               $PRERELEASE
