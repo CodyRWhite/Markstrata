@@ -61,6 +61,20 @@ Entries below 0.0.10.0 were written before the switch and are three-part.
   rather than beside it, so the browser's own Back button walks the same path
   and the two cannot disagree about where the reader has been.
 
+- The cell after a `||` is on the page again. A doubled pipe is how a
+  MultiMarkdown table says a cell runs across the column to its right, and the
+  cell that came after one was deleted: not mis-spanned, not mis-placed, gone,
+  with nothing said about it. A row that was nothing but a span lost all of it.
+  markdown-it-attrs did it rather than the table plugin. attrs has a way of
+  writing a span where the author writes every cell and the covered ones are
+  hidden afterwards, and it hides by blanking the text; `||` is the other way
+  round, the covered cell is never written and the span is already set by the
+  time attrs looks, so it found a span, assumed the cells it covers were still
+  in the row, and blanked a real one. Both syntaxes are documented, so neither
+  plugin could go: the span is set aside for the length of attrs' own rule and
+  put back after, which leaves attrs an ordinary row and nothing to do in it.
+  `^^` rowspans and tables with no spans in them are untouched.
+
 - A release publishes one file again, the `.sppkg`. The Teams app zip was a
   second asset from when Sync to Teams was failing and the only way into Teams
   was to upload the zip by hand in the admin centre. Sync works now, and the zip

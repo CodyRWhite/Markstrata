@@ -22,7 +22,7 @@
  *            imagePaths.ts, frontMatter.ts, markdownItWikiLinks.ts,
  *            markdownItTableCaptions.ts, markdownItAttributeGuard.ts,
  *            markdownItTableCells.ts, markdownItStrikethrough.ts,
- *            markdownItComments.ts, markdownItBlockIds.ts,
+ *            markdownItComments.ts, markdownItBlockIds.ts, markdownItSpanGuard.ts,
  *            markdownItTags.ts, markdownItTypes.ts, htmlSanitiser.ts
  */
 
@@ -34,6 +34,7 @@ import { splitFrontMatter, ISplitDocument } from './frontMatter';
 import { wikiLinkPlugin } from './markdownItWikiLinks';
 import { tableCaptionPlugin } from './markdownItTableCaptions';
 import { attributeGuardPlugin } from './markdownItAttributeGuard';
+import { spanGuardPlugin } from './markdownItSpanGuard';
 import { tableCellPlugin } from './markdownItTableCells';
 import { strikethroughPlugin } from './markdownItStrikethrough';
 import { commentPlugin } from './markdownItComments';
@@ -282,6 +283,10 @@ export class MarkdownProcessor {
        can really use. Left to itself it takes any trailing `{...}`, keeps
        nothing out of it, and deletes the text it was holding. */
     register('attribute guard', attributeGuardPlugin);
+    /* And beside it, because it is the same plugin doing the same thing one
+       layer along: attrs deletes the cell after a `||`, taking it for one of
+       the cells its own {colspan=} syntax covers. */
+    register('span guard', spanGuardPlugin);
 
     /*
      * A fence's line spec has to be taken before markdown-it-attrs runs.

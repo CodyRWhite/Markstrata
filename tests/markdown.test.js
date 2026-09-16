@@ -557,3 +557,55 @@ test('options can be changed after construction', () => {
   processor.updateOptions({ showLineNumbers: true });
   assert.match(processor.render('```js\nx\n```'), /strata-code--numbered/);
 });
+
+/*
+ * A doubled pipe is how a MultiMarkdown table says a cell runs across the
+ * column to its right. The cell after it was deleted - not mis-spanned, not
+ * mis-placed, gone from the page with nothing said - which is the same class
+ * of failure as a swallowed row and worse, because a table missing a column
+ * still reads as a table.
+ *
+ * markdown-it-attrs did it, not the table plugin. attrs has its own way of
+ * writing a span, where the author writes every cell and the covered ones are
+ * hidden afterwards; `||` is the other way round, the covered cell is never
+ * written, and the colspan is already set by the time attrs looks. So attrs
+ * found a span, assumed the cells it covers were still in the row, and blanked
+ * a real one.
+ */
+const spanTable = (body) => new MarkdownProcessor({}).render(body);
+
+test('the cell after a doubled pipe survives', () => {
+  const html = spanTable('| a | b | c |\n|---|---|---|\n| spans two || third |\n');
+  assert.match(html, /<td colspan="2">spans two<\/td>/);
+  assert.match(html, /<td>third<\/td>/, 'the cell after the span was deleted');
+});
+
+test('and so does one at the end of a longer row', () => {
+  const html = spanTable(
+    '| a | b | c | d |\n|---|---|---|---|\n| one | wide || last |\n'
+  );
+  assert.match(html, /<td>one<\/td>/);
+  assert.match(html, /<td colspan="2">wide<\/td>/);
+  assert.match(html, /<td>last<\/td>/);
+});
+
+test('a row that is only a span still spans', () => {
+  const html = spanTable('| a | b |\n|---|---|\n| all of it ||\n');
+  assert.match(html, /<td colspan="2">all of it<\/td>/);
+});
+
+test('a rowspan is left exactly as the table plugin wrote it', () => {
+  /* ^^ goes through the same attrs pattern and was never the bug, so this is
+     the guard that fixing one did not disturb the other. */
+  const html = spanTable('| a | b |\n|---|---|\n| x | y |\n| ^^ | z |\n');
+  assert.match(html, /<td rowspan="2">x<\/td>/);
+  assert.match(html, /<td>y<\/td>/);
+  assert.match(html, /<td>z<\/td>/);
+});
+
+test('a table with no spans in it is untouched', () => {
+  const html = spanTable('| a | b |\n|---|---|\n| 1 | 2 |\n');
+  assert.match(html, /<td>1<\/td><\/td>|<td>1<\/td>/);
+  assert.match(html, /<td>2<\/td>/);
+  assert.doesNotMatch(html, /colspan/);
+});
