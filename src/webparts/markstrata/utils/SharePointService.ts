@@ -24,6 +24,8 @@ import '@pnp/sp/items';
 import '@pnp/sp/files';
 import '@pnp/sp/folders';
 
+import { collectFolderPaths } from './folderTree';
+
 export interface IFileMetadata {
   name: string;
   serverRelativeUrl: string;
@@ -114,16 +116,43 @@ export class SharePointService {
     }
   }
 
+  /**
+   * Every folder in a library, the ones inside other folders included, as
+   * paths relative to its root.
+   *
+   * SharePoint describes one folder at a time, so this used to stop at the
+   * root and an author could not point the web part at `Runbooks/Database`.
+   * The walking is in folderTree.ts, which knows nothing about SharePoint and
+   * can therefore be tested; this is the half that does the asking.
+   */
   public async getFolders(libraryUrl: string): Promise<string[]> {
+    return collectFolderPaths((relativePath: string) =>
+      this.childFolderNames(libraryUrl, relativePath));
+  }
+
+  /**
+   * The folder names directly inside one folder of a library.
+   *
+   * A failure is reported and read as an empty folder rather than thrown: a
+   * reader denied one subfolder still has every other folder to choose from,
+   * and losing the library over that would be the worse answer.
+   */
+  private async childFolderNames(libraryUrl: string, relativePath: string): Promise<string[]> {
+    const target: string = relativePath ? `${libraryUrl}/${relativePath}` : libraryUrl;
+
     try {
       const folders: ISpFolder[] = await this.sp.web
-        .getFolderByServerRelativePath(libraryUrl)
-        .folders.select('Name')
-        .filter("Name ne 'Forms'")();
+        .getFolderByServerRelativePath(target)
+        .folders.select('Name')();
 
-      return folders.map((folder: ISpFolder) => folder.Name);
+      /* `Forms` is SharePoint's own, holding the library's view pages, and it
+         exists only at the root. Filtered there and nowhere else, so a folder
+         an author deliberately called Forms further down still appears. */
+      return folders
+        .map((folder: ISpFolder) => folder.Name)
+        .filter((name: string) => relativePath !== '' || name !== 'Forms');
     } catch (error) {
-      console.error('[Markstrata] Could not list folders', error);
+      console.error('[Markstrata] Could not list folders in', target, error);
       return [];
     }
   }
