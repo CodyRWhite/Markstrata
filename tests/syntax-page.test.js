@@ -52,7 +52,7 @@ const SHOWN = {
   'strikethrough': /<s>|<del>/,
   'inline code': /<code>/,
   'highlighted text': /<mark>/,
-  'subscript': /<sub>/,
+  'a subscript, written as maths': /katex/,
   'superscript': /<sup>/,
   'a keyboard key': /<kbd>/,
   'an emoji': /\u{1F680}/u,

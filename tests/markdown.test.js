@@ -285,11 +285,48 @@ test('highlighted text renders as a mark element', () => {
   assert.match(markdown.render('some ==important== text'), /<mark>important<\/mark>/);
 });
 
-test('footnotes, definition lists, sub and sup all load', () => {
+test('footnotes, definition lists and superscript all load', () => {
   assert.match(markdown.render('text[^1]\n\n[^1]: note'), /class="footnotes/);
   assert.match(markdown.render('Term\n: definition'), /<dl>/);
-  assert.match(markdown.render('H~2~O'), /<sub>2<\/sub>/);
   assert.match(markdown.render('x^2^'), /<sup>2<\/sup>/);
+  assert.match(markdown.render('10^6^'), /10<sup>6<\/sup>/);
+});
+
+/*
+ * One tilde is strikethrough, which is what GitHub makes of it. It used to be
+ * a subscript, a reading only Pandoc has, so `~deprecated~` written anywhere
+ * else rendered here as a tiny 'deprecated' saying the opposite of what it
+ * meant. `H~2~O` is struck through now; a subscript is written `$H_2O$` with
+ * maths on, or as <sub>2</sub> with HTML allowed.
+ */
+test('a single tilde strikes through, and is not a subscript', () => {
+  const html = markdown.render('~struck~');
+  assert.match(html, /<s>struck<\/s>/);
+  assert.doesNotMatch(html, /<sub>/);
+});
+
+test('a doubled tilde still strikes through', () => {
+  assert.match(markdown.render('~~struck~~'), /<s>struck<\/s>/);
+  assert.match(markdown.render('~~a ~b~ c~~'), /<s>a <s>b<\/s> c<\/s>/);
+});
+
+test('what used to be a subscript is struck through', () => {
+  assert.match(markdown.render('H~2~O'), /H<s>2<\/s>O/);
+});
+
+test('a tilde with nothing to close it stays a tilde', () => {
+  assert.match(markdown.render('a ~ b'), /<p>a ~ b<\/p>/);
+  assert.match(markdown.render('~'), /<p>~<\/p>/);
+  assert.match(markdown.render('one ~ two ~~ three'), /one ~ two ~~ three/);
+});
+
+test('a tilde fence still opens a code block', () => {
+  assert.match(markdown.render('~~~\ncode\n~~~'), /strata-code/);
+  assert.doesNotMatch(markdown.render('~~~\ncode\n~~~'), /<s>/);
+});
+
+test('subscript is written as maths', () => {
+  assert.match(markdown.render('$H_2O$'), /katex/);
 });
 
 test('rendering never throws on malformed input', () => {

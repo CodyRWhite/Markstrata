@@ -11,7 +11,9 @@ Regular paragraph text with **bold**, *italic*, ~~strikethrough~~, `inline code`
 a [link to SharePoint](https://www.microsoft.com/sharepoint), ==nothing exotic==,
 and a keyboard shortcut like <kbd>Ctrl</kbd> + <kbd>K</kbd>.
 
-Subscript and superscript are written H~2~O and 10^6^. Emoji render from their
+One tilde strikes through as well as two, so ~this~ and ~~this~~ match.
+Superscript is written 10^6^, and a subscript comes from maths, $H_2O$, or from
+<sub>markup</sub>. Emoji render from their
 shortcodes: :rocket: :warning: :white_check_mark:. An
 abbreviation carries its meaning on hover, so HTML and CSS explain themselves the
 first time someone meets them.

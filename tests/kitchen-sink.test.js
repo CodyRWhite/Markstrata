@@ -55,7 +55,7 @@ const RENDERED = {
   'a footnote': /footnote/,
   'a definition list': /<dl/,
   'an abbreviation': /<abbr/,
-  'subscript or superscript': /<su[bp]>/,
+  'superscript': /<sup>/,
   'highlighted text': /<mark/,
   'a blockquote': /<blockquote/,
   'strikethrough': /<s>|<del/,

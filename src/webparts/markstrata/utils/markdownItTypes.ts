@@ -83,13 +83,51 @@ export interface IStateBlock {
   getLines(begin: number, end: number, indent: number, keepLastLf: boolean): string;
 }
 
-/** The parts of the inline parser state the math rule reads. */
+/**
+ * One end of a pair of markers, as the inline parser collects them before
+ * `balance_pairs` works out which opener goes with which closer.
+ *
+ * The names are markdown-it's own, spelt the way markdown-it spells them,
+ * because these objects are put straight into its lists and read back out.
+ */
+/* eslint-disable @typescript-eslint/naming-convention */
+export interface IDelimiter {
+  /** Which run of markers this is one of. Any number will do, as long as one
+      rule's markers cannot be paired with another's. */
+  marker: number;
+  length: number;
+  jump?: number;
+  /** Index of the text token standing in for the marker. */
+  token: number;
+  /** Index of the delimiter that closes this one, or -1. */
+  end: number;
+  open: boolean;
+  close: boolean;
+}
+
+/** What `scanDelims` reports about a run of markers. */
+export interface IScannedDelims {
+  can_open: boolean;
+  can_close: boolean;
+  length: number;
+}
+/* eslint-enable @typescript-eslint/naming-convention */
+
+/** The parts of the inline parser state the math and marker rules read. */
 export interface IStateInline {
   src: string;
   pos: number;
   posMax: number;
+  tokens: IToken[];
+  /** Per token, whatever a rule hung on it; markers live here. */
+  tokens_meta: ({ delimiters?: IDelimiter[] } | undefined)[];
+  delimiters: IDelimiter[];
+  scanDelims(start: number, canSplitWord: boolean): IScannedDelims;
   push(type: string, tag: string, nesting: number): IToken;
 }
+
+/** A rule of the second inline pass, which pairs markers up. */
+export type PostRule = (state: IStateInline) => void;
 
 export type CoreRule = (state: IStateCore) => void;
 export type BlockRule = (state: IStateBlock, startLine: number, endLine: number, silent: boolean) => boolean;
@@ -133,7 +171,7 @@ export interface ILinkify {
 export interface IMarkdownIt {
   core: { ruler: IRuler<CoreRule> };
   block: { ruler: IRuler<BlockRule> };
-  inline: { ruler: IRuler<InlineRule> };
+  inline: { ruler: IRuler<InlineRule>; ruler2: IRuler<PostRule> };
   renderer: IRenderer;
   linkify: ILinkify;
   utils: {

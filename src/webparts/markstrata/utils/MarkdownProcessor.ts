@@ -21,7 +21,8 @@
  * Requires:  markdownItCallouts.ts, markdownItTaskLists.ts, codeBlocks.ts,
  *            imagePaths.ts, frontMatter.ts, markdownItWikiLinks.ts,
  *            markdownItTableCaptions.ts, markdownItAttributeGuard.ts,
- *            markdownItTableCells.ts, markdownItTypes.ts
+ *            markdownItTableCells.ts, markdownItStrikethrough.ts,
+ *            markdownItTypes.ts
  */
 
 import { calloutPlugin } from './markdownItCallouts';
@@ -33,6 +34,7 @@ import { wikiLinkPlugin } from './markdownItWikiLinks';
 import { tableCaptionPlugin } from './markdownItTableCaptions';
 import { attributeGuardPlugin } from './markdownItAttributeGuard';
 import { tableCellPlugin } from './markdownItTableCells';
+import { strikethroughPlugin } from './markdownItStrikethrough';
 import {
   ILinkifyMatch,
   IMarkdownIt,
@@ -49,7 +51,6 @@ import markdownItFootnote from 'markdown-it-footnote';
 import * as markdownItEmoji from 'markdown-it-emoji';
 import markdownItAbbr from 'markdown-it-abbr';
 import markdownItDeflist from 'markdown-it-deflist';
-import markdownItSub from 'markdown-it-sub';
 import markdownItSup from 'markdown-it-sup';
 import markdownItMark from 'markdown-it-mark';
 import markdownItAnchor from 'markdown-it-anchor';
@@ -175,6 +176,7 @@ export class MarkdownProcessor {
     // `{.is-info}` classes have already landed on the blockquote token.
     this.markdownIt.use(calloutPlugin);
     this.markdownIt.use(taskListPlugin);
+    this.markdownIt.use(strikethroughPlugin);
 
     if (this.options.enableWikiLinks) {
       /* Given the same resolver as images, so a link and a picture beside it
@@ -261,7 +263,6 @@ export class MarkdownProcessor {
     register('emoji', markdownItEmoji.full || markdownItEmoji);
     register('abbreviations', markdownItAbbr);
     register('definition lists', markdownItDeflist);
-    register('subscript', markdownItSub);
     register('superscript', markdownItSup);
     // ==highlight==, which Obsidian users write a lot of.
     register('highlight', markdownItMark);

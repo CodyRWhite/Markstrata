@@ -84,6 +84,18 @@ Entries below 0.0.10.0 were written before the switch and are three-part.
   row using the rowspan or colspan syntax is left alone, since how wide it is
   is that syntax's answer to give.
 
+- `~struck~` with one tilde is now struck through, and `H~2~O` is no longer a
+  subscript. One tilde used to be Pandoc's subscript, a reading GitHub,
+  Obsidian and VS Code all lack: GitHub Flavoured Markdown says one tilde or
+  two is strikethrough, and GitHub renders `~deprecated~` struck. So a document
+  written anywhere else and read here turned a struck out word into a tiny
+  subscript that said the opposite of what it meant, with no error and nothing
+  to notice. The collision only runs one way, since nobody writes `H~2~O`
+  meaning struck through, and it is settled in GitHub's favour. A subscript is
+  now written `$H_2O$` with **Math (KaTeX)** on, or `<sub>2</sub>` with raw
+  HTML allowed, both of which work in GitHub, Obsidian and VS Code as well as
+  here. `~~this~~`, `10^6^` and a `~~~` code fence are all unchanged.
+
 ## 0.0.18.3
 
 - The split editor is one editor again. The box you typed in stopped at its own

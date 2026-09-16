@@ -49,11 +49,6 @@ declare module 'markdown-it-deflist' {
   export = plugin;
 }
 
-declare module 'markdown-it-sub' {
-  const plugin: (markdownIt: unknown) => void;
-  export = plugin;
-}
-
 declare module 'markdown-it-sup' {
   const plugin: (markdownIt: unknown) => void;
   export = plugin;

@@ -17,9 +17,10 @@ named. The [documentation page](../docs/) covers the settings themselves.
 | `**bold**` | **bold** |
 | `*italic*` | *italic* |
 | `~~struck through~~` | ~~struck through~~ |
+| `~also struck~` | ~also struck~ |
 | `` `inline code` `` | `inline code` |
 | `==highlighted==` | ==highlighted== |
-| `H~2~O` | H~2~O |
+| `$H_2O$` | $H_2O$ |
 | `10^6^` | 10^6^ |
 | `<kbd>Ctrl</kbd>` | <kbd>Ctrl</kbd> |
 | `:rocket:` | :rocket: |
