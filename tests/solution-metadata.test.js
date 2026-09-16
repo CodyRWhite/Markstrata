@@ -114,3 +114,24 @@ test('there is still a description for both places that show one', () => {
   assert.ok(solution.metadata.shortDescription.default, 'no short description');
   assert.ok(solution.metadata.longDescription.default, 'no long description');
 });
+
+test('the screenshots the app catalog is told to show are there to show', () => {
+  const screenshots = solution.metadata.screenshotPaths;
+  assert.ok(Array.isArray(screenshots) && screenshots.length > 0,
+    'no screenshots, so the About page shows the app with nothing to look at');
+  assert.ok(screenshots.length <= 5, `${screenshots.length} screenshots; SPFx allows 5`);
+
+  /* SPFx resolves a relative screenshot path against the package directory,
+     the same base it uses for iconPath, and a missing file fails the whole
+     package rather than quietly shipping an empty <Screenshots> element. That
+     failure only shows up at release time, so it is worth catching here. */
+  screenshots.forEach((relative) => {
+    assert.ok(
+      relative.indexOf('://') === -1,
+      `${relative} is an external URL; the site deploys from main, so a link `
+      + 'to an unmerged image is a 404 in the app catalog'
+    );
+    const file = path.join(ROOT, 'sharepoint', relative);
+    assert.ok(fs.existsSync(file), `the screenshot is missing: sharepoint/${relative}`);
+  });
+});

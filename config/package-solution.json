@@ -3,7 +3,7 @@
   "solution": {
     "name": "Markstrata - Markdown Web Part for SharePoint Online",
     "id": "7160b942-6869-49d0-b3e9-db7b50ca5fdc",
-    "version": "0.0.18.1",
+    "version": "0.0.18.2",
     "includeClientSideAssets": true,
     "skipFeatureDeployment": true,
     "isDomainIsolated": false,
@@ -22,7 +22,11 @@
       "longDescription": {
         "default": "Renders markdown from SharePoint libraries, URLs or inline content with readable, faithful themes modelled on GitHub, Obsidian and VS Code - including proper code block contrast, GitHub alerts and Obsidian callouts, Mermaid diagrams, KaTeX math and a table of contents."
       },
-      "screenshotPaths": [],
+      "screenshotPaths": [
+        "screenshots/github-light.png",
+        "screenshots/obsidian-dark.png",
+        "screenshots/vscode-dark.png"
+      ],
       "videoUrl": "",
       "categories": [
         "Content management",
@@ -35,7 +39,7 @@
         "title": "Markstrata",
         "description": "Activates the Markstrata markdown web part.",
         "id": "d4f340af-99c8-4167-88ef-53b89003b7bc",
-        "version": "0.0.18.1"
+        "version": "0.0.18.2"
       }
     ]
   },

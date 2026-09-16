@@ -8,6 +8,51 @@ is normally zero. `scripts/set-version.js` stamps it when a release is cut.
 
 Entries below 0.0.10.0 were written before the switch and are three-part.
 
+## 0.0.18.2
+
+- A web part nobody has configured now says so. It used to render the sample
+  document, which looks exactly like a configured web part showing a document
+  about Markstrata, so the one state that needs an instruction was the one
+  state that gave none. It now starts empty and says where the way in is, and
+  because that differs by host it is worded per host: on a page being edited,
+  the property pane, with the sample one click away for anyone who wants it; on
+  a published page, that somebody who can edit the page has to choose a
+  document; in a Teams tab, the tab's own settings, because a tab has no
+  property pane and telling somebody to open one is telling them to do
+  something impossible.
+- The Teams app package is written here now, by hand, rather than generated
+  from the solution by Sync to Teams. Sync to Teams writes a manifest nothing
+  in this repository can influence, and what it wrote was wrong in three ways
+  that all showed: the short and full descriptions were both the word
+  "Markstrata", so the app described itself by repeating its name; the
+  Documentation link was empty and could not be filled, because SPFx has no
+  field that maps to the manifest's `publisherDocsUrl`; and the tab's
+  configuration page - the step where a document is chosen - was a placeholder,
+  which meant a tab could be added to a channel and then never pointed at
+  anything. `teams/manifest.json` is the manifest, written against the v1.17
+  schema, and seven tests hold it to the limits that schema states, since a
+  short name over 30 characters is refused at upload and the admin centre is a
+  slow place to learn that.
+- `npm run teams` builds it: the manifest and the two icons, zipped into
+  `teams/dist/markstrata-teams.zip`, with the version stamped from
+  `package.json`. A tenant uploads that zip in the Teams admin centre instead
+  of pressing Sync to Teams, and removes an app an earlier sync left behind so
+  there are not two of them. Nothing new is hosted - the tab loads the
+  component already in the app catalog, through SharePoint's own Teams hosting
+  page, so the `.sppkg` is still what has to be installed first.
+- The app catalog's About page has screenshots on it. `screenshotPaths` had
+  been left empty because the SPFx schema says only that relative paths are
+  resolved against "the base package directory" without saying which directory
+  that is; it is `sharepoint/`, the same base as `iconPath`, so the three
+  images now live in `sharepoint/screenshots/` and are carried into the package
+  beside the icon. A test fails if the config names a file that is not there,
+  because a missing screenshot fails the whole package and release time is
+  where that would have surfaced.
+- `scripts/build-strings.js` writes the generated file's own header. Every code
+  file here opens with one and a test says so, but `en-us.js` is overwritten
+  every time the generator runs, so the header that had been added to it by
+  hand survived exactly until the next regeneration.
+
 ## 0.0.18.1
 
 - The app now tells a tenant the truth about itself. Its website, privacy
