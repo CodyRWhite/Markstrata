@@ -1,0 +1,52 @@
+name: Retire releases
+
+# Withdraws releases and the tags that anchor them, by hand:
+#   Actions -> Retire releases -> Run workflow -> 0.0.18.7 0.0.18.8
+#
+# A tag is a reference, so a rewritten history is not actually rewritten until
+# every tag pointing into the old one is gone. `gh release delete
+# --cleanup-tag` drops the release and its tag together, which is the only way
+# to reach a tag from a sandbox whose git remote refuses tag pushes and ref
+# deletions.
+#
+# This is destructive and deliberately manual: there is no trigger but
+# workflow_dispatch, it names the versions one at a time, and a version with no
+# release is reported rather than treated as an error, so a half-finished run
+# can be repeated safely.
+on:
+  workflow_dispatch:
+    inputs:
+      versions:
+        description: 'Versions to withdraw, space separated, without the leading v (e.g. 0.0.18.7 0.0.18.8)'
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  retire:
+    name: Withdraw the named releases
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Withdraw
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSIONS: ${{ inputs.versions }}
+        run: |
+          for VERSION in $VERSIONS; do
+            if gh release view "v$VERSION" >/dev/null 2>&1; then
+              gh release delete "v$VERSION" --yes --cleanup-tag
+              echo "withdrew v$VERSION and its tag"
+            elif git ls-remote --exit-code --tags origin "v$VERSION" >/dev/null 2>&1; then
+              # A tag with no release behind it. Nothing for gh to delete, so
+              # the reference goes directly.
+              git push origin ":refs/tags/v$VERSION"
+              echo "deleted the tag v$VERSION, which had no release"
+            else
+              echo "nothing at v$VERSION"
+            fi
+          done

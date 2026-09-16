@@ -8,6 +8,29 @@ is normally zero. `scripts/set-version.js` stamps it when a release is cut.
 
 Entries below 0.0.10.0 were written before the switch and are three-part.
 
+## 0.0.19.3
+
+- A real site name is out of the repository's history, not just out of its
+  working tree. 0.0.18.4 took the name out of the files; every commit made
+  before that still carried it, so anybody cloning the repository got it back
+  in full. The history has been rewritten: the name, the tenant host and the
+  internal folder names it appeared beside are replaced everywhere they occur,
+  in file contents and in commit messages alike.
+- The rewrite changed no content. The tree at the tip is byte for byte what it
+  was before, all 279 commits are still there, and the full test suite passes
+  against the rewritten history. What changed is every commit's identifier,
+  because a commit names its parent and rewriting one rewrites all of them
+  after it.
+- The five pre-releases that were cut while the name was still in the tests,
+  0.0.18.7 through 0.0.19.2, have been withdrawn along with their tags. A tag
+  is a reference, and leaving those in place would have kept the old commits
+  reachable and the name with them. They were superseded pre-releases of a
+  pre-1.0 product and this release replaces all of them.
+- One consequence worth knowing about: the commits before this no longer carry
+  their signatures. Rewriting a commit invalidates the signature over it, and
+  there is no way to re-sign somebody else's work. Commits from here on are
+  signed as before.
+
 ## 0.0.18.4
 
 - A real site name is out of the tests, out of a source file's header and out
