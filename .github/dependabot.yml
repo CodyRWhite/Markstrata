@@ -12,6 +12,16 @@ updates:
     schedule:
       interval: weekly
     open-pull-requests-limit: 5
+    ignore:
+      # SPFx builds with the TypeScript its own toolchain ships for, which for
+      # 1.23 is 5.x, and the version here is pinned exactly rather than
+      # floated. TypeScript 7 is the native rewrite and does not work with
+      # SPFx at all; the bump Dependabot opened fails CI. A major move here
+      # happens when SPFx moves, deliberately, not weekly and not by robot.
+      - dependency-name: typescript
+        update-types:
+          - 'version-update:semver-major'
+
     groups:
       markdown:
         patterns:
