@@ -82,7 +82,7 @@ const VIEW = {
   resolvedMode: 'light',
   showToolbar: true,
   showThemeSwitcher: true,
-  showPrintButton: true,
+  showExportButton: true,
   showReadingTime: true,
   tocPosition: 'off',
   tocMaxLevel: 3,
@@ -141,7 +141,7 @@ function renderers(libDir, options) {
   return {
     enhancer: enhancer,
     view: new ViewModeRenderer(processor, mermaid, enhancer, {
-      onReload: NOTHING, onShowVersions: NOTHING, onThemeOverride: NOTHING, onPrint: NOTHING
+      onReload: NOTHING, onShowVersions: NOTHING, onThemeOverride: NOTHING, onExport: NOTHING
     }),
     editor: new EditModeManager(processor, mermaid, enhancer, {
       onChange: NOTHING, onSave: () => Promise.resolve(true)
@@ -195,7 +195,7 @@ function trail(kit, names) {
   const here = names[names.length - 1];
   kit.view.render(host, TRAIL_DOCUMENTS[here], Object.assign({}, VIEW, {
     showThemeSwitcher: false,
-    showPrintButton: false,
+    showExportButton: false,
     showReadingTime: false,
     canReload: false,
     canShowVersions: false,

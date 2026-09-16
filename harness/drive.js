@@ -197,10 +197,10 @@ const LIBRARY_PATH = '/sites/demo/Documents';
     if (bar.order.join(' ') !== expected.join(' ')) {
       throw new Error('the bar holds ' + JSON.stringify(bar.order));
     }
-    /* Reload and History are about the file, Share and Print are about the
+    /* Reload and History are about the file, Share and Export are about the
        document on screen, and the mode switch is about the page. Share sits
-       with Print rather than beside Reload for that reason. */
-    if (bar.actions.join(' ') !== 'Reload History Share Print Dark mode') {
+       with Export rather than beside Reload for that reason. */
+    if (bar.actions.join(' ') !== 'Reload History Share Export Dark mode') {
       throw new Error('the actions are ' + JSON.stringify(bar.actions));
     }
     if (Math.abs(bar.top - bar.bottom) > 0.5) {
@@ -3666,6 +3666,180 @@ const LIBRARY_PATH = '/sites/demo/Documents';
        is most of what made the link unreadable. */
     if (shared.atDocument.indexOf('%2F') !== -1) {
       throw new Error('slashes came back encoded: ' + JSON.stringify(shared.atDocument));
+    }
+  });
+
+  /*
+   * Exporting, which is the whole reason Paged.js is in the bundle.
+   *
+   * A browser saving a page as a PDF saves the page: one column cut wherever
+   * the paper ran out, the contents dumped on the front as a list of headings
+   * with no page numbers, because nothing knows what page anything is on until
+   * the pages exist. This works them out first, and then the contents can say.
+   *
+   * The page numbers are checked against where the headings actually landed
+   * rather than against what the contents renders, because what it renders is
+   * generated content and there is no text node to read. Walking from the
+   * heading up to the page box it ended up in gives the number the contents is
+   * counting, which is the thing worth being sure of.
+   */
+  await step('exporting lays the document out as pages, with a contents', async () => {
+    const exported = await page.evaluate(async () => {
+      await window.webPartHarness.start({
+        contentSource: 'library',
+        selectedLibrary: '/sites/demo/Documents',
+        selectedFile: '/sites/demo/Documents/handbook.md',
+        showToolbar: 'always',
+        showExportButton: true,
+        exportCoverPage: true,
+        exportContentsPage: true,
+        tocMaxLevel: 3
+      });
+      await new Promise((resolve) => setTimeout(resolve, 800));
+
+      const button = Array.prototype.slice
+        .call(document.querySelectorAll('#host .strata-toolbar-actions .strata-btn'))
+        .filter((b) => (b.textContent || '').indexOf('Export') !== -1)[0];
+      if (!button) { return { failed: 'there is no export button' }; }
+
+      /* Nothing opens a print dialog in a headless browser. What is worth
+         knowing is that it was asked for, and what the page looked like when
+         it was. */
+      const asked = [];
+      const realPrint = window.print;
+      window.print = () => {
+        asked.push(document.documentElement.getAttribute('data-strata-export'));
+      };
+
+      button.click();
+
+      /* Paged.js is a chunk that has to load before it can lay anything out. */
+      const deadline = Date.now() + 40000;
+      while (Date.now() < deadline
+        && !document.querySelector('.strata-export-root .pagedjs_page')) {
+        await new Promise((resolve) => setTimeout(resolve, 200));
+      }
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+
+      const root = document.querySelector('.strata-export-root');
+      if (!root) { window.print = realPrint; return { failed: 'nothing was laid out' }; }
+
+      const pageOf = (element) => {
+        let node = element;
+        while (node && node !== root) {
+          if (node.classList && node.classList.contains('pagedjs_page')) {
+            return parseInt(node.dataset.pageNumber, 10);
+          }
+          node = node.parentElement;
+        }
+        return undefined;
+      };
+
+      /* Everything about the laid-out document is read here, before the print
+         is finished: tearing down destroys the pages, which is the point of
+         it, so anything read afterwards is read off nothing. */
+      const laidOut = {
+        pages: root.querySelectorAll('.pagedjs_page').length,
+        cover: !!root.querySelector('.strata-export-cover'),
+        entries: Array.prototype.slice
+          .call(root.querySelectorAll('.strata-export-contents a'))
+          .map((link) => {
+            const id = (link.getAttribute('href') || '').slice(1);
+            const target = id ? root.querySelector('[id="' + id + '"]') : null;
+            return {
+              label: (link.textContent || '').trim(),
+              landedOn: target ? pageOf(target) : undefined,
+              rendered: window.getComputedStyle(link, '::after').content
+            };
+          })
+      };
+
+      const before = {
+        article: !!document.querySelector('#host .strata-content'),
+        prefixed: document.querySelectorAll('#host .strata-content [id^="strata-export-id-"]').length
+      };
+
+      /* The dialog closing is what puts the page back. */
+      window.dispatchEvent(new Event('afterprint'));
+      await new Promise((resolve) => setTimeout(resolve, 400));
+
+      const after = {
+        root: !!document.querySelector('.strata-export-root'),
+        attribute: document.documentElement.getAttribute('data-strata-export'),
+        article: !!document.querySelector('#host .strata-content'),
+        pagedStyles: document.querySelectorAll('style[data-pagedjs-inserted-styles]').length
+      };
+
+      window.print = realPrint;
+      return {
+        pages: laidOut.pages,
+        cover: laidOut.cover,
+        entries: laidOut.entries,
+        askedToPrint: asked,
+        before: before,
+        after: after
+      };
+    });
+
+    if (exported.failed) throw new Error(exported.failed);
+
+    if (exported.pages < 2) {
+      throw new Error('it laid out ' + exported.pages + ' pages, so nothing was paginated');
+    }
+    if (!exported.cover) throw new Error('the cover page is missing');
+    if (!exported.entries.length) throw new Error('the contents has no entries');
+
+    /* Every entry points at a heading that is on a page. An entry whose target
+       is nowhere is an entry whose page number would be blank. */
+    const lost = exported.entries.filter((entry) => !entry.landedOn);
+    if (lost.length) {
+      throw new Error(lost.length + ' contents entries point at nothing on a page, first: '
+        + JSON.stringify(lost[0].label));
+    }
+
+    /* And the document runs forwards. */
+    for (let i = 1; i < exported.entries.length; i++) {
+      if (exported.entries[i].landedOn < exported.entries[i - 1].landedOn) {
+        throw new Error('the contents runs backwards at ' + JSON.stringify(exported.entries[i].label));
+      }
+    }
+
+    /* The first heading is after the cover and the contents, which is what
+       says the front matter was laid out as pages of its own rather than
+       running into the document. */
+    if (exported.entries[0].landedOn < 3) {
+      throw new Error('the document starts on page ' + exported.entries[0].landedOn
+        + ', so the cover and contents did not take a page each');
+    }
+
+    /* target-counter is the rule a browser does not implement. Paged.js
+       rewrites it into a counter of its own, so seeing one there is what says
+       it was understood rather than dropped. */
+    if (exported.entries[0].rendered.indexOf('counter(') === -1) {
+      throw new Error('the page number was not resolved: ' + exported.entries[0].rendered);
+    }
+
+    if (exported.askedToPrint.length !== 1) {
+      throw new Error('it asked to print ' + exported.askedToPrint.length + ' times, expected one');
+    }
+    if (exported.askedToPrint[0] !== 'on') {
+      throw new Error('the page was not handed to the export before printing');
+    }
+
+    /* The document on screen is not the one that was laid out. */
+    if (!exported.before.article) throw new Error('the document on screen was taken away');
+    if (exported.before.prefixed !== 0) {
+      throw new Error('the copy\'s renamed ids reached the document on screen');
+    }
+
+    /* And the page is given back afterwards. */
+    if (exported.after.root) throw new Error('the export was left standing on the page');
+    if (exported.after.attribute) throw new Error('the page is still handed to the export');
+    if (!exported.after.article) throw new Error('the document did not come back');
+    /* Paged.js writes stylesheets of its own while it works. Left behind, a
+       second export would be laid out through the first one's. */
+    if (exported.after.pagedStyles !== 0) {
+      throw new Error(exported.after.pagedStyles + ' of Paged.js own stylesheets were left on the page');
     }
   });
 

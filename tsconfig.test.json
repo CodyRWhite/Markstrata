@@ -30,6 +30,7 @@
     "src/webparts/markstrata/utils/codeZoom.ts",
     "src/webparts/markstrata/utils/tables.ts",
     "src/webparts/markstrata/utils/folderTree.ts",
-    "src/webparts/markstrata/utils/headingLanding.ts"
+    "src/webparts/markstrata/utils/headingLanding.ts",
+    "src/webparts/markstrata/utils/exportNaming.ts"
   ]
 }

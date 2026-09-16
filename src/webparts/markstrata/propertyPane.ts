@@ -489,12 +489,37 @@ export function paneConfiguration(
               // costs a line and saves someone turning the toggle on and
               // wondering why nothing changed.
               PropertyPaneLabel('toolbarHint', { text: strings.ToolbarHint }),
-              PropertyPaneToggle('showPrintButton', {
-                label: strings.PrintButtonLabel,
+              PropertyPaneToggle('showExportButton', {
+                label: strings.ExportButtonLabel,
                 onText: 'On',
                 offText: 'Off',
                 disabled: properties.toolbarVisibility !== 'always'
               }),
+              PropertyPaneLabel('exportHint', { text: strings.ExportButtonHint }),
+              /* The three below decide what an export contains, so they are
+                 nothing to anybody whose toolbar has no export button in it. */
+              PropertyPaneToggle('exportCoverPage', {
+                label: strings.ExportCoverLabel,
+                onText: 'On',
+                offText: 'Off',
+                disabled: !properties.showExportButton
+                  || properties.toolbarVisibility !== 'always'
+              }),
+              PropertyPaneToggle('exportContentsPage', {
+                label: strings.ExportContentsLabel,
+                onText: 'On',
+                offText: 'Off',
+                disabled: !properties.showExportButton
+                  || properties.toolbarVisibility !== 'always'
+              }),
+              PropertyPaneToggle('exportSectionBreaks', {
+                label: strings.ExportSectionBreaksLabel,
+                onText: 'On',
+                offText: 'Off',
+                disabled: !properties.showExportButton
+                  || properties.toolbarVisibility !== 'always'
+              }),
+              PropertyPaneLabel('exportSectionBreaksHint', { text: strings.ExportSectionBreaksHint }),
               PropertyPaneToggle('showShareButton', {
                 label: strings.ShareButtonLabel,
                 /* Off with following off, because the link it copies is the

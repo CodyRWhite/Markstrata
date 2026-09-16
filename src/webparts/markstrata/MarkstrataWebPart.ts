@@ -60,6 +60,9 @@ import './styles/print.css';
 
 import { MarkdownProcessor, IMarkdownProcessorOptions } from './utils/MarkdownProcessor';
 import { folderOf } from './utils/imagePaths';
+import { fileOf } from './utils/wikiLinks';
+import { PdfExport } from './utils/pdfExport';
+import { documentTitle, exportDate, sourceLabel } from './utils/exportNaming';
 import { DocumentNavigator, ILoadedDocument } from './utils/documentNavigator';
 import {
   documentFromAddress, addressForDocument, addressWithoutDocument,
@@ -132,6 +135,7 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
   private enhancer: ContentEnhancer;
   private viewRenderer: ViewModeRenderer;
   private editManager: EditModeManager;
+  private readonly pdfExport: PdfExport = new PdfExport();
   private versionPanel: VersionPanel;
   private sharePoint: SharePointService;
   private themeProvider: ThemeProvider;
@@ -266,7 +270,7 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
         this.themeOverride.set(family, mode);
         this.render();
       },
-      onPrint: () => window.print()
+      onExport: () => void this.exportPdf()
     });
 
     this.editManager = new EditModeManager(this.processor, this.mermaid, this.enhancer, {
@@ -312,6 +316,7 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
     this.stopping(() => { if (this.navigator) { this.navigator.dispose(); } });
     this.stopping(() => { if (this.enhancer) { this.enhancer.dispose(); } });
     this.stopping(() => { if (this.editManager) { this.editManager.dispose(); } });
+    this.stopping(() => { if (this.pdfExport) { this.pdfExport.dispose(); } });
     super.onDispose();
   }
 
@@ -396,7 +401,10 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
       tocWidthUnit: 'em',
       tocWidthValue: 15,
       toolbarVisibility: 'always',
-      showPrintButton: true,
+      showExportButton: true,
+      exportCoverPage: true,
+      exportContentsPage: true,
+      exportSectionBreaks: false,
       showShareButton: true,
       showSourceInfo: true,
       pinMeta: false,
@@ -408,6 +416,16 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
 
     const properties: Record<string, unknown> = this.properties as unknown as Record<string, unknown>;
     const fallbacks: Record<string, unknown> = defaults as Record<string, unknown>;
+
+    /* This button printed the page before it exported a document, and the
+       setting was called showPrintButton. A page that turned it off meant it,
+       so the old answer is carried over rather than the default putting the
+       button back on a page somebody deliberately took it off. Read through
+       the record, because the old key is not on the interface any more: it
+       only exists in what a page saved before this release. */
+    if (properties.showExportButton === undefined && properties.showPrintButton !== undefined) {
+      properties.showExportButton = properties.showPrintButton;
+    }
 
     Object.keys(fallbacks).forEach((key: string) => {
       if (properties[key] === undefined || properties[key] === null) {
@@ -492,6 +510,47 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
    * sends them to the front page. The configured document is the exception and
    * needs no parameter, because the page address already is its address.
    */
+  /**
+   * The document on screen, laid out as pages and handed to the print dialog.
+   *
+   * Falls back to printing the page as it stands wherever the pages cannot be
+   * worked out. A reader who asked for a PDF should get one: a worse PDF is
+   * better than a button that did nothing and said nothing.
+   */
+  private async exportPdf(): Promise<void> {
+    const article: HTMLElement | null = this.domElement.querySelector('.strata-content');
+    if (!article) {
+      window.print();
+      return;
+    }
+
+    const path: string = this.navigator.path
+      || (this.properties.contentSource === 'url'
+        ? this.properties.fileUrl
+        : this.properties.selectedFile)
+      || '';
+
+    const exported: boolean = await this.pdfExport.run(
+      article,
+      this.domElement.querySelector<HTMLElement>('.strata-root') || undefined,
+      {
+        title: documentTitle(article, fileOf(path)),
+        source: sourceLabel(path),
+        taken: exportDate(new Date()),
+        cover: this.properties.exportCoverPage,
+        contents: this.properties.exportContentsPage,
+        /* The same depth the contents sidebar is set to, so the two agree
+           about how deep this document goes. */
+        contentsMaxLevel: this.properties.tocMaxLevel,
+        sectionBreaks: this.properties.exportSectionBreaks
+      }
+    );
+
+    if (!exported) {
+      window.print();
+    }
+  }
+
   private addressToShare(): string {
     const here: string = window.location.href;
     return this.navigator.path
@@ -676,7 +735,7 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
       resolvedMode: mode,
       showToolbar: this.isToolbarVisible(),
       showThemeSwitcher: this.properties.showThemeSwitcher,
-      showPrintButton: this.properties.showPrintButton,
+      showExportButton: this.properties.showExportButton,
       tocPosition: this.properties.tocPosition,
       tocMaxLevel: this.properties.tocMaxLevel,
       showSourceInfo: this.properties.showSourceInfo,

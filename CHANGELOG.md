@@ -8,6 +8,72 @@ is normally zero. `scripts/set-version.js` stamps it when a release is cut.
 
 Entries below 0.0.10.0 were written before the switch and are three-part.
 
+## 0.0.20.0
+
+- The Print button is an Export button, and what it produces is a document
+  rather than a page cut into paper-sized pieces. A cover with the document's
+  name and where it came from, a contents page carrying the page number each
+  heading actually landed on, running headers naming the document and the
+  section, and breaks that keep a heading with the text under it and a table
+  row off the fold.
+  - The page numbers are the point. Nothing knows what page a heading is on
+    until the pages exist, which is why the old print put the contents sidebar
+    on the front as a bare list of headings. Paged.js works the pages out
+    first, and then `target-counter` can say. It is CSS Paged Media, which
+    print engines implement and browsers do not, so it arrives as a polyfill.
+  - It is a chunk of its own, not part of the bundle, the same arrangement
+    Mermaid has had since the beginning. A reader who never exports never
+    downloads it.
+  - What it does not do is write a PDF outline, the bookmarks pane a reader
+    navigates from, because nothing a page is allowed to ask the browser for
+    produces one. `window.print()` takes no arguments and the Save as PDF
+    dialog has no such option; Chrome will write an outline, but only when it
+    is driven over the DevTools Protocol, which is a headless browser on a
+    server rather than a web part in a tenant. The contents page answers the
+    same need, as something a reader turns to rather than navigates from.
+  - Three settings decide what an export contains: a cover page, a contents
+    page, and whether each top level section starts on a page of its own. The
+    last is off by default, being right for a reference somebody reads a
+    section of at a time and wasteful for a runbook that is two pages long.
+  - The document on screen is never touched. Everything happens to a copy,
+    which is laid out, printed from and thrown away, so the reader's scroll
+    position and the document they were reading are where they left them. The
+    copy's ids are renamed for the same reason: two elements answering to one
+    id would have the contents counting the page of the heading still on
+    screen, which is on no page at all.
+  - The export still opens the browser's print dialog, because that is the
+    only way a page is allowed to make a PDF. Choose "Save as PDF" in it.
+  - A page that turned the print button off keeps it off. The setting was
+    called `showPrintButton` and is carried over, rather than a new default
+    putting a button back that somebody deliberately took away.
+
+- A shared link is one somebody can read. The Share button copied the whole
+  server-relative path with every character in it escaped, so a link to a
+  document three folders down arrived as a wall of per cent signs carrying the
+  site and the library whether or not they said anything:
+
+  ```text
+  ?strataDoc=%2Fsites%2Fwiki%2FDocuments%2FRunbooks%2FDeploy%20notes.md
+  ?strataDoc=Runbooks/Deploy%20notes.md
+  ```
+
+  It is named against the folder the page reads from now, which is the short
+  form `?strataDoc=` has always accepted and the documentation has always
+  recommended, and escaped only where a query value has to be: a per cent
+  sign, an ampersand, a hash and a plus. A space is escaped as well, which is
+  not one of the four and does not need to be, because Teams and Outlook stop
+  autolinking at a raw space and what arrives is half an address. Relative only
+  where relative is clearer: another site, an address rather than a path, or
+  anything more than one folder up is still written out in full.
+
+- The browser harness says what failed rather than failing silently. It printed
+  its summary, then closed the browser, then read the tally again to decide the
+  exit code, and those two readings could disagree: a page error arriving
+  during teardown made a run report "No failures and no page errors." and then
+  exit 1. It happened twice and cost a round of investigation both times,
+  because the run was green everywhere a person would look. Nothing new counts
+  as a problem; whatever turns up is now in the list that gets printed.
+
 ## 0.0.19.4
 
 - A folder inside a folder can be chosen. Picking a library asked SharePoint
