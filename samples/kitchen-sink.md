@@ -233,11 +233,19 @@ Another term
 
 ## Math
 
-Inline: the Lorentz factor is $\gamma = 1/\sqrt{1 - v^2/c^2}$.
+Inline: the Lorentz factor is $\gamma = 1/\sqrt{1 - v^2/c^2}$, and GitHub's
+backtick form $`a^2 + b^2 = c^2`$ beside it.
 
+The sum of the first n numbers is:
 $$
 \sum_{i=1}^{n} i = \frac{n(n+1)}{2}
 $$
+
+A fence labelled `math` is the same block:
+
+```math
+\int_0^1 x^2 \, dx = \frac{1}{3}
+```
 
 ## Diagram
 

@@ -133,6 +133,38 @@ test('block math renders in its own container', () => {
   assert.match(html, /katex/);
 });
 
+/* The commonest way of all to write display maths: a line introducing it, the
+   block under it, and no blank line between them. Without permission to
+   interrupt a paragraph the whole thing was one paragraph of literal LaTeX. */
+test('display math can follow the sentence that introduces it', () => {
+  const html = markdown.render('The formula is:\n$$\nE = mc^2\n$$');
+  assert.match(html, /<div class="strata-math-block">/);
+  assert.doesNotMatch(html, /\$\$/);
+});
+
+test('display math works inside a list item and inside a quote', () => {
+  assert.match(markdown.render('- item\n  $$\n  x = 1\n  $$'), /<li>item<div class="strata-math-block">/);
+  assert.match(markdown.render('> $$\n> x = 1\n> $$'), /<blockquote>\s*<div class="strata-math-block">/);
+});
+
+test('double dollars inside a sentence are display math, not stray dollars', () => {
+  const html = markdown.render('Before $$x^2$$ after.');
+  assert.match(html, /katex-display/);
+  assert.doesNotMatch(html, /\$/);
+});
+
+test("GitHub's backtick form of inline math does not typeset its backticks", () => {
+  const html = markdown.render('The identity $`a+b`$ holds.');
+  assert.match(html, /katex/);
+  assert.doesNotMatch(html.replace(/<[^>]*>/g, ''), /[`\u2018\u2019]/);
+});
+
+test('a fence labelled math is display math, not a code block', () => {
+  const html = markdown.render('```math\nE = mc^2\n```');
+  assert.match(html, /<div class="strata-math-block">/);
+  assert.doesNotMatch(html, /strata-code/);
+});
+
 test('math can be switched off', () => {
   const noMath = new MarkdownProcessor({ enableMath: false });
   const html = noMath.render('$E = mc^2$');
@@ -175,6 +207,23 @@ test('anchors can be switched off', () => {
   const html = plain.render('## Heading');
   assert.match(html, /id="heading"/);
   assert.doesNotMatch(html, /strata-anchor/);
+});
+
+/*
+ * GitHub links a bare `www.` address, and so does this. The switch that allows
+ * it also links every bare word ending in something domain shaped, and `md` is
+ * a country code, so it is narrowed back to what GitHub documents: a file name
+ * in a sentence is a file name.
+ */
+test('a bare www address is a link and a bare file name is not', () => {
+  assert.match(markdown.render('see www.github.com now'), /<a href="http:\/\/www\.github\.com">www\.github\.com<\/a>/);
+  const prose = markdown.render('see notes.md and example.com');
+  assert.doesNotMatch(prose, /<a /);
+});
+
+test('addresses and schemes still autolink as they did', () => {
+  assert.match(markdown.render('http://a.example'), /<a href="http:\/\/a\.example">/);
+  assert.match(markdown.render('mail me at a@b.com'), /href="mailto:a@b\.com"/);
 });
 
 test('raw HTML is escaped by default and rendered when allowed', () => {

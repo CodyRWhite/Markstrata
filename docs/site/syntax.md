@@ -46,6 +46,10 @@ An abbreviation is declared once and explains itself wherever it appears:
 Headings get an id and, with **Heading link anchors** on, a `#` beside them to
 copy. A link to another site opens in a new tab.
 
+An address written on its own becomes a link, including one that starts
+`www.` with no scheme in front of it. A bare file name does not: `notes.md` in
+a sentence is a file name, not an address.
+
 ### Wiki links
 
 Off by default, under **Wiki links**.
@@ -179,8 +183,19 @@ flowchart LR
 ```
 ````
 
-Inline maths is written `$E = mc^2$` and display maths between `$$` fences.
-Both need **Math (KaTeX)** on.
+Maths needs **Math (KaTeX)** on, and is written whichever way the editor it
+came from writes it:
+
+| Write | Effect |
+|---|---|
+| `$E = mc^2$` | inline, in the line it is in |
+| ``$`E = mc^2`$`` | inline, GitHub's form, for an expression full of markdown characters |
+| `$$E = mc^2$$` | display, in the middle of a sentence |
+| `$$` on its own line, then the maths, then `$$` | display, in a block of its own |
+| a fence labelled ```` ```math ```` | display, the same block |
+
+A display block can follow straight on from the line that introduces it, and
+works inside a list item and inside a quote.
 
 ## Footnotes
 

@@ -33,6 +33,7 @@ import { wikiLinkPlugin } from './markdownItWikiLinks';
 import { tableCaptionPlugin } from './markdownItTableCaptions';
 import { attributeGuardPlugin } from './markdownItAttributeGuard';
 import {
+  ILinkifyMatch,
   IMarkdownIt,
   IRenderer,
   IStateBlock,
@@ -156,6 +157,7 @@ export class MarkdownProcessor {
       breaks: false
     }) as unknown) as IMarkdownIt;
 
+    this.addWwwLinks();
     this.addPlugins();
     this.addCodeBlocks();
     this.addTableWrapper();
@@ -181,6 +183,41 @@ export class MarkdownProcessor {
           this.options.imageBasePath ? resolveAgainst(this.options.imageBasePath, path) : undefined
       });
     }
+  }
+
+  /*
+   * `www.github.com`, with no scheme in front of it, is a link. GitHub says so
+   * and everybody writes one, but markdown-it left it as text.
+   *
+   * The switch that turns it on, linkify-it's `fuzzyLink`, turns on far more
+   * than that: it links every bare word that ends in something resembling a
+   * domain, and `md` is the country code for Moldova. In a viewer for markdown
+   * documents, where a sentence naming `notes.md` is an ordinary sentence, that
+   * trade is not worth making - a file name silently becoming a link to
+   * http://notes.md is a worse bug than the one being fixed.
+   *
+   * So it is turned on and then narrowed to what GitHub actually documents:
+   * a match that carried no scheme of its own is kept only when it begins with
+   * `www.`. Everything written with a scheme, and every address, is untouched.
+   */
+  private addWwwLinks(): void {
+    const linkify = this.markdownIt.linkify;
+    if (!linkify || !linkify.set || !linkify.match) {
+      return;
+    }
+
+    linkify.set({ fuzzyLink: true });
+
+    const matchAll: (text: string) => ILinkifyMatch[] | undefined = linkify.match.bind(linkify);
+    linkify.match = (text: string): ILinkifyMatch[] | undefined => {
+      const found: ILinkifyMatch[] | undefined = matchAll(text);
+      if (!found) {
+        return found;
+      }
+      return found.filter(
+        (candidate: ILinkifyMatch) => !!candidate.schema || /^www\./i.test(candidate.text)
+      );
+    };
   }
 
   private addPlugins(): void {
@@ -459,8 +496,39 @@ export class MarkdownProcessor {
 
   // ------------------------------------------------------------------ math
 
+  /*
+   * The delimiters, and why there are four of them.
+   *
+   *   $x$            inline, TeX's own
+   *   $`x`$          inline, GitHub's, for an expression full of markdown
+   *                  characters that would otherwise be read as markdown
+   *   $$x$$          display, whether it is on a line of its own or not
+   *   ```math        display, which is what GitHub and VS Code render a fence
+   *                  labelled math as
+   *
+   * All four are written by people who never chose them: they are what the
+   * editor they came from writes. A document is not improved by being told it
+   * used the wrong one.
+   */
   private addMath(): void {
-    // Inline: $...$ with guards so prices ("$5 and $10") are not swallowed.
+    this.addInlineMath();
+    this.addBlockMath();
+    this.addFencedMath();
+
+    this.markdownIt.renderer.rules.mdf_math_inline = (tokens: IToken[], index: number): string => {
+      const token: IToken = tokens[index];
+      /* `$$x$$` written inside a sentence is still display maths. KaTeX
+         renders display mode as a span, so it is legal where the sentence
+         put it. */
+      return this.renderInlineMath(token.content, token.markup === '$$');
+    };
+
+    this.markdownIt.renderer.rules.mdf_math_block = (tokens: IToken[], index: number): string =>
+      this.renderMathBlock(tokens[index].content);
+  }
+
+  /** Inline: `$...$`, GitHub's `$`...`$`, and `$$...$$` on a line with prose. */
+  private addInlineMath(): void {
     this.markdownIt.inline.ruler.before('escape', 'mdf_math_inline', (state: IStateInline, silent: boolean): boolean => {
       const start: number = state.pos;
       if (state.src.charCodeAt(start) !== 0x24 /* $ */) {
@@ -470,37 +538,61 @@ export class MarkdownProcessor {
         return false;
       }
 
-      let end: number = start + 1;
-      while (end < state.posMax) {
-        if (state.src[end] === '$' && state.src[end - 1] !== '\\') {
-          break;
-        }
+      /* Two dollars are display maths. Read as one, the rule found an empty
+         body between them, gave up, and left both dollars in the prose with
+         the maths rendered between them. */
+      const marker: string = state.src.charCodeAt(start + 1) === 0x24 ? '$$' : '$';
+
+      let end: number = start + marker.length;
+      while (end + marker.length <= state.posMax) {
         if (state.src[end] === '\n') {
           return false;
+        }
+        if (state.src.slice(end, end + marker.length) === marker && state.src[end - 1] !== '\\') {
+          break;
         }
         end++;
       }
 
-      if (end >= state.posMax) {
+      if (end + marker.length > state.posMax) {
         return false;
       }
 
-      const content: string = state.src.slice(start + 1, end);
-      if (!content || /^\s|\s$/.test(content)) {
+      const body: string = state.src.slice(start + marker.length, end);
+      if (!body.trim()) {
+        return false;
+      }
+      /* A price is not maths. "$5 and $10" has a space against each dollar,
+         which is what tells the two apart, and only single dollars are in any
+         danger of being read that way. */
+      if (marker === '$' && /^\s|\s$/.test(body)) {
         return false;
       }
 
       if (!silent) {
         const token: IToken = state.push('mdf_math_inline', 'math', 0);
-        token.content = content;
-        token.markup = '$';
+        token.content = marker === '$' ? this.unfence(body) : body.trim();
+        token.markup = marker;
       }
 
-      state.pos = end + 1;
+      state.pos = end + marker.length;
       return true;
     });
+  }
 
-    // Block: $$ ... $$
+  /*
+   * GitHub writes an inline expression as ``$`x`$`` so that whatever is in it
+   * cannot be read as markdown on the way past. The backticks are delimiters
+   * and not part of the maths: handed to KaTeX they were typeset as two stray
+   * quote glyphs either side of the expression.
+   */
+  private unfence(body: string): string {
+    const fenced: RegExpExecArray | null = /^`([\s\S]+)`$/.exec(body.trim());
+    return fenced ? fenced[1].trim() : body;
+  }
+
+  /** Block: `$$ ... $$`, on its own lines. */
+  private addBlockMath(): void {
     this.markdownIt.block.ruler.before(
       'fence',
       'mdf_math_block',
@@ -549,29 +641,75 @@ export class MarkdownProcessor {
 
         state.line = nextLine + 1;
         return true;
-      }
+      },
+      /*
+       * The rule has to be allowed to interrupt a paragraph, or the commonest
+       * way of all to write display maths - a sentence introducing it, then
+       * the block on the next line - is not maths at all. Without this the
+       * whole thing was one paragraph with the dollars and the LaTeX showing,
+       * and nothing said why. The same list is what lets it work inside a
+       * quote and inside a list item.
+       */
+      { alt: ['paragraph', 'reference', 'blockquote', 'list'] }
     );
+  }
 
-    this.markdownIt.renderer.rules.mdf_math_inline = (tokens: IToken[], index: number): string => {
-      try {
-        return katex.renderToString(tokens[index].content, { throwOnError: false, output: 'html' });
-      } catch {
-        return `<span class="strata-math-error-inline">${escapeHtml(tokens[index].content)}</span>`;
-      }
-    };
+  /*
+   * A fence labelled `math` is display maths, which is what GitHub and VS Code
+   * both make of it. Rendered as code it came out as a syntax highlighted block
+   * headed MATH, which is a reasonable guess and the wrong one.
+   */
+  private addFencedMath(): void {
+    const defaultFence: RenderRule = this.markdownIt.renderer.rules.fence as RenderRule;
 
-    this.markdownIt.renderer.rules.mdf_math_block = (tokens: IToken[], index: number): string => {
-      try {
-        const html: string = katex.renderToString(tokens[index].content, {
-          throwOnError: false,
-          displayMode: true,
-          output: 'html'
-        });
-        return `<div class="strata-math-block">${html}</div>`;
-      } catch {
-        return `<div class="strata-math-error">${escapeHtml(tokens[index].content)}</div>`;
+    this.markdownIt.renderer.rules.fence = (
+      tokens: IToken[],
+      index: number,
+      options: unknown,
+      environment: unknown,
+      self: IRenderer
+    ): string => {
+      const token: IToken = tokens[index];
+      const language: string = this.fenceInfo(token).trim().toLowerCase();
+      if (language === 'math' || language === 'katex') {
+        return this.renderMathBlock(token.content);
       }
+      return defaultFence(tokens, index, options, environment, self);
     };
+  }
+
+  /*
+   * Display maths in a box of its own, however the document asked for it.
+   *
+   * KaTeX is asked not to throw, so a mistake inside an expression is marked
+   * in red where it is rather than losing the expression. It can still throw
+   * on input it cannot scan at all, and no document deserves to lose a
+   * paragraph over one bad formula: what was written is shown instead.
+   */
+  private renderMathBlock(content: string): string {
+    try {
+      const html: string = katex.renderToString(content.trim(), {
+        throwOnError: false,
+        displayMode: true,
+        output: 'html'
+      });
+      return `<div class="strata-math-block">${html}</div>`;
+    } catch {
+      return `<div class="strata-math-error">${escapeHtml(content)}</div>`;
+    }
+  }
+
+  /** The same, for maths that is part of a sentence. */
+  private renderInlineMath(content: string, displayMode: boolean): string {
+    try {
+      return katex.renderToString(content, {
+        throwOnError: false,
+        displayMode: displayMode,
+        output: 'html'
+      });
+    } catch {
+      return `<span class="strata-math-error-inline">${escapeHtml(content)}</span>`;
+    }
   }
 
   // --------------------------------------------------------------- mermaid

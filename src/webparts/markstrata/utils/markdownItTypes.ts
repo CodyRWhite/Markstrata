@@ -94,8 +94,12 @@ export type BlockRule = (state: IStateBlock, startLine: number, endLine: number,
 export type InlineRule = (state: IStateInline, silent: boolean) => boolean;
 
 export interface IRuler<TRule> {
-  before(beforeName: string, ruleName: string, rule: TRule): void;
-  after(afterName: string, ruleName: string, rule: TRule): void;
+  /**
+   * `options.alt` names the rules this one may interrupt. A block rule that
+   * does not list `paragraph` can only start a block, never break into one.
+   */
+  before(beforeName: string, ruleName: string, rule: TRule, options?: { alt?: string[] }): void;
+  after(afterName: string, ruleName: string, rule: TRule, options?: { alt?: string[] }): void;
   push(ruleName: string, rule: TRule): void;
   /** Replaces a rule that is already registered, keeping its place in the chain. */
   at(ruleName: string, rule: TRule, options?: { alt?: string[] }): void;
@@ -107,11 +111,29 @@ export interface IRuler<TRule> {
   __rules__?: { name: string; fn?: TRule }[];
 }
 
+/** One autolink candidate linkify-it found in a run of text. */
+export interface ILinkifyMatch {
+  /** The scheme it was written with, empty when the text had none. */
+  schema: string;
+  text: string;
+  url: string;
+  index: number;
+  lastIndex: number;
+}
+
+/** The linkify-it instance markdown-it autolinks through. */
+export interface ILinkify {
+  set(options: { fuzzyLink?: boolean; fuzzyEmail?: boolean; fuzzyIP?: boolean }): ILinkify;
+  /** A property rather than a method, because it is wrapped to narrow it. */
+  match: (text: string) => ILinkifyMatch[] | undefined;
+}
+
 export interface IMarkdownIt {
   core: { ruler: IRuler<CoreRule> };
   block: { ruler: IRuler<BlockRule> };
   inline: { ruler: IRuler<InlineRule> };
   renderer: IRenderer;
+  linkify: ILinkify;
   utils: {
     escapeHtml(value: string): string;
     /** Removed in markdown-it 15; MarkdownProcessor restores it for plugins. */

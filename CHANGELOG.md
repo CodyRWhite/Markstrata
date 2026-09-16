@@ -48,6 +48,24 @@ Entries below 0.0.10.0 were written before the switch and are three-part.
   offered a brace group whose every part is a class, an id or a `key=value`
   pair. Anything else is text that happens to end in braces, and stays text.
 
+- Display maths written the way almost everybody writes it now renders as
+  maths. A `$$` block placed straight under the line that introduces it, with
+  no blank line between, was not maths at all: the whole thing came out as one
+  paragraph with the dollars and the LaTeX showing, and nothing said why. The
+  block rule had never been given permission to interrupt a paragraph, which is
+  also what kept it from working inside a list item or a quote. Three more
+  forms are recognised with it: `$$x$$` inside a sentence, which used to leave
+  a stray dollar either side of the maths; GitHub's `` $`x`$ ``, whose
+  backticks were being typeset as two quote glyphs; and a fence labelled
+  `math`, which GitHub and VS Code both render as display maths and which came
+  out here as a code block headed MATH.
+- An address written as `www.github.com`, with no scheme in front of it, is now
+  a link, which is what GitHub does with one. The switch that allows it also
+  links every bare word ending in something domain shaped, and `md` is the
+  country code for Moldova, so a sentence naming `notes.md` would have been
+  turned into a link to a website. It is narrowed back to the `www.` form that
+  GitHub documents: a file name in a sentence is still a file name.
+
 ## 0.0.18.3
 
 - The split editor is one editor again. The box you typed in stopped at its own
