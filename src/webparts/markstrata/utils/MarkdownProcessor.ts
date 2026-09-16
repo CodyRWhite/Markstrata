@@ -20,7 +20,8 @@
  * Ships in:  the web part bundle
  * Requires:  markdownItCallouts.ts, markdownItTaskLists.ts, codeBlocks.ts,
  *            imagePaths.ts, frontMatter.ts, markdownItWikiLinks.ts,
- *            markdownItTableCaptions.ts, markdownItTypes.ts
+ *            markdownItTableCaptions.ts, markdownItAttributeGuard.ts,
+ *            markdownItTypes.ts
  */
 
 import { calloutPlugin } from './markdownItCallouts';
@@ -30,6 +31,7 @@ import { resolveAgainst } from './imagePaths';
 import { splitFrontMatter, ISplitDocument } from './frontMatter';
 import { wikiLinkPlugin } from './markdownItWikiLinks';
 import { tableCaptionPlugin } from './markdownItTableCaptions';
+import { attributeGuardPlugin } from './markdownItAttributeGuard';
 import {
   IMarkdownIt,
   IRenderer,
@@ -199,6 +201,10 @@ export class MarkdownProcessor {
     };
 
     register('attributes', markdownItAttrs, { leftDelimiter: '{', rightDelimiter: '}', allowedAttributes: ['id', 'class'] });
+    /* Straight after, so the plugin above is only ever shown a brace group it
+       can really use. Left to itself it takes any trailing `{...}`, keeps
+       nothing out of it, and deletes the text it was holding. */
+    register('attribute guard', attributeGuardPlugin);
 
     /*
      * A fence's line spec has to be taken before markdown-it-attrs runs.

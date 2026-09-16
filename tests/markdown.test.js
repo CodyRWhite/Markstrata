@@ -43,6 +43,32 @@ test('multimd table extensions still work on markdown-it 15', () => {
  * A row of wiki links or of bracketed cells was swallowed whole: the caption
  * appeared, the row did not, and nothing on the page said a row had been lost.
  */
+/*
+ * markdown-it-attrs reads a brace group at the end of a block as an attribute
+ * list, and it used to take the braces before looking at what was in them:
+ * what it could not use it dropped, and the text went with it. A shell
+ * variable, a LaTeX environment and a template placeholder all end a line in
+ * braces, and all three were being deleted without a word.
+ */
+test('a trailing brace group that is not attributes stays on the page', () => {
+  assert.match(markdown.render('- The shell uses ${HOME}'), /<li>The shell uses \$\{HOME\}<\/li>/);
+  assert.match(markdown.render('# Config {env}'), /Config \{env\}<\/h1>/);
+  assert.match(
+    markdown.render('| a | b |\n|---|---|\n| home | ${HOME} |'),
+    /<td>\$\{HOME\}<\/td>/
+  );
+  assert.match(markdown.render('\\begin{align}\nx = 1\n\\end{align}'), /\\end\{align\}/);
+  assert.match(markdown.render('{HOME}'), /<p>\{HOME\}<\/p>/);
+});
+
+test('a trailing brace group that is attributes is still read as attributes', () => {
+  assert.match(markdown.render('text {.center}'), /<p class="center">text<\/p>/);
+  assert.match(markdown.render('# Head {#custom}'), /<h1 id="custom"/);
+  assert.match(markdown.render('- item {.red}'), /<li class="red">item<\/li>/);
+  assert.match(markdown.render('# H {.a #b}'), /<h1 class="a" id="b"/);
+  assert.match(markdown.render('item\n{.cls}'), /<p class="cls">item<\/p>/);
+});
+
 test('a row of bracketed cells stays a row instead of becoming a caption', () => {
   const html = markdown.render('A | B\n-- | --\n[x] | [y]');
   assert.match(html, /<tbody>/);

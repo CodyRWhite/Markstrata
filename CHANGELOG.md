@@ -26,6 +26,19 @@ Entries below 0.0.10.0 were written before the switch and are three-part.
   that quietly disagreed with Teams would be worse than an honest partial
   check.
 
+- A line that ends in braces keeps them. `${HOME}` at the end of a list item,
+  `{env}` at the end of a heading, a shell variable in the last cell of a table
+  and the `\end{align}` closing a LaTeX environment were all being deleted, and
+  what was left was a stray `$` or nothing at all. The attribute syntax reads a
+  brace group at the end of a block as a list of classes and ids, and it took
+  the braces before looking inside them: anything it could not use was dropped,
+  along with the text it was holding. Shell variables, template placeholders,
+  config keys and LaTeX environments are what a runbook is made of, and all of
+  them end a line in braces. The syntax still works, because `{.class}` and
+  `{#id}` are documented here and somebody's document uses them; it is now only
+  offered a brace group whose every part is a class, an id or a `key=value`
+  pair. Anything else is text that happens to end in braces, and stays text.
+
 ## 0.0.18.3
 
 - The split editor is one editor again. The box you typed in stopped at its own
