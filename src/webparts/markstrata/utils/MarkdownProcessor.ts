@@ -22,7 +22,7 @@
  *            imagePaths.ts, frontMatter.ts, markdownItWikiLinks.ts,
  *            markdownItTableCaptions.ts, markdownItAttributeGuard.ts,
  *            markdownItTableCells.ts, markdownItStrikethrough.ts,
- *            markdownItComments.ts, markdownItTypes.ts
+ *            markdownItComments.ts, markdownItTypes.ts, htmlSanitiser.ts
  */
 
 import { calloutPlugin } from './markdownItCallouts';
@@ -36,6 +36,7 @@ import { attributeGuardPlugin } from './markdownItAttributeGuard';
 import { tableCellPlugin } from './markdownItTableCells';
 import { strikethroughPlugin } from './markdownItStrikethrough';
 import { commentPlugin } from './markdownItComments';
+import { sanitiseRenderedHtml } from './htmlSanitiser';
 import {
   ILinkifyMatch,
   IMarkdownIt,
@@ -134,7 +135,14 @@ export class MarkdownProcessor {
          document. Left in, it renders as a rule and a heading of its own keys.
          What it held is read back separately, by whoever wants the footer. */
       const document: ISplitDocument = splitFrontMatter(markdown || '');
-      return this.unwrapToc(this.markdownIt.render(document.body));
+      const html: string = this.unwrapToc(this.markdownIt.render(document.body));
+      /* Only when raw HTML is allowed. With it off markdown-it has escaped
+         every tag the author wrote, so the string holds no HTML but ours and
+         there is nothing to take out of it.
+
+         Inside the try on purpose: a sanitiser that cannot run must not fall
+         back to handing the unsanitised string to the page. */
+      return this.options.allowHtml ? sanitiseRenderedHtml(html) : html;
     } catch (error) {
       const message: string = (error as Error).message || 'Unknown error';
       return `<div class="strata-error">Could not render this markdown: ${escapeHtml(message)}</div>`;

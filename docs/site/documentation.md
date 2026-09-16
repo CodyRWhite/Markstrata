@@ -493,6 +493,21 @@ setting.
 > `securityLevel: 'strict'` and HTML labels disabled, so diagram text can never
 > become markup.
 
+With the setting on, the rendered page is sanitised before anybody sees it.
+`<script>`, every `on*` handler and every `javascript:` address are taken out,
+along with `<object>`, `<embed>`, `<base>`, `<form>` and `<meta>`. Formatting
+HTML is kept: `<sub>`, `<sup>`, `<kbd>`, `<br>`, `<details>`, `<summary>`,
+tables, and a `<div>` or `<span>` with a class.
+
+`<iframe>` is kept as well, since an embedded video is usually the reason the
+setting is on at all, but only when it points somewhere on a fixed list:
+YouTube, YouTube's no-cookie address, Vimeo, Microsoft Stream, Forms, Power BI,
+Teams, any SharePoint address on any tenant, and the site the page itself is
+on. Anywhere else and the frame is dropped. The host is read from the parsed
+address rather than matched in the text, so a URL that merely mentions an
+allowed host is not one. An `srcdoc` is dropped whatever the host, because a
+frame carrying its own document never visits the host it names.
+
 `npm audit --omit=dev` reports no advisories: nothing that ships to the browser
 has a known vulnerability.
 

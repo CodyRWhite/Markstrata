@@ -248,4 +248,6 @@ tags: [ops, sharepoint]
 ## Raw HTML
 
 Escaped unless **Allow raw HTML in markdown** is on. Callout titles are escaped
-either way.
+either way. With the setting on the page is sanitised: formatting tags and
+embeds from a few known hosts are kept, and scripting is not. See
+[Security](/docs/#security).
