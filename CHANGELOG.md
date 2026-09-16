@@ -61,6 +61,25 @@ Entries below 0.0.10.0 were written before the switch and are three-part.
   rather than beside it, so the browser's own Back button walks the same path
   and the two cannot disagree about where the reader has been.
 
+- A Word, Excel or PowerPoint file named by `![[Quarterly report.docx]]` is
+  drawn as a card rather than as a link to a download. The card carries the
+  file's name, a link that opens it in Word for the web, and SharePoint's own
+  preview of it in a frame underneath. The document is never copied anywhere:
+  the frame is SharePoint's page and it answers with the reader's own session,
+  so somebody who may not open the file sees SharePoint refuse rather than
+  seeing the contents.
+  - The link is the feature and the preview is the enhancement, deliberately.
+    Office for the web sets frame-ancestors and a tenant can be configured in
+    ways that refuse the frame, with no way to detect that from the outside. If
+    the preview never appears the name and the way into the editor are still
+    there, which is better than the link this replaced either way.
+  - The link goes to the file itself rather than to an edit address, so
+    SharePoint decides whether a reader gets the editor or the viewer. It opens
+    in a new tab, because the document being read is the page.
+  - A file the library cannot answer for keeps its card and loses the empty box
+    under it: a blank frame reads as a document with nothing in it, which is a
+    different and wrong thing to say.
+
 - A link inside a document fetched from a URL opens here, the way a link
   inside a document from a library does. The **File URL** source reads markdown
   from anywhere that will answer, and everything relative inside that document

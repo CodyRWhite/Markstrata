@@ -41,6 +41,7 @@ import { attachDiagramTools } from './diagramTools';
 import { DocumentLinkWatcher, followDocumentLinks, secureExternalLinks } from './documentLinks';
 import { HeightFiller } from './fillHeight';
 import { enhanceImages } from './images';
+import { FileIdLookup, buildOfficeCards } from './officeCards';
 import { validateWikiLinks } from './linkCheck';
 import { readingTime } from './documentText';
 import { TableTools } from './tableTools';
@@ -96,6 +97,16 @@ export class ContentEnhancer {
   }
 
   /** Marks wiki links whose target is not in the library. */
+  /**
+   * Turns an `![[Report.docx]]` embed into a card with SharePoint's own
+   * preview in it and the way into the editor beside it.
+   */
+  public async buildOfficeCards(
+    container: HTMLElement, webUrl: string, lookup: FileIdLookup
+  ): Promise<void> {
+    await buildOfficeCards(container, webUrl, lookup);
+  }
+
   public async validateWikiLinks(
     container: HTMLElement,
     listFolder: (folder: string) => Promise<string[] | undefined>

@@ -86,6 +86,20 @@ const LIBRARY_PATH = '/sites/demo/Documents';
    */
   await page.route('**/sites/demo/**', (route, request) => {
     const asked = new URL(request.url()).pathname;
+
+    /* SharePoint's own preview page, which an Office embed puts in a frame.
+       Stood in for here rather than left to fail, because the thing being
+       checked is that the frame is built and addressed correctly - what
+       SharePoint draws inside it is SharePoint's business and is not
+       reachable from a harness at all. */
+    if (asked.indexOf('/_layouts/15/Doc.aspx') !== -1) {
+      return route.fulfill({
+        contentType: 'text/html',
+        body: '<!doctype html><title>Preview</title>'
+          + '<body><p id="stand-in-preview">SharePoint would draw the document here.</p>'
+      });
+    }
+
     const within = asked.indexOf(LIBRARY_PATH) === 0
       ? asked.slice(LIBRARY_PATH.length + 1)
       : '';
@@ -2785,6 +2799,126 @@ const LIBRARY_PATH = '/sites/demo/Documents';
     if (opened.banner) throw new Error(opened.banner);
     if (opened.at.indexOf('Remote deploying') === -1) {
       throw new Error('the blob address went to ' + JSON.stringify(opened.at));
+    }
+  });
+
+  /*
+   * An Office file embedded in a document.
+   *
+   * `![[Quarterly report.docx]]` used to render as a link with a mark on it,
+   * which is a link to a download: the reader either gets a file or loses the
+   * page they were on. It is a card now, with the file's name, the way into
+   * Word beside it, and SharePoint's own preview in a frame underneath.
+   *
+   * The card is built from what the link already says and the preview arrives
+   * afterwards, because the frame is addressed by the file's unique id and
+   * that is a request. So a card with no preview in it is a state worth
+   * checking on purpose: a tenant can refuse the frame and there is no way to
+   * find that out from the outside, so the name and the link have to stand on
+   * their own.
+   */
+  await step('an embedded Office file is a card, not a link to a download', async () => {
+    const card = await page.evaluate(async () => {
+      window.webPartHarness.addressDocument(undefined);
+      await window.webPartHarness.start({
+        contentSource: 'library',
+        selectedLibrary: '/sites/demo/Documents',
+        selectedFile: '/sites/demo/Documents/reports.md',
+        enableWikiLinks: true,
+        followDocumentLinks: true
+      });
+      await new Promise((resolve) => setTimeout(resolve, 900));
+
+      const cards = Array.prototype.slice.call(
+        document.querySelectorAll('#host .strata-office')
+      );
+      if (cards.length !== 2) {
+        return { failed: `${cards.length} cards, expected two` };
+      }
+
+      const read = (element) => {
+        const name = element.querySelector('.strata-office-name');
+        const open = element.querySelector('.strata-office-open');
+        const frame = element.querySelector('iframe.strata-office-frame');
+        const holder = element.querySelector('.strata-office-preview');
+        return {
+          kind: element.getAttribute('data-office'),
+          name: name ? (name.textContent || '').trim() : '',
+          opens: open ? open.getAttribute('href') : '',
+          target: open ? open.getAttribute('target') : '',
+          src: frame ? frame.getAttribute('src') : '',
+          suppressed: holder ? holder.getAttribute('data-strata-no-preview') : ''
+        };
+      };
+
+      return {
+        filed: read(cards[0]),
+        unfiled: read(cards[1]),
+        leftovers: document.querySelectorAll('#host a.strata-wiki-embed').length
+      };
+    });
+
+    if (card.failed) throw new Error(card.failed);
+
+    /* The one the library holds: named, openable, and previewed. */
+    if (card.filed.kind !== 'word') {
+      throw new Error('the card calls it ' + JSON.stringify(card.filed.kind));
+    }
+    if (card.filed.name !== 'Quarterly report.docx') {
+      throw new Error('the card is titled ' + JSON.stringify(card.filed.name));
+    }
+    if ((card.filed.opens || '').indexOf('Quarterly%20report.docx') === -1) {
+      throw new Error('the way into Word points at ' + JSON.stringify(card.filed.opens));
+    }
+    if (card.filed.target !== '_blank') {
+      throw new Error('opening the file would take the reader off the page they are on');
+    }
+    if ((card.filed.src || '').indexOf('/_layouts/15/Doc.aspx') === -1
+      || card.filed.src.indexOf('action=embedview') === -1) {
+      throw new Error('the preview is addressed as ' + JSON.stringify(card.filed.src));
+    }
+
+    /* The one nothing could look up: still a card, with no empty box under it. */
+    if (card.unfiled.name !== 'Missing report.docx') {
+      throw new Error('the second card is titled ' + JSON.stringify(card.unfiled.name));
+    }
+    if (card.unfiled.src) {
+      throw new Error('a file with no id got a frame pointing at '
+        + JSON.stringify(card.unfiled.src));
+    }
+    if (card.unfiled.suppressed !== 'true') {
+      throw new Error('a card with no preview left an empty box behind it');
+    }
+
+    /* And no embed was left as the marked link it started as. */
+    if (card.leftovers !== 0) {
+      throw new Error(card.leftovers + ' embeds were never turned into cards');
+    }
+  });
+
+  await step('and the preview frame really loads what it is pointed at', async () => {
+    /* Scrolled to first: the frame is lazy, which is right when a document
+       holds several of these, and a lazy frame off the bottom of the window
+       has not fetched anything yet. */
+    await page.evaluate(() => {
+      const card = document.querySelector('#host .strata-office');
+      if (card) { card.scrollIntoView(); }
+    });
+    await page.waitForTimeout(800);
+
+    /* Read through Playwright's own view of the frames rather than by reaching
+       into contentDocument, which is empty until the load finishes and says
+       nothing about why. */
+    const preview = page.frames().filter(
+      (frame) => frame.url().indexOf('/_layouts/15/Doc.aspx') !== -1
+    )[0];
+    if (!preview) {
+      throw new Error('no frame is pointed at the preview address; frames: '
+        + JSON.stringify(page.frames().map((frame) => frame.url())));
+    }
+    const text = await preview.locator('#stand-in-preview').textContent();
+    if ((text || '').indexOf('SharePoint would draw the document here') === -1) {
+      throw new Error('the frame shows ' + JSON.stringify(text));
     }
   });
 

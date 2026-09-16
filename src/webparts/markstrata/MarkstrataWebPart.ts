@@ -656,6 +656,12 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
          the navigator keeps, so everything after it is offset by one. */
       onGoToCrumb: (index: number) => { void this.navigator.goTo(index - 1, true); },
       landOnHeading: landOn,
+      /* Only from a library: a preview is addressed by a file's id in this
+         site, and a document fetched from a URL has neither. */
+      officeFileId: this.properties.contentSource === 'library'
+        ? (path: string) => this.sharePoint.getFileId(path)
+        : undefined,
+      webUrl: this.context.pageContext.web.serverRelativeUrl,
       /* A library or a URL can hand over another document; markdown typed
          into the web part cannot, because there is no folder for a link in it
          to mean anything against. And only a reader is reading: in page edit

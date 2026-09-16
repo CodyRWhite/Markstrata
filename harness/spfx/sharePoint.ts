@@ -148,6 +148,31 @@ const REMOTE_DEPLOY: string = [
 put(`${REMOTE_RAW}/Home.md`, REMOTE_HOME);
 put(`${REMOTE_RAW}/Deploy%20runbook.md`, REMOTE_DEPLOY);
 
+/*
+ * A document that embeds an Office file, and the file itself. The file has no
+ * markdown in it and never needs any: what the library has to answer for it is
+ * that it exists and what its id is.
+ */
+const WITH_EMBEDS: string = [
+  '# Reports',
+  '',
+  'This quarter:',
+  '',
+  '![[Quarterly report.docx]]',
+  '',
+  'And one nobody has filed yet, which has no id to preview:',
+  '',
+  '![[Missing report.docx]]',
+  ''
+].join('\n');
+
+put(`${LIBRARY}/reports.md`, WITH_EMBEDS);
+put(`${LIBRARY}/Quarterly report.docx`, '');
+
+const FILE_IDS: { [path: string]: string } = {
+  [`${LIBRARY}/Quarterly report.docx`]: '6f1c2b8e-1111-2222-3333-444455556666'
+};
+
 put(`${LIBRARY}/handbook.md`, typeof SAMPLE === 'string' ? SAMPLE : '# Handbook\n');
 put(`${LIBRARY}/index.md`, INDEX);
 put(`${LIBRARY}/Runbooks/Deploy notes.md`, DEPLOY);
@@ -334,6 +359,17 @@ export class SharePointService {
       putting the web part away stopped it. */
   public static watching(service: SharePointService): boolean {
     return service.pollTimer !== undefined;
+  }
+
+  /**
+   * Harness stand-in for the unique id a preview frame is addressed by. Any
+   * file the stand-in library holds has one; anything else has none, which is
+   * how a card with no preview in it is driven.
+   */
+  public async getFileId(serverRelativeUrl: string): Promise<string | undefined> {
+    return SharePointService.answer(
+      files[serverRelativeUrl] ? FILE_IDS[serverRelativeUrl] : undefined
+    );
   }
 
   public static async fetchUrl(url: string): Promise<string> {

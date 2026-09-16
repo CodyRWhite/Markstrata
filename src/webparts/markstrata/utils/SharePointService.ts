@@ -208,6 +208,27 @@ export class SharePointService {
     }
   }
 
+  /**
+   * A file's unique id, which is what a preview frame is addressed by.
+   *
+   * `/_layouts/15/Doc.aspx?sourcedoc={id}` is the address SharePoint's own
+   * File, Share, Embed dialog produces, and it takes the id rather than the
+   * path. Undefined when the file is not there or the reader may not see it,
+   * which the caller draws as a card with no preview in it rather than as a
+   * failure: not being allowed to look inside a document is an ordinary thing
+   * to happen in a library.
+   */
+  public async getFileId(serverRelativeUrl: string): Promise<string | undefined> {
+    try {
+      const file: { UniqueId?: string } = await this.sp.web
+        .getFileByServerRelativePath(serverRelativeUrl)
+        .select('UniqueId')();
+      return file && file.UniqueId ? file.UniqueId : undefined;
+    } catch {
+      return undefined;
+    }
+  }
+
   public async saveFileContent(serverRelativeUrl: string, content: string): Promise<void> {
     await this.sp.web.getFileByServerRelativePath(serverRelativeUrl).setContent(content);
   }

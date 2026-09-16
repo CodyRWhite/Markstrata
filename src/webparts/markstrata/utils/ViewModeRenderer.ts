@@ -73,6 +73,14 @@ export interface IViewOptions {
   documentTrail?: string[];
   /** A crumb was clicked, by its place in documentTrail. */
   onGoToCrumb?: (index: number) => void;
+  /**
+   * Asked for a file's unique id, so an `![[Report.docx]]` embed can be drawn
+   * with SharePoint's own preview in it. Undefined leaves those embeds as the
+   * marked links they render as.
+   */
+  officeFileId?: (path: string) => Promise<string | undefined>;
+  /** The site the page is on, server relative: the preview is addressed from it. */
+  webUrl?: string;
   /** A heading in the document to land on once it is drawn, from a link. */
   landOnHeading?: string;
   backToTop?: BackToTop;
@@ -219,6 +227,13 @@ export class ViewModeRenderer {
        answer arrives rather than the page waiting on it. */
     if (options.listFolder) {
       void this.enhancer.validateWikiLinks(article, options.listFolder);
+    }
+
+    /* Also left to settle in on its own. The card is drawn synchronously with
+       everything a reader needs on it; only the preview inside it waits on
+       SharePoint, and a document is readable without it. */
+    if (options.officeFileId && options.webUrl) {
+      void this.enhancer.buildOfficeCards(article, options.webUrl, options.officeFileId);
     }
 
     if (options.enableMermaid) {

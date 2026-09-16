@@ -359,3 +359,74 @@
   white-space: nowrap;
   border: 0;
 }
+
+/* ---------------------------------------------------------- office embeds */
+
+/*
+ * A Word, Excel or PowerPoint file named by an `![[embed]]`, shown as a card
+ * rather than as a link to a download.
+ *
+ * Built so the card still reads correctly with no preview in it, because a
+ * tenant can refuse the frame and there is no reliable way to find that out
+ * from here. The name and the way into the editor are the card; the preview is
+ * what fills the space under them when it can.
+ */
+.strata-office {
+  margin: 1.2em 0;
+  border: 1px solid var(--strata-border);
+  border-radius: var(--strata-radius-sm);
+  background-color: var(--strata-bg-elevated);
+  overflow: hidden;
+}
+
+.strata-office-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--strata-border);
+  font-size: 0.875em;
+}
+
+.strata-office-name {
+  font-weight: 600;
+  color: var(--strata-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Pushed to the end rather than floated, so a long file name shortens itself
+   instead of pushing the way out of the card off the edge. */
+.strata-office-open {
+  margin-left: auto;
+  flex: none;
+  color: var(--strata-link);
+}
+
+.strata-office-preview {
+  /* Roughly a page of A4 at the width a document column tends to be. Tall
+     enough to read the top of the document, short enough that a card does not
+     take the whole screen when several are on one page. */
+  height: 460px;
+}
+
+/* No id came back, so there is no frame. The space goes with it: an empty box
+   reads as a document with nothing in it, which is a different and wrong
+   thing to say. */
+.strata-office-preview[data-strata-no-preview='true'] {
+  display: none;
+}
+
+.strata-office-frame {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+/* On paper a frame prints as an empty rectangle, so only the card's own line
+   about which document it is survives. */
+@media print {
+  .strata-root .strata-office-preview { display: none; }
+}
