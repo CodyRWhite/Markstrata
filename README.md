@@ -15,31 +15,31 @@
 [![Release](https://img.shields.io/github/v/release/CodyRWhite/Markstrata?include_prereleases&label=release)](https://github.com/CodyRWhite/Markstrata/releases/latest)
 [![SPFx](https://img.shields.io/badge/SPFx-1.23.2-0078d4)](https://learn.microsoft.com/en-us/sharepoint/dev/spfx/sharepoint-framework-overview)
 [![Licence: MIT](https://img.shields.io/badge/licence-MIT-green)](./LICENSE)
-[![Live demo](https://img.shields.io/badge/demo-live-36a7ca)](https://codywhite.me/Markstrata/demo/)
+[![Live demo](https://img.shields.io/badge/demo-live-36a7ca)](https://markstrata.com/demo/)
 [![Buy me a coffee](https://img.shields.io/badge/buy%20me%20a%20coffee-ffdd00?logo=buymeacoffee&logoColor=000)](https://buymeacoffee.com/codyrwhite)
 
 A SharePoint Framework (SPFx) web part that renders markdown from a document
 library, a URL, or typed straight into the page, with themes that mirror how
 **GitHub**, **Obsidian** and **VS Code** display markdown, in light and dark.
 
-**[Try it in your browser](https://codywhite.me/Markstrata/demo/)**:
+**[Try it in your browser](https://markstrata.com/demo/)**:
 the live demo runs the web part's own renderer. Switch themes, fold callouts,
 copy code, open the property pane and type in the split editor. No install
 needed.
 
 > **Documentation lives on the site**, which is in two halves.
 >
-> Evaluating it: [install](https://codywhite.me/Markstrata/install/) ·
-> [Teams](https://codywhite.me/Markstrata/teams/) ·
-> [themes](https://codywhite.me/Markstrata/themes/) ·
-> [why it exists](https://codywhite.me/Markstrata/about/) ·
-> [support the project](https://codywhite.me/Markstrata/support/)
+> Evaluating it: [install](https://markstrata.com/install/) ·
+> [Teams](https://markstrata.com/teams/) ·
+> [themes](https://markstrata.com/themes/) ·
+> [why it exists](https://markstrata.com/about/) ·
+> [support the project](https://markstrata.com/support/)
 >
-> Using it: [settings](https://codywhite.me/Markstrata/docs/) ·
-> [syntax](https://codywhite.me/Markstrata/syntax/) ·
-> [linking documents](https://codywhite.me/Markstrata/linking/) ·
-> [reading](https://codywhite.me/Markstrata/reading/) ·
-> [editing in the page](https://codywhite.me/Markstrata/editing/)
+> Using it: [settings](https://markstrata.com/docs/) ·
+> [syntax](https://markstrata.com/syntax/) ·
+> [linking documents](https://markstrata.com/linking/) ·
+> [reading](https://markstrata.com/reading/) ·
+> [editing in the page](https://markstrata.com/editing/)
 >
 > This file covers what a reader of the repository needs: what it is, how to
 > build it, and how to work on it.
@@ -75,8 +75,8 @@ with links to pages that are not there marked. A reading time can sit in the
 toolbar and a back-to-top button can float above the page.
 
 Every piece of syntax, with what you write beside what it turns into:
-**[the syntax page](https://codywhite.me/Markstrata/syntax/)**. Every setting:
-**[the settings page](https://codywhite.me/Markstrata/docs/)**.
+**[the syntax page](https://markstrata.com/syntax/)**. Every setting:
+**[the settings page](https://markstrata.com/docs/)**.
 
 ## Why it exists
 
@@ -96,7 +96,7 @@ actually written in. The code here is written from scratch.
 | Third-party CDN | Mermaid, KaTeX CSS and Monaco fetched at runtime | Nothing from a CDN; Mermaid is a lazy chunk of the package |
 | Dependencies | markdown-it 13 (ReDoS), KaTeX 0.16.9 (5 CVEs) | Current versions, no advisories against code that ships to the browser |
 
-The [about page](https://codywhite.me/Markstrata/about/) has the longer version,
+The [about page](https://markstrata.com/about/) has the longer version,
 including the issues and the security review that shaped what got built.
 
 ## Install
@@ -118,7 +118,7 @@ Every release ships the package under the same name. The App Catalog matches an
 upload to the solution it replaces by file name, so a version in the name gets
 the upload refused; the version lives in the tag and inside the package.
 
-[Fuller install notes, including what it asks of a tenant.](https://codywhite.me/Markstrata/install/)
+[Fuller install notes, including what it asks of a tenant.](https://markstrata.com/install/)
 
 ### Security
 
@@ -187,7 +187,7 @@ own. The `.sppkg` still has to be installed there, because that is where the tab
 loads the web part from. What the harness cannot cover - Teams, and the
 full-page app host - is a manual check list in
 [CONTRIBUTING.md](./CONTRIBUTING.md), and
-[the Teams page](https://codywhite.me/Markstrata/teams/) is the tenant-facing
+[the Teams page](https://markstrata.com/teams/) is the tenant-facing
 version of the same thing.
 
 Branch, commit and release conventions are in

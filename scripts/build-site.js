@@ -48,6 +48,29 @@ PAGES.forEach((page) => {
   }
 });
 
+/*
+ * The two documents the themes page links to.
+ *
+ * That page renders the sample that exercises everything, and part of what it
+ * demonstrates is a wiki link: `[[deploy]]` resolves to `deploy.md` beside the
+ * page it is on. In a library that opens inside the web part. On a website
+ * there is no library, so without these a reader clicking the feature being
+ * demonstrated got a 404 from GitHub Pages.
+ *
+ * Copied rather than rendered, because a wiki link points at a markdown file
+ * and that is what it should hand over. Each one says what it is and why it
+ * exists, so a reader who follows one is not left wondering.
+ */
+const STUBS = path.join(root, 'docs', 'site', 'stubs');
+const themesFolder = PAGES.filter((entry) => entry.id === 'themes')[0];
+if (themesFolder) {
+  const into = path.join(siteDir, themesFolder.folder);
+  fs.readdirSync(STUBS).forEach((name) => {
+    fs.copyFileSync(path.join(STUBS, name), path.join(into, name));
+  });
+  console.log(`\nCopied ${fs.readdirSync(STUBS).length} linked documents into /${themesFolder.folder}/`);
+}
+
 // Pages serves this as-is rather than running it through Jekyll.
 fs.writeFileSync(path.join(siteDir, '.nojekyll'), '');
 

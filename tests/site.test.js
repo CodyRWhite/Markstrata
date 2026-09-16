@@ -18,6 +18,7 @@ const assert = require('node:assert/strict');
 const fs = require('fs');
 const path = require('path');
 const { PAGES, SECTIONS, page, linkTo } = require('../scripts/site');
+const { MarkdownProcessor } = require('./helpers');
 
 const root = path.join(__dirname, '..');
 
@@ -167,4 +168,56 @@ test('no em dashes in the prose this project ships', () => {
 
 test('an unknown page id fails loudly', () => {
   assert.throws(() => page('nope'), /no site page called/);
+});
+
+/*
+ * The themes page renders the sample document, and part of what that document
+ * demonstrates is a wiki link: `[[deploy]]` resolves to `deploy.md` beside the
+ * page it is on. In a library that opens inside the web part. On a website
+ * there is no library, so a reader clicking the feature being demonstrated got
+ * GitHub Pages' 404 - on the page whose job is showing the thing working.
+ *
+ * The documents it links to are published beside it. This checks the sample
+ * and the stubs have not drifted apart, in either direction: a new wiki link in
+ * the sample needs a document, and a stub nobody links to is dead weight.
+ */
+test('every wiki link on the themes page has somewhere to land', () => {
+  const stubs = path.join(root, 'docs', 'site', 'stubs');
+  const themes = PAGES.filter((entry) => entry.id === 'themes')[0];
+  assert.ok(themes && themes.source, 'the themes page no longer renders a document');
+
+  /*
+   * Rendered rather than read. Three shapes in the sample wear the same
+   * brackets and none of them is a link to a document: `[[toc]]` is consumed
+   * by the contents plugin, `[[Another page]]` inside a code span is an
+   * example of the syntax, and `![[brand/mark.svg]]` is a picture. Reading the
+   * markdown means reasoning about all three and getting one wrong; rendering
+   * it with the settings the page really uses means asking the code what it
+   * actually produced.
+   */
+  const html = new MarkdownProcessor(
+    Object.assign({ enableToc: true }, themes.render || {})
+  ).render(fs.readFileSync(path.join(root, themes.source), 'utf8'));
+
+  const linked = new Set();
+  const anchors = /<a [^>]*class="[^"]*strata-wiki-link[^"]*"[^>]*>/g;
+  let tag;
+  while ((tag = anchors.exec(html)) !== null) {
+    const href = /href="([^"]*)"/.exec(tag[0]);
+    if (!href || href[1].charAt(0) === '#') { continue; }
+    linked.add(decodeURIComponent(href[1].split('#')[0]).replace(/\.md$/, ''));
+  }
+  assert.ok(linked.size > 0, 'the sample no longer links to any document');
+
+  const published = new Set(fs.readdirSync(stubs).map((name) => name.replace(/\.md$/, '')));
+
+  for (const target of linked) {
+    assert.ok(published.has(target),
+      `the themes page links to ${target}.md and docs/site/stubs has no such file, `
+      + 'so a click on the page demonstrating wiki links is a 404');
+  }
+  for (const stub of published) {
+    assert.ok(linked.has(stub),
+      `docs/site/stubs/${stub}.md is published beside the themes page and nothing links to it`);
+  }
 });

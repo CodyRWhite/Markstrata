@@ -27,11 +27,14 @@ const assetsDir = path.join(root, 'assets');
 
 /*
  * Where the site is published, for the absolute URLs link previews require.
- * The path is the repository name and GitHub Pages paths are case-sensitive,
- * so this has to be spelled exactly - it needs updating if the repository is
- * ever renamed again.
+ * A domain of its own rather than a repository path. It used to be
+ * codywhite.me/Markstrata, which is where the project lived before it was its
+ * own thing, and that address was left behind when the rest moved: the
+ * SharePoint package, the Teams manifest and the privacy policy have all said
+ * markstrata.com for some time, so every link preview pointed somewhere the
+ * app itself never mentions.
  */
-const SITE_ORIGIN = process.env.SITE_ORIGIN || 'https://codywhite.me/Markstrata';
+const SITE_ORIGIN = process.env.SITE_ORIGIN || 'https://markstrata.com';
 
 const COPIES = [
   ['icons/favicon-32.png', 'brand/favicon-32.png'],
@@ -72,7 +75,10 @@ function copyBrand(outDir) {
  * answers on its own domain and on the Pages path that redirects to it.
  */
 const ANALYTICS_ID = 'G-9S03B399TB';
-const ANALYTICS_HOSTS = ['markstrata.com', 'www.markstrata.com', 'codywhite.me'];
+/* Where counting visits is meant to happen. Anywhere else - a local build, a
+   preview, a fork - loads nothing, which is what keeps a contributor's own
+   browsing out of the numbers. */
+const ANALYTICS_HOSTS = ['markstrata.com', 'www.markstrata.com'];
 
 function analyticsTag() {
   return `<!-- Google tag (gtag.js) -->
