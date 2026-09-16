@@ -3844,6 +3844,10 @@ const LIBRARY_PATH = '/sites/demo/Documents';
   });
 
   await step('a library that will not answer is a message, not a broken page', async () => {
+    /* The web part reports what it could not fetch. Saying so is the
+       behaviour being checked, not a fault. */
+    expected.push(/could not be told what the site holds/);
+
     const shown = await page.evaluate(async () => {
       window.webPartHarness.refuse(true);
       await window.webPartHarness.start({
@@ -3866,6 +3870,48 @@ const LIBRARY_PATH = '/sites/demo/Documents';
     if (shown.drawn !== 1) throw new Error('nothing was drawn');
     if (shown.banner.indexOf('Could not load') === -1) {
       throw new Error('the page says ' + JSON.stringify(shown.banner));
+    }
+  });
+
+  /*
+   * And it refuses without leaving anything behind.
+   *
+   * The lists the property pane offers are fetched for their effect rather
+   * than their result, so the call was made and not waited on. `void` says the
+   * result is not wanted; it does not say a rejection is not wanted, and a
+   * library that will not answer rejected that lookup into nothing. What
+   * arrived was an unhandled error on the page, at whatever moment the promise
+   * happened to settle, credited to whichever check was running at the time.
+   *
+   * It failed three pull requests before it was caught, and only ever on CI,
+   * because the timing is what decides whether it lands during a check or
+   * after the last one. Deterministic here: refuse, start, wait, and nothing
+   * should have reached the page.
+   */
+  await step('and refuses without leaving an error on the page', async () => {
+    const before = problems.length;
+
+    await page.evaluate(async () => {
+      window.webPartHarness.refuse(true);
+      await window.webPartHarness.start({
+        contentSource: 'library',
+        selectedLibrary: '/sites/demo/Documents',
+        selectedFile: '/sites/demo/Documents/handbook.md'
+      });
+      window.webPartHarness.refuse(false);
+      /* Long enough for a rejection nobody is holding to surface. */
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+    });
+    await new Promise((resolve) => setTimeout(resolve, 500));
+
+    /* A pageerror, specifically. The web part reporting the failure on the
+       console is the fix working; an unhandled rejection reaching the page is
+       the fault, and only one of those is a pageerror. */
+    const leaked = problems.slice(before)
+      .filter((problem) => problem.indexOf('pageerror') === 0
+        && problem.indexOf('told to refuse') !== -1);
+    if (leaked.length) {
+      throw new Error('the refusal reached the page unhandled: ' + JSON.stringify(leaked[0]));
     }
   });
 

@@ -66,6 +66,21 @@ Entries below 0.0.10.0 were written before the switch and are three-part.
   where relative is clearer: another site, an address rather than a path, or
   anything more than one folder up is still written out in full.
 
+- A library that will not answer is reported rather than thrown into the page.
+  The lists the property pane offers are fetched for their effect rather than
+  their result, so the call was made and not waited on. `void` on a promise
+  says the result is not wanted; it does not say a rejection is not wanted, and
+  a library the reader may not list rejected that lookup into nothing. What
+  arrived was an unhandled error on the SharePoint page, at whatever moment the
+  promise happened to settle, with nothing in it to say which web part it came
+  from. It is caught and reported now, along with the other calls made the same
+  way: the version panel and an export.
+
+  This is what had been failing the browser harness on and off, and only ever
+  on CI: whether it landed during a check or after the last one was a matter of
+  timing. Three pull requests were held up by it before the change above made
+  it legible.
+
 - The browser harness says what failed rather than failing silently. It printed
   its summary, then closed the browser, then read the tally again to decide the
   exit code, and those two readings could disagree: a page error arriving

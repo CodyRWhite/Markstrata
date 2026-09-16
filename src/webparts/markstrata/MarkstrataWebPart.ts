@@ -265,12 +265,13 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
       onReload: () => void (this.navigator.path
         ? this.navigator.open(this.navigator.path, '', false)
         : this.loadContent(true)),
-      onShowVersions: () => void this.showVersions(),
+      onShowVersions: () => this.detached('The version history could not be shown.',
+        this.showVersions()),
       onThemeOverride: (family: ThemeFamily, mode: 'light' | 'dark') => {
         this.themeOverride.set(family, mode);
         this.render();
       },
-      onExport: () => void this.exportPdf()
+      onExport: () => this.detached('The document could not be exported.', this.exportPdf())
     });
 
     this.editManager = new EditModeManager(this.processor, this.mermaid, this.enhancer, {
@@ -293,7 +294,8 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
       onRestored: () => void this.loadContent(true)
     });
 
-    void this.paneSources.loadAll().then(() => this.context.propertyPane.refresh());
+    this.detached('The property pane could not be told what the site holds.',
+      this.paneSources.loadAll().then(() => this.context.propertyPane.refresh()));
     await this.loadContent(false);
     await this.openDocumentFromAddress();
   }
@@ -549,6 +551,28 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
     if (!exported) {
       window.print();
     }
+  }
+
+  /**
+   * A promise nobody is waiting on, and somewhere for it to fail.
+   *
+   * These are the calls made for their effect rather than their result: the
+   * lists the property pane offers, the version panel, an export. Failing,
+   * none of them is worth taking the page down for, and none of them has
+   * anybody left to tell.
+   *
+   * What they must not do is fail silently into the page. `void` on a promise
+   * says the result is not wanted; it does not say a rejection is not wanted,
+   * and an unhandled one surfaces as an error on somebody's SharePoint page
+   * with nothing in it to say which web part it came from. The harness caught
+   * it: a stand-in library told to refuse rejected the property pane's own
+   * lookup, and the error arrived while a later check was running, attributed
+   * to that.
+   */
+  private detached(what: string, work: Promise<unknown>): void {
+    work.catch((error: unknown) => {
+      console.error(`[Markstrata] ${what}`, error);
+    });
   }
 
   private addressToShare(): string {
@@ -1107,14 +1131,16 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
     if (propertyPath === 'selectedLibrary') {
       this.properties.selectedFolder = '';
       this.properties.selectedFile = '';
-      void this.paneSources.loadFolders()
-        .then(() => this.paneSources.loadFiles())
-        .then(() => this.context.propertyPane.refresh());
+      this.detached('The folders in that library could not be listed.',
+        this.paneSources.loadFolders()
+          .then(() => this.paneSources.loadFiles())
+          .then(() => this.context.propertyPane.refresh()));
     }
 
     if (propertyPath === 'selectedFolder') {
       this.properties.selectedFile = '';
-      void this.paneSources.loadFiles().then(() => this.context.propertyPane.refresh());
+      this.detached('The files in that folder could not be listed.',
+        this.paneSources.loadFiles().then(() => this.context.propertyPane.refresh()));
     }
 
     if (propertyPath === 'selectedFile' || propertyPath === 'fileUrl') {
