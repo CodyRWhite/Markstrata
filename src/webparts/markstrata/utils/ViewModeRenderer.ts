@@ -24,6 +24,7 @@ import { MarkdownProcessor } from './MarkdownProcessor';
 import { MermaidRenderer } from './MermaidRenderer';
 import { DiagramWidth } from './mermaidConfig';
 import { ContentEnhancer, ITocEntry } from './ContentEnhancer';
+import { landOnHeading } from './headingLanding';
 import {
   ThemeManager,
   IThemeSettings,
@@ -197,7 +198,16 @@ export class ViewModeRenderer {
        view is decided by measuring them rather than by reading the markdown. */
     this.enhancer.attachCodeZoom(article, options.enableImageZoom !== false);
     this.enhancer.secureExternalLinks(article);
-    this.enhancer.followDocumentLinks(article, options.documentBase, options.openDocument);
+    this.enhancer.followDocumentLinks(
+      article,
+      options.documentBase,
+      options.openDocument,
+      /* An anchor into this document scrolls here rather than being handed to
+         the page's router, which would take the reader back to the configured
+         document with the fragment still on the address. Smoothly, so it
+         arrives the way the contents list already arrives. */
+      (heading: string) => { landOnHeading(article, heading, true); }
+    );
     this.enhancer.enhanceImages(article, options.enableImageZoom !== false);
     this.enhancer.enhanceTables(article, options.enableTableSort !== false);
 
@@ -228,14 +238,12 @@ export class ViewModeRenderer {
        now, so this is the moment it can be scrolled to. The offset above is
        what keeps it clear of the chrome, so it has to be set first. */
     if (options.landOnHeading) {
-      const landing: HTMLElement | null = article.querySelector(
-        `#${(window.CSS && window.CSS.escape
-          ? window.CSS.escape(options.landOnHeading)
-          : options.landOnHeading)}`
-      );
-      if (landing) {
-        landing.scrollIntoView();
-      }
+      /* By every spelling the name might have, not just the one written. A
+         wiki link arrives already slugged; a heading named on the page's own
+         address arrives as somebody typed it, so `#Rollback` was looked up as
+         `Rollback` and matched nothing, and the reader was left at the top of
+         the right document. */
+      landOnHeading(article, options.landOnHeading);
     }
 
     /* Left to settle in on its own: the document is readable while this is in

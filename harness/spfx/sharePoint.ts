@@ -75,16 +75,34 @@ const DEPLOY: string = [
   ''
 ].join('\n');
 
+/*
+ * Carries an anchor into itself, written the way a person writes one: the
+ * heading's own words, capitalised, rather than the id the heading was given.
+ * Both halves of the anchor fault are in that one link. Left to the browser it
+ * is a navigation as far as a SharePoint page's router is concerned, and the
+ * name does not match the id unless it is slugged on the way to the lookup.
+ *
+ * With enough between the link and the heading that landing on it is a
+ * measurable thing to have happened: a document shorter than the window
+ * cannot scroll, and a check on where the heading sits would be measuring that
+ * rather than the scroll.
+ */
 const ROLLBACK: string = [
   '# Rolling back',
   '',
   'The other end of the link in [deploying](deploy.md).',
   '',
+  'Straight to [[#When to roll back]].',
+  '',
+  ...new Array(60).fill('Filler, so the heading below can reach the top.'),
+  '',
   '## When to roll back',
   '',
   'When the thing that came up is worse than the thing that was there.',
+  '',
+  ...new Array(20).fill('More filler, so the heading can sit at the top.'),
   ''
-].join('\n');
+].join('\n\n');
 
 interface IStoredFile {
   markdown: string;
