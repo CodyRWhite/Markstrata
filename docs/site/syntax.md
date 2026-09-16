@@ -178,6 +178,7 @@ matter:
 |---|---|
 | `wrap` / `nowrap` | wrap long lines, or scroll them |
 | `numbers` / `nonumbers` | show or hide the line gutter |
+| `short` / `medium` / `full` | cap the block's height, or leave it as tall as its code |
 | `{2,4-6}` | call out those lines and fade the rest |
 
 ````markdown
@@ -187,6 +188,74 @@ matter:
 ```js {2,4-6}
 ```
 ````
+
+### Block height
+
+`short` caps a block at about ten lines and `medium` at about twenty-five, and
+either scrolls inside rather than running down the page. `full` is the default
+and is a block as tall as its code.
+
+````markdown
+```python short
+```
+````
+
+The caps are counted in lines rather than written in pixels, so they mean the
+same thing in every theme and follow the **Code text size** setting. Ten lines
+is roughly a paragraph of prose; twenty-five is over half a laptop window, so a
+capped block still has the text before and after it on screen with it.
+
+There is a page setting for the default, **Block height** in the **Code blocks**
+group, so a page can make every block medium without touching the documents. A
+word on a fence beats it, the way `wrap` and `numbers` already do.
+
+A capped block prints whole. There is no scrolling on paper, and printing the
+first ten lines of a listing and losing the rest is worse than printing all of
+it.
+
+### Full size
+
+A block with more to show than it is showing carries an Expand button beside
+Copy, and clicking the block opens it too. It opens in the same overlay a
+picture and a diagram use, uncapped, and Escape or a click outside closes it
+again. Selecting code still selects, and Copy still copies without opening
+anything.
+
+Which blocks offer it is decided by measuring the rendered block rather than by
+reading the markdown: one capped by its height, one whose lines run past the
+column, or one longer than the window. A short block that already fits is left
+alone, because a control on every two line fence is clutter on the thing a
+document is mostly made of.
+
+The **Click a picture, diagram or code block to see it full size** setting
+turns all three off together.
+
+### Code from a URL
+
+A fence with no body can say where its code is, and the block is filled in once
+that address answers:
+
+````markdown
+```ts src="https://github.com/contoso/tools/blob/main/src/cache.ts#L10-L20"
+```
+````
+
+`#L10-L20` and `#L10` take those lines out of the fetched file, which is what
+makes this worth using: a runbook wants the twenty lines it is talking about,
+not the whole file. Both are what GitHub puts in the address bar when you click
+a line number, so the address you copy out of a browser is the address to
+paste. A `github.com/.../blob/...` link is translated to the raw host that
+returns the file, the same way a link to another document is.
+
+The fetch happens after the document is drawn, so nothing waits on it. Until
+the address answers the block says which server it is waiting for, and if it
+never answers it says that instead of staying empty. The other server decides
+whether this page may read it at all: it has to allow cross-origin requests,
+and most do not. GitHub's raw host does.
+
+What comes back is text. It is highlighted with the language on the fence and
+escaped exactly as a block typed into the document is, never rendered as
+markup. A fence that has both a body and a `src` shows the body.
 
 ## Tables
 

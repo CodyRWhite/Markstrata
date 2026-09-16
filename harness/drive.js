@@ -748,6 +748,287 @@ const LIBRARY_PATH = '/sites/demo/Documents';
   });
 
   /*
+   * A capped block. This is layout, so a browser is the only place it can be
+   * checked: the cap is written in the block's own line height and code font
+   * size, both of which come from the theme, so what a rule says and what a
+   * reader gets are two different questions.
+   *
+   * The count is what is checked, not a pixel height. Ten lines is the promise;
+   * how many pixels that is depends on the theme, which is the whole reason the
+   * cap is not written in pixels.
+   */
+  await step('a fence capped short shows about ten lines and scrolls the rest', async () => {
+    const capped = await page.evaluate(() => {
+      const block = document.querySelector('.strata-code--short');
+      if (!block) { return { error: 'no block capped short' }; }
+      const pre = block.querySelector('pre');
+      const line = block.querySelector('.strata-code-line');
+      const lineHeight = line.getBoundingClientRect().height;
+      /* clientHeight carries the block's padding, and the three themes pad by
+         different amounts. The cap counts lines, so measure lines. */
+      const style = getComputedStyle(pre);
+      const padding = parseFloat(style.paddingTop) + parseFloat(style.paddingBottom);
+      return {
+        shown: (pre.clientHeight - padding) / lineHeight,
+        held: (pre.scrollHeight - padding) / lineHeight,
+        scrolls: pre.scrollHeight > pre.clientHeight + 1,
+        /* The whole block, header and padding included, against the window. */
+        block: Math.round(block.getBoundingClientRect().height),
+        window: window.innerHeight
+      };
+    });
+    if (capped.error) throw new Error(capped.error);
+    if (!capped.scrolls) throw new Error('nothing was capped: ' + JSON.stringify(capped));
+    if (capped.held < 12) throw new Error('the sample block is too short to cap');
+    /* Ten lines of code, plus the padding that sits outside them. */
+    if (capped.shown < 9.8 || capped.shown > 10.2) {
+      throw new Error('it shows ' + capped.shown.toFixed(1) + ' lines, not ten');
+    }
+    /* And the point of it: a capped block leaves room for the document. */
+    if (capped.block > capped.window / 2) {
+      throw new Error('a short block took ' + capped.block + 'px of a '
+        + capped.window + 'px window');
+    }
+  });
+
+  /* The same cap, in every theme, because the line height it counts in is the
+     theme's. Written in pixels this would be ten lines in one theme and nine
+     and a bit in the next. */
+  await step('the cap is the same number of lines in all three themes', async () => {
+    for (const family of ['github', 'obsidian', 'vscode']) {
+      await page.evaluate((name) => window.harness.setTheme(name, 'light'), family);
+      await page.waitForTimeout(250);
+      const shown = await page.evaluate(() => {
+        const block = document.querySelector('.strata-code--short');
+        const pre = block.querySelector('pre');
+        const style = getComputedStyle(pre);
+        const padding = parseFloat(style.paddingTop) + parseFloat(style.paddingBottom);
+        const line = block.querySelector('.strata-code-line').getBoundingClientRect().height;
+        return (pre.clientHeight - padding) / line;
+      });
+      if (shown < 9.8 || shown > 10.2) {
+        throw new Error(family + ' shows ' + shown.toFixed(1) + ' lines');
+      }
+    }
+    await page.evaluate(() => window.harness.setTheme('vscode', 'light'));
+    await page.waitForTimeout(250);
+  });
+
+  /* And the page setting, which a fence beats. */
+  await step('the page setting caps every block a fence has not spoken for', async () => {
+    await page.evaluate(() => window.harness.setCodeHeight('medium'));
+    await page.waitForTimeout(400);
+    const counts = await page.evaluate(() => ({
+      medium: document.querySelectorAll('.strata-code--medium').length,
+      short: document.querySelectorAll('.strata-code--short').length,
+      blocks: document.querySelectorAll('.strata-code').length
+    }));
+    if (counts.medium < counts.blocks - counts.short) {
+      throw new Error('only ' + counts.medium + ' of ' + counts.blocks + ' took the setting');
+    }
+    /* The sample's own `short` fence is still short: a word on a fence beats
+       the page, the way wrap and numbers already do. */
+    if (counts.short !== 1) throw new Error('the fence lost to the page setting');
+
+    await page.evaluate(() => window.harness.setCodeHeight('full'));
+    await page.waitForTimeout(400);
+    const left = await page.evaluate(() =>
+      document.querySelectorAll('.strata-code--medium').length);
+    if (left !== 0) throw new Error(left + ' blocks stayed capped');
+  });
+
+  /*
+   * Which blocks offer a full size view, and which are left alone.
+   *
+   * Decided by measuring the rendered block, so a browser is the only place it
+   * can be checked at all: the rule is that a block offers Expand when its
+   * <pre> has more to show than it is showing in either direction, or when the
+   * block is taller than the window.
+   */
+  await step('only the blocks with more to show offer a full size view', async () => {
+    const blocks = await page.evaluate(() => {
+      const FITS = 2;
+      return [...document.querySelectorAll('.strata-code')].map((block) => {
+        const pre = block.querySelector('.strata-code-pre');
+        return {
+          lang: block.getAttribute('data-lang'),
+          offers: !!block.querySelector('.strata-code-expand'),
+          overflows: pre.scrollHeight > pre.clientHeight + FITS
+            || pre.scrollWidth > pre.clientWidth + FITS
+            || block.getBoundingClientRect().height > window.innerHeight
+        };
+      });
+    });
+    if (blocks.length < 5) throw new Error('only ' + blocks.length + ' blocks');
+    const wrong = blocks.filter((block) => block.offers !== block.overflows);
+    if (wrong.length) {
+      throw new Error('the rule and the markup disagree: ' + JSON.stringify(wrong));
+    }
+    /* Both halves have to be represented, or this passes by there being
+       nothing of one kind on the page. */
+    if (!blocks.some((block) => block.offers)) {
+      throw new Error('no block offers it at all');
+    }
+    if (!blocks.some((block) => !block.offers)) {
+      throw new Error('every block offers it, so the rule is not a rule');
+    }
+  });
+
+  await step('a capped block opens full size, uncapped, and closes again', async () => {
+    const block = page.locator('.strata-code--short').first();
+    await block.scrollIntoViewIfNeeded();
+    await block.locator('.strata-code-expand').click();
+    await page.waitForSelector('.strata-zoom .strata-zoom-code', { timeout: 3000 });
+
+    const open = await page.evaluate(() => {
+      const copy = document.querySelector('.strata-zoom-code .strata-code');
+      const pre = copy.querySelector('.strata-code-pre');
+      const onPage = document.querySelector('.strata-content .strata-code--short pre');
+      return {
+        capped: copy.className.indexOf('strata-code--short') !== -1,
+        /* Nothing left in it to scroll past. */
+        scrolls: pre.scrollHeight > pre.clientHeight + 2,
+        lines: copy.querySelectorAll('.strata-code-line').length,
+        /* A cloned button would have no listener behind it. */
+        buttons: copy.querySelectorAll('button').length,
+        /* The document keeps its own block, still capped. */
+        pageStillCapped: onPage.scrollHeight > onPage.clientHeight + 2,
+        label: document.querySelector('.strata-zoom').getAttribute('aria-label')
+      };
+    });
+    if (open.capped) throw new Error('the copy is still capped');
+    if (open.scrolls) throw new Error('the copy still has more to show');
+    if (open.lines < 12) throw new Error('the copy holds ' + open.lines + ' lines');
+    if (open.buttons) throw new Error(open.buttons + ' dead buttons in the overlay');
+    if (!open.pageStillCapped) throw new Error('the block on the page was changed');
+    if (!open.label) throw new Error('the overlay has no name');
+
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(200);
+    if (await page.locator('.strata-zoom').count() !== 0) {
+      throw new Error('Escape did not close it');
+    }
+  });
+
+  await step('a click on the block opens it, and a click on Copy does not', async () => {
+    await page.context().grantPermissions(['clipboard-read', 'clipboard-write']);
+    const block = page.locator('.strata-code--short').first();
+    await block.scrollIntoViewIfNeeded();
+
+    /* Copy first: it has to copy and it must not open anything. */
+    await block.locator('.strata-code-copy').click();
+    await page.waitForTimeout(300);
+    if (await page.locator('.strata-zoom').count() !== 0) {
+      throw new Error('copying opened the overlay as well');
+    }
+    const state = await block.locator('.strata-code-copy').getAttribute('data-state');
+    if (state !== 'done') throw new Error('copy said ' + state);
+    const copied = await page.evaluate(() => navigator.clipboard.readText());
+    if (!/dataclass/.test(copied || '')) {
+      throw new Error('the clipboard holds ' + JSON.stringify((copied || '').slice(0, 40)));
+    }
+
+    /* Then the code itself, which is what a reader tries on something cut off. */
+    await block.locator('.strata-code-line-text').first().click();
+    await page.waitForSelector('.strata-zoom-code', { timeout: 3000 });
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(200);
+  });
+
+  /* Selecting code has to keep working: a drag that selected something ends in
+     a click, and swallowing that to open an overlay makes code unselectable. */
+  await step('selecting code does not open the overlay', async () => {
+    const block = page.locator('.strata-code--short').first();
+    await block.scrollIntoViewIfNeeded();
+    /* This is only worth anything over a block that would otherwise open. */
+    if (await block.locator('.strata-code-expand').count() === 0) {
+      throw new Error('this block does not open at all, so nothing was checked');
+    }
+    const line = await block.locator('.strata-code-line-text').first().boundingBox();
+    await page.mouse.move(line.x + 4, line.y + line.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(line.x + line.width - 4, line.y + line.height / 2, { steps: 8 });
+    await page.mouse.up();
+    await page.waitForTimeout(300);
+
+    const selected = await page.evaluate(() => (window.getSelection().toString() || '').trim());
+    if (!selected) throw new Error('nothing was selected, so this checked nothing');
+    if (await page.locator('.strata-zoom').count() !== 0) {
+      throw new Error('selecting opened the overlay');
+    }
+    await page.evaluate(() => window.getSelection().removeAllRanges());
+  });
+
+  /*
+   * A fence that named an address instead of a body. The address is fetched
+   * after the document is drawn, so this is the one thing about the feature a
+   * unit test cannot see: that the block really is filled in on the page, by
+   * the renderer, without the document waiting on it.
+   *
+   * Nothing here reaches the network. harness/fixtures.ts holds the file the
+   * sample's fence names, keyed by the raw address - so a pass also says the
+   * github.com blob link in the document was translated on the way.
+   */
+  await step('a fence with a src is filled in from that address', async () => {
+    await page.waitForSelector('.strata-code[data-lang="ts"]', { timeout: 5000 });
+    const filled = await page.evaluate(() => {
+      /* The sample writes `ts` on exactly this fence; its other TypeScript
+         blocks are written `typescript`. */
+      const block = document.querySelector('.strata-code[data-lang="ts"]');
+      if (!block) { return { error: 'the fence with a src never rendered' }; }
+      return {
+        waiting: block.classList.contains('strata-code--loading'),
+        failed: block.classList.contains('strata-code--failed'),
+        stillCarriesTheAddress: block.hasAttribute('data-strata-code-src'),
+        note: !!block.querySelector('.strata-code-note'),
+        lines: block.querySelectorAll('.strata-code-line').length,
+        highlighted: block.querySelectorAll('.hljs-keyword').length,
+        first: (block.querySelector('.strata-code-line-text') || {}).textContent,
+        /* Nothing fetched may become markup. */
+        elements: block.querySelectorAll('.strata-code-line-text *').length > 0
+      };
+    });
+    if (filled.error) throw new Error(filled.error);
+    if (filled.waiting || filled.failed) throw new Error('the block is ' + JSON.stringify(filled));
+    if (filled.stillCarriesTheAddress) throw new Error('the address was never claimed');
+    if (filled.note) throw new Error('it still says it is loading');
+    /* The sample asks for #L12-L22, which is the get method and nothing else. */
+    if (filled.lines !== 11) throw new Error('the fragment gave ' + filled.lines + ' lines');
+    if (!/public get\(key/.test(filled.first || '')) {
+      throw new Error('the fragment started at ' + JSON.stringify(filled.first));
+    }
+    if (!filled.highlighted) throw new Error('the fetched code was not highlighted');
+  });
+
+  /* And the other half: an address nothing answers has to say so in the block,
+     because a block that stays empty reads as a fence the author left blank. */
+  await step('a fence whose address does not answer says so in the block', async () => {
+    await page.evaluate(() => window.harness.setMarkdown(
+      '# One block\n\n```ts src="https://github.com/contoso/nothing/blob/main/gone.ts"\n```\n'
+    ));
+    await page.waitForTimeout(500);
+    const said = await page.evaluate(() => {
+      const block = document.querySelector('.strata-code');
+      const note = block ? block.querySelector('.strata-code-note') : null;
+      return block ? {
+        failed: block.classList.contains('strata-code--failed'),
+        waiting: block.classList.contains('strata-code--loading'),
+        note: note ? (note.textContent || '').trim() : null,
+        /* Nothing to copy, so nothing offering to. */
+        copyShown: block.querySelector('.strata-code-actions')
+          ? getComputedStyle(block.querySelector('.strata-code-actions')).visibility : 'gone'
+      } : null;
+    });
+    if (!said) throw new Error('no block at all');
+    if (!said.failed || said.waiting) throw new Error('the block is ' + JSON.stringify(said));
+    if (!said.note || !/raw\.githubusercontent\.com/.test(said.note)) {
+      throw new Error('it said ' + JSON.stringify(said.note));
+    }
+    await page.evaluate(() => window.harness.setMarkdown(''));
+    await page.waitForTimeout(600);
+  });
+
+  /*
    * A diagram is the one thing on the page nobody can copy out by selecting it,
    * so the button hands over a raster. This checks the clipboard actually
    * receives PNG bytes, not that a button exists and says Copied.

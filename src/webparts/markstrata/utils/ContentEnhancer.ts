@@ -29,12 +29,13 @@
  * Ships in:  the web part bundle
  * Requires:  backToTop.ts, chromeOffset.ts, codeCopy.ts, contents.ts,
  *            copyFeedback.ts, diagramTools.ts, documentLinks.ts,
- *            fillHeight.ts
+ *            fillHeight.ts, remoteCode.ts, codeZoom.ts
  */
 
 import { BackToTop, BackToTopButton } from './backToTop';
 import { ScrollOffset, chromeAbove } from './chromeOffset';
 import { attachCopyButtons, copyToClipboard } from './codeCopy';
+import { attachCodeZoom } from './codeZoom';
 import { HeadingTracker, ITocEntry, adoptAuthoredToc, buildToc, collectHeadings } from './contents';
 import { CopyFeedback } from './copyFeedback';
 import { attachDiagramTools } from './diagramTools';
@@ -44,6 +45,7 @@ import { enhanceImages } from './images';
 import { FileIdLookup, buildOfficeCards } from './officeCards';
 import { validateWikiLinks } from './linkCheck';
 import { readingTime } from './documentText';
+import { FetchCode, fillRemoteCode } from './remoteCode';
 import { TableTools } from './tableTools';
 import { ZoomOverlay } from './zoomOverlay';
 
@@ -80,6 +82,16 @@ export class ContentEnhancer {
   /** Puts Expand and Copy over every diagram. */
   public attachDiagramTools(container: HTMLElement, allowZoom: boolean): void {
     attachDiagramTools(container, allowZoom, this.zoom, this.feedback);
+  }
+
+  /** Fetches the code for every fence that named an address instead of a body. */
+  public async fillRemoteCode(container: HTMLElement, fetchCode: FetchCode): Promise<void> {
+    return fillRemoteCode(container, fetchCode);
+  }
+
+  /** Offers a full size view of the blocks that have more to show than they show. */
+  public attachCodeZoom(container: HTMLElement, allowZoom: boolean): void {
+    attachCodeZoom(container, allowZoom, this.zoom);
   }
 
   // ----------------------------------------------------------------- links

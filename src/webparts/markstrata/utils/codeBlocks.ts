@@ -11,12 +11,20 @@
  * imported - the token classes are coloured by syntax.css from theme
  * variables, which is what lets one rendered block follow the selected theme.
  *
+ * A fence that names a `src` has no body to render yet. Rendering is a string
+ * going in and a string coming out, so the address is not fetched here: the
+ * block is drawn waiting, carrying the address on the element, and remoteCode
+ * fills it in once the document is on the page.
+ *
  * .USAGE
- *   import { renderCodeBlock, parseInfo } from './utils/codeBlocks';
+ *   import { renderCodeBlock, renderCodeLines, parseInfo } from './utils/codeBlocks';
  *
  *   const html: string = renderCodeBlock(source, 'ts {2,4-6}', {
  *     highlight: true, showHeader: true, showLineNumbers: true
  *   });
+ *
+ *   // The line elements on their own, for a block being filled in later:
+ *   const lines: string = renderCodeLines(fetched, 'ts', true, [2, 4]);
  *
  * .NOTES
  * Since:     0.0.6
@@ -39,11 +47,54 @@ hljs.registerLanguage('dockerfile', dockerfile);
 hljs.registerLanguage('dos', dos);
 hljs.registerLanguage('http', http);
 
+/**
+ * How tall a block is allowed to be.
+ *
+ * `full` is a block as tall as its code, which is what a fenced block has
+ * always been. The other two cap it and scroll inside; the line counts they
+ * mean are in code.css, because that is where the line height they are counted
+ * in lives.
+ */
+export type CodeHeight = 'short' | 'medium' | 'full';
+
+const CODE_HEIGHTS: CodeHeight[] = ['short', 'medium', 'full'];
+
 export interface ICodeBlockOptions {
   highlight: boolean;
   showHeader: boolean;
   lineNumbers: boolean;
   wrap: boolean;
+  /** The page's default height, which a word on a fence overrides. */
+  height?: CodeHeight;
+}
+
+/**
+ * The attribute a block carries its unfetched address on, and the class that
+ * says it is still waiting. Named here because remoteCode.ts reads both and
+ * code.css styles the second, and three copies of a string is two too many.
+ */
+export const CODE_SOURCE_ATTRIBUTE: string = 'data-strata-code-src';
+export const CODE_LOADING_CLASS: string = 'strata-code--loading';
+
+/**
+ * How many lines a waiting block should hold room for, from the line range on
+ * its address.
+ *
+ * A block that fills grows from one line of prose to the height of a file, and
+ * everything below it moves down - which, for a reader who followed a link to
+ * a heading further down the page, means the place they were taken to slides
+ * away under them. An address that names `#L10-L20` has already said how tall
+ * the block will be, so the room is taken before the fetch rather than after.
+ *
+ * An address with no range cannot say, and that block does still move when it
+ * fills. Nothing here can know the length of a file it has not read.
+ */
+export function reservedLines(src: string): number {
+  const found: RegExpExecArray | null = /#L(\d+)(?:-L?(\d+))?$/i.exec(src || '');
+  if (!found || !found[2]) {
+    return 0;
+  }
+  return Math.abs(parseInt(found[2], 10) - parseInt(found[1], 10)) + 1;
 }
 
 const LANGUAGE_LABELS: { [alias: string]: string } = {
@@ -121,6 +172,10 @@ export interface IFenceInfo {
   lineNumbers?: boolean;
   /** 1-based source lines to call out, from a `{2,4-6}` on the fence. */
   highlight?: number[];
+  /** Where the code is, from a `src="..."` on the fence. */
+  src?: string;
+  /** Per-fence override of the height cap. */
+  height?: CodeHeight;
 }
 
 /**
@@ -132,6 +187,9 @@ export interface IFenceInfo {
  *   ```python wrap            soft-wrap this block whatever the web part default
  *   ```python nowrap numbers  and the opposites, per block
  *   ```js {2,4-6}             call out those lines, as Docusaurus and VitePress do
+ *   ```ts src="https://..."   fetch the code from there instead of writing a body
+ *   ```ts short                cap the height at ten lines and scroll inside
+ *   ```ts medium               the same at twenty-five; `full` is the default
  */
 export function parseInfo(info: string): IFenceInfo {
   const trimmed: string = (info || '').trim();
@@ -140,16 +198,22 @@ export function parseInfo(info: string): IFenceInfo {
   }
 
   const titleMatch: RegExpExecArray | null = /\btitle\s*=\s*"([^"]+)"|\btitle\s*=\s*'([^']+)'/.exec(trimmed);
+  const srcMatch: RegExpExecArray | null = /\bsrc\s*=\s*"([^"]+)"|\bsrc\s*=\s*'([^']+)'/.exec(trimmed);
   const first: string = trimmed.split(/\s+/)[0];
-  const colonIndex: number = first.indexOf(':');
+  /* A fence that carries only a line spec has no language, and `{2,4-6}` is
+     not one. Nor is `title="app.ts"` or `src="https://..."`: a fence may open
+     with either of those and no language at all, and taking the first word
+     regardless put the whole attribute into the header as a language label.
+     The `lang:file` shorthand is off for those too, or the colon in `https://`
+     would be read as the one that separates the two. */
+  const attribute: boolean = /^\{/.test(first) || /^[a-z-]+\s*=/i.test(first);
+  const colonIndex: number = attribute ? -1 : first.indexOf(':');
   const flags: string[] = trimmed
     .split(/\s+/)
     .slice(1)
     .map((flag: string) => flag.toLowerCase());
 
-  /* A fence that carries only a line spec has no language, and `{2,4-6}` is
-     not one. */
-  const language: string = /^\{/.test(first) ? '' : first;
+  const language: string = attribute ? '' : first;
   const parsed: IFenceInfo = {
     lang: (colonIndex > 0 ? language.slice(0, colonIndex) : language).toLowerCase(),
     filename: titleMatch ? titleMatch[1] || titleMatch[2] : colonIndex > 0 ? first.slice(colonIndex + 1) : ''
@@ -167,12 +231,46 @@ export function parseInfo(info: string): IFenceInfo {
     parsed.lineNumbers = false;
   }
 
+  CODE_HEIGHTS.forEach((height: CodeHeight) => {
+    if (parsed.height === undefined && flags.indexOf(height) !== -1) {
+      parsed.height = height;
+    }
+  });
+
   const lines: number[] = parseHighlightedLines(trimmed);
   if (lines.length) {
     parsed.highlight = lines;
   }
 
+  if (srcMatch) {
+    parsed.src = srcMatch[1] || srcMatch[2];
+    /* A block showing somebody else's file wants to say which file, and the
+       address already says it. A `title=` on the fence still wins: an author
+       who named it meant that name. */
+    if (!parsed.filename) {
+      parsed.filename = fileNameOf(parsed.src);
+    }
+  }
+
   return parsed;
+}
+
+/**
+ * The file name at the end of an address, for the header of a block that is
+ * showing a file from one.
+ *
+ * Decoded, because a path with a space in it arrives written `%20` and a
+ * header reading `Deploy%20notes.ts` says the encoding rather than the name.
+ * An address that decodes to nothing keeps what it had.
+ */
+function fileNameOf(src: string): string {
+  const withoutFragment: string = src.split('#')[0].split('?')[0];
+  const last: string = withoutFragment.slice(withoutFragment.lastIndexOf('/') + 1);
+  try {
+    return decodeURIComponent(last) || last;
+  } catch {
+    return last;
+  }
 }
 
 /**
@@ -266,17 +364,26 @@ function highlightCode(code: string, lang: string, enabled: boolean): { html: st
   return { html: escapeHtml(code), language: lang };
 }
 
-export function renderCodeBlock(code: string, info: string, options: ICodeBlockOptions): string {
-  const parsed: IFenceInfo = parseInfo(info);
-  const lineNumbers: boolean = parsed.lineNumbers === undefined ? options.lineNumbers : parsed.lineNumbers;
-  const wrap: boolean = parsed.wrap === undefined ? options.wrap : parsed.wrap;
+/**
+ * The line elements for a block's code, without the block around them.
+ *
+ * Split out because a fence with a `src` is rendered twice: once empty while
+ * the address is being fetched, and once with what came back. The second pass
+ * has the block already on the page and only needs these to put inside it, so
+ * this is the half the two share.
+ */
+export function renderCodeLines(
+  code: string,
+  lang: string,
+  highlight: boolean,
+  called: number[]
+): string {
   const source: string = code.replace(/\n$/, '');
-  const highlighted: { html: string; language: string } = highlightCode(source, parsed.lang, options.highlight);
+  const highlighted: { html: string; language: string } = highlightCode(source, lang, highlight);
 
   // Joined with no separator: each line is a block element, so a newline
   // between them would render as an extra blank line inside the <pre>.
-  const called: number[] = parsed.highlight || [];
-  const lines: string = splitHighlightedLines(highlighted.html)
+  return splitHighlightedLines(highlighted.html)
     .map((line: string, index: number) => {
       /* Numbered from one, the way a fence names them and a gutter shows them. */
       const marked: boolean = called.indexOf(index + 1) !== -1;
@@ -286,8 +393,27 @@ export function renderCodeBlock(code: string, info: string, options: ICodeBlockO
         `<span class="strata-code-line-text">${line}</span></span>`;
     })
     .join('');
+}
+
+export function renderCodeBlock(code: string, info: string, options: ICodeBlockOptions): string {
+  const parsed: IFenceInfo = parseInfo(info);
+  const lineNumbers: boolean = parsed.lineNumbers === undefined ? options.lineNumbers : parsed.lineNumbers;
+  const wrap: boolean = parsed.wrap === undefined ? options.wrap : parsed.wrap;
+  /* A word on the fence beats the page setting, the way wrap and numbers
+     already do: the author of the document knows which block is the long one. */
+  const height: CodeHeight = parsed.height || options.height || 'full';
+  const called: number[] = parsed.highlight || [];
+
+  /* A `src` is only a source when there is nothing else to show. An author who
+     typed a body meant the body, and quietly dropping what they wrote in
+     favour of a file somewhere else is the one outcome nobody would choose. */
+  const waiting: boolean = !!parsed.src && code.trim().length === 0;
+  const lines: string = waiting ? '' : renderCodeLines(code, parsed.lang, options.highlight, called);
 
   const classes: string[] = ['strata-code'];
+  if (waiting) {
+    classes.push(CODE_LOADING_CLASS);
+  }
   if (options.showHeader) {
     classes.push('strata-code--has-header');
   }
@@ -296,6 +422,11 @@ export function renderCodeBlock(code: string, info: string, options: ICodeBlockO
   }
   if (wrap) {
     classes.push('strata-code--wrap');
+  }
+  /* Full is what a block has always been, so it carries no class of its own
+     and nothing in the stylesheet has to undo anything. */
+  if (height !== 'full') {
+    classes.push(`strata-code--${height}`);
   }
   /* Dimming the rest only reads as deliberate when something is called out. */
   if (called.length) {
@@ -318,10 +449,41 @@ export function renderCodeBlock(code: string, info: string, options: ICodeBlockO
 
   const codeClass: string = `hljs${parsed.lang ? ` language-${escapeHtml(parsed.lang)}` : ''}`;
 
+  /* The address and the line spec ride on the element rather than in a table
+     kept beside it: the block that has to be filled in is the one the reader
+     can see, and the DOM is where it is. Read back by remoteCode.ts. */
+  const attributes: string = (parsed.lang ? ` data-lang="${escapeHtml(parsed.lang)}"` : '')
+    + (waiting ? ` ${CODE_SOURCE_ATTRIBUTE}="${escapeHtml(parsed.src as string)}"` : '')
+    + (waiting && called.length ? ` data-strata-code-called="${called.join(',')}"` : '')
+    + (waiting && !options.highlight ? ' data-strata-code-plain="true"' : '');
+
+  /* An inline custom property rather than a height: code.css turns it into one
+     using the same line height and code font size the block itself is drawn
+     with, so the room reserved is the room the lines will take in whichever
+     theme is on. */
+  const reserve: number = waiting ? reservedLines(parsed.src as string) : 0;
+  const note: string = waiting
+    ? `<div class="strata-code-note"${reserve ? ` style="--strata-code-reserve:${reserve}"` : ''}>`
+      + `${escapeHtml(waitingNote(parsed.src as string))}</div>`
+    : '';
+
   return (
-    `<div class="${classes.join(' ')}"${parsed.lang ? ` data-lang="${escapeHtml(parsed.lang)}"` : ''}>` +
+    `<div class="${classes.join(' ')}"${attributes}>` +
     header +
     `<pre class="strata-code-pre"><code class="${codeClass}">${lines}</code></pre>` +
+    note +
     '</div>'
   );
+}
+
+/**
+ * What a block says while its address is still being fetched.
+ *
+ * It names the host rather than saying "loading", because the interesting part
+ * of the wait is which server is being waited on: that is the one that will
+ * refuse, and the reader can tell at a glance whether it is one they can reach.
+ */
+function waitingNote(src: string): string {
+  const host: RegExpExecArray | null = /^[a-z][a-z0-9+.-]*:\/\/([^/?#]*)/i.exec(src);
+  return host ? `Loading this code from ${host[1]}` : 'Loading this code';
 }

@@ -28,7 +28,7 @@
 
 import { calloutPlugin } from './markdownItCallouts';
 import { taskListPlugin } from './markdownItTaskLists';
-import { renderCodeBlock, ICodeBlockOptions, escapeHtml } from './codeBlocks';
+import { renderCodeBlock, CodeHeight, ICodeBlockOptions, escapeHtml } from './codeBlocks';
 import { resolveAgainst } from './imagePaths';
 import { splitFrontMatter, ISplitDocument } from './frontMatter';
 import { wikiLinkPlugin } from './markdownItWikiLinks';
@@ -83,6 +83,12 @@ export interface IMarkdownProcessorOptions {
   showCodeHeader: boolean;
   showLineNumbers: boolean;
   wrapCodeLines: boolean;
+  /**
+   * How tall a code block is by default: as tall as its code, or capped at
+   * roughly ten or twenty-five lines and scrolling inside. A `short`, `medium`
+   * or `full` on a fence overrides it for that block.
+   */
+  codeHeight?: CodeHeight;
   allowHtml: boolean;
   /**
    * The folder the markdown came from, as a server-relative path. Relative
@@ -108,6 +114,7 @@ export const DEFAULT_PROCESSOR_OPTIONS: IMarkdownProcessorOptions = {
   showCodeHeader: true,
   showLineNumbers: false,
   wrapCodeLines: false,
+  codeHeight: 'full',
   allowHtml: false,
   imageBasePath: undefined
 };
@@ -447,7 +454,8 @@ export class MarkdownProcessor {
       highlight: this.options.enableSyntaxHighlighting,
       showHeader: this.options.showCodeHeader,
       lineNumbers: this.options.showLineNumbers,
-      wrap: this.options.wrapCodeLines
+      wrap: this.options.wrapCodeLines,
+      height: this.options.codeHeight
     });
 
     this.markdownIt.renderer.rules.fence = (tokens: IToken[], index: number): string => {

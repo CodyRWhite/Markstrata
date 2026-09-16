@@ -19,7 +19,7 @@
  * Ships in:  nothing - it builds or drives what ships
  * Requires:  MarkdownProcessor.ts, MermaidRenderer.ts, ContentEnhancer.ts,
  *            ViewModeRenderer.ts, EditModeManager.ts, ThemeManager.ts,
- *            panel.ts, tocWidth.ts
+ *            panel.ts, tocWidth.ts, fixtures.ts
  */
 
 import { MarkdownProcessor } from '../src/webparts/markstrata/utils/MarkdownProcessor';
@@ -30,6 +30,7 @@ import { EditModeManager } from '../src/webparts/markstrata/utils/EditModeManage
 import { ThemeManager } from '../src/webparts/markstrata/utils/ThemeManager';
 import { DocumentNavigator } from '../src/webparts/markstrata/utils/documentNavigator';
 import { PropertyPanel, IPanelPage } from './panel';
+import { fetchRemoteCode } from './fixtures';
 import { TOC_WIDTH_RANGES, tocWidthForUnit } from '../src/webparts/markstrata/utils/tocWidth';
 
 declare const SAMPLE: string;
@@ -64,6 +65,7 @@ const state: any = {
   showCodeHeader: true,
   showLineNumbers: true,
   wrapCodeLines: false,
+  codeHeight: 'full',
   codeSize: 'normal',
   imageAlign: 'left',
   // Contents
@@ -95,8 +97,8 @@ const state: any = {
 /* The options the processor is built from, as opposed to the ones the
    renderer reads at draw time. Changing any of these rebuilds markdown-it. */
 const PROCESSOR_KEYS: string[] = ['enableSyntaxHighlighting', 'showCodeHeader',
-  'showLineNumbers', 'wrapCodeLines', 'allowHtml', 'enableMath', 'enableMermaid',
-  'enableAnchors', 'enableWikiLinks'];
+  'showLineNumbers', 'wrapCodeLines', 'codeHeight', 'allowHtml', 'enableMath',
+  'enableMermaid', 'enableAnchors', 'enableWikiLinks'];
 
 function processorOptions(): any {
   return {
@@ -104,6 +106,7 @@ function processorOptions(): any {
     showCodeHeader: state.showCodeHeader,
     showLineNumbers: state.showLineNumbers,
     wrapCodeLines: state.wrapCodeLines,
+    codeHeight: state.codeHeight,
     allowHtml: state.allowHtml,
     enableMath: state.enableMath,
     enableMermaid: state.enableMermaid,
@@ -275,6 +278,9 @@ function draw(showing?: string, heading?: string): void {
     showReadingTime: state.showReadingTime,
     backToTop: state.backToTop,
     listFolder: state.enableWikiLinks && state.checkWikiLinks ? listFolder : undefined,
+    /* Nothing here reaches the network: fixtures.ts holds the file the sample's
+       `src` fence names, keyed by the address the fetch asks for. */
+    fetchCode: fetchRemoteCode,
     documentBase: state.libraryBase || undefined,
     openDocument: state.followDocumentLinks
       ? (path: string, heading: string) => void navigator.open(path, heading, true)
@@ -322,6 +328,18 @@ function log(message: string): void {
     draw();
   },
   setLibraryBase: setLibraryBase,
+  /* Swaps the document being shown, for a check that needs markdown the sample
+     does not carry - a fence pointed at an address nothing answers, say. */
+  setMarkdown: (markdown: string) => {
+    navigator.close(false);
+    state.markdown = markdown || SAMPLE;
+    draw();
+  },
+  setCodeHeight: (height: any) => {
+    state.codeHeight = height;
+    processor.updateOptions(processorOptions());
+    draw();
+  },
   setBackToTop: (position: any) => {
     state.backToTop = position;
     draw();
@@ -455,7 +473,16 @@ const PANEL_PAGES: IPanelPage[] = [
           { key: 'codeSize', label: 'Code text size', type: 'dropdown', options: [
             { value: 'small', text: 'Small' },
             { value: 'normal', text: 'Normal' },
-            { value: 'large', text: 'Large' }] }
+            { value: 'large', text: 'Large' }] },
+          { key: 'codeHeight', label: 'Block height', type: 'dropdown', options: [
+            { value: 'full', text: 'As tall as the code' },
+            { value: 'short', text: 'Short, about ten lines' },
+            { value: 'medium', text: 'Medium, about twenty-five lines' }],
+            hint: 'Caps how tall a code block is and scrolls inside it, so a long '
+              + 'listing does not push the rest of the document off the screen. Short '
+              + 'is about ten lines and medium about twenty-five, counted in the line '
+              + 'height of the theme that is on. A fence can say short, medium or full '
+              + 'for itself, and that beats this the way wrap and numbers already do.' }
         ]
       },
       {

@@ -60,6 +60,13 @@ export interface IViewOptions {
   showReadingTime?: boolean;
   /* Given only when there is a library behind the page to ask. */
   listFolder?: (folder: string) => Promise<string[] | undefined>;
+  /**
+   * How a fence that named a `src` reaches that address. Given by the host,
+   * because only the host knows whether it is talking to SharePoint or to a
+   * stand-in; without it such a fence stays as it rendered, saying which
+   * server it was waiting for.
+   */
+  fetchCode?: (url: string) => Promise<string>;
   /** The folder this document is in, which its relative links point from. */
   documentBase?: string;
   /** Given when a link to another document should open here rather than leave. */
@@ -186,6 +193,9 @@ export class ViewModeRenderer {
     }
 
     this.enhancer.attachCopyButtons(article);
+    /* After the article is in the page, because which blocks get a full size
+       view is decided by measuring them rather than by reading the markdown. */
+    this.enhancer.attachCodeZoom(article, options.enableImageZoom !== false);
     this.enhancer.secureExternalLinks(article);
     this.enhancer.followDocumentLinks(article, options.documentBase, options.openDocument);
     this.enhancer.enhanceImages(article, options.enableImageZoom !== false);
@@ -240,6 +250,18 @@ export class ViewModeRenderer {
        SharePoint, and a document is readable without it. */
     if (options.officeFileId && options.webUrl) {
       void this.enhancer.buildOfficeCards(article, options.webUrl, options.officeFileId);
+    }
+
+    /* And the same bargain for a fence that named an address: the block is
+       drawn waiting, the document is readable around it, and the code arrives
+       when the other server answers. A fence that named a line range has
+       already reserved the height it will need, so the document around it does
+       not move when it fills. */
+    if (options.fetchCode) {
+      void this.enhancer.fillRemoteCode(article, options.fetchCode)
+        /* Round again, because a block that was one line of prose when the
+           blocks were measured is now as tall as a file. */
+        .then(() => this.enhancer.attachCodeZoom(article, options.enableImageZoom !== false));
     }
 
     if (options.enableMermaid) {

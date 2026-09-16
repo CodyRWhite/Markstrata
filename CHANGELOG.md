@@ -68,6 +68,101 @@ Entries below 0.0.10.0 were written before the switch and are three-part.
   reaches a tenant: SPFx copies everything under `teams/` into the .sppkg, and
   the sync looks inside the package for `./teams/TeamsSPFxApp.zip` and publishes
   ours instead of generating one.
+- A code block with more to show than it is showing opens at the size of the
+  window, in the same overlay a picture and a Mermaid diagram already use. A
+  capped block is the obvious case, since it is showing ten lines of a hundred,
+  but a block whose lines run past the column has the same problem without
+  anybody having asked for a cap.
+  - Which blocks offer it is decided by measuring the rendered block, never by
+    reading the markdown. The rule in full: a block offers **Expand** when its
+    `<pre>` has more to show than it is showing, in either direction, or when
+    the block is taller than the window. One measurement, three cases - a
+    capped block scrolls down, a wide block scrolls across, and a block with
+    two hundred lines and no cap overflows neither because it is as tall as its
+    code. A two line fence that fits is caught by none of it and is left alone:
+    a control on every tiny fence is clutter, and clutter on the thing a
+    document is mostly made of is worse than clutter anywhere else.
+  - The button sits beside Copy. Clicking the block opens it too, because that
+    is what a reader tries first on something they can see is cut off, but not
+    when the click ended a drag that selected some of the code, and not on
+    Copy: copying copies and opens nothing.
+  - What opens is a copy of the block with its cap and its buttons taken off.
+    The buttons because a cloned button has no listener behind it, and one that
+    says Copy and does nothing is worse than no Copy at all. The block on the
+    page keeps its own, and the text in the overlay is real text that selects.
+  - The **Click a picture or diagram to see it full size** setting now reads
+    **Click a picture, diagram or code block to see it full size** and turns
+    all three off together. One switch for one idea.
+
+- A code block can be capped in height and scroll inside instead of running
+  down the page. A fence says `short`, `medium` or `full` beside `wrap` and
+  `numbers`, and there is a **Block height** setting in the **Code blocks**
+  group for the page default, so a page can make every block medium without
+  touching the documents. A word on a fence beats the setting, the way
+  `wrap` and `nowrap` already beat it.
+
+  ````markdown
+  ```python short
+  ```
+  ````
+
+  - `full` is the default and is what a block has always been: as tall as its
+    code. It carries no class of its own, so nothing in the stylesheet has to
+    undo anything for the case that has not changed.
+  - Short is ten lines and medium twenty-five, counted rather than written in
+    pixels. The three themes disagree about both numbers that decide how tall a
+    line is - GitHub sets 0.85em at line-height 1.45, Obsidian 0.875em at 1.5,
+    VS Code 0.9em at 1.5 on a 15px body rather than 16px - and the code size
+    setting moves the first of those again. Written in pixels a cap would be a
+    different number of lines in every theme. Written in the block's own line
+    height and code font size it is the same number of lines in all of them.
+    Measured in a browser, a short block is 229px in GitHub, 238px in Obsidian
+    and 227px in VS Code: roughly a paragraph of prose. A medium one is about
+    525px, 553px and 530px, which is over half the content area of a laptop
+    window, so a capped block still has the text before and after it on screen
+    with it. That is the whole reason to cap one.
+  - A capped block prints whole. Nothing scrolls on paper, and printing the
+    first ten lines of a listing and losing the rest says something false about
+    the listing.
+
+- A fenced code block can name a file instead of carrying one. A fence with no
+  body and a `src="..."` on it shows the file at that address, and a runbook
+  that quotes twenty lines of code no longer has to carry a copy of them - a
+  copy is wrong from the first release after it was pasted.
+
+  ````markdown
+  ```ts src="https://github.com/contoso/tools/blob/main/src/cache.ts#L10-L20"
+  ```
+  ````
+
+  - `#L10-L20` and `#L10` take the named lines out of the fetched file. That is
+    most of the value: a whole file in the middle of a runbook is not what
+    anybody wanted, and both spellings are what GitHub puts in the address bar
+    when you click a line number.
+  - The address is translated by the same code a link to a remote document
+    uses, so a `github.com/.../blob/...` link works. That is the address a
+    browser gives you when you copy a link to a file, so it is the one people
+    paste; the file itself is on the raw host.
+  - Fetched after the document is drawn, not during it. Rendering is a string
+    going in and a string coming out and stays that way, so the block is drawn
+    saying which server it is waiting on and filled in when that server
+    answers, the same shape as wiki link checking and Mermaid.
+  - A fetch that fails says why in the block, in the same words a remote
+    document uses: the file is either not there or that server does not allow
+    pages on this site to read it, and a browser cannot tell those apart. A
+    block that stayed empty and silent would read as a fence the author left
+    blank.
+  - What comes back is somebody else's file, so it goes in as text. It is
+    highlighted with the language on the fence and escaped exactly as a block
+    typed into the document is, never rendered as markup.
+  - A fence with both a body and a `src` shows the body and says nothing about
+    the `src`. Quietly dropping what an author typed in favour of a file
+    somewhere else is the one outcome nobody would choose.
+  - A fence that opens with an attribute rather than a language no longer takes
+    that attribute for one. `` ```src="https://..." `` was headed
+    `SRC="HTTPS://GITHUB.COM/..."`, and the colon in `https://` was read as the
+    `lang:filename` shorthand. The same slip was there for a fence opening with
+    a bare `title="app.ts"`.
 
 - Raw HTML no longer means raw scripting. With "Allow raw HTML in markdown" on,
   whatever an author wrote went onto the page untouched, so `<script>`,

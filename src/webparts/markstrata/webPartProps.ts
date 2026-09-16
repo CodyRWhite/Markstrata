@@ -18,13 +18,14 @@
  * .NOTES
  * Since:     0.0.17.0
  * Ships in:  the web part bundle
- * Requires:  ThemeManager.ts, mermaidConfig.ts, backToTop.ts,
+ * Requires:  ThemeManager.ts, mermaidConfig.ts, backToTop.ts, codeBlocks.ts,
  *            ViewModeRenderer.ts, tocWidth.ts, SharePointService.ts
  */
 
 import { ThemeFamily, ColorMode } from './utils/ThemeManager';
 import { DiagramWidth } from './utils/mermaidConfig';
 import { BackToTop } from './utils/backToTop';
+import { CodeHeight } from './utils/codeBlocks';
 import { TocPosition } from './utils/ViewModeRenderer';
 import { TocWidthMode, TocWidthUnit } from './utils/tocWidth';
 import { IFileMetadata } from './utils/SharePointService';
@@ -55,6 +56,7 @@ export interface IMarkstrataWebPartProps {
   showCodeHeader: boolean;
   showLineNumbers: boolean;
   wrapCodeLines: boolean;
+  codeHeight: CodeHeight;
 
   // Features
   enableMermaid: boolean;

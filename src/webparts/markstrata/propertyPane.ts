@@ -269,6 +269,7 @@ export function paneConfiguration(
                 onText: 'On',
                 offText: 'Off'
               }),
+              PropertyPaneLabel('imageZoomHint', { text: strings.ImageZoomHint }),
               PropertyPaneLabel('imageAlignHint', { text: strings.ImageAlignHint })
             ]
           },
@@ -315,7 +316,17 @@ export function paneConfiguration(
                 label: strings.CodeSizeLabel,
                 options: toDropdown(CODE_SIZES),
                 selectedKey: properties.codeSize
-              })
+              }),
+              PropertyPaneDropdown('codeHeight', {
+                label: strings.CodeHeightLabel,
+                options: [
+                  { key: 'full', text: 'As tall as the code' },
+                  { key: 'short', text: 'Short, about ten lines' },
+                  { key: 'medium', text: 'Medium, about twenty-five lines' }
+                ],
+                selectedKey: properties.codeHeight
+              }),
+              PropertyPaneLabel('codeHeightHint', { text: strings.CodeHeightHint })
             ]
           },
           {
