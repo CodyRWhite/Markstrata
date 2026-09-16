@@ -6,7 +6,9 @@ below is rendered by the same code a SharePoint page runs: if something here
 stops working, this page stops showing it.
 
 Where a feature is off by default, or belongs to a setting, the setting is
-named. The [documentation page](../docs/) covers the settings themselves.
+named. The [settings page](../docs/) covers the settings themselves, and
+[linking documents](../linking/) covers what happens when one document points
+at another.
 
 [[toc]]
 
@@ -65,9 +67,12 @@ Off by default, under **Wiki links**.
 | `[[Deploy runbook]]` | `Deploy runbook.md` in the same folder |
 | `[[Deploy runbook\|how we ship]]` | the same file, worded for the sentence |
 | `[[Deploy runbook#Rollback]]` | that heading in that file |
+| `[[../Applications/Timesheets]]` | a file in a folder beside this one |
 | `[[#Text]]` | a heading in this document |
 
-With a library file, a link to a page that is not there is marked.
+A bare name resolves against the folder this document is in and nowhere else,
+which is not what Obsidian does with one. With a library file, a link to a page
+that is not there is marked. [The whole of it](../linking/).
 
 ### Embeds
 
@@ -311,4 +316,4 @@ tags: [ops, sharepoint]
 Escaped unless **Allow raw HTML in markdown** is on. Callout titles are escaped
 either way. With the setting on the page is sanitised: formatting tags and
 embeds from a few known hosts are kept, and scripting is not. See
-[Security](/docs/#security).
+[Security](../docs/#security).

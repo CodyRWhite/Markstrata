@@ -630,6 +630,11 @@ if (panelHost && panelButton) {
       /* The change still applies, it is just not remembered. */
     }
     document.documentElement.setAttribute('data-site-mode', mode);
+    document.documentElement.style.colorScheme = mode;
+    /* Said out loud, so the switch in the site header stays in step with the
+       pane. Nothing here listens to it, and the listener below ignores a mode
+       it is already in, so this cannot come back round. */
+    window.dispatchEvent(new CustomEvent('strata-site-mode', { detail: mode }));
   };
 
   draw();
@@ -673,6 +678,22 @@ if (panelHost && panelButton) {
     if (event.key === 'Escape' && panel.isOpen) {
       panel.close();
     }
+  });
+
+  /*
+   * The switch in the site header is the same choice as Colour mode in the
+   * pane, so one has to move the other. The header sets the page and says so
+   * with an event; this takes the web part and the pane's own field with it,
+   * rather than leaving a pane that disagrees with the document beside it.
+   */
+  window.addEventListener('strata-site-mode', (event: Event) => {
+    const chosen: string = String((event as CustomEvent).detail);
+    if (state.mode === chosen) {
+      return;
+    }
+    state.mode = chosen;
+    panel.refresh();
+    draw();
   });
 }
 

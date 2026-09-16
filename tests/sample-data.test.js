@@ -50,18 +50,25 @@ const crypto = require('node:crypto');
  */
 const ROOT = path.join(__dirname, '..');
 
+/*
+ * Every page of the site, rather than a list kept in step by hand: a page added
+ * without being added here is a page nothing checks, and the whole point of the
+ * rule is that it catches the file somebody pasted a real path into while
+ * working on a feature.
+ */
 const CONTENT = [
   'samples/kitchen-sink.md',
   'samples/welcome.md',
-  'docs/site/home.md',
-  'docs/site/documentation.md',
-  'docs/site/themes.md',
-  'docs/site/about.md',
-  'docs/site/support.md',
   'README.md',
   'CONTRIBUTING.md',
-  'THEMES.md'
-].filter((file) => fs.existsSync(path.join(ROOT, file)));
+  'THEMES.md',
+  'scripts/specimens.js'
+]
+  .concat(require('../scripts/site').PAGES
+    .filter((entry) => entry.source)
+    .map((entry) => entry.source))
+  .filter((file, index, all) => all.indexOf(file) === index)
+  .filter((file) => fs.existsSync(path.join(ROOT, file)));
 
 /* Real addresses we link to on purpose. */
 const PUBLIC_HOSTS = [
@@ -74,6 +81,11 @@ const PUBLIC_HOSTS = [
   'buymeacoffee.com',
   'semver.org',
   'codywhite.me',
+  /* This project's own site. It is named in the SharePoint package and the
+     Teams manifest, so the privacy policy that both of them link to is entitled
+     to say which site it is describing. */
+  'markstrata.com',
+  'www.markstrata.com',
   'primer.style',
   'katex.org',
   'nodejs.org',

@@ -10,6 +10,65 @@ Entries below 0.0.10.0 were written before the switch and are three-part.
 
 ## 0.0.18.4
 
+- The website is rebuilt. It served two readers as though they were one: an
+  administrator deciding whether to install this and somebody who has to write
+  a document in it were offered the same seven links in the same bar. The
+  navigation is two labelled sections now, Evaluate and Documentation, and both
+  are drawn on every page, the privacy policy and the terms of use included,
+  since those are named in the SharePoint package and the app catalog sends
+  people straight to them.
+
+  Five pages are new. **Install** is what a tenant has to have, which is an App
+  Catalog and nothing else, and what happens to the package once it is there.
+  **Teams** is the half the site had never caught up with: a channel's Files are
+  a SharePoint document library, so the same web part reads the same documents
+  as a tab, and Sync to Teams publishes the app package that already rides
+  inside the .sppkg. **Linking**, **Reading** and **Editing** cover the three
+  behaviours no single rendered document can show: wiki links and what a bare
+  `[[Firewall]]` resolves to, following a link and the trail back out,
+  `?strataDoc=` on the page address, what a reader gets around a document, and
+  what changes when the page goes into edit mode. The front page is rewritten
+  around the split, and the old documentation page is a settings reference
+  following the five pages of the property pane.
+
+  Those pages say plainly where this and Obsidian disagree: a bare wiki link
+  resolves against the folder the document is in and nowhere else, because there
+  is no vault to search, only a library, a reader's permissions and one request
+  at a time.
+
+- A guided page carries specimens: panels of markup that ViewModeRenderer and
+  EditModeManager produced at build time, over a jsdom document, dropped onto
+  the page where the web part's own stylesheets already are. The toolbar, the
+  trail of documents a reader has walked, a wiki link marked as not being in the
+  library, and the split editor are all built against a SharePoint library, so
+  none of them can be shown by rendering one markdown file, and a screenshot of
+  each would be four pictures to keep in step by hand. A specimen cannot drift,
+  because it is the shipping code's own output. It also cannot work: the
+  handlers are properties on the elements and do not survive being written to a
+  file, so the panel refuses the pointer, everything in it is out of the tab
+  order, and the note under it says so.
+
+- The site follows the reader's light or dark mode rather than being a dark band
+  at either end of a light page, and the switch that decides it is in the header
+  on every page. It used to be a dropdown in a bar of theme controls that
+  appeared above every page whether or not the page was about the rendering; on
+  a phone that bar filled the screen before the first sentence. The bar is now
+  only on the theme preview and on `npm run demo`, which exist for nothing else.
+
+- The theme preview was rendering `[[deploy]]` as literal brackets and
+  `#kitchen-sink` as a word with a hash in front, in the same sentences that say
+  what each of them becomes. Wiki links and tags are both off by default in the
+  web part, and the page that claims to exercise everything was being built with
+  the defaults. It is built with them on, so the document shows what it says.
+
+- The README and CONTRIBUTING.md described a Teams flow that stopped being true
+  at 0.0.18.2. Both named a zip at a path the builder does not write, from a
+  manifest at a path that does not exist, and CONTRIBUTING said Sync to Teams
+  was not used any more and should not be. Sync to Teams is exactly how the app
+  reaches a tenant: SPFx copies everything under `teams/` into the .sppkg, and
+  the sync looks inside the package for `./teams/TeamsSPFxApp.zip` and publishes
+  ours instead of generating one.
+
 - Raw HTML no longer means raw scripting. With "Allow raw HTML in markdown" on,
   whatever an author wrote went onto the page untouched, so `<script>`,
   `<img onerror=...>` and `<a href="javascript:...">` all ran - in the next

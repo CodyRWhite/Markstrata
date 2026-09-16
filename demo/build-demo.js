@@ -28,6 +28,7 @@ const path = require('path');
 const { execFileSync } = require('child_process');
 const { copyBrand, brandHead } = require('../scripts/brand-assets');
 const site = require('../scripts/site');
+const specimens = require('../scripts/specimens');
 
 /*
  * Usage:
@@ -46,6 +47,23 @@ const root = path.join(__dirname, '..');
 const outDir = outArg === -1 ? path.join(__dirname, 'dist') : path.resolve(args[outArg + 1]);
 const libDir = path.join(root, 'temp', 'demo-lib');
 
+/*
+ * The theme controls above the document.
+ *
+ * They belong on a page whose subject is the rendering - the theme preview,
+ * and `npm run demo`, which exists for nothing else. On a page of prose they
+ * are five dropdowns nobody came for, and at phone width they filled the
+ * screen before the first sentence. The colour mode is not among them either
+ * way: that is a choice about the whole site, so it lives in the header and
+ * every page has it.
+ */
+const showControls = !pageId || site.page(pageId).demoBar === true;
+
+/* A page that asks for no contents gets none built, rather than one built and
+   hidden: a panel nothing can reach is still a panel in the markup, and the
+   browser driver counts them. */
+const showToc = !pageId || site.page(pageId).toc !== 'off';
+
 const CSS_FILES = [
   'base.css',
   'typography.css',
@@ -62,6 +80,12 @@ const CSS_FILES = [
   'print.css'
 ];
 
+/*
+ * The renderer classes as well as the pipeline. They cost nothing extra to
+ * compile - tsc is already walking the same graph - and a page that asks for a
+ * specimen needs the same ViewModeRenderer and EditModeManager a SharePoint
+ * page runs, rather than a second drawing of the toolbar kept in step by hand.
+ */
 function compileProcessor() {
   console.log('Compiling the markdown pipeline...');
   execFileSync(
@@ -71,6 +95,13 @@ function compileProcessor() {
       path.join(root, 'src', 'webparts', 'markstrata', 'utils', 'htmlSanitiser.ts'),
       path.join(root, 'src', 'webparts', 'markstrata', 'utils', 'ThemeManager.ts'),
       path.join(root, 'src', 'webparts', 'markstrata', 'utils', 'mermaidConfig.ts'),
+      path.join(root, 'src', 'webparts', 'markstrata', 'utils', 'ViewModeRenderer.ts'),
+      path.join(root, 'src', 'webparts', 'markstrata', 'utils', 'EditModeManager.ts'),
+      path.join(root, 'src', 'webparts', 'markstrata', 'utils', 'linkCheck.ts'),
+      /* Named rather than found: with an explicit file list tsc picks up no
+         ambient declarations of its own, and the diagram renderer's import of
+         `mermaid` is answered by this one. */
+      path.join(root, 'src', 'types', 'mermaid.d.ts'),
       '--outDir', libDir,
       '--module', 'commonjs',
       '--target', 'es2017',
@@ -136,7 +167,7 @@ function copyAssets() {
   copyBrand(outDir);
 }
 
-function build() {
+async function build() {
   compileProcessor();
 
   /* The pipeline sanitises its own output when raw HTML is allowed, and
@@ -151,7 +182,20 @@ function build() {
   /* The same object the web part initialises mermaid with, so the two cannot
      drift: this page used to carry its own copy and missed the gantt fix. */
   const { mermaidConfigFor, MERMAID_BASE_CONFIG } = require(path.join(libDir, 'mermaidConfig.js'));
-  const processor = new MarkdownProcessor({ showLineNumbers: true, allowHtml: true });
+  /*
+   * Raw HTML is on because these pages write some: the front page's cards, the
+   * support buttons, a `<kbd>` on the syntax page and the empty div a page uses
+   * to ask for a specimen. It is sanitised on the way out like anywhere else.
+   *
+   * A page may ask for more. Wiki links are off by default in the web part, so
+   * a page explaining them has to turn them on to show one working, and it
+   * says so in its own entry in scripts/site.js rather than every page being
+   * rendered as though the settings were something they are not.
+   */
+  const processor = new MarkdownProcessor(Object.assign(
+    { showLineNumbers: true, allowHtml: true },
+    (pageId && site.page(pageId).render) || {}
+  ));
 
   // Diagrams are themed from the same palettes the web part uses, so the
   // preview shows what a deployed page shows.
@@ -169,8 +213,13 @@ function build() {
   /* The web part prefers a contents the document wrote for itself; this does
      the same, or the page carries two. */
   const rendered = adoptAuthoredToc(processor.render(sample));
-  const html = rendered.html;
-  const page = template(readCss(), html, rendered.toc || buildToc(html), mermaidThemes,
+  /* Panels of real web part markup, where a page asks for one. See
+     scripts/specimens.js for what they are and why they are not pictures. */
+  const html = await specimens.fill(rendered.html, libDir);
+  /* Built from the document, not from what was dropped into it: a specimen
+     carries headings of its own and they are not sections of this page. */
+  const page = template(readCss(), html,
+    showToc ? (rendered.toc || buildToc(rendered.html)) : '', mermaidThemes,
     { configFor: mermaidConfigFor, base: MERMAID_BASE_CONFIG },
     pageId ? site.page(pageId).title : pageTitle(html));
 
@@ -272,20 +321,30 @@ ${brandHead(title, pageId ? site.page(pageId).description : 'Markdown for ShareP
    the surface behind the web part has to move with it or a dark document sits
    on a white page. The web part paints its own root; this is everything
    around it. */
-:root { color-scheme: light; --site-canvas: #FFFFFF; }
-:root[data-site-mode="dark"] { color-scheme: dark; --site-canvas: #0A1417; }
+${site.SITE_TOKENS_CSS}
 body { margin: 0; background: var(--site-canvas);
        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
 .demo-bar {
-  position: sticky; top: 0; z-index: 20; display: flex; flex-wrap: wrap; gap: 12px;
-  align-items: center; padding: 10px 16px; background: #1b1f24; color: #e6edf3; font-size: 13px;
+  display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center;
+  padding: 10px 22px; max-width: 1180px; margin: 0 auto;
+  color: var(--site-muted); font-size: 13px;
 }
-.demo-bar .demo-brand { display: flex; align-items: center; margin-right: 4px; }
-.demo-bar select, .demo-bar button {
-  padding: 4px 8px; border-radius: 4px; border: 1px solid #444c56;
-  background: #22272e; color: #e6edf3; font: inherit;
+.demo-bar select {
+  padding: 4px 8px; border-radius: 6px; border: 1px solid var(--site-line);
+  background: var(--site-chrome); color: var(--site-ink); font: inherit;
 }
-.demo-stage { padding: 24px 20px 64px; }
+.demo-bar label { display: flex; align-items: center; gap: 6px; }
+/* The document sits on the canvas as a panel of its own, so the surface the
+   web part paints reads as the web part rather than as the page. */
+.demo-stage { padding: 22px 20px 56px; }
+.demo-stage .strata-root {
+  max-width: 1180px; margin: 0 auto; border-radius: 12px;
+  border: 1px solid var(--site-line); box-shadow: var(--site-shadow);
+}
+@media (max-width: 720px) {
+  .demo-bar { padding: 10px 16px; }
+  .demo-stage { padding: 14px 10px 40px; }
+}
 ${pageId ? site.CHROME_CSS : ''}
 </style>
 <style>
@@ -295,18 +354,13 @@ ${site.MODE_BOOTSTRAP}
 </head>
 <body>
 ${header}
-<div class="demo-bar">
+${showControls ? `<div class="demo-bar">
+  ${pageId ? '' : site.modeToggle()}
   <label>Theme
     <select id="theme">
       <option value="github">GitHub</option>
       <option value="obsidian">Obsidian</option>
       <option value="vscode" selected>VS Code</option>
-    </select>
-  </label>
-  <label>Mode
-    <select id="mode">
-      <option value="light">Light</option>
-      <option value="dark">Dark</option>
     </select>
   </label>
   <label>Width
@@ -334,7 +388,7 @@ ${header}
   </label>
   <label><input type="checkbox" id="numbers" checked> Line numbers</label>
   <label><input type="checkbox" id="wrap"> Wrap code</label>
-</div>
+</div>` : ''}
 <div class="demo-stage">
   <div class="strata-root" id="root" data-strata-theme="vscode" data-strata-mode="light"
        data-strata-width="comfortable" data-strata-density="compact" data-strata-size="normal" data-strata-code-size="normal">
@@ -370,9 +424,9 @@ var MERMAID_CONFIG_FOR = ${mermaidBase.configFor.toString()};
   var tocSelect = document.getElementById('toc');
   var layout = document.getElementById('layout');
   var content = document.getElementById('content');
-  function placeToc() {
+  function placeToc(placement) {
     var panel = document.querySelector('.strata-toc-sidebar, .strata-toc-inline');
-    var placement = tocSelect.value;
+    if (!panel) { return; }
     panel.hidden = placement === 'off';
     layout.setAttribute('data-strata-toc', placement === 'off' ? 'left' : placement);
     panel.className = placement === 'inline' ? 'strata-toc-inline' : 'strata-toc-sidebar';
@@ -382,13 +436,16 @@ var MERMAID_CONFIG_FOR = ${mermaidBase.configFor.toString()};
       layout.insertBefore(panel, content);
     }
   }
-  tocSelect.addEventListener('change', function () {
-    placeToc();
-    if (window.strataEnhance) { window.strataEnhance(); }
-  });
+  if (tocSelect) {
+    tocSelect.addEventListener('change', function () {
+      placeToc(tocSelect.value);
+      if (window.strataEnhance) { window.strataEnhance(); }
+    });
+  }
   // Run it once so the page starts wherever the select does, rather than the
-  // markup having to repeat the default placement and drift from it.
-  placeToc();
+  // markup having to repeat the default placement and drift from it. A page
+  // without the controls starts where the markup says, which is the left.
+  placeToc(tocSelect ? tocSelect.value : 'left');
 
   // Mirror the web part: a contents sidebar starts collapsed when the column
   // is too narrow to sit it beside the text. Above the content it always
@@ -397,73 +454,41 @@ var MERMAID_CONFIG_FOR = ${mermaidBase.configFor.toString()};
   if (toc && root.clientWidth <= 720) {
     toc.open = false;
   }
+
   /*
-   * Colour mode follows the operating system until the reader chooses one, and
-   * their choice is remembered from then on. Storage can throw in a private
-   * window, so every read and write is guarded and the page simply falls back
-   * to the system setting.
+   * The colour mode is the header's, on every page of the site, and the switch
+   * there says so with an event. All this has to do is take the web part's own
+   * root with it and re-draw the diagrams, which are painted in the colours of
+   * whatever mode was current when they were drawn.
    */
-  var MODE_KEY = 'markstrata-site-mode';
-  var query = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
-
-  function storedMode() {
-    try {
-      var saved = window.localStorage.getItem(MODE_KEY);
-      return saved === 'light' || saved === 'dark' ? saved : null;
-    } catch (error) {
-      return null;
-    }
-  }
-
   function applyMode(mode) {
     root.setAttribute('data-strata-mode', mode);
     root.style.colorScheme = mode;
-    document.documentElement.setAttribute('data-site-mode', mode);
-    document.getElementById('mode').value = mode;
   }
 
-  /* Decided in the head, before the first paint; this only keeps the controls
-     and the listeners in step with it. */
-  applyMode(window.__strataMode || storedMode() || (query && query.matches ? 'dark' : 'light'));
+  applyMode(document.documentElement.getAttribute('data-site-mode')
+    || window.__strataMode || 'light');
 
-  if (query) {
-    var follow = function () {
-      if (!storedMode()) {
-        applyMode(query.matches ? 'dark' : 'light');
-        renderDiagrams();
-      }
-    };
-    if (query.addEventListener) {
-      query.addEventListener('change', follow);
-    } else if (query.addListener) {
-      query.addListener(follow);
-    }
-  }
+  window.addEventListener('strata-site-mode', function (event) {
+    applyMode(event.detail);
+    renderDiagrams();
+  });
 
   function bind(id, attribute) {
     var input = document.getElementById(id);
+    if (!input) { return; }
     input.addEventListener('change', function () {
       root.setAttribute(attribute, input.value);
-      root.style.colorScheme = document.getElementById('mode').value;
       renderDiagrams();
     });
   }
   bind('theme', 'data-strata-theme');
-  document.getElementById('mode').addEventListener('change', function () {
-    var chosen = document.getElementById('mode').value;
-    try {
-      window.localStorage.setItem(MODE_KEY, chosen);
-    } catch (error) {
-      /* A private window still gets the change, just not the memory of it. */
-    }
-    applyMode(chosen);
-    renderDiagrams();
-  });
   bind('width', 'data-strata-width');
   bind('density', 'data-strata-density');
 
   function toggleClass(id, className) {
     var input = document.getElementById(id);
+    if (!input) { return; }
     input.addEventListener('change', function () {
       var blocks = document.querySelectorAll('.strata-code');
       for (var index = 0; index < blocks.length; index++) {
@@ -490,7 +515,10 @@ var MERMAID_CONFIG_FOR = ${mermaidBase.configFor.toString()};
         sources[index] = source ? source.textContent : '';
       }
     }
-    var key = document.getElementById('theme').value + '-' + document.getElementById('mode').value;
+    /* Read off the web part's own root rather than off the controls, because
+       on most pages there are no controls: the theme is whatever the markup
+       said and the mode is whatever the header last set. */
+    var key = root.getAttribute('data-strata-theme') + '-' + root.getAttribute('data-strata-mode');
     var config = mermaidThemes[key];
     for (var next = 0; next < hosts.length; next++) {
       (function (host, source, index) {
@@ -510,9 +538,16 @@ var MERMAID_CONFIG_FOR = ${mermaidBase.configFor.toString()};
   renderDiagrams();
 })();
 </script>
+${site.MODE_SCRIPT}
 </body>
 </html>
 `;
 }
 
-build();
+/* A specimen has to ask SharePoint-shaped questions before it can be drawn, so
+   the build is asynchronous. A failure has to stop the build rather than be
+   reported to nobody, which an unhandled rejection would be. */
+build().catch((error) => {
+  console.error(error);
+  process.exitCode = 1;
+});
