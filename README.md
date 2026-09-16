@@ -74,6 +74,10 @@ document in the footer. `[[Wiki links]]` resolve to files in the same folder,
 with links to pages that are not there marked. A reading time can sit in the
 toolbar and a back-to-top button can float above the page.
 
+A reader can share a link to the document they have reached, and export it as a
+paginated PDF with a cover, a contents page carrying real page numbers and
+running headers.
+
 Every piece of syntax, with what you write beside what it turns into:
 **[the syntax page](https://markstrata.com/syntax/)**. Every setting:
 **[the settings page](https://markstrata.com/docs/)**.
@@ -93,7 +97,7 @@ actually written in. The code here is written from scratch.
 | Syntax colours | One highlight.js stylesheet, whatever the page theme was | Per-theme token colours: Primer, Obsidian's Prism mapping, Dark+/Light+ |
 | Line numbers | Absolutely positioned, overlapping long lines, copied with the code | A gutter drawn with CSS counters, never copied, never overlapped |
 | Search | Content invisible to Microsoft Search | Rendered text published to the search index |
-| Third-party CDN | Mermaid, KaTeX CSS and Monaco fetched at runtime | Nothing from a CDN; Mermaid is a lazy chunk of the package |
+| Third-party CDN | Mermaid, KaTeX CSS and Monaco fetched at runtime | Nothing from a CDN; Mermaid and Paged.js are lazy chunks of the package |
 | Dependencies | markdown-it 13 (ReDoS), KaTeX 0.16.9 (5 CVEs) | Current versions, no advisories against code that ships to the browser |
 
 The [about page](https://markstrata.com/about/) has the longer version,
@@ -204,7 +208,10 @@ src/webparts/markstrata/
                                   print, and themes/github|obsidian|vscode.css
   utils/                          markdown-it pipeline and plugins, code blocks,
                                   theme resolution, view and edit renderers,
-                                  SharePoint access, Mermaid, image paths
+                                  SharePoint access, Mermaid, image paths,
+                                  PDF export (Paged.js)
+  types/                          hand-written typings for the lazily imported
+                                  chunks, which ship none usable here
 tests/                            unit tests (node --test)
 samples/                          welcome + kitchen-sink markdown
 demo/                             static theme preview builder
@@ -214,8 +221,10 @@ harness/                          renderer classes driven in a real browser,
                                   own lifecycle can run in a plain page
 assets/                           delivered brand package and generated assets
 docs/site/                        the website's markdown sources
-scripts/                          site, specimens, brand, screenshots, version
-                                  stamping, release notes
+scripts/                          site, specimens, brand, screenshots, strings,
+                                  the Teams app, version stamping, release
+                                  notes, and the PowerShell that writes them
+                                  back onto published releases
 .github/workflows/                CI, release and Pages pipelines
 ```
 
