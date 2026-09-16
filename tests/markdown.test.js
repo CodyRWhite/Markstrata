@@ -236,6 +236,50 @@ test('mermaid fences are left as code when diagrams are off', () => {
   assert.match(html, /strata-code/);
 });
 
+/*
+ * GitHub's slug rule, which VS Code and Obsidian follow too. The ids used to be
+ * the heading percent-encoded, which nothing else in the world produces: no
+ * anchor written anywhere else landed here, and none of ours travelled.
+ */
+test('a heading gets the id GitHub would give it', () => {
+  assert.match(markdown.render('## Step 1: Install'), /<h2 id="step-1-install"/);
+  assert.match(markdown.render('## C# and .NET'), /<h2 id="c-and-net"/);
+  assert.match(markdown.render("## What's new?"), /<h2 id="whats-new"/);
+});
+
+test('a repeated heading is still told apart from the first', () => {
+  const html = markdown.render('## Same\n\n## Same');
+  assert.match(html, /<h2 id="same"/);
+  assert.match(html, /<h2 id="same-1"/);
+});
+
+/*
+ * Every anchor already written in somebody's library was written against the
+ * old id, so a heading answers to both. The old one goes on an empty anchor
+ * inside the heading, out of reach of the contents and of the permalink.
+ */
+test('a heading still answers to the id it used to have', () => {
+  const html = markdown.render('## Step 1: Install');
+  assert.match(html, /<a id="step-1%3A-install" class="strata-heading-alias"/);
+});
+
+test('a heading whose two ids agree is emitted once', () => {
+  const html = markdown.render('## Plain heading');
+  assert.match(html, /<h2 id="plain-heading"/);
+  assert.doesNotMatch(html, /strata-heading-alias/);
+});
+
+test('no two headings claim the same old id', () => {
+  const html = markdown.render('## Same\n\n## Same');
+  assert.equal((html.match(/id="same"/g) || []).length, 1);
+});
+
+test('the contents point at the ids the headings actually have', () => {
+  const html = markdown.render('[[toc]]\n\n## Step 1: Install\n\ntext');
+  assert.match(html, /<a href="#step-1-install">/);
+  assert.match(html, /<h2 id="step-1-install"/);
+});
+
 test('the inline table of contents is not left inside a paragraph', () => {
   const html = markdown.render('# Title\n\n[[toc]]\n\n## One\n\n## Two');
   assert.match(html, /<div class="strata-toc">/);

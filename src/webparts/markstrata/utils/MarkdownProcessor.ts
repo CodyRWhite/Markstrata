@@ -36,6 +36,7 @@ import { attributeGuardPlugin } from './markdownItAttributeGuard';
 import { tableCellPlugin } from './markdownItTableCells';
 import { strikethroughPlugin } from './markdownItStrikethrough';
 import { commentPlugin } from './markdownItComments';
+import { headingSlug, legacyHeadingAnchor } from './wikiLinks';
 import {
   ILinkifyMatch,
   IMarkdownIt,
@@ -170,6 +171,7 @@ export class MarkdownProcessor {
 
     this.addWwwLinks();
     this.addPlugins();
+    this.addHeadingAliases();
     this.addCodeBlocks();
     this.addTableWrapper();
     this.addImages();
@@ -312,16 +314,90 @@ export class MarkdownProcessor {
               space: false
             })
           : undefined;
-      register('heading anchors', anchor, { level: [1, 2, 3, 4], permalink: permalink, tabIndex: false });
+      register('heading anchors', anchor, {
+        level: [1, 2, 3, 4],
+        permalink: permalink,
+        tabIndex: false,
+        /* GitHub's rule, and the same function the table of contents below and
+           `[[Page#Heading]]` use. A heading whose id is made one way and
+           linked another way is a link to nothing. */
+        slugify: headingSlug,
+        /* Called with the heading's token and the text the id was made from,
+           before the permalink is put in among its children, which is the one
+           moment the old id can still be worked out. */
+        callback: (token: IToken, heading: { slug: string; title: string }): void => {
+          const legacy: string = legacyHeadingAnchor(heading.title);
+          if (legacy && legacy !== heading.slug) {
+            token.meta = { ...((token.meta as { [key: string]: unknown }) || {}), strataAlias: legacy };
+          }
+        }
+      });
     }
 
     if (this.options.enableToc) {
       register('table of contents', markdownItTOC, {
         includeLevel: [2, 3],
         containerClass: 'strata-toc',
-        listType: 'ul'
+        listType: 'ul',
+        /* Its own copy of the slug rule, which it falls back on for a heading
+           that has no id yet. Left at its default it would send every entry in
+           the contents to an id that no heading has. */
+        slugify: headingSlug
       });
     }
+  }
+
+  /*
+   * A heading answers to the id it used to have as well as the one it has now.
+   *
+   * Moving to GitHub's slug rule changed what almost every heading is called,
+   * and every `[[Page#Heading]]` and `#anchor` already written in somebody's
+   * library was written against the old name. Rather than break all of them at
+   * once, the old name is put on an empty anchor inside the heading, so a link
+   * written last year still lands on the right paragraph. It costs a tag that
+   * renders as nothing.
+   *
+   * Emitted here, at render time, rather than as a token, so that neither the
+   * table of contents nor the permalink rendering can pick it up: both of them
+   * read the heading's children, and this is not one of them.
+   */
+  private addHeadingAliases(): void {
+    const previous: RenderRule | undefined = this.markdownIt.renderer.rules.heading_open;
+
+    this.markdownIt.renderer.rules.heading_open = (
+      tokens: IToken[],
+      index: number,
+      options: unknown,
+      environment: unknown,
+      self: IRenderer
+    ): string => {
+      const html: string = previous
+        ? previous(tokens, index, options, environment, self)
+        : self.renderToken(tokens, index, options);
+
+      /* Two headings can share an old name where they no longer share a new
+         one - "Same" and "Same" become `same` and `same-1`, and both used to
+         be `same` - and two elements with the same id is worse than one link
+         that does not land. Every id a heading has already taken is written
+         down, its own first, and the first to claim a name keeps it. */
+      const env: { strataAliases?: { [name: string]: boolean } } =
+        (environment as { strataAliases?: { [name: string]: boolean } }) || {};
+      const claimed: { [name: string]: boolean } = env.strataAliases || (env.strataAliases = {});
+      const own: string | null = tokens[index].attrGet('id');
+      if (own) {
+        claimed[own] = true;
+      }
+
+      const meta: { strataAlias?: string } | undefined =
+        tokens[index].meta as { strataAlias?: string } | undefined;
+      const alias: string | undefined = meta ? meta.strataAlias : undefined;
+      if (!alias || claimed[alias]) {
+        return html;
+      }
+      claimed[alias] = true;
+
+      return `${html}<a id="${escapeHtml(alias)}" class="strata-heading-alias" aria-hidden="true"></a>`;
+    };
   }
 
   private addCodeBlocks(): void {

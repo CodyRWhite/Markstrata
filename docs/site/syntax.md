@@ -45,8 +45,12 @@ An abbreviation is declared once and explains itself wherever it appears:
 [a heading on this page](#text)
 ```
 
-Headings get an id and, with **Heading link anchors** on, a `#` beside them to
-copy. A link to another site opens in a new tab.
+Headings get the same id GitHub gives them - lower case, punctuation dropped,
+spaces to hyphens, so `## Step 1: Install` is `#step-1-install` - which means a
+link written against the page on GitHub lands here too. A heading also answers
+to the id it was given before this web part moved to GitHub's rule, so an
+anchor written against an older version still lands. With
+**Heading link anchors** on there is a `#` beside each heading to copy. A link to another site opens in a new tab.
 
 An address written on its own becomes a link, including one that starts
 `www.` with no scheme in front of it. A bare file name does not: `notes.md` in

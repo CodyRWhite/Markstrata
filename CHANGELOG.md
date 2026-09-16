@@ -126,6 +126,21 @@ Entries below 0.0.10.0 were written before the switch and are three-part.
   around them was, which is where half of a runbook's commands are written.
   GitHub and VS Code both leave punctuation alone, and so does this now.
 
+- A heading gets the id GitHub gives it. `## Step 1: Install` was
+  `step-1%3A-install`, `## C# and .NET` was `c%23-and-.net` and `## What's new?`
+  was `what%E2%80%99s-new%3F`, none of which any other tool produces: an
+  anchor written against the same document on GitHub, in VS Code or in Obsidian
+  landed nowhere here, and one written here travelled nowhere else. The rule is
+  now theirs - lower case, drop the punctuation, spaces to hyphens - and it
+  lives in one function, shared by the heading ids, the generated table of
+  contents and `[[Page#Heading]]`, because a heading whose id is made one way
+  and linked another way is a link to nothing.
+- Anchors already written against the old ids still land. Every
+  `[[Page#Heading]]` and every `#fragment` in a library was written against the
+  old rule, so the old id is kept on an empty anchor inside the heading and a
+  link written last year still finds its paragraph. Where the two forms agree,
+  which is most headings, only the heading is emitted.
+
 ## 0.0.18.3
 
 - The split editor is one editor again. The box you typed in stopped at its own

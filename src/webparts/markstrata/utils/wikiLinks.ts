@@ -34,12 +34,59 @@
  * Requires:  imagePaths.ts
  */
 
-/** How a heading becomes the id that markdown-it-anchor gave it. */
 import { encodePath } from './imagePaths';
 
+/*
+ * Everything a heading may keep in its id: digits, unqualified letters, a
+ * space, a hyphen and an underscore, plus the ranges where the letters of
+ * every other alphabet live. Everything else - the colon in "Step 1: Install",
+ * the hash in "C# and .NET", the apostrophe and the question mark in "What's
+ * new?" - comes out.
+ *
+ * Written as ranges rather than as `\p{L}`, which needs a newer compilation
+ * target than SharePoint Framework pins. The ranges deliberately stop short of
+ * U+2000, so curly quotes, dashes and ellipses are punctuation here as well.
+ */
+const NOT_IN_A_SLUG: RegExp =
+  /[^0-9a-z \-_\u00c0-\u1fff\u2c00-\ud7ff\uf900-\ufdcf\ufdf0-\ufffd]/g;
+
+/**
+ * How a heading becomes the id it can be linked to.
+ *
+ * GitHub's rule, which VS Code and Obsidian follow as well: lower case, drop
+ * the punctuation, spaces to hyphens. The point of matching it is that an
+ * anchor is written by hand, in another document, often by somebody reading
+ * the page on GitHub, and a link that works there has to work here.
+ *
+ * This is the one place the rule lives. The heading ids, the entries in a
+ * generated table of contents and the target of a `[[Page#Heading]]` all come
+ * through here, and a heading whose id is made one way and linked another way
+ * is a link to nothing.
+ */
+export function headingSlug(heading: string): string {
+  return (heading || '')
+    .trim()
+    .toLowerCase()
+    .replace(NOT_IN_A_SLUG, '')
+    .replace(/ /g, '-');
+}
+
+/** The same, kept under the name the rest of the web part already calls it. */
 export function headingAnchor(heading: string): string {
+  return headingSlug(heading);
+}
+
+/**
+ * The id a heading used to get, before the move to GitHub's rule.
+ *
+ * Every `[[Page#Heading]]` and `#anchor` already written in a library was
+ * written against this one, and changing the rule would have broken all of
+ * them at once. A heading still answers to its old id as well, so those links
+ * keep landing; this is what works out what to call it.
+ */
+export function legacyHeadingAnchor(heading: string): string {
   return encodeURIComponent(
-    heading.trim().toLowerCase().replace(/\s+/g, '-')
+    (heading || '').trim().toLowerCase().replace(/\s+/g, '-')
   );
 }
 

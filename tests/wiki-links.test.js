@@ -69,6 +69,17 @@ test('a heading can be named, in another page or in this one', () => {
   assert.equal(here.label, 'Rollback');
 });
 
+test('a heading link resolves to the id the heading is given', () => {
+  /* The one rule, shared with the heading ids and the contents: a heading
+     whose id is made one way and linked another way is a link to nothing. */
+  assert.equal(headingAnchor('Step 1: Install'), 'step-1-install');
+  assert.equal(headingAnchor("What's new?"), 'whats-new');
+  assert.equal(
+    wikiHref(parseWikiLink('Runbook#Step 1: Install'), () => undefined),
+    'Runbook.md#step-1-install'
+  );
+});
+
 test('empty brackets are not a link', () => {
   assert.equal(parseWikiLink(''), undefined);
   assert.equal(parseWikiLink('   '), undefined);
