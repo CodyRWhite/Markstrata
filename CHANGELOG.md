@@ -8,6 +8,70 @@ is normally zero. `scripts/set-version.js` stamps it when a release is cut.
 
 Entries below 0.0.10.0 were written before the switch and are three-part.
 
+## 0.0.19.4
+
+- A folder inside a folder can be chosen. Picking a library asked SharePoint
+  for its folders once, which answers with the folders at the root and says
+  nothing about what is inside them, so an author could choose `Runbooks` and
+  never `Runbooks/Database`. A wiki kept more than one level deep could not be
+  pointed at at all, which is most wikis by the time they are worth calling
+  one. SharePoint describes one folder at a time, so the rest are walked: five
+  levels down and five hundred folders at most, breadth first, so the shallow
+  folders are the ones that survive a library too big to describe. A folder a
+  reader cannot open is taken as empty rather than ending the walk, because
+  being denied one subfolder out of twenty should not cost them the other
+  nineteen. A folder chosen before this still reads correctly.
+- A wiki link written in a table stays a link. A pipe inside a row ends the
+  cell, so the pipe in `[[Deploy runbook|how we ship]]` ended it too: the link
+  came apart across two cells, both halves reached the reader as literal
+  brackets, and the row carried one cell more than the table had columns.
+  Obsidian documents the escaped form, `[[Page\|Label]]`, and that has always
+  worked here, but the bare pipe is what a folder of notes arrives full of,
+  because it is what Obsidian itself writes everywhere outside a table. The
+  pipe inside a wiki link's brackets is content now, the same way a pipe inside
+  a code span already was. `[[1,2],[3,4]]` is still an array and the pipe after
+  it still ends the cell, since a bracket between the pairs means these are not
+  a link's brackets, and an opening pair with no closing one protects nothing.
+  With wiki links off, a row splits where its pipes are, exactly as before.
+- An anchor goes to the heading it names. Two faults, and both ended with the
+  reader at the top of a document rather than at the heading they asked for.
+  - An anchor inside the document was left to the browser, and on a SharePoint
+    page that is not a scroll: the page is a single-page application with a
+    router listening for clicks, a fragment is a navigation as far as it is
+    concerned, and what came back was the page's own address with the anchor on
+    it and the configured document on screen, which has no such heading. The
+    click is taken before the router now, the same way a click on a document
+    link already is. The permalink beside every heading is an anchor into this
+    document too and had the same fault, so it is mended by the same change.
+  - And a heading was looked up by exactly the text the link carried. A wiki
+    link has already been through the slug rule, so `[[Runbook#Rollback]]`
+    asked for `rollback` and found it; a heading named on the page's own
+    address has not, so `?strataDoc=Runbook.md%23Rollback` asked for
+    `Rollback`, which is the id of nothing. The lookup now asks for each
+    spelling in turn and takes the first that is on the page: as written, so an
+    author's own `{#custom-id}` still wins, then decoded, then slugged, then
+    slugged the way headings were named before the rule changed.
+  - A link to a heading this document has not got does nothing now, rather than
+    sending the reader home. Nothing writes to the address bar: the web part
+    keeps its history entries at the page's own URL so the router treats them
+    as the same page, and putting a fragment there would hand it the navigation
+    all of this is avoiding.
+- Every release has its own notes again. The 0.0.18.4 section had accumulated
+  the notes for everything released after it, so eight versions shared one
+  heading and seven published releases fell back to a one-liner giving their
+  own number and where to download the package. Nothing was rewritten: every
+  line is where it was, under the heading for the release it shipped in. Which
+  release that was is the whole of the work, because the tags cannot answer it
+  and this changelog says why, so the file headers answered it instead, being
+  the one record reconstructed from what each release actually contained.
+- And a way to keep the releases in step with it. A release body is written
+  once, out of the section for that version, and does not follow the changelog
+  afterwards. `scripts/sync-release-notes.ps1` reads the changelog the way the
+  release workflow reads it and writes each body back, leaving the tag, the
+  commit, the assets and the pre-release flag alone. It is PowerShell and run
+  by hand because a release write is refused outright to the environment the
+  rest of this was done in.
+
 ## 0.0.19.3
 
 - A real site name is out of the repository's history, not just out of its
