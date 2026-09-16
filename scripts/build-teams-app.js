@@ -65,13 +65,47 @@ const PACKAGE_NAME = 'TeamsSPFxApp.zip';
 const COMPONENT_ID = '74aecd51-7619-4ca6-b81a-6c670d6098b3';
 
 /*
- * Teams wants three parts and SharePoint's version is four. The fourth is the
- * build number and is normally zero, so it is dropped rather than invented
- * around: 0.0.18.2 goes to Teams as 0.0.18.
+ * Teams wants three parts and SharePoint's version is four, and the fourth one
+ * has to survive the trip.
+ *
+ * It used to be dropped, on the reasoning that the fourth part is the build
+ * number and is normally zero. On a release branch it is not zero and it is
+ * the only part moving: 0.0.18.0 through 0.0.18.5 all went to Teams as
+ * "0.0.18". Teams refuses an app whose version it already holds, so the first
+ * of those installed and every one after it was rejected - which reads, from
+ * the app catalog, as Sync to Teams simply failing again.
+ *
+ * So the build is folded into the patch instead of being thrown away. The
+ * result is still three parts, and it still only ever goes up:
+ *
+ *   0.0.18.0  ->  0.0.18000
+ *   0.0.18.5  ->  0.0.18005
+ *   0.0.19.0  ->  0.0.19000
+ *
+ * A tenant sitting on the old "0.0.18" upgrades cleanly, because 18000 is
+ * greater than 18.
+ *
+ * BUILD_SCALE is what keeps that true, and it only holds while the build
+ * number stays below it. Past that, 0.0.18.1000 would collide with 0.0.19.0
+ * and the upgrade would be refused with nothing to say why, so this throws
+ * rather than writing a number that cannot be installed.
  */
+const BUILD_SCALE = 1000;
+
 function teamsVersion(fourPart) {
   const parts = fourPart.split('.');
-  return parts.slice(0, 3).join('.');
+  const [major, minor, patch] = parts;
+  const build = Number(parts[3] || 0);
+
+  if (!(build < BUILD_SCALE)) {
+    throw new Error(
+      `Build number ${build} in ${fourPart} is too large for the Teams version:`
+      + ` it must stay below ${BUILD_SCALE} so that a later release always`
+      + ' reads as a higher version to Teams.'
+    );
+  }
+
+  return [major, minor, Number(patch) * BUILD_SCALE + build].join('.');
 }
 
 function build() {
@@ -113,7 +147,13 @@ function build() {
     });
 }
 
-build().catch((error) => {
-  console.error(error.message);
-  process.exit(1);
-});
+/* Exported so the version rule can be checked without building a package.
+   Run directly, this still builds. */
+module.exports = { teamsVersion: teamsVersion };
+
+if (require.main === module) {
+  build().catch((error) => {
+    console.error(error.message);
+    process.exit(1);
+  });
+}

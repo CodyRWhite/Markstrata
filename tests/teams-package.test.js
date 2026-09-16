@@ -92,3 +92,60 @@ test('the hosts claimed are the ones there is a story for', () => {
     'a host is claimed here that nothing has been built or checked for'
   );
 });
+
+/*
+ * The version Teams is given has to keep going up.
+ *
+ * SharePoint's version is four-part and Teams takes three, and the fourth was
+ * simply dropped: 0.0.18.0 through 0.0.18.5 all reached Teams as "0.0.18".
+ * Teams refuses an app whose version it already holds, so the first of those
+ * installed and every one after it was refused - which looks, from the app
+ * catalog, like Sync to Teams failing for no reason. On a release branch the
+ * fourth part is the only one moving, which is exactly when it matters most.
+ */
+const { teamsVersion } = require('../scripts/build-teams-app.js');
+
+test('the build number reaches Teams instead of being dropped', () => {
+  assert.notEqual(teamsVersion('0.0.18.5'), teamsVersion('0.0.18.4'),
+    'two releases of the same patch must not read as one version');
+  assert.equal(teamsVersion('0.0.18.5'), '0.0.18005');
+});
+
+test('a later release always reads as a higher version', () => {
+  const order = [
+    '0.0.17.0', '0.0.17.2', '0.0.18.0', '0.0.18.1', '0.0.18.4', '0.0.18.5',
+    '0.0.18.999', '0.0.19.0', '0.1.0.0', '1.0.0.0'
+  ];
+  const compare = (left, right) => {
+    const a = left.split('.').map(Number);
+    const b = right.split('.').map(Number);
+    for (let index = 0; index < 3; index++) {
+      if (a[index] !== b[index]) { return a[index] - b[index]; }
+    }
+    return 0;
+  };
+  for (let index = 1; index < order.length; index++) {
+    const previous = teamsVersion(order[index - 1]);
+    const next = teamsVersion(order[index]);
+    assert.ok(compare(next, previous) > 0,
+      `${order[index]} -> ${next} does not come after ${order[index - 1]} -> ${previous}`);
+  }
+});
+
+test('a tenant on the old three-part version still upgrades', () => {
+  /* What is installed now, from before this was fixed. */
+  assert.ok(Number(teamsVersion('0.0.18.0').split('.')[2]) > 18,
+    'the next release has to outrank the "0.0.18" already installed');
+});
+
+test('it is still three parts, which is all Teams accepts', () => {
+  for (const version of ['0.0.18.5', '1.2.3.4', '0.0.18.0']) {
+    assert.equal(teamsVersion(version).split('.').length, 3, version);
+  }
+});
+
+test('a build number too large to stay in order fails the build', () => {
+  /* Rather than writing a number that reads as older than the release before
+     it and being refused by Teams with nothing to say why. */
+  assert.throws(() => teamsVersion('0.0.18.1000'), /too large/);
+});
