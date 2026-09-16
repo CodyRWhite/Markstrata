@@ -403,3 +403,80 @@ test('and a frame off the allowlist keeps nothing, allow included', () => {
   assert.equal(document.querySelector('iframe'), null, 'the frame itself should be gone');
   assert.doesNotMatch(html, /camera/);
 });
+
+// ------------------------------------------- controls, style, and task lists
+
+/*
+ * Three things that were left allowed when the sanitiser first landed, and
+ * were flagged rather than fixed because each one costs something.
+ *
+ * Nothing here can execute: `form` is blocked and so is scripting, so a
+ * control cannot submit and nothing can read what a reader typed into one.
+ * What is left is what they look like, and a sign-in box drawn inside a
+ * document is something a reader has no way to tell from a real one.
+ */
+const asDom = (html) => {
+  const document = new JSDOM('<body>').window.document;
+  document.body.innerHTML = html;
+  return document;
+};
+
+test('a text box cannot be drawn in a document', () => {
+  const document = asDom(sanitiseRenderedHtml(
+    '<p>Sign in</p><input type="text" name="user"><input type="password" name="pass">'
+  ));
+  assert.equal(document.querySelectorAll('input').length, 0);
+  assert.match(document.body.innerHTML, /Sign in/, 'the prose around it stays');
+});
+
+test('and neither can a textarea or a dropdown', () => {
+  const document = asDom(sanitiseRenderedHtml(
+    '<textarea rows="4"></textarea><select><option>one</option></select>'
+  ));
+  assert.equal(document.querySelector('textarea'), null);
+  assert.equal(document.querySelector('select'), null);
+});
+
+test('but a task list checkbox is untouched, which is why input is not simply blocked', () => {
+  const html = new MarkdownProcessor({ allowHtml: true }).render('- [x] done\n- [ ] todo\n');
+  const document = asDom(html);
+  const boxes = document.querySelectorAll('input[type="checkbox"]');
+  assert.equal(boxes.length, 2, 'the sample itself must have two');
+  assert.equal(boxes[0].hasAttribute('disabled'), true);
+});
+
+test('a checkbox a reader could actually tick does not survive', () => {
+  /* Ours are disabled. One that is not is a control, and a control in a
+     document that nothing reads is a promise the page cannot keep. */
+  const document = asDom(sanitiseRenderedHtml('<input type="checkbox">'));
+  assert.equal(document.querySelector('input'), null);
+});
+
+test('a code block keeps its copy button, which is why button is not blocked', () => {
+  const html = new MarkdownProcessor({
+    allowHtml: true, enableSyntaxHighlighting: true, showCodeHeader: true
+  }).render('```bash\nnpm run package\n```\n');
+  const document = asDom(html);
+  assert.ok(document.querySelector('button'), 'the sample itself must have one');
+});
+
+test('a document cannot restyle the page around it', () => {
+  /* Reaches past its own element: one document could hide the toolbar or
+     overlay the trail for every reader of the page.
+
+     Unlike the checks above this one does NOT fail when `style` is taken out
+     of the forbidden list - DOMPurify drops it under this configuration
+     anyway. Kept, and said out loud, because it is the statement that this
+     stays true; the entry in the list pins behaviour it does not create. */
+  const document = asDom(sanitiseRenderedHtml(
+    '<style>.strata-toolbar { display: none }</style><p>text</p>'
+  ));
+  assert.equal(document.querySelector('style'), null);
+  assert.doesNotMatch(document.body.innerHTML, /strata-toolbar/);
+  assert.match(document.body.innerHTML, /text/);
+});
+
+test('but it can still style one element of its own', () => {
+  const document = asDom(sanitiseRenderedHtml('<p style="color: teal">note</p>'));
+  assert.match(document.querySelector('p').getAttribute('style') || '', /teal/);
+});

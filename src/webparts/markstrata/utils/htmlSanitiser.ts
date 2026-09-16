@@ -128,7 +128,35 @@ const EMBED_PROTOCOLS: string[] = ['http:', 'https:'];
  * allows it, and a form on a wiki page is a login box drawn over someone
  * else's content, posting somewhere the reader cannot see.
  */
-const FORBIDDEN_TAGS: string[] = ['script', 'object', 'embed', 'base', 'meta', 'form'];
+const FORBIDDEN_TAGS: string[] = [
+  'script', 'object', 'embed', 'base', 'meta', 'form',
+  /* Somewhere to type. Nothing can be submitted with `form` gone and nothing
+     can be read back without scripting, so what is left is what they look
+     like - and a convincing sign-in box in a document is something a reader
+     has no way to tell from a real one. A document is for reading, and a box
+     a reader can type into but nothing can collect from is a lie with no
+     upside. `input` is not here because our own task lists are checkboxes; it
+     is narrowed to exactly those, below.
+
+     `button` is not here either, and deliberately: this project renders its
+     own, one per code block for Copy, and blocking the tag took all eight out
+     of the kitchen sink. A button that cannot submit and cannot run anything
+     is decoration; a text box that looks like it takes a password is not. */
+  'select', 'textarea',
+  /* Style, which reaches past its own element: one document could hide the
+     toolbar or overlay the trail for every reader of the page.
+
+     Named here for what it is rather than for what it changes. Taking it out
+     of this list makes no difference today - DOMPurify drops `<style>` under
+     the configuration below either way, which I checked rather than assumed
+     after being told it was allowed. So this pins the behaviour instead of
+     creating it, and the check beside it passes with or without this entry
+     and says so. It earns its place the day a DOMPurify default moves.
+
+     Per-element `style` attributes are untouched, so a document can still
+     colour its own table. */
+  'style'
+];
 
 /**
  * `srcdoc` is a whole document written inline, so an iframe carrying one never
@@ -280,6 +308,25 @@ function build(): Purifier {
    */
   instance.addHook('afterSanitizeAttributes', (node: Element): void => {
     const tag: string = (node.tagName || '').toLowerCase();
+
+    /*
+     * The one control a document may draw, and only in the shape this project
+     * draws it: a task list is `<input type="checkbox" disabled>`. Anything
+     * else wearing the same tag - a text box, a password box, a submit button
+     * written as an input - goes. Checked here rather than by name, because
+     * DOMPurify allows or refuses a tag and this is a question about two of
+     * its attributes.
+     */
+    if (tag === 'input') {
+      const type: string = (node.getAttribute('type') || '').toLowerCase();
+      if (type !== 'checkbox' || !node.hasAttribute('disabled')) {
+        if (node.parentNode) {
+          node.parentNode.removeChild(node);
+        }
+      }
+      return;
+    }
+
     if (tag !== 'iframe') {
       return;
     }
