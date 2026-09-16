@@ -135,3 +135,23 @@ test('the screenshots the app catalog is told to show are there to show', () => 
     assert.ok(fs.existsSync(file), `the screenshot is missing: sharepoint/${relative}`);
   });
 });
+
+test('the app catalog is told which language this is in', () => {
+  /* Without supportedLocales the store page reads "Supported languages are not
+     specified", which is how this shipped until 0.0.18.3. Nothing in a build or
+     in the workbench shows the row, so the only place the omission is visible
+     is a tenant, months later. */
+  const locales = solution.supportedLocales;
+  assert.ok(Array.isArray(locales) && locales.length > 0,
+    'no supportedLocales, so the store page says the language is unspecified');
+
+  /* The packager copies each entry straight into the CultureName attribute of a
+     SupportedLocale element, so a value SharePoint cannot parse as a culture is
+     not caught until the package is uploaded. SPFx documents the form as LL-CC. */
+  locales.forEach((locale) => {
+    assert.match(
+      locale, /^[a-z]{2}-[a-z]{2}$/i,
+      `${locale} is not an LL-CC culture name`
+    );
+  });
+});
