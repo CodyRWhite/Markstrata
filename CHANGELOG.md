@@ -8,6 +8,28 @@ is normally zero. `scripts/set-version.js` stamps it when a release is cut.
 
 Entries below 0.0.10.0 were written before the switch and are three-part.
 
+## 0.0.18.1
+
+- The app now tells a tenant the truth about itself. Its website, privacy
+  policy and terms of use all pointed at the same private GitHub repository,
+  which is a 404 for everyone who installs it, and it carried no category at
+  all, so it arrived filed under nothing. The three addresses are now three
+  real pages on markstrata.com, and the categories are Content management,
+  Productivity and Collaboration. This is what the SharePoint app catalog shows
+  an administrator and what Teams shows on the app's About page.
+- Which meant writing the two pages that were being linked to and did not
+  exist. The privacy page says what the web part reads, that your documents
+  never leave your tenant, that there is no telemetry in it, that nothing is
+  fetched from a third party while it runs, and that the only thing remembered
+  is a reader's own theme choice in their own browser - and, separately, that
+  this website counts visits with Google Analytics. The terms page says MIT,
+  as is, and not a Microsoft product. Both are linked from the site footer and
+  kept out of the navigation, which is for pages somebody is looking for.
+- A test reads the package metadata and fails on an address that is not https,
+  that points into the private repository, or that is the same page as one of
+  the other two, and on a category the SPFx schema will not accept - checked
+  against the list in the schema rather than a copy of it.
+
 ## 0.0.18.0
 
 - Markstrata runs as a **Teams tab**. A channel's Files are a SharePoint

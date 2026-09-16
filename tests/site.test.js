@@ -53,11 +53,48 @@ test('links between pages are relative', () => {
   }
 });
 
-test('the header marks the current page and links to all of them', () => {
+/*
+ * Two kinds of page. Most are in the navigation, and the one being read is
+ * marked there. A hidden page is one that exists because something else points
+ * at it - the privacy policy and the terms of use are named in the web part's
+ * package, and Teams and the app catalog show them to everyone who installs
+ * it - rather than because a reader is looking for it. Those are left out of
+ * the navigation and linked from the footer instead.
+ */
+const SHOWN = PAGES.filter((entry) => !entry.hidden);
+const HIDDEN = PAGES.filter((entry) => entry.hidden);
+
+test('the header links every page that belongs in the navigation', () => {
   for (const entry of PAGES) {
     const html = require('../scripts/site').header(entry.id);
-    assert.equal((html.match(/class="site-nav-link/g) || []).length, PAGES.length);
+    assert.equal((html.match(/class="site-nav-link/g) || []).length, SHOWN.length,
+      `on ${entry.id}`);
+  }
+});
+
+test('and marks the one being read, when it is one of them', () => {
+  for (const entry of SHOWN) {
+    const html = require('../scripts/site').header(entry.id);
     assert.equal((html.match(/aria-current="page"/g) || []).length, 1, `${entry.id}`);
+  }
+  for (const entry of HIDDEN) {
+    const html = require('../scripts/site').header(entry.id);
+    assert.equal((html.match(/aria-current="page"/g) || []).length, 0,
+      `${entry.id} is not in the navigation, so nothing there is current`);
+  }
+});
+
+test('a page kept out of the navigation is still reachable', () => {
+  /* Otherwise hidden means orphaned, and the addresses in the web part's
+     package would be the only way to it. */
+  assert.ok(HIDDEN.length > 0, 'no hidden pages to check');
+
+  const footer = require('../scripts/site').footer('home');
+  for (const entry of HIDDEN) {
+    assert.ok(
+      footer.indexOf(`${entry.folder}/`) !== -1,
+      `${entry.id} is in no navigation and not in the footer either`
+    );
   }
 });
 

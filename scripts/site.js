@@ -71,6 +71,24 @@ const PAGES = [
     id: 'support', folder: 'support', label: 'Support', title: 'Support - Markstrata',
     source: 'docs/site/support.md',
     description: 'Markstrata is free and MIT licensed. Ways to help - most of which cost nothing.'
+  },
+  /*
+   * Below the line: pages that exist because something has to point at them,
+   * rather than because a reader is looking for them. The web part's package
+   * names a privacy policy and terms of use, and Teams and the app catalog
+   * show those to everybody who installs it - so they have to be real pages at
+   * stable addresses. They are linked from the footer and left out of the
+   * navigation, which is for the seven pages somebody might actually want.
+   */
+  {
+    id: 'privacy', folder: 'privacy', label: 'Privacy', title: 'Privacy - Markstrata',
+    source: 'docs/site/privacy.md', hidden: true,
+    description: 'What the web part reads, what it never sends, and what this site counts.'
+  },
+  {
+    id: 'terms', folder: 'terms', label: 'Terms of use', title: 'Terms of use - Markstrata',
+    source: 'docs/site/terms.md', hidden: true,
+    description: 'MIT licensed, provided as is, and not a Microsoft product.'
   }
 ];
 
@@ -97,6 +115,7 @@ function linkTo(fromId, toId) {
 function header(currentId) {
   const toRoot = page(currentId).folder ? '../' : '';
   const links = PAGES
+    .filter((entry) => !entry.hidden)
     .map((entry) => {
       const current = entry.id === currentId;
       return `<a class="site-nav-link${current ? ' is-current' : ''}" href="${linkTo(currentId, entry.id)}"`
@@ -123,6 +142,10 @@ function footer(currentId) {
     <a href="${REPO}/releases/latest">Releases</a> ·
     <a href="${REPO}/blob/main/LICENSE">MIT licence</a> ·
     <a href="${linkTo(currentId, 'support')}">Support this project</a>
+  </p>
+  <p>
+    <a href="${linkTo(currentId, 'privacy')}">Privacy</a> ·
+    <a href="${linkTo(currentId, 'terms')}">Terms of use</a>
   </p>
 </footer>`;
 }
