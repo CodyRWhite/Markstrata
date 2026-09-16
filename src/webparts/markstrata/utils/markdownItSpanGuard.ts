@@ -45,7 +45,7 @@
  *   markdownIt.use(spanGuardPlugin);
  *
  * .NOTES
- * Since:     unreleased
+ * Since:     0.0.18.7
  * Ships in:  the web part bundle
  * Requires:  markdownItTypes.ts, and markdown-it-attrs registered first
  */

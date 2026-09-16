@@ -40,7 +40,7 @@
  *   markdownIt.use(attributeGuardPlugin);   // after, it sits in front of it
  *
  * .NOTES
- * Since:     unreleased
+ * Since:     0.0.18.5
  * Ships in:  the web part bundle
  * Requires:  markdownItTypes.ts, markdown-it-attrs
  */

@@ -30,7 +30,7 @@
  *   uploaded by hand in the Teams admin centre, or sideloaded to try it.
  *
  * .NOTES
- * Since:     unreleased
+ * Since:     0.0.18.2
  * Ships in:  nothing - it builds the Teams package beside the .sppkg
  * Requires:  config/teams-app-manifest.json, the icons built by build-brand.js
  */

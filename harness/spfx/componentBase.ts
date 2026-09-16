@@ -25,7 +25,7 @@
  *   provider.setTheme({ isInverted: true });   // harness only
  *
  * .NOTES
- * Since:     unreleased
+ * Since:     0.0.18.0
  * Ships in:  nothing - it stands in for SharePoint at harness time
  * Requires:  nothing else in this project
  */

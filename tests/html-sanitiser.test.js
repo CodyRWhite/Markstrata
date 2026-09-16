@@ -42,7 +42,7 @@
  *   node --test tests/html-sanitiser.test.js   this one
  *
  * .NOTES
- * Since:     unreleased
+ * Since:     0.0.18.6
  * Ships in:  nothing - it runs at test time only
  * Requires:  helpers.js, jsdom
  */

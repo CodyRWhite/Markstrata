@@ -23,7 +23,7 @@
  *   node --test tests/solution-metadata.test.js  this one
  *
  * .NOTES
- * Since:     unreleased
+ * Since:     0.0.18.1
  * Ships in:  nothing - it runs at test time only
  * Requires:  nothing else in this project
  */

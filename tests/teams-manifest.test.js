@@ -24,7 +24,7 @@
  *   node --test tests/teams-manifest.test.js  this one
  *
  * .NOTES
- * Since:     unreleased
+ * Since:     0.0.18.2
  * Ships in:  nothing - it runs at test time only
  * Requires:  teams/manifest.json
  */

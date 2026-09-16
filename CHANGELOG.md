@@ -61,6 +61,21 @@ Entries below 0.0.10.0 were written before the switch and are three-part.
   rather than beside it, so the browser's own Back button walks the same path
   and the two cannot disagree about where the reader has been.
 
+- Every release tag in this series pointed at the wrong commit. The workflow
+  is dispatched on a branch, builds that branch, and then asked `gh` to create
+  the release without saying which commit it was for - so the tag landed on the
+  repository's default branch instead. v0.0.18.0 through v0.0.18.6 all name one
+  commit, and it is not one any of them was built from. The packages are what
+  they always were, built from the right code; it is the tags beside them that
+  answer "what shipped?" with a straight face and get it wrong, so checking one
+  out or bisecting through it gives you a build nobody released. Fixed for
+  every release from here. The tags already written are left where they are,
+  because moving one changes what a version means to anybody who has already
+  fetched it; this entry is the record of where they really point.
+- Every file header that said `Since: unreleased` now names the version it
+  first shipped in, worked out from which release actually contained it rather
+  than from the tags, which could not be trusted for it.
+
 - The cell after a `||` is on the page again. A doubled pipe is how a
   MultiMarkdown table says a cell runs across the column to its right, and the
   cell that came after one was deleted: not mis-spanned, not mis-placed, gone,

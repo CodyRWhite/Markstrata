@@ -121,7 +121,16 @@ jobs:
           if gh release view "v$VERSION" >/dev/null 2>&1; then
             gh release upload "v$VERSION" "$PACKAGE" --clobber
           else
+            # --target, because without it gh tags the repository's DEFAULT
+            # branch rather than the commit this run built. Every 0.0.18.x tag
+            # was created that way: the package inside each one is built from
+            # the branch it was dispatched on, and the tag beside it points at
+            # a commit holding none of that code. A tag that names the wrong
+            # commit is worse than no tag - it answers "what shipped?" with a
+            # straight face and gets it wrong, and bisecting or checking one
+            # out gives you a build nobody released.
             gh release create "v$VERSION" "$PACKAGE" \
+              --target "$GITHUB_SHA" \
               --title "v$VERSION" \
               --notes "$NOTES" \
               $PRERELEASE

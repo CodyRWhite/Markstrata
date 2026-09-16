@@ -29,7 +29,7 @@
  *   markdownIt.use(tagPlugin);
  *
  * .NOTES
- * Since:     unreleased
+ * Since:     0.0.18.6
  * Ships in:  the web part bundle
  * Requires:  markdownItTypes.ts
  */
