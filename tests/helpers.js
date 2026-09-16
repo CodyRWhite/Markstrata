@@ -69,5 +69,6 @@ module.exports = {
   codeZoom: lib('codeZoom'),
   tables: lib('tables'),
   folderTree: lib('folderTree'),
-  headingLanding: lib('headingLanding')
+  headingLanding: lib('headingLanding'),
+  exportNaming: lib('exportNaming')
 };

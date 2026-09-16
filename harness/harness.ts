@@ -86,7 +86,7 @@ const state: any = {
   enableMath: true,
   allowHtml: false,
   showToolbar: true,
-  showPrintButton: true,
+  showExportButton: true,
   showReadingTime: true,
   backToTop: 'right',
   showSourceInfo: true,
@@ -213,7 +213,7 @@ const view = new ViewModeRenderer(processor, mermaid, enhancer, {
     log(`Theme override -> ${family}/${mode}`);
     draw();
   },
-  onPrint: () => log('Print clicked')
+  onExport: () => log('Export clicked')
 });
 
 const editor = new EditModeManager(processor, mermaid, enhancer, {
@@ -267,7 +267,7 @@ function draw(showing?: string, heading?: string): void {
     resolvedMode: mode,
     showToolbar: state.showToolbar,
     showThemeSwitcher: state.showThemeSwitcher,
-    showPrintButton: state.showPrintButton,
+    showExportButton: state.showExportButton,
     tocPosition: state.toc,
     tocMaxLevel: state.tocMaxLevel,
     showSourceInfo: state.showSourceInfo,
@@ -582,7 +582,7 @@ const PANEL_PAGES: IPanelPage[] = [
           { key: 'showToolbar', label: 'Show toolbar', type: 'toggle',
             hint: 'The reload, version history, theme and print controls all live in the '
               + 'toolbar, so turning it off takes the print button with it.' },
-          { key: 'showPrintButton', label: 'Show print button', type: 'toggle',
+          { key: 'showExportButton', label: 'Show export button', type: 'toggle',
             showIf: (state) => state.showToolbar === true },
           { key: 'showReadingTime', label: 'Show reading time', type: 'toggle',
             showIf: (state) => state.showToolbar === true },

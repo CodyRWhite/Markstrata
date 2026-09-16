@@ -102,8 +102,17 @@ const STRINGS = {
 
   ToolbarGroupName: 'Toolbar',
   ToolbarVisibilityLabel: 'Show toolbar',
-  ToolbarHint: 'The reload, version history, theme and print controls all live in the toolbar. With "Only while editing the page", readers of the page never see them.',
-  PrintButtonLabel: 'Show print button',
+  ToolbarHint: 'The reload, version history, theme and export controls all live in the toolbar. With "Only while editing the page", readers of the page never see them.',
+  ExportButtonLabel: 'Show export button',
+  ExportButtonHint: 'Exports the document as a paginated PDF: a cover, a '
+    + 'contents page with the page number each heading landed on, and running '
+    + 'headers. The browser\'s own print dialog opens to save it, since that '
+    + 'is the only way a page is allowed to produce a PDF.',
+  ExportCoverLabel: 'Cover page',
+  ExportContentsLabel: 'Contents page',
+  ExportSectionBreaksLabel: 'Start each section on a new page',
+  ExportSectionBreaksHint: 'Useful for a reference somebody reads a section of '
+    + 'at a time. Wasteful for a runbook that is two pages long.',
   ShareButtonLabel: 'Show share button',
   ShareButtonHint: 'Copies a link to the document on screen. A reader who has '
     + 'followed links to another document is looking at something the page '

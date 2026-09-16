@@ -10,7 +10,8 @@
 
     "baseUrl": ".",
     "paths": {
-      "mermaid": ["src/types/mermaid"]
+      "mermaid": ["src/types/mermaid"],
+      "pagedjs": ["src/types/pagedjs"]
     },
 
     "declaration": true,

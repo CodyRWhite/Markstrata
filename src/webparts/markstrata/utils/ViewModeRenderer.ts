@@ -8,7 +8,7 @@
  *
  *   const view: ViewModeRenderer = new ViewModeRenderer(processor, mermaid, enhancer, {
  *     onReload: () => load(), onShowVersions: () => versions(),
- *     onThemeOverride: (family, mode) => override(family, mode), onPrint: () => window.print()
+ *     onThemeOverride: (family, mode) => override(family, mode), onExport: () => exportPdf()
  *   });
  *   view.render(container, markdown, options);
  *
@@ -49,7 +49,7 @@ export interface IViewOptions {
   resolvedMode: ResolvedMode;
   showToolbar: boolean;
   showThemeSwitcher: boolean;
-  showPrintButton: boolean;
+  showExportButton: boolean;
   tocPosition: TocPosition;
   tocMaxLevel: number;
   showSourceInfo: boolean;
@@ -112,7 +112,8 @@ export interface IViewCallbacks {
   onReload: () => void;
   onShowVersions: () => void;
   onThemeOverride: (family: ThemeFamily, mode: 'light' | 'dark') => void;
-  onPrint: () => void;
+  /** Lay the document out as pages and hand it to the print dialog. */
+  onExport: () => void;
 }
 
 export class ViewModeRenderer {
@@ -443,9 +444,14 @@ export class ViewModeRenderer {
       );
       actions.appendChild(share);
     }
-    if (options.showPrintButton) {
-      actions.appendChild(this.button('Print', 'Print or save as PDF',
-        () => this.callbacks.onPrint(), PRINT_ICON));
+    if (options.showExportButton) {
+      /* "Export" rather than "Print", because what it produces is a document
+         with a cover, a contents and page numbers rather than the page cut
+         into paper-sized pieces. The dialog that opens is still the browser's
+         print dialog, since that is the only way a page is allowed to make a
+         PDF, so the title says where to go in it. */
+      actions.appendChild(this.button('Export', 'Export as a PDF, with a contents page. Choose "Save as PDF" in the dialog',
+        () => this.callbacks.onExport(), PRINT_ICON));
     }
     /* Last in the group, at the far right of the bar. It belongs with the
        things you do to the page rather than with the theme list: choosing a
