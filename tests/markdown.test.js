@@ -37,6 +37,39 @@ test('multimd table extensions still work on markdown-it 15', () => {
   assert.match(html, /colspan="2"/);
 });
 
+/*
+ * markdown-it-multimd-table reads a bracketed line beside a table as its
+ * caption, and it used to try that before it tried reading the line as a row.
+ * A row of wiki links or of bracketed cells was swallowed whole: the caption
+ * appeared, the row did not, and nothing on the page said a row had been lost.
+ */
+test('a row of bracketed cells stays a row instead of becoming a caption', () => {
+  const html = markdown.render('A | B\n-- | --\n[x] | [y]');
+  assert.match(html, /<tbody>/);
+  assert.match(html, /<td>\[x\]<\/td>/);
+  assert.match(html, /<td>\[y\]<\/td>/);
+  assert.doesNotMatch(html, /<caption/);
+});
+
+test('a header row of wiki links is still a header row', () => {
+  const wiki = new MarkdownProcessor({ enableWikiLinks: true });
+  const html = wiki.render('[[Wiki]] | ![[Embed]]\n-- | --\na | b');
+  assert.match(html, /<thead>/);
+  assert.match(html, /<tbody>/);
+  assert.match(html, /<td>a<\/td>/);
+  assert.doesNotMatch(html, /<caption/);
+});
+
+test('a caption that could not have been a row is still a caption', () => {
+  const above = markdown.render('[Quarterly figures]\nA | B\n-- | --\na | b');
+  assert.match(above, /<caption[^>]*>Quarterly figures<\/caption>/);
+  assert.match(above, /<td>a<\/td>/);
+
+  const below = markdown.render('A | B\n-- | --\na | b\n[Quarterly figures]');
+  assert.match(below, /caption-side: bottom/);
+  assert.match(below, /<td>a<\/td>/);
+});
+
 test('column alignment is honoured', () => {
   const html = markdown.render('| l | c | r |\n|:--|:-:|--:|\n| 1 | 2 | 3 |');
   assert.match(html, /text-align:center/);

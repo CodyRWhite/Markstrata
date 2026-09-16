@@ -10,6 +10,17 @@ Entries below 0.0.10.0 were written before the switch and are three-part.
 
 ## 0.0.18.3
 
+- The split editor is one editor again. The box you typed in stopped at its own
+  minimum height while the preview beside it ran on to the bottom of the row, so
+  the source ended halfway down with an empty area under it. The two halves did
+  not start level either: the MARKDOWN label sat above its box while PREVIEW sat
+  inside the preview's border, which put every line of source a label's height
+  below its own rendering. Each pane is now a label above a box, both boxes are
+  stretched into the same row, and the textarea has lost its drag handle because
+  the pane decides how tall it is. They also scroll together, by the proportion
+  of the way down each one is rather than by pixels, because the source is
+  monospace text and the preview is headings, code and pictures and the same
+  line is never at the same height in both.
 - A page can be told which document to show in its address, so a SharePoint
   menu is a menu again. Every entry on a navigation bar can only point at a
   page, and a page showed the one document it was configured with, so a wiki's
@@ -52,6 +63,23 @@ Entries below 0.0.10.0 were written before the switch and are three-part.
 - The app catalog listing says which language it is in. `supportedLocales` had
   never been set, so the store page read "Supported languages are not
   specified".
+
+- A table row written in brackets is no longer swallowed. A row whose first
+  cell opens with `[` and whose last cell closes with `]` was read as the
+  table's caption, which left a caption nobody wrote, a table with no body at
+  all, and no sign on the page that a row had ever been there. `[x] | [y]` is
+  one shape it happened to; `[[Wiki]] | ![[Embed]]` is another, and that is how
+  Obsidian's own documentation writes a table of links. When the swallowed line
+  was the header rather than a data row the whole table was lost and the block
+  rendered as a paragraph of raw pipes. Captions still work, because they are a
+  real feature of the table syntax and a caption is worth keeping: they are now
+  only read on a line that holds no pipe, which is a line that could never have
+  been a row.
+- A wiki link written with an escaped pipe points at the document it names. A
+  pipe inside a table cell ends the cell, so `[[Basic formatting syntax\|Markdown
+  syntax]]` is how Obsidian documents writing a labelled wiki link in a table.
+  The backslash was being left on the page name, so the link asked for
+  `Basic%20formatting%20syntax%5C.md` and could only ever be a 404.
 
 ## 0.0.18.2
 

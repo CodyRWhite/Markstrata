@@ -65,7 +65,13 @@ export function parseWikiLink(inner: string): IWikiTarget | undefined {
   }
 
   const pipe: number = text.lastIndexOf('|');
-  const target: string = (pipe === -1 ? text : text.slice(0, pipe)).trim();
+  /* The backslash in `[[Page\|label]]` belongs to the pipe, not to the page.
+     Obsidian documents that escaped form as the way to write a wiki link
+     inside a table, where a bare pipe would end the cell, so it is the shape
+     most links in a table arrive in. Left on, it reaches the href as `%5C`
+     and every one of those links points at a file that cannot exist. */
+  const written: string = pipe === -1 ? text : text.slice(0, pipe).replace(/\\$/, '');
+  const target: string = written.trim();
   const label: string = pipe === -1 ? '' : text.slice(pipe + 1).trim();
 
   const hash: number = target.indexOf('#');

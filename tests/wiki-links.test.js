@@ -38,6 +38,29 @@ test('the label splits on the last pipe, so a page can contain one', () => {
   assert.equal(parseWikiLink('A|B|label').label, 'label');
 });
 
+/*
+ * A pipe inside a table cell ends the cell, so Obsidian documents `\\|` as the
+ * way to write a wiki link with a label in a table. The backslash belongs to
+ * the pipe, not to the page: left on the target it reached the href as `%5C`
+ * and pointed every one of those links at a file that cannot exist.
+ */
+test('an escaped pipe splits the label without staying on the page name', () => {
+  assert.deepEqual(parseWikiLink('Basic formatting syntax\\|Markdown syntax'), {
+    page: 'Basic formatting syntax',
+    heading: '',
+    label: 'Markdown syntax'
+  });
+  assert.equal(parseWikiLink('Runbook\\|how we ship').page, 'Runbook');
+  assert.equal(parseWikiLink('Runbook#Rollback\\|rolling back').heading, 'Rollback');
+});
+
+test('an escaped pipe in a table cell reaches a href that can be followed', () => {
+  const html = render('| link |\n| --- |\n| [[Basic formatting syntax\\|Markdown syntax]] |');
+  assert.match(html, /href="[^"]*\/Basic%20formatting%20syntax\.md"/);
+  assert.doesNotMatch(html, /%5C/);
+  assert.match(html, />Markdown syntax</);
+});
+
 test('a heading can be named, in another page or in this one', () => {
   assert.deepEqual(parseWikiLink('Runbook#Rollback'),
     { page: 'Runbook', heading: 'Rollback', label: 'Runbook › Rollback' });

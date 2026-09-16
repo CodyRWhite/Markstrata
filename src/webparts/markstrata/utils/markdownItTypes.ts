@@ -67,13 +67,16 @@ export interface IStateCore {
   md: IMarkdownIt;
 }
 
-/** The parts of the block parser state the math rule reads. */
+/** The parts of the block parser state the math and table rules read. */
 export interface IStateBlock {
   src: string;
   bMarks: number[];
   eMarks: number[];
   tShift: number[];
+  /** Leading whitespace on a line, which is where its content starts. */
+  sCount: number[];
   line: number;
+  isEmpty(line: number): boolean;
   push(type: string, tag: string, nesting: number): IToken;
   getLines(begin: number, end: number, indent: number, keepLastLf: boolean): string;
 }
@@ -94,8 +97,14 @@ export interface IRuler<TRule> {
   before(beforeName: string, ruleName: string, rule: TRule): void;
   after(afterName: string, ruleName: string, rule: TRule): void;
   push(ruleName: string, rule: TRule): void;
-  /** Undocumented but stable; used to detect whether a plugin is loaded. */
-  __rules__?: { name: string }[];
+  /** Replaces a rule that is already registered, keeping its place in the chain. */
+  at(ruleName: string, rule: TRule, options?: { alt?: string[] }): void;
+  /**
+   * Undocumented but stable; used to detect whether a plugin is loaded, and to
+   * reach the rule a plugin registered so it can be wrapped rather than
+   * reimplemented.
+   */
+  __rules__?: { name: string; fn?: TRule }[];
 }
 
 export interface IMarkdownIt {

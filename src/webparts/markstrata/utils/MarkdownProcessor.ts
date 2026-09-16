@@ -20,7 +20,7 @@
  * Ships in:  the web part bundle
  * Requires:  markdownItCallouts.ts, markdownItTaskLists.ts, codeBlocks.ts,
  *            imagePaths.ts, frontMatter.ts, markdownItWikiLinks.ts,
- *            markdownItTypes.ts
+ *            markdownItTableCaptions.ts, markdownItTypes.ts
  */
 
 import { calloutPlugin } from './markdownItCallouts';
@@ -29,6 +29,7 @@ import { renderCodeBlock, ICodeBlockOptions, escapeHtml } from './codeBlocks';
 import { resolveAgainst } from './imagePaths';
 import { splitFrontMatter, ISplitDocument } from './frontMatter';
 import { wikiLinkPlugin } from './markdownItWikiLinks';
+import { tableCaptionPlugin } from './markdownItTableCaptions';
 import {
   IMarkdownIt,
   IRenderer,
@@ -230,6 +231,10 @@ export class MarkdownProcessor {
       multibody: false,
       autolabel: true
     });
+    /* Straight after, because it wraps the block rule that plugin just
+       registered and narrows its caption test so a row of cells written in
+       brackets stays a row. */
+    register('table captions', tableCaptionPlugin);
 
     if (this.options.enableAnchors || this.options.enableToc) {
       const anchor: typeof markdownItAnchor = resolvePlugin(markdownItAnchor) as typeof markdownItAnchor;
