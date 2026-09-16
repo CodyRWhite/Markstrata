@@ -8,6 +8,24 @@ is normally zero. `scripts/set-version.js` stamps it when a release is cut.
 
 Entries below 0.0.10.0 were written before the switch and are three-part.
 
+## 0.0.18.4
+
+- The Teams app package was refused by Teams, which is why Sync to Teams kept
+  failing and why uploading the package by hand failed the same way: the
+  manifest carried a `packageName` property, which the v1.17 schema does not
+  define and does not allow, so Teams rejected the whole thing before reading
+  any of it. One cause, both symptoms. It is gone.
+- The schema is now vendored beside the manifest and read by the test rather
+  than remembered by me. The limits were previously copied into the test by
+  hand, which is exactly how a key Teams does not allow got in: I checked the
+  fields I could remember and never asked the schema what it permits. The
+  check walks every key in the manifest, and every key in the objects inside
+  it, against what the schema defines, and reads the length limits from the
+  schema too. It is not a full JSON Schema validator and says so: the schema is
+  draft-04, the validator to hand does not read that draft, and a validator
+  that quietly disagreed with Teams would be worse than an honest partial
+  check.
+
 ## 0.0.18.3
 
 - The split editor is one editor again. The box you typed in stopped at its own

@@ -42,35 +42,92 @@ const webPart = JSON.parse(fs.readFileSync(
   path.join(ROOT, 'src', 'webparts', 'markstrata', 'MarkstrataWebPart.manifest.json'), 'utf8'
 ));
 
-/* Straight out of the v1.17 schema, which is also what $schema points at. */
-const REQUIRED = [
-  'manifestVersion', 'version', 'id', 'developer', 'name', 'description',
-  'icons', 'accentColor'
-];
-const LIMITS = [
-  [['name', 'short'], 30],
-  [['name', 'full'], 100],
-  [['description', 'short'], 80],
-  [['description', 'full'], 4000]
-];
+/*
+ * The schema itself, vendored beside the manifest.
+ *
+ * The limits used to be copied into this file by hand, which is how a key
+ * Teams does not allow got in: I checked the fields I remembered and never
+ * asked the schema what it permits. It answers both questions, so it is read
+ * rather than remembered.
+ */
+const schema = JSON.parse(fs.readFileSync(
+  path.join(ROOT, 'config', 'teams-manifest-v1.17.schema.json'), 'utf8'
+));
+
+/**
+ * Every key in `value` that the schema does not define, walked into the
+ * objects we populate.
+ *
+ * This is not a JSON Schema validator and does not pretend to be one: it
+ * checks names, requiredness and lengths, which is the class of mistake that
+ * reaches Teams as a refused upload. Types and enums it leaves alone. The
+ * schema is draft-04 and the validator available here does not read that
+ * draft, and a validator that quietly disagrees with the real one would be
+ * worse than an honest partial check.
+ */
+function undefinedKeys(value, node, trail) {
+  if (!node || !node.properties || typeof value !== 'object' || value === null) {
+    return [];
+  }
+  if (node.additionalProperties !== false) {
+    return [];
+  }
+
+  let found = [];
+  Object.keys(value).forEach((key) => {
+    if (key === '$schema') { return; }
+    const where = trail ? `${trail}.${key}` : key;
+
+    if (!node.properties[key]) {
+      found.push(where);
+      return;
+    }
+    const child = node.properties[key];
+    if (Array.isArray(value[key]) && child.items) {
+      value[key].forEach((entry, index) => {
+        found = found.concat(undefinedKeys(entry, child.items, `${where}[${index}]`));
+      });
+      return;
+    }
+    found = found.concat(undefinedKeys(value[key], child, where));
+  });
+  return found;
+}
+
+test('every key in it is one the schema defines', () => {
+  /* The one that mattered: "packageName" was in here, is not in v1.17, and
+     the schema sets additionalProperties false, so Teams refused the upload
+     outright - both by hand and through Sync to Teams, because that deploys
+     this same package. */
+  assert.deepEqual(
+    undefinedKeys(manifest, schema, ''),
+    [],
+    'Teams refuses a manifest carrying a property the schema does not define'
+  );
+});
 
 test('it has everything the schema demands', () => {
-  const missing = REQUIRED.filter((field) => manifest[field] === undefined);
+  const missing = (schema.required || []).filter((field) => manifest[field] === undefined);
   assert.deepEqual(missing, [], 'Teams refuses a manifest without these');
   assert.equal(manifest.manifestVersion, '1.17');
   assert.match(manifest.id, /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/);
   assert.match(manifest.accentColor, /^#[0-9A-Fa-f]{6}$/);
 });
 
-test('nothing is longer than Teams will take', () => {
-  LIMITS.forEach(([keys, limit]) => {
-    const value = keys.reduce((node, key) => node[key], manifest);
-    assert.ok(value, `${keys.join('.')} is empty`);
-    assert.ok(
-      value.length <= limit,
-      `${keys.join('.')} is ${value.length} characters; Teams allows ${limit}`
-    );
-  });
+test('nothing is longer than the schema allows', () => {
+  /* Read out of the schema rather than copied here, so a version of it that
+     moves a limit fails this instead of failing an upload. */
+  [['name', 'short'], ['name', 'full'], ['description', 'short'], ['description', 'full']]
+    .forEach(([group, part]) => {
+      const limit = schema.properties[group].properties[part].maxLength;
+      const value = manifest[group][part];
+      assert.ok(limit, `the schema states no limit for ${group}.${part}`);
+      assert.ok(value, `${group}.${part} is empty`);
+      assert.ok(
+        value.length <= limit,
+        `${group}.${part} is ${value.length} characters; the schema allows ${limit}`
+      );
+    });
 });
 
 test('the descriptions describe rather than repeat the name', () => {
