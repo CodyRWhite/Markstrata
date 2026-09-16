@@ -81,11 +81,28 @@ jobs:
           test -f "$PATH_TO_PACKAGE"
           echo "path=$PATH_TO_PACKAGE" >> "$GITHUB_OUTPUT"
 
+      # The Teams app, which is a second thing to install and so a second thing
+      # to attach. It is built after the package rather than before, because it
+      # stamps the version the package was just stamped with, and it is built
+      # here rather than committed because it is build output.
+      #
+      # A release without it means the only way to get the Teams app is to
+      # clone the repository and build it, which is not a way to hand somebody
+      # an app to try.
+      - name: Build the Teams app package
+        id: teams
+        run: |
+          npm run teams
+          PATH_TO_TEAMS=dist/teams/markstrata-teams.zip
+          test -f "$PATH_TO_TEAMS"
+          echo "path=$PATH_TO_TEAMS" >> "$GITHUB_OUTPUT"
+
       - name: Publish the release
         env:
           GH_TOKEN: ${{ github.token }}
           VERSION: ${{ steps.version.outputs.version }}
           PACKAGE: ${{ steps.package.outputs.path }}
+          TEAMS: ${{ steps.teams.outputs.path }}
           # The solution version stays four-part numeric either way: SharePoint
           # will not install a package whose version carries a semver suffix, so
           # a pre-release is marked on the GitHub release, not in the number.
@@ -101,9 +118,9 @@ jobs:
             gh release delete "v$VERSION" --yes --cleanup-tag
           fi
           if gh release view "v$VERSION" >/dev/null 2>&1; then
-            gh release upload "v$VERSION" "$PACKAGE" --clobber
+            gh release upload "v$VERSION" "$PACKAGE" "$TEAMS" --clobber
           else
-            gh release create "v$VERSION" "$PACKAGE" \
+            gh release create "v$VERSION" "$PACKAGE" "$TEAMS" \
               --title "v$VERSION" \
               --notes "$NOTES" \
               $PRERELEASE
