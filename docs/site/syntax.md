@@ -25,9 +25,10 @@ named. The [documentation page](../docs/) covers the settings themselves.
 | `<kbd>Ctrl</kbd>` | <kbd>Ctrl</kbd> |
 | `:rocket:` | :rocket: |
 
-Straight quotes become curly ones and `--` becomes an en dash, the way a
-typesetter would do it. A bare address like https://example.com is turned into
-a link without being written as one.
+Punctuation is left exactly as it is written. A double hyphen stays a double
+hyphen and a straight quote stays straight, so `--force` in a sentence is still
+something a reader can copy and run. A bare address like https://example.com is
+turned into a link without being written as one.
 
 An abbreviation is declared once and explains itself wherever it appears:
 

@@ -366,6 +366,23 @@ test('a marker with nothing to close it is left where it is', () => {
   assert.match(markdown.render('a 50%% share'), /50%% share/);
 });
 
+/*
+ * The typographer is off and has to stay off. Its job is to make prose look
+ * typeset, and a runbook is not prose: "run it with --force" came out as
+ * "-force", and a reader who copied that line got a dash no shell accepts.
+ */
+test('punctuation in prose is left exactly as it was written', () => {
+  assert.match(markdown.render('Use --force to end the options'), /Use --force to end/);
+  assert.match(markdown.render('try --dry-run first'), /--dry-run/);
+  assert.match(markdown.render('pages 1--5'), /1--5/);
+  assert.match(markdown.render('Set the "name" field'), /&quot;name&quot;/);
+  assert.match(markdown.render("it doesn't matter"), /doesn't/);
+});
+
+test('a code span is unaffected either way', () => {
+  assert.match(markdown.render('run `--dry-run` now'), /<code>--dry-run<\/code>/);
+});
+
 test('rendering never throws on malformed input', () => {
   ['', '   ', '```\nunclosed', '| broken |\n|---', '> [!', '$$', '~~~'].forEach((input) => {
     assert.doesNotThrow(() => markdown.render(input), `input: ${JSON.stringify(input)}`);

@@ -107,6 +107,15 @@ Entries below 0.0.10.0 were written before the switch and are three-part.
   a document that quietly comes back shorter than it is would be the worse
   failure.
 
+- Punctuation is left exactly as the document wrote it. The renderer had the
+  typographer on, which is a setting for making prose look typeset: straight
+  quotes became curly ones and `--` became an en dash. A runbook is not prose.
+  "Run it with --force" was shown as "-force" and a reader who copied that
+  line got a dash no shell will accept, and a JSON key shown as "name" got
+  quotes no parser will read. Code spans were never affected, but the sentence
+  around them was, which is where half of a runbook's commands are written.
+  GitHub and VS Code both leave punctuation alone, and so does this now.
+
 ## 0.0.18.3
 
 - The split editor is one editor again. The box you typed in stopped at its own

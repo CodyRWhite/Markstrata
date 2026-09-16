@@ -156,7 +156,15 @@ export class MarkdownProcessor {
     this.markdownIt = (new MarkdownIt({
       html: this.options.allowHtml,
       linkify: true,
-      typographer: true,
+      /*
+       * Off, and it has to stay off. The typographer's job is to make prose
+       * look typeset: straight quotes become curly ones and `--` becomes an en
+       * dash. A runbook is not prose. "Run it with --force" came out as
+       * "-force", and a reader who copied that line got a dash no shell will
+       * accept; a JSON key shown as "name" got quotes no parser will read.
+       * GitHub and VS Code both leave this alone, for the same reason.
+       */
+      typographer: false,
       breaks: false
     }) as unknown) as IMarkdownIt;
 
