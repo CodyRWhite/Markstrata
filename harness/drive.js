@@ -3682,7 +3682,23 @@ const LIBRARY_PATH = '/sites/demo/Documents';
     }
   });
 
-  console.log('\n' + (problems.length ? 'Problems:\n  ' + problems.join('\n  ') : 'No failures and no page errors.'));
+  /*
+   * Closed before the tally is read, not after.
+   *
+   * `problems` is appended to by the page's own handlers - a page error, a
+   * failed request, a console error - and those go on arriving while the
+   * browser is being torn down. Printed first, the summary was written from a
+   * list that `process.exit` then read again one line later and disagreed
+   * with: the log ended "No failures and no page errors." and the job failed
+   * anyway, which is the least useful thing CI can say. It happened twice, and
+   * cost a round of investigation both times because the run was green
+   * everywhere a person would look.
+   *
+   * Nothing new counts as a problem. Whatever teardown turns up was already
+   * failing the build; it is in the list that gets printed now, so it can be
+   * read and fixed rather than guessed at.
+   */
   await browser.close();
+  console.log('\n' + (problems.length ? 'Problems:\n  ' + problems.join('\n  ') : 'No failures and no page errors.'));
   process.exit(problems.length ? 1 : 0);
 })();
