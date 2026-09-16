@@ -1,109 +1,90 @@
-# Documentation
+# Settings
 
-Everything the web part does, and how to configure it.
+Every field in the property pane, in the order the pane puts them. The pane has
+five pages and this page follows them: **Content**, **Appearance**, **Code**,
+**Contents** and **Chrome**.
+
+Three subjects have pages of their own here, because they are behaviours rather
+than settings and explaining them properly takes more than a table row:
+[linking between documents](../linking/),
+[what a reader sees around a document](../reading/), and
+[editing in the page](../editing/). This page names the settings and says where
+they are; those pages say what happens.
 
 [[toc]]
 
-## Install
+## Content
 
-Download `markstrata.sppkg` from the
-[latest release](https://github.com/CodyRWhite/Markstrata/releases/latest).
-
-1. Upload it to your tenant **App Catalog** (`/sites/appcatalog`, the *Apps for
-   SharePoint* library).
-2. When prompted, choose **Enable this app and add it to all sites**, or leave
-   it unticked and add it per site from *Site contents → New → App*.
-3. Edit a page, add a web part, and pick **Markstrata** from the
-   **Content** group.
-
-> [!TIP] Upgrading
-> Upload the newer `.sppkg` over the old one and choose **Replace**. The
-> solution and web part IDs never change between versions, so a tenant sees an
-> upgrade rather than a second app, and pages keep their settings.
->
-> Every release ships the file under the same name for this reason: the App
-> Catalog matches an upload to the solution it replaces by file name, and a
-> version in the name gets it refused with *"A solution with the same product
-> ID already exists."* The version lives in the release tag and inside the
-> package, which is where SharePoint reads it.
-
-To build the package yourself you need Node.js 22:
-
-```bash
-npm install
-npm run package          # writes sharepoint/solution/markstrata.sppkg
-```
-
-## Where the content comes from
-
-The **Content** page of the property pane, the first of its five, offers three
-sources.
+Where the markdown comes from. Three sources, one of which is usually right.
 
 | Source | What it does |
 |---|---|
-| **Typed in** | Markdown lives in the web part itself. Good for a page-specific note. |
-| **Library file** | **Markdown file** picks a `.md` file from a document library, with folder browsing. **Reload when the file changes** keeps the page in step with edits, and **Show version history button** lets a reader browse the file's versions, with preview and restore. |
-| **URL** | **File URL** takes any address that returns markdown. |
+| **Markdown** | Typed into the web part and stored with it. Good for a page-specific note, and versioned with the page rather than on its own. |
+| **Library file** | A `.md` file in a document library, chosen with **Document library**, **Folder** and **Markdown file**. |
+| **File URL** | Any address that returns markdown. SharePoint addresses are requested with your sign-in; other sites have to allow cross-origin requests. |
 
-A library file is usually the right answer: the markdown stays in SharePoint
-where it can be versioned, permissioned and edited by people who never touch
-the page.
+A library file is usually the right answer. The markdown stays in SharePoint
+where it can be versioned, permissioned and edited by people who never touch the
+page, and it is the only source that can do any of the things on the
+[linking page](../linking/), because those need a folder of other documents to
+look in.
+
+Two settings come with it:
+
+- **Reload when the file changes** keeps the page in step with edits.
+- **Show version history button** lets a reader browse the file's versions, with
+  preview and restore.
 
 ## Appearance
 
-**Theme**: GitHub, Obsidian or VS Code.
+### Theme
 
-**Colour mode**: light, dark, or *follow the page*, which takes its cue from
-the SharePoint site theme so a dark intranet gets a dark web part.
+**Theme** is GitHub, Obsidian or VS Code. Each brings its own typography, code
+block styling, callout shape and syntax colours, in light and in dark.
 
-**Let readers switch theme**: adds a theme list to the left of the toolbar and
-a dark mode switch to the right of it, which shows a sun on a light page and a
-moon on a dark one. A reader's choice is remembered per web part in their own
-browser and never changes what anyone else sees.
+**Colour mode** is light, dark, or *Match SharePoint page*, which takes its cue
+from the site theme so a dark intranet gets a dark web part.
 
-**Content width, spacing and text size**: independent of theme, so you can run
-GitHub's look at a narrower measure or a larger size without editing anything.
+**Let readers switch theme** puts a theme list and a dark mode switch in the
+toolbar. A reader's choice is remembered in their own browser and never changes
+what anybody else sees. [More about the toolbar](../reading/#the-toolbar).
 
-**Fill the available height**: gives the web part at least the room below where
+### Reading
+
+**Content width**, **Spacing** and **Text size** are independent of the theme,
+so GitHub's look can be run at a narrower measure or a larger size without
+editing anything.
+
+### Pictures
+
+**Picture alignment** places any picture that is a paragraph of its own: left,
+centred or right. Left is the default, which is how markdown has always rendered
+a block image and what GitHub and Obsidian both do. A picture inside a sentence
+is not moved: it sits on the baseline of the text around it, and shifting it
+would take the sentence with it.
+
+A document can place one picture itself, whatever the page is set to, by giving
+it a class:
+
+```markdown
+![A deployment flow](flow.png){.center}
+```
+
+`{.left}`, `{.center}` and `{.right}` all work.
+
+**Click a picture or diagram to see it full size** opens a picture over the
+page, and covers diagrams too.
+[What that looks like](../reading/#pictures-and-diagrams).
+
+### The page
+
+**Fill the available height** gives the web part at least the room below where
 it starts, so a short document does not stop halfway down and leave the page
-canvas showing under it. With the file name and modified date shown, they sit at
-the bottom of that rather than under a gap, which is usually the reason for
-turning it on.
+canvas showing under it.
 
-> [!NOTE]
-> The room is measured on the page, not written as `100vh`. A SharePoint page
-> does not scroll the window: it scrolls an inner container under a header and a
-> command bar, so a viewport unit overshoots by however tall that chrome is.
-> It is measured from where the web part starts too, so a part placed under
-> other content on a long page has no room below it and is left as it is.
+## Code
 
-## The toolbar and the file footer
-
-Both are on the last page of the pane, under **Toolbar** and **File
-information**: they are what shows around the document rather than part of it.
-
-**Show toolbar** carries the reload, version history, theme and print controls,
-and **Show print button** decides whether the print one is among them. Set the
-toolbar to *only while editing the page* and readers never see any of them, that
-button included.
-
-**Show reading time** puts an estimate beside the theme control, from the text
-a reader actually reads: code blocks and diagram source are left out of the
-count, because neither is read at the speed of prose. It needs the toolbar.
-
-**Back to top button** floats a button above the page once the reader is a
-screenful or so past the top of the document, at the bottom **left** or bottom
-**right**, or **No button** to leave it out. It goes back to the top of the web
-part rather than the top of the page, which is what "back to top" means from
-inside a document that is one section of somebody's page.
-
-**Show file name and last updated**: a footer with the file's name, when it was
-last changed and by whom. It needs a file from a document library, since that is
-the only source with any of those to show. **Keep it in view while scrolling**
-pins it to the bottom of the web part rather than leaving it at the end of the
-document, which in a long one means a reader never reaches it.
-
-## Code blocks
+### Code blocks
 
 ````markdown
 ```typescript title="ThemeManager.ts"
@@ -113,291 +94,44 @@ export function resolveMode(mode: ColorMode): ResolvedMode {
 ```
 ````
 
-- Syntax highlighting for around forty languages, including PowerShell,
+- **Syntax highlighting** covers around forty languages, including PowerShell,
   Dockerfile, batch and HTTP on top of the common set.
 - **Show language header** labels the block with its language and, with
   `title="app.ts"`, a filename.
-- A copy button that copies the source and never the line numbers.
 - **Show line numbers** puts them in a gutter that stays put while a long line
-  scrolls under it, and that wrapped lines indent past rather than run under.
-- Diff blocks tint whole lines, so `+` and `-` read at a glance.
+  scrolls under it, and that wrapped lines indent past rather than run under. A
+  copy button copies the source and never the numbers.
+- **Long lines** decides what a line too wide for the column does: wrap, or
+  scroll sideways.
+- **Code text size** sets code independently of body text, so a dense block can
+  come down a notch without shrinking the prose around it.
 
-**Long lines** decides what a line too wide for the column does: wrap, or scroll
-sideways. It applies to every block on the page, and any block can override it,
-or the line numbers, on its fence:
-
-A fence can also call out the lines that matter, which is the convention
-Docusaurus and VitePress use:
-
-````markdown
-```typescript {3,6-7}
-````
-
-Single lines, ranges and both together all work: `{2}`, `{4-6}`, `{2,4-6}`. The
-rest of the block is faded rather than the called lines being tinted, because a
-tint has to be a colour and a colour behind syntax highlighting either fights it
-or is too faint to see. Hovering the block brings all of it back, and printing
-never fades anything, since there is no hover on paper.
+Any block can override the page on its own fence, and can call out the lines
+that matter, which is the convention Docusaurus and VitePress use:
 
 | Flag | Effect |
 |---|---|
 | `wrap` / `nowrap` | Soft wrap, or horizontal scroll |
 | `numbers` / `nonumbers` | Line numbers on or off for this block |
 | `title="name.ts"` | Filename in the header |
+| `{2,4-6}` | Call out those lines and fade the rest |
 
-**Code text size** sets code independently of body text, so a dense block can
-be brought down a notch without shrinking the prose around it.
+Single lines, ranges and both together all work. The rest of the block is faded
+rather than the called lines being tinted, because a tint has to be a colour and
+a colour behind syntax highlighting either fights it or is too faint to see.
+Hovering the block brings all of it back, and printing never fades anything,
+since there is no hover on paper.
 
-## Linking between pages
+Diff blocks tint whole lines, so `+` and `-` read at a glance.
 
-**Wiki links** turns `[[Another page]]` into a link to that file, the way
-Obsidian and older wikis write one. It is off by default, since the brackets
-mean nothing in ordinary markdown and a document that uses them for something
-else should keep them.
+### Diagrams
 
-| Written | Links to |
-|---|---|
-| `[[Deploy runbook]]` | `Deploy runbook.md` in the same folder |
-| `[[Deploy runbook\|how we ship]]` | the same file, worded for the sentence |
-| `[[Deploy runbook#Rollback]]` | straight to that heading in that file |
-| `[[#Rollback]]` | a heading in this document |
+**Mermaid diagrams** renders fenced `mermaid` blocks, themed to match the page
+and redrawn when the theme changes.
 
-The name resolves against the folder the document lives in, the same rule
-images follow, and `.md` is added when the name has no extension.
-
-**Mark links to pages that are not there** checks them. The folder is listed
-once and every link into it answered from that listing, so it costs one request
-per folder rather than one per link. It needs a library file, since that is what
-gives the document a folder to look in.
-
-A marked link still goes where it said it would, since following a broken link
-is how the missing page gets written. It is marked in colour and with a raised
-question mark, and carries a note that a screen reader reads out.
-
-> [!NOTE] A folder that cannot be read leaves its links alone
-> Not knowing whether a page is there is different from knowing it is not, so a
-> folder that fails to list marks nothing. A reader without access to a folder
-> is never told the author's links are broken. For the same reason a marked
-> link says the page was not found *in this library*, which covers both not
-> being there and not being visible to whoever is reading.
-
-### Following a link to another document
-
-**Open a linked document here** is what makes a folder of markdown readable as
-a set rather than as files. Without it, clicking a link to another `.md` hands
-the reader the file: SharePoint shows raw markdown or downloads it, and the page
-they were reading is gone. With it, the linked document is loaded and rendered
-in the web part, with a bar above it saying which one is open and a button back
-to the one the page is configured to show. The browser's Back button works too.
-
-It applies to any link to a markdown file, a wiki link or an ordinary one, and a
-link that names a heading lands on that heading. It needs a document library,
-since that is where the other documents are.
-
-Opening a link in a new tab - Ctrl, Shift, the middle button - still goes to the
-file itself, because taking that away would be worse than what this fixes.
-
-> [!NOTE] What stays with the configured file
-> Nothing about following a link is saved into the page: the web part is still
-> configured to show the file you chose, and the next reader starts there.
-> Version history is hidden while another document is open, because the
-> versions it would list are the configured file's. If the configured file
-> changes underneath while somebody is reading a document they followed to,
-> they get the new text when they come back rather than having the page pulled
-> out from under them.
-
-### Where a relative link points
-
-A relative link points from the folder the document is in, not from the page
-that hosts the web part. A document in `/Runbooks` saying `[deploy](deploy.md)`
-means `/Runbooks/deploy.md`, which is what it now resolves to - before, the
-browser resolved it against the `.aspx` page in SitePages and landed somewhere
-the document never meant. This applies to every relative link, not only ones to
-markdown: a link to `notes/spec.pdf` finds the PDF beside the document.
-
-## Callouts
-
-Three syntaxes, one rendering, so markdown written for GitHub, for Obsidian or
-for an older SharePoint web part all render correctly without editing.
-
-```markdown
-> [!NOTE]
-> GitHub alert syntax: NOTE, TIP, IMPORTANT, WARNING, CAUTION.
-
-> [!tip] Obsidian callout with a title of your own
-> Types: note, abstract, info, todo, tip, important, success, question,
-> warning, caution, failure, danger, bug, example, quote, and their aliases.
-
-> [!warning]- Foldable, collapsed by default
-> `-` starts collapsed, `+` starts open.
-
-> Wiki.js classes still render.
-{.is-info}
-```
-
-Foldable callouts are a `<details>` element, so they need no JavaScript, work
-with a keyboard, and print expanded.
-
-## Also rendered
-
-Tables (including colspan, rowspan and alignment, and see [Tables](#tables) for
-what a reader can do with one), task lists, footnotes,
-definition lists, abbreviations, emoji, sub/sup, `==highlighted==` text, heading
-anchors, [Mermaid](https://mermaid.js.org/) diagrams themed to match the page,
-and KaTeX maths, which needs **Math (KaTeX)** on.
-
-YAML frontmatter at the top of a file, the way Obsidian, Hugo and Jekyll write
-it, is taken off rather than rendered: `title`, `author` and `tags` are shown in
-the file footer instead.
-
-> [!TIP] Every piece of syntax, with examples
-> The [syntax page](../syntax/) lists everything the web part renders, with the
-> markdown you write beside what it turns into. It is built through the same
-> pipeline, so nothing on it can claim a feature that has stopped working.
-
-```mermaid
-flowchart LR
-  A[Markdown in a library] --> B[Markstrata]
-  B --> C[GitHub]
-  B --> D[Obsidian]
-  B --> E[VS Code]
-```
-
-## Tables
-
-A long table loses its header the moment you scroll past it, and then every
-column is a guess. The header row stays in view instead while the rows go past,
-and it holds itself under whatever SharePoint has stuck above the page rather
-than behind it.
-
-That works for a table that fits its column. One too wide for the column keeps
-the sideways scroll box it has always had, and inside a scroll box a stuck
-header has nothing to stick to, so a wide table's header scrolls away as before.
-
-**Let readers sort a table** puts sorting on the column headers. A click sorts
-by that column, a second reverses it, and a third puts the rows back in the
-order the document wrote them - which matters for a table of steps, where the
-author's order is the answer and there is otherwise no way back to it short of
-reloading the page.
-
-What a column holds is worked out from the column itself, since markdown has no
-types: it sorts as numbers only if every filled cell in it is a number, dates
-only if every filled cell is an unambiguous date, and as text otherwise. A
-column of mostly numbers with one "n/a" in it sorts as text, which is honest
-rather than a guess about where the odd one out belongs. Empty cells go to the
-end whichever way the column is sorted.
-
-> [!NOTE]
-> Dates are read narrowly on purpose. `01/02/2024` is the second of January to
-> half the world and the first of February to the other half, so a column of
-> them sorts as text rather than into a confident wrong order. Written
-> `2024-01-02`, or `2 January 2024`, they sort as dates.
-
-A table with a merged cell in it is left as the document wrote it: a row that
-spans two of them says something about its neighbours, and moving it away from
-them turns a table into a mess.
-
-## Images
-
-`![Alt text](path/to/image.png "Optional title")` works the way it does on
-GitHub. A relative path is resolved against the folder holding the markdown
-file, not the page the web part sits on, so a document library laid out like
-this renders as written:
-
-```text
-Shared Documents/runbooks/
-  deploy.md          <- ![Flow](images/flow.png)
-  images/flow.png
-```
-
-Absolute URLs, protocol-relative URLs, data URIs and paths that already start
-with `/` are left untouched. Content typed into the web part has no folder of
-its own, so its relative paths resolve against the site root.
-
-Images are given `loading="lazy"` and `decoding="async"`, so a long document
-fetches them as the reader reaches them rather than all at once.
-
-### Sizing an image
-
-A width goes after a pipe, the way Obsidian writes it:
-
-| Written | Result |
-|---|---|
-| `![Diagram\|300](flow.png)` | 300 pixels wide |
-| `![Diagram\|300x200](flow.png)` | 300 wide, and told the picture is 3:2 |
-
-The number becomes the image's `width` attribute rather than a style, which
-gives it an intrinsic size. That matters because every image here loads lazily,
-and a lazily loaded image with no intrinsic size reserves no room: the text
-below it jumps as each picture arrives. **The aspect ratio is always kept** and
-the height follows the width, so a second number describes the picture rather
-than stretching it. An image still shrinks to fit a narrow column.
-
-### Where a picture sits
-
-**Picture alignment** places any image that is a paragraph of its own, left,
-centred or right. Left is the default, which is how markdown has always
-rendered a block image and what GitHub and Obsidian both do. An image inside a
-sentence is not moved: it sits on the baseline of the text around it, and
-shifting it would take the sentence with it.
-
-A document can place one picture itself, whatever the page is set to, by giving
-the image a class:
-
-```markdown
-![A deployment flow](flow.png){.center}
-```
-
-`{.left}`, `{.center}` and `{.right}` all work.
-
-### Captions
-
-An image that is a paragraph of its own and carries a title becomes a figure,
-with the title as its caption:
-
-```markdown
-![A deployment flow](flow.png "How a release reaches the tenant")
-```
-
-An image inside a sentence keeps its title as a tooltip instead, since lifting
-it out into a block would break the sentence around it.
-
-### Seeing an image full size
-
-**Click a picture or diagram to see it full size** opens it over the page,
-which is worth having because documentation is mostly screenshots and a column
-is narrower than the screen. Escape closes it, or a click anywhere outside.
-An image that is a link is left alone: it already does something when clicked.
-
-The same setting covers diagrams, which are the likeliest thing on a page to be
-too small to read. A diagram opens as a drawing rather than as a picture of
-one, so it is as sharp at full width as it was in the column, and it is given a
-background of its own: a light-theme diagram is drawn in dark ink and would
-otherwise open as an empty rectangle. Click it, or use the **Expand** button
-that appears over it beside **Copy**.
-
-> [!NOTE]
-> Readers see only the images they have permission to open. A relative path
-> resolves to a real SharePoint URL, and SharePoint still applies the
-> library's permissions to it.
-
-## Diagrams
-
-> [!NOTE] Diagrams need a current browser
-> Mermaid 12 targets ES2024 and Safari 17.4, which means iOS 17 or later. On an
-> older browser the diagram library does not load and each diagram shows a
-> message in its place; the rest of the document renders normally.
-
-
-Mermaid diagrams are themed to match the page and re-drawn when the theme
-changes. Each one carries a copy button in its top right corner that puts the
-diagram on the clipboard as a PNG, drawn at twice its size on the page so it
-stays sharp when it is pasted into a deck or a document. Selecting a diagram
-would only get you its source, which is rarely what you want.
-
-A gantt chart lays out from its time axis rather than wrapping, so it asks for
-more width than a column usually has. **Wide diagrams** decides what happens
-then:
+**Wide diagrams** decides what happens when a diagram asks for more width than
+the column gives, which gantt charts do because they lay out from their time
+axis rather than wrapping:
 
 | Setting | What it does |
 |---|---|
@@ -405,85 +139,92 @@ then:
 | Keep their size and scroll | The chart keeps its natural width and the box scrolls sideways. |
 | Scale down to fit | Shrinks the whole drawing, text included. Mermaid's own behaviour. |
 
-## Table of contents
+> [!NOTE] Diagrams need a current browser
+> Mermaid 12 targets ES2024 and Safari 17.4, which means iOS 17 or later. On an
+> older browser the diagram library does not load and each diagram shows a
+> message in its place; the rest of the document renders normally.
 
-Built from the headings, or placed inline with `[[toc]]`. It can sit in a left
-or right column, above the content, or be switched off. It has a pane page of
-its own, **Contents**, since between the position, the depth and the width
-there is more to it than one setting.
+### Maths and HTML
 
-### A contents the document writes itself
+**Math (KaTeX)** typesets `$inline$` and `$$display$$` maths. The
+[syntax page](../syntax/#diagrams-and-maths) lists every form it accepts.
 
-If the document has its own contents, that one is used and the generated one is
-not built, so the page never carries two. Either of these counts:
+**Tags** shows `#recipe` and a nested `#work/urgent` as tags rather than as
+words with a hash in front, the way a note written in Obsidian writes them. It
+is off by default. A tag holds letters, digits, `_`, `-` and `/`, has to contain
+at least one character that is not a digit, and cannot be joined onto the end of
+a word, so `C#` and `#1984` are not tags. They are styled and nothing more: this
+web part cannot see the other documents in a library, so a tag that looked like
+a link would go nowhere.
 
-- `[[toc]]` on a line of its own.
-- A list of links to headings in this document, under a heading that reads
-  *Contents*, *Table of contents* or *On this page*.
+**Allow raw HTML in markdown** is off by default and is covered under
+[Security](#security) below.
 
-A hand-written list is usually a deliberate subset, naming the sections worth
-jumping to and leaving out the rest, so it is treated as a decision rather than
-as something to improve on. It is lifted out of the text into whichever position
-the setting gives it, and gets the same indentation, smooth scrolling and
-reading-position tracking as a generated one. **Deepest heading in the contents**
-does not apply to it, since the document has already said what belongs.
+### Tables
 
-With the contents set to **No contents**, nothing is taken over: an authored one
-stays exactly where it was written.
+**Let readers sort a table** puts sorting on the column headers.
+[How a column's type is worked out](../reading/#sorting).
 
-**Deepest heading in the contents** decides how far down it goes, from top-level
-headings only through to every level. A long document with four levels of
-heading usually reads better listing two or three of them.
+A long table keeps its header row in view while the rows go past whether sorting
+is on or not.
 
-**Heading link anchors** put a link beside each heading, so a section can be
-linked to directly. They are reserved a gutter of their own rather than sitting
-in the margin, where a SharePoint page canvas clips them.
+## Contents
 
-It is a column of the layout or a block above the text, never an overlay, so
-it cannot cover the content or the page's own editing controls. In a narrow
-column it collapses to a single line you can expand, and while the page is being
-edited it stops sticking to the top of the screen. The entry for the heading you
-are reading is highlighted as you scroll.
+### Contents
 
-### How wide the sidebar is
+**Table of contents** puts the list of headings in a left or right column, above
+the content, or switches it off. **Deepest heading in the contents** decides how
+far down it reaches, and **Contents width** how much room a sidebar takes.
+**Heading link anchors** put a link beside each heading.
 
-With the contents in a left or right sidebar, **Contents width** decides how
-much room they take. Stacked above the content in a narrow column the setting
-does not apply: there they are always full width.
+All four are covered at length under
+[the contents](../reading/#the-contents), including what happens when the
+document writes a contents of its own, which is that the document wins.
 
-**Auto** fits the sidebar to its longest entry, so there is no gap beside short
-headings and no wrapping of long ones. It is floored and capped, so a document
-with three short headings still reads as a column and one deep heading cannot
-take the page.
+### Links between documents
 
-**Fixed** adds **Measured in** for the unit and a **Width**, given as both a
-slider and a box:
+**Wiki links** turns `[[Another page]]` into a link. **Mark links to pages that
+are not there** checks them against the library. **Open a linked document here**
+makes a link to another `.md` open in the web part rather than handing the
+reader the file.
 
-| Unit | What it measures | Worth knowing |
-|---|---|---|
-| `em` | The contents' own text size | Keeps the same characters per line as the text size changes. The best choice for most documents. |
-| `%` | A share of the web part | Adapts to the column the web part is placed in. |
-| `px` | A fixed number of pixels | Predictable, but ignores both text size and column width. |
-| `vw` | A share of the browser window | Measures the window rather than the web part, so a narrow column and a full-width one get the same sidebar. Rarely what you want. |
+All three are the subject of [linking documents](../linking/), along with the
+`?strataDoc=` parameter that lets a SharePoint navigation menu point at any
+document in the library.
 
-## Editing in the page
+## Chrome
 
-Put the page in edit mode and the web part becomes a split editor: markdown on
-the left, live preview on the right, with **Edit / Split / Preview** layouts. If
-the content came from a library file, **Save to SharePoint** writes it back,
-warning you first if someone else has saved it since you opened it. `Ctrl+S`
-saves.
+### Toolbar
 
-It is a plain textarea rather than Monaco, deliberately: it always loads, and a
-large editor bundle is hard to justify for the short edits that happen on a
-SharePoint page.
+**Show toolbar** decides whether the strip above the document is drawn at all,
+and whether readers see it or only somebody editing the page does. **Show print
+button**, **Show reading time** and **Back to top button** decide what is in it
+and what floats above the page.
+
+[What each control does](../reading/#the-toolbar).
+
+### File information
+
+**Show file name and last updated** puts a footer under the document with the
+file's name, when it was last changed and by whom. **Keep it in view while
+scrolling** pins it to the bottom of the web part rather than leaving it at the
+end of the document.
+
+Both need a file from a document library, since that is the only source with any
+of those to show.
+
+## Frontmatter
+
+YAML frontmatter at the top of a file, the way Obsidian, Hugo and Jekyll write
+it, is taken off rather than rendered as a heading of its own keys. `title`,
+`author` and `tags` are shown in the file footer instead. `+++` works too.
 
 ## Defaults
 
 A web part you have just added starts on the **VS Code** theme in light mode,
 comfortable width, compact spacing, contents above the content, and line numbers
-on. It is as tall as its content, and raw HTML is off. Every one of those is a
-setting.
+on. It is as tall as its content, wiki links are off, tags are off and raw HTML
+is off. Every one of those is a setting.
 
 ## Security
 
@@ -493,20 +234,32 @@ setting.
 > `securityLevel: 'strict'` and HTML labels disabled, so diagram text can never
 > become markup.
 
-With the setting on, the rendered page is sanitised before anybody sees it.
-`<script>`, every `on*` handler and every `javascript:` address are taken out,
-along with `<object>`, `<embed>`, `<base>`, `<form>` and `<meta>`. Formatting
-HTML is kept: `<sub>`, `<sup>`, `<kbd>`, `<br>`, `<details>`, `<summary>`,
-tables, and a `<div>` or `<span>` with a class.
+With the setting on, the rendered page is sanitised before anybody sees it. That
+matters because in a document library the author is everybody with write access
+to the library, which is not the same set of people as the readers.
 
-`<iframe>` is kept as well, since an embedded video is usually the reason the
-setting is on at all, but only when it points somewhere on a fixed list:
-YouTube, YouTube's no-cookie address, Vimeo, Microsoft Stream, Forms, Power BI,
-Teams, any SharePoint address on any tenant, and the site the page itself is
-on. Anywhere else and the frame is dropped. The host is read from the parsed
-address rather than matched in the text, so a URL that merely mentions an
-allowed host is not one. An `srcdoc` is dropped whatever the host, because a
-frame carrying its own document never visits the host it names.
+Gone: `<script>` in every spelling, every `on*` handler, a `javascript:` address
+in an `href` or a `src` however it is written, and `<object>`, `<embed>`,
+`<base>`, `<form>`, `<meta>`, `<style>`, `<select>` and `<textarea>`.
+
+Kept: ordinary formatting HTML. `<sub>`, `<sup>`, `<kbd>`, `<br>`, `<details>`,
+`<summary>`, tables, and a `<div>` or `<span>` with a class.
+
+`<iframe>` is kept as well, because an embedded video is usually the reason the
+setting is on at all, but only when it points at a host on a fixed list: YouTube
+and its no-cookie address, Vimeo, Microsoft Stream, Forms, Power BI, Teams, any
+SharePoint address on any tenant, and the site the page itself is on. Anywhere
+else and the frame is dropped.
+
+The host is read from the parsed address rather than matched in the text, so a
+URL that merely mentions an allowed host is not one. An `srcdoc` is dropped
+whatever the host, because a frame carrying its own document never visits the
+host it names.
+
+Sanitising is done with DOMPurify rather than by hand. HTML sanitisation by
+regular expression is the most reliably-got-wrong thing in this field: the
+parser, not the pattern, decides what a tag is, and only a parser can see
+through an encoded `javascript:` or a stray control character.
 
 `npm audit --omit=dev` reports no advisories: nothing that ships to the browser
 has a known vulnerability.
@@ -515,7 +268,9 @@ has a known vulnerability.
 
 | Where | What is there |
 |---|---|
-| [README](https://github.com/CodyRWhite/Markstrata#readme) | Features, configuration, deployment |
+| [Install](../install/) | The package, the App Catalog, upgrades |
+| [Microsoft Teams](../teams/) | The same web part as a channel tab |
+| [Syntax](../syntax/) | Every piece of markdown, with what it turns into |
 | [THEMES.md](https://github.com/CodyRWhite/Markstrata/blob/main/THEMES.md) | The token contract, and how to add a fourth theme |
 | [CONTRIBUTING.md](https://github.com/CodyRWhite/Markstrata/blob/main/CONTRIBUTING.md) | Branches, commits, releases |
 | [Issues](https://github.com/CodyRWhite/Markstrata/issues) | Bugs and requests |

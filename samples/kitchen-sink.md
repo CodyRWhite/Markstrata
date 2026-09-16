@@ -66,8 +66,9 @@ first time someone meets them.
 
 With **Wiki links** on, `[[Another page]]` links to that file in the same
 folder, the way Obsidian and older wikis write one. A link to [[deploy]] points
-at a page that is there; a link to [[a page nobody wrote]] is marked, because
-the folder was listed and it was not in it. You can also write
+at a page that is there; a link to [[a page nobody wrote]] is marked when there
+is a library behind the page to ask, because the folder is listed once and every
+link into it answered from that. You can also write
 [[deploy|a label of your own]] or jump to [[deploy#Rollback]], and [[#Images]]
 goes to a heading in this document. A link inside a table is written with an
 escaped pipe, [[deploy\|the runbook]], so the pipe does not end the cell.
