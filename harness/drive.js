@@ -126,6 +126,22 @@ const LIBRARY_PATH = '/sites/demo/Documents';
   page.on('requestfailed', (request) => {
     const failure = request.failure();
     const why = failure ? failure.errorText : 'failed';
+
+    /*
+     * ERR_ABORTED is not a failure. It is what a browser reports for a request
+     * it cancelled itself, which is what happens to anything still in flight
+     * when the page navigates - and this driver navigates between a dozen
+     * pages. It was reported twice as a missing brand mark on a site page that
+     * is sitting exactly where it belongs, once here and once to an agent who
+     * correctly went and checked before believing it.
+     *
+     * A request that was really refused or really not found says so with a
+     * different error, and those are still reported.
+     */
+    if (why === 'net::ERR_ABORTED') {
+      return;
+    }
+
     problems.push(`request: ${why} ${request.url()}`);
   });
 
