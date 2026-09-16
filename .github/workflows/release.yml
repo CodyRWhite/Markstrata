@@ -66,11 +66,18 @@ jobs:
         run: npm test
 
       # The Teams app, built BEFORE the solution package rather than after.
-      # SharePoint looks inside the .sppkg for ./teams/TeamsSPFxApp.zip when an
-      # administrator presses Sync to Teams, and deploys that instead of
-      # generating a manifest of its own - so it has to be sitting in teams/ by
-      # the time package-solution sweeps that folder up. The version it stamps
-      # is the one set-version wrote a step earlier.
+      # package-solution sweeps teams/ into the package, so the zip has to be
+      # sitting there by the time it runs. The version it stamps is the one
+      # set-version wrote a step earlier.
+      #
+      # Inside the built .sppkg the file is at ClientSideAssets/TeamsSPFxApp.zip
+      # rather than teams/TeamsSPFxApp.zip: SPFx moves what it sweeps. This
+      # comment used to claim the second path, from documentation rather than
+      # from looking, and the package says otherwise. What is actually known is
+      # that building it into teams/ before packaging produces a package that
+      # Sync to Teams accepts, because 0.0.18.4 did and a tenant confirmed it.
+      # The check below is there so that if it ever stops being swept in, the
+      # release fails here rather than a tenant finding out.
       #
       # Built, but not published beside the .sppkg. It used to be a second
       # release asset, from when Sync to Teams was failing and the only way in
@@ -97,6 +104,18 @@ jobs:
         run: |
           PATH_TO_PACKAGE=sharepoint/solution/markstrata.sppkg
           test -f "$PATH_TO_PACKAGE"
+
+          # And that it carries the Teams app. Without this the package still
+          # builds, still installs, and Sync to Teams either does nothing or
+          # deploys something SPFx generated - which is the failure that cost
+          # an evening once already, and it is silent from the outside.
+          if ! unzip -l "$PATH_TO_PACKAGE" | grep -q 'TeamsSPFxApp.zip'; then
+            echo "The Teams app is not in the package. Sync to Teams would have"
+            echo "nothing to deploy. Check that npm run teams ran before"
+            echo "package-solution and wrote into teams/."
+            exit 1
+          fi
+
           echo "path=$PATH_TO_PACKAGE" >> "$GITHUB_OUTPUT"
 
       - name: Publish the release

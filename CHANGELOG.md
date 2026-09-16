@@ -61,6 +61,12 @@ Entries below 0.0.10.0 were written before the switch and are three-part.
   rather than beside it, so the browser's own Back button walks the same path
   and the two cannot disagree about where the reader has been.
 
+- The release refuses to publish a package with no Teams app inside it. Without
+  the app the package still builds, still installs, and Sync to Teams either
+  does nothing or deploys something SPFx generated instead. That is silent from
+  the outside and it is the failure that cost an evening once already, so it
+  fails the release now rather than a tenant.
+
 - A page address naming a document that cannot be opened now says so, to
   whoever can fix it. `?strataDoc=` is ignored unless "Open a linked document
   here" is on and the source is a library or a URL, and unless the value names
