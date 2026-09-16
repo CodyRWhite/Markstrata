@@ -126,13 +126,16 @@ export class ViewModeRenderer {
       host.appendChild(toolbar);
     }
 
-    /* Under the toolbar rather than over it. The toolbar is the web part's own
-       furniture and sits in the same place on every document; the trail
-       belongs to the document under it and changes as the reader moves, so it
-       reads as the top of the document rather than as another row of
-       controls. */
+    /* Inside the toolbar, on a line of its own under the controls and above
+       the rule that closes it. The trail is part of the same furniture - it
+       says where the reader is, the controls say what they can do about it -
+       and a line between them would separate two halves of one thing. The
+       toolbar wraps, so a full-width child falls to its own row.
+
+       Without a toolbar there is nothing to sit inside, and it stands where
+       the toolbar would have been. */
     if (options.openDocumentName && options.onGoToCrumb) {
-      host.appendChild(this.buildOpenDocumentBar(options));
+      (toolbar || host).appendChild(this.buildOpenDocumentBar(options));
     }
 
     const layout: HTMLElement = document.createElement('div');

@@ -267,6 +267,17 @@
 }
 
 /*
+ * In the toolbar it is a row of its own rather than another item on the end of
+ * the controls: full width forces the wrap, and the toolbar's own padding and
+ * rule close underneath it. The margin goes, because the toolbar already has
+ * one and two of them read as a gap nobody asked for.
+ */
+.strata-toolbar > .strata-open-doc {
+  flex: 0 0 100%;
+  margin-bottom: 0;
+}
+
+/*
  * The trail the reader walked, as breadcrumbs. Wraps rather than scrolling or
  * collapsing: a crumb that is off the edge or behind an ellipsis is a way back
  * the reader cannot see, which is the thing this replaced a single Back button
