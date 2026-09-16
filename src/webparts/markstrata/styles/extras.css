@@ -258,6 +258,38 @@
   height: 100%;
 }
 
+/*
+ * A code block in the overlay: the same block, with nothing capping it.
+ *
+ * It scrolls inside the panel rather than the panel growing past the window,
+ * because a hundred line file opened full size is still a hundred lines. Its
+ * own ground under it for the same reason the diagram has one: the overlay is
+ * black and a light-theme block would otherwise be light text on it.
+ */
+.strata-zoom-code {
+  width: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  overflow: auto;
+  border-radius: var(--strata-radius-md);
+  background-color: var(--strata-code-bg);
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.5);
+  cursor: default;
+}
+
+/* The clone brought its own margin and rounding, which the panel now provides;
+   two of each reads as a box inside a box. */
+.strata-zoom-code .strata-code {
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+}
+
+/* Uncapped, whatever the block on the page was set to. */
+.strata-zoom-code .strata-code-pre {
+  max-height: none;
+}
+
 .strata-zoom-close {
   position: absolute;
   top: 16px;

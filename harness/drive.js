@@ -805,6 +805,128 @@ const LIBRARY_PATH = '/sites/demo/Documents';
   });
 
   /*
+   * Which blocks offer a full size view, and which are left alone.
+   *
+   * Decided by measuring the rendered block, so a browser is the only place it
+   * can be checked at all: the rule is that a block offers Expand when its
+   * <pre> has more to show than it is showing in either direction, or when the
+   * block is taller than the window.
+   */
+  await step('only the blocks with more to show offer a full size view', async () => {
+    const blocks = await page.evaluate(() => {
+      const FITS = 2;
+      return [...document.querySelectorAll('.strata-code')].map((block) => {
+        const pre = block.querySelector('.strata-code-pre');
+        return {
+          lang: block.getAttribute('data-lang'),
+          offers: !!block.querySelector('.strata-code-expand'),
+          overflows: pre.scrollHeight > pre.clientHeight + FITS
+            || pre.scrollWidth > pre.clientWidth + FITS
+            || block.getBoundingClientRect().height > window.innerHeight
+        };
+      });
+    });
+    if (blocks.length < 5) throw new Error('only ' + blocks.length + ' blocks');
+    const wrong = blocks.filter((block) => block.offers !== block.overflows);
+    if (wrong.length) {
+      throw new Error('the rule and the markup disagree: ' + JSON.stringify(wrong));
+    }
+    /* Both halves have to be represented, or this passes by there being
+       nothing of one kind on the page. */
+    if (!blocks.some((block) => block.offers)) {
+      throw new Error('no block offers it at all');
+    }
+    if (!blocks.some((block) => !block.offers)) {
+      throw new Error('every block offers it, so the rule is not a rule');
+    }
+  });
+
+  await step('a capped block opens full size, uncapped, and closes again', async () => {
+    const block = page.locator('.strata-code--short').first();
+    await block.scrollIntoViewIfNeeded();
+    await block.locator('.strata-code-expand').click();
+    await page.waitForSelector('.strata-zoom .strata-zoom-code', { timeout: 3000 });
+
+    const open = await page.evaluate(() => {
+      const copy = document.querySelector('.strata-zoom-code .strata-code');
+      const pre = copy.querySelector('.strata-code-pre');
+      const onPage = document.querySelector('.strata-content .strata-code--short pre');
+      return {
+        capped: copy.className.indexOf('strata-code--short') !== -1,
+        /* Nothing left in it to scroll past. */
+        scrolls: pre.scrollHeight > pre.clientHeight + 2,
+        lines: copy.querySelectorAll('.strata-code-line').length,
+        /* A cloned button would have no listener behind it. */
+        buttons: copy.querySelectorAll('button').length,
+        /* The document keeps its own block, still capped. */
+        pageStillCapped: onPage.scrollHeight > onPage.clientHeight + 2,
+        label: document.querySelector('.strata-zoom').getAttribute('aria-label')
+      };
+    });
+    if (open.capped) throw new Error('the copy is still capped');
+    if (open.scrolls) throw new Error('the copy still has more to show');
+    if (open.lines < 12) throw new Error('the copy holds ' + open.lines + ' lines');
+    if (open.buttons) throw new Error(open.buttons + ' dead buttons in the overlay');
+    if (!open.pageStillCapped) throw new Error('the block on the page was changed');
+    if (!open.label) throw new Error('the overlay has no name');
+
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(200);
+    if (await page.locator('.strata-zoom').count() !== 0) {
+      throw new Error('Escape did not close it');
+    }
+  });
+
+  await step('a click on the block opens it, and a click on Copy does not', async () => {
+    await page.context().grantPermissions(['clipboard-read', 'clipboard-write']);
+    const block = page.locator('.strata-code--short').first();
+    await block.scrollIntoViewIfNeeded();
+
+    /* Copy first: it has to copy and it must not open anything. */
+    await block.locator('.strata-code-copy').click();
+    await page.waitForTimeout(300);
+    if (await page.locator('.strata-zoom').count() !== 0) {
+      throw new Error('copying opened the overlay as well');
+    }
+    const state = await block.locator('.strata-code-copy').getAttribute('data-state');
+    if (state !== 'done') throw new Error('copy said ' + state);
+    const copied = await page.evaluate(() => navigator.clipboard.readText());
+    if (!/dataclass/.test(copied || '')) {
+      throw new Error('the clipboard holds ' + JSON.stringify((copied || '').slice(0, 40)));
+    }
+
+    /* Then the code itself, which is what a reader tries on something cut off. */
+    await block.locator('.strata-code-line-text').first().click();
+    await page.waitForSelector('.strata-zoom-code', { timeout: 3000 });
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(200);
+  });
+
+  /* Selecting code has to keep working: a drag that selected something ends in
+     a click, and swallowing that to open an overlay makes code unselectable. */
+  await step('selecting code does not open the overlay', async () => {
+    const block = page.locator('.strata-code--short').first();
+    await block.scrollIntoViewIfNeeded();
+    /* This is only worth anything over a block that would otherwise open. */
+    if (await block.locator('.strata-code-expand').count() === 0) {
+      throw new Error('this block does not open at all, so nothing was checked');
+    }
+    const line = await block.locator('.strata-code-line-text').first().boundingBox();
+    await page.mouse.move(line.x + 4, line.y + line.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(line.x + line.width - 4, line.y + line.height / 2, { steps: 8 });
+    await page.mouse.up();
+    await page.waitForTimeout(300);
+
+    const selected = await page.evaluate(() => (window.getSelection().toString() || '').trim());
+    if (!selected) throw new Error('nothing was selected, so this checked nothing');
+    if (await page.locator('.strata-zoom').count() !== 0) {
+      throw new Error('selecting opened the overlay');
+    }
+    await page.evaluate(() => window.getSelection().removeAllRanges());
+  });
+
+  /*
    * A fence that named an address instead of a body. The address is fetched
    * after the document is drawn, so this is the one thing about the feature a
    * unit test cannot see: that the block really is filled in on the page, by

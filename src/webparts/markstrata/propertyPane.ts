@@ -269,6 +269,7 @@ export function paneConfiguration(
                 onText: 'On',
                 offText: 'Off'
               }),
+              PropertyPaneLabel('imageZoomHint', { text: strings.ImageZoomHint }),
               PropertyPaneLabel('imageAlignHint', { text: strings.ImageAlignHint })
             ]
           },

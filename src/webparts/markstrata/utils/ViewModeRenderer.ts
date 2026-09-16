@@ -179,6 +179,9 @@ export class ViewModeRenderer {
     }
 
     this.enhancer.attachCopyButtons(article);
+    /* After the article is in the page, because which blocks get a full size
+       view is decided by measuring them rather than by reading the markdown. */
+    this.enhancer.attachCodeZoom(article, options.enableImageZoom !== false);
     this.enhancer.secureExternalLinks(article);
     this.enhancer.followDocumentLinks(article, options.documentBase, options.openDocument);
     this.enhancer.enhanceImages(article, options.enableImageZoom !== false);
@@ -234,7 +237,10 @@ export class ViewModeRenderer {
        already reserved the height it will need, so the document around it does
        not move when it fills. */
     if (options.fetchCode) {
-      void this.enhancer.fillRemoteCode(article, options.fetchCode);
+      void this.enhancer.fillRemoteCode(article, options.fetchCode)
+        /* Round again, because a block that was one line of prose when the
+           blocks were measured is now as tall as a file. */
+        .then(() => this.enhancer.attachCodeZoom(article, options.enableImageZoom !== false));
     }
 
     if (options.enableMermaid) {

@@ -18,22 +18,17 @@
  * .NOTES
  * Since:     0.0.17.0
  * Ships in:  the web part bundle
- * Requires:  copyFeedback.ts, zoomOverlay.ts
+ * Requires:  copyFeedback.ts, icons.ts, zoomOverlay.ts
  */
 
 import { CopyFeedback } from './copyFeedback';
+import { EXPAND_ICON } from './icons';
 import { ZoomOverlay } from './zoomOverlay';
 
 const IMAGE_ICON: string =
   '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">'
   + '<rect x="3" y="4" width="18" height="14" rx="2"/>'
   + '<circle cx="8.5" cy="9" r="1.5"/><path d="m21 15-5-5-9 8"/></svg>';
-
-/* Arrows to the four corners: the diagram, opened out to the window. */
-const EXPAND_ICON: string =
-  '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">'
-  + '<path d="M9 3H3v6M21 9V3h-6M15 21h6v-6M3 15v6h6"/>'
-  + '<path d="m3 3 6 6M21 3l-6 6M21 21l-6-6M3 21l6-6"/></svg>';
 
 /* Drawn at twice the diagram's size, so the copy is still sharp when it is
    pasted into a deck or a document and scaled back up. */

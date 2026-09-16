@@ -10,6 +10,32 @@ Entries below 0.0.10.0 were written before the switch and are three-part.
 
 ## 0.0.18.4
 
+- A code block with more to show than it is showing opens at the size of the
+  window, in the same overlay a picture and a Mermaid diagram already use. A
+  capped block is the obvious case, since it is showing ten lines of a hundred,
+  but a block whose lines run past the column has the same problem without
+  anybody having asked for a cap.
+  - Which blocks offer it is decided by measuring the rendered block, never by
+    reading the markdown. The rule in full: a block offers **Expand** when its
+    `<pre>` has more to show than it is showing, in either direction, or when
+    the block is taller than the window. One measurement, three cases - a
+    capped block scrolls down, a wide block scrolls across, and a block with
+    two hundred lines and no cap overflows neither because it is as tall as its
+    code. A two line fence that fits is caught by none of it and is left alone:
+    a control on every tiny fence is clutter, and clutter on the thing a
+    document is mostly made of is worse than clutter anywhere else.
+  - The button sits beside Copy. Clicking the block opens it too, because that
+    is what a reader tries first on something they can see is cut off, but not
+    when the click ended a drag that selected some of the code, and not on
+    Copy: copying copies and opens nothing.
+  - What opens is a copy of the block with its cap and its buttons taken off.
+    The buttons because a cloned button has no listener behind it, and one that
+    says Copy and does nothing is worse than no Copy at all. The block on the
+    page keeps its own, and the text in the overlay is real text that selects.
+  - The **Click a picture or diagram to see it full size** setting now reads
+    **Click a picture, diagram or code block to see it full size** and turns
+    all three off together. One switch for one idea.
+
 - A code block can be capped in height and scroll inside instead of running
   down the page. A fence says `short`, `medium` or `full` beside `wrap` and
   `numbers`, and there is a **Block height** setting in the **Code blocks**

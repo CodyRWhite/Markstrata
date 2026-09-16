@@ -249,6 +249,10 @@ export class EditModeManager {
     const preview: HTMLElement = this.preview;
     preview.innerHTML = this.processor.render(markdown);
     this.enhancer.attachCopyButtons(preview);
+    /* The preview is the document, so a capped block in it opens the same way.
+       The preview column is narrower than a page, which makes this more useful
+       here rather than less. */
+    this.enhancer.attachCodeZoom(preview, options.enableImageZoom !== false);
     this.enhancer.secureExternalLinks(preview);
     this.enhancer.enhanceImages(preview, options.enableImageZoom !== false);
     this.enhancer.enhanceTables(preview, options.enableTableSort !== false);

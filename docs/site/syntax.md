@@ -208,6 +208,23 @@ A capped block prints whole. There is no scrolling on paper, and printing the
 first ten lines of a listing and losing the rest is worse than printing all of
 it.
 
+### Full size
+
+A block with more to show than it is showing carries an Expand button beside
+Copy, and clicking the block opens it too. It opens in the same overlay a
+picture and a diagram use, uncapped, and Escape or a click outside closes it
+again. Selecting code still selects, and Copy still copies without opening
+anything.
+
+Which blocks offer it is decided by measuring the rendered block rather than by
+reading the markdown: one capped by its height, one whose lines run past the
+column, or one longer than the window. A short block that already fits is left
+alone, because a control on every two line fence is clutter on the thing a
+document is mostly made of.
+
+The **Click a picture, diagram or code block to see it full size** setting
+turns all three off together.
+
 ### Code from a URL
 
 A fence with no body can say where its code is, and the block is filled in once

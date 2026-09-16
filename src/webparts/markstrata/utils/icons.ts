@@ -46,6 +46,19 @@ export const PRINT_ICON: string =
   '<path d="M7 15h10v6H7z"/></svg>';
 
 /*
+ * Arrows to the four corners: the thing under them, opened out to the window.
+ *
+ * Written without the strata-icon class the toolbar icons carry, because it is
+ * used on the small buttons over a diagram and inside a code block header,
+ * which `.strata-code-btn svg` sizes instead. Shared by both of those so the
+ * same drawing means the same thing wherever a reader meets it.
+ */
+export const EXPAND_ICON: string =
+  '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">'
+  + '<path d="M9 3H3v6M21 9V3h-6M15 21h6v-6M3 15v6h6"/>'
+  + '<path d="m3 3 6 6M21 3l-6 6M21 21l-6-6M3 21l6-6"/></svg>';
+
+/*
  * The colour-mode toggle: one drawing that moves between a sun and a moon
  * rather than two glyphs that swap.
  *

@@ -425,6 +425,19 @@
   .strata-code--calling .strata-code-line { transition: none; }
 }
 
+/*
+ * A block that has more to show than it is showing.
+ *
+ * The cursor is left alone over the code, which is selectable text and should
+ * say so. The Expand button in the actions is the affordance, and a click
+ * anywhere else in the block opens it too, for the reader who tries that
+ * first. The outline is for the keyboard reaching the button, which is what
+ * moves focus to the block.
+ */
+.strata-code--zoomable:focus-within {
+  border-color: var(--strata-border-strong);
+}
+
 /* On paper there is no hover, so nothing must be faded past reading. */
 @media print {
   .strata-code--calling .strata-code-line { opacity: 1; }
