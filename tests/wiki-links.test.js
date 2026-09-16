@@ -61,6 +61,81 @@ test('an escaped pipe in a table cell reaches a href that can be followed', () =
   assert.match(html, />Markdown syntax</);
 });
 
+/*
+ * The escape above is what Obsidian documents, and it has always worked. The
+ * bare pipe is what a folder of notes actually arrives full of, because it is
+ * what Obsidian itself writes outside a table and what somebody moving a link
+ * into one types. Split on that pipe, the link came apart across two cells and
+ * both halves reached the reader as literal brackets.
+ */
+const cellsOf = (html) => (html.match(/<td[^>]*>[\s\S]*?<\/td>/g) || []);
+
+test('a bare pipe inside a wiki link does not end the cell', () => {
+  const html = render('| a | b |\n| --- | --- |\n| [[Deploy runbook|how we ship]] | x |');
+  assert.equal(cellsOf(html).length, 2);
+  assert.doesNotMatch(html, /\[\[|\]\]/);
+  assert.match(html, /href="[^"]*\/Deploy%20runbook\.md"/);
+  assert.match(html, />how we ship</);
+});
+
+test('a heading and a label together survive a table cell', () => {
+  const html = render('| a | b |\n| --- | --- |\n| [[Deploy runbook#Rollback|roll back]] | x |');
+  assert.equal(cellsOf(html).length, 2);
+  assert.match(html, /href="[^"]*\/Deploy%20runbook\.md#rollback"/);
+  assert.match(html, />roll back</);
+});
+
+test('the cells either side of a labelled link are still their own cells', () => {
+  const html = render('| a | b | c |\n| --- | --- | --- |\n| before | [[Page|Label]] | after |');
+  const cells = cellsOf(html);
+  assert.equal(cells.length, 3);
+  assert.match(cells[0], />before</);
+  assert.match(cells[2], />after</);
+});
+
+test('two labelled links in one row are two cells, not four', () => {
+  const html = render('| a | b |\n| --- | --- |\n| [[One|first]] | [[Two|second]] |');
+  assert.equal(cellsOf(html).length, 2);
+  assert.match(html, />first</);
+  assert.match(html, />second</);
+});
+
+test('a pipe outside the brackets still ends the cell', () => {
+  const html = render('| a | b |\n| --- | --- |\n| [[One]] | [[Two]] |');
+  assert.equal(cellsOf(html).length, 2);
+});
+
+test('brackets that are not a wiki link do not protect a pipe', () => {
+  /* The rule the wiki link rule itself applies: a bracket between the pairs
+     means these are not a link's brackets. `[[1,2],[3,4]]` is an array, so the
+     pipe after it is a cell boundary like any other. */
+  const html = render('| a | b |\n| --- | --- |\n| [[1,2],[3,4]] | x |');
+  const cells = cellsOf(html);
+  assert.equal(cells.length, 2);
+  assert.match(cells[1], />x</);
+});
+
+test('an opening bracket with no closing one does not swallow the row', () => {
+  const html = render('| a | b |\n| --- | --- |\n| [[unfinished | x |');
+  assert.equal(cellsOf(html).length, 2);
+});
+
+test('a pipe inside a code span in a cell is still content', () => {
+  const html = render('| a | b |\n| --- | --- |\n| `a|b` | x |');
+  const cells = cellsOf(html);
+  assert.equal(cells.length, 2);
+  assert.match(cells[0], /a\|b/);
+});
+
+test('with wiki links off a table splits where its pipes are', () => {
+  /* Those brackets are ordinary text then, and changing how a table reads for
+     somebody who does not use wiki links would be a different bug. */
+  const html = new MarkdownProcessor({ enableWikiLinks: false })
+    .render('| a | b |\n| --- | --- |\n| [[Page|Label]] | x |');
+  assert.equal(cellsOf(html).length, 2);
+  assert.match(html, /\[\[Page/);
+});
+
 test('a heading can be named, in another page or in this one', () => {
   assert.deepEqual(parseWikiLink('Runbook#Rollback'),
     { page: 'Runbook', heading: 'Rollback', label: 'Runbook › Rollback' });
