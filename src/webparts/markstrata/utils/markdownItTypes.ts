@@ -62,6 +62,8 @@ export interface IRenderer {
 
 /** Core rules run over the whole token stream after block or inline parsing. */
 export interface IStateCore {
+  /** The whole document, which is what a token's `map` indexes lines of. */
+  src: string;
   tokens: IToken[];
   Token: TokenConstructor;
   md: IMarkdownIt;

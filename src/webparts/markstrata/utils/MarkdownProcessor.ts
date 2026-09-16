@@ -21,7 +21,7 @@
  * Requires:  markdownItCallouts.ts, markdownItTaskLists.ts, codeBlocks.ts,
  *            imagePaths.ts, frontMatter.ts, markdownItWikiLinks.ts,
  *            markdownItTableCaptions.ts, markdownItAttributeGuard.ts,
- *            markdownItTypes.ts
+ *            markdownItTableCells.ts, markdownItTypes.ts
  */
 
 import { calloutPlugin } from './markdownItCallouts';
@@ -32,6 +32,7 @@ import { splitFrontMatter, ISplitDocument } from './frontMatter';
 import { wikiLinkPlugin } from './markdownItWikiLinks';
 import { tableCaptionPlugin } from './markdownItTableCaptions';
 import { attributeGuardPlugin } from './markdownItAttributeGuard';
+import { tableCellPlugin } from './markdownItTableCells';
 import {
   ILinkifyMatch,
   IMarkdownIt,
@@ -278,6 +279,10 @@ export class MarkdownProcessor {
        registered and narrows its caption test so a row of cells written in
        brackets stays a row. */
     register('table captions', tableCaptionPlugin);
+    /* And the cells of a row, read again where that plugin read them wrongly:
+       a lone backtick in a cell, an escaped pipe inside a code span, and a row
+       with the wrong number of cells in it. */
+    register('table cells', tableCellPlugin);
 
     if (this.options.enableAnchors || this.options.enableToc) {
       const anchor: typeof markdownItAnchor = resolvePlugin(markdownItAnchor) as typeof markdownItAnchor;

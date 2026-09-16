@@ -151,6 +151,10 @@ matter:
 | one | two | 3 |
 ```
 
+A pipe inside a cell is written `\|`, which is the only escape a cell has, and
+works inside a code span as well as outside one. A row with too few cells is
+padded out to the table and a row with too many is trimmed to it.
+
 `^^` merges a cell with the one above it, and a doubled `||` mid-row runs a
 cell across the column to its right:
 

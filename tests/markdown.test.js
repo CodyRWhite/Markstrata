@@ -86,6 +86,55 @@ test('a header row of wiki links is still a header row', () => {
   assert.doesNotMatch(html, /<caption/);
 });
 
+/*
+ * GitHub's own documentation of tables uses this table: a column of characters,
+ * one of which is a backtick. The plugin reads a backtick as opening a code
+ * span and ignores every pipe until the closing one, so a row with an odd
+ * number of them ran to the end of the line as a single cell.
+ */
+test('a lone backtick in a cell does not swallow the rest of the row', () => {
+  const html = markdown.render(
+    '| Name     | Character |\n| ---      | ---       |\n| Backtick | ` |\n| Pipe     | \\| |'
+  );
+  assert.match(html, /<td>Backtick<\/td>\s*<td>`<\/td>/);
+  assert.match(html, /<td>Pipe<\/td>\s*<td>\|<\/td>/);
+});
+
+test('a pipe inside a code span in a cell is written as the document wrote it', () => {
+  /* The only escape a table cell has, and the backslash has to come off before
+     the cell is read as markdown: a code span reads no escapes of its own. */
+  const html = markdown.render('| a | b |\n|---|---|\n| b `\\|` az | x |');
+  assert.match(html, /<code>\|<\/code>/);
+});
+
+test('a cell may still hold a pipe inside a closed code span', () => {
+  const html = markdown.render('| a | b |\n|---|---|\n| `x|y` | z |');
+  assert.match(html, /<code>x\|y<\/code>/);
+  assert.match(html, /<td>z<\/td>/);
+});
+
+test('a row with the wrong number of cells is padded or trimmed to the table', () => {
+  const html = markdown.render('| a | b |\n|---|---|\n| one |\n| 1 | 2 | 3 |');
+  assert.match(html, /<tr>\s*<td>one<\/td>\s*<td><\/td>\s*<\/tr>/);
+  assert.match(html, /<tr>\s*<td>1<\/td>\s*<td>2<\/td>\s*<\/tr>/);
+  assert.doesNotMatch(html, /<td>3<\/td>/);
+});
+
+test('a padded cell is aligned the way its column is', () => {
+  const html = markdown.render('| l | c | r |\n|:--|:-:|--:|\n| 1 |');
+  assert.match(html, /<td style="text-align:center"><\/td>/);
+  assert.match(html, /<td style="text-align:right"><\/td>/);
+});
+
+test('rowspan and colspan rows are left to the plugin that understands them', () => {
+  const rowspan = markdown.render('| Service | Host |\n|---|---|\n| Orders | db01 |\n| ^^ | db02 |');
+  assert.match(rowspan, /rowspan="2"/);
+  assert.match(rowspan, /<td>db02<\/td>/);
+
+  const colspan = markdown.render('| a | b | c |\n|---|---|---|\n| spans two || third |');
+  assert.match(colspan, /colspan="2"/);
+});
+
 test('a caption that could not have been a row is still a caption', () => {
   const above = markdown.render('[Quarterly figures]\nA | B\n-- | --\na | b');
   assert.match(above, /<caption[^>]*>Quarterly figures<\/caption>/);

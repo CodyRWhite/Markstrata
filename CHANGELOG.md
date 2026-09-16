@@ -66,6 +66,24 @@ Entries below 0.0.10.0 were written before the switch and are three-part.
   turned into a link to a website. It is narrowed back to the `www.` form that
   GitHub documents: a file name in a sentence is still a file name.
 
+- A table row with a single backtick in it is a row again. A backtick was read
+  as opening a code span, so every pipe after it was taken for part of that
+  span and the rest of the row became one cell with a raw pipe showing in it.
+  The table GitHub's own documentation uses to explain tables - a column of
+  characters, one of them a backtick - came out wrong here. A pipe inside a
+  closed code span still stays in its cell, which is the table plugin's own
+  extension and worth keeping.
+- `\|` inside a code span in a table cell is a pipe. It kept its backslash and
+  the reader saw `\|`, because a code span reads no escapes of its own and the
+  backslash has to come off before the cell is read as markdown. It is the only
+  escape a table cell has, so it is the one that had to work.
+- A row with the wrong number of cells is now squared up with the table: a
+  short row is padded out and the excess of a long row is dropped, which is
+  what every other renderer does with one. A ragged row put cells under no
+  heading at all and walked a sortable column out of step with its header. A
+  row using the rowspan or colspan syntax is left alone, since how wide it is
+  is that syntax's answer to give.
+
 ## 0.0.18.3
 
 - The split editor is one editor again. The box you typed in stopped at its own
