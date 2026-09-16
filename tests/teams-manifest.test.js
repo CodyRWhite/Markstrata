@@ -138,24 +138,39 @@ test('the icons it names are the ones the package carries', () => {
   });
 });
 
-test('nothing but the icons is left where SPFx will ship it', () => {
+test('teams/ holds what SharePoint looks for and nothing else', () => {
   /*
-   * SPFx globs every file under teams/ into the solution package. The first
-   * cut of this kept the hand-written manifest there and wrote the zip to
-   * teams/dist, so a .sppkg built after npm run teams carried
-   * ClientSideAssets/manifest.json - a generic name beside SPFx's own assets -
-   * and a stale copy of the whole Teams app inside the SharePoint one.
+   * SPFx copies everything under teams/ into the .sppkg, and that is the
+   * point rather than a nuisance: when an administrator presses Sync to Teams,
+   * SharePoint looks inside the package for ./teams/TeamsSPFxApp.zip and
+   * deploys that instead of generating a manifest of its own.
    *
-   * Only the two icons belong in that folder, because those are what it is
-   * for: they are named by component id so that SharePoint's Sync to Teams
-   * can find them, which is the fallback if anybody ever uses it.
+   * So three things belong here and nothing else. The two icons, named by
+   * component id, for the generated path if anybody ever falls back to it; and
+   * the built package, which is not committed, so it is allowed rather than
+   * required. Anything else is shipped inside the .sppkg for no reason - an
+   * earlier cut of this left the manifest loose in the folder, where it became
+   * a generic ClientSideAssets/manifest.json beside SPFx's own assets.
    */
-  const inside = fs.readdirSync(path.join(ROOT, 'teams'));
-  const expected = [`${webPart.id}_color.png`, `${webPart.id}_outline.png`];
+  const allowed = [
+    `${webPart.id}_color.png`,
+    `${webPart.id}_outline.png`,
+    'TeamsSPFxApp.zip'
+  ];
 
-  assert.deepEqual(
-    inside.sort(),
-    expected.sort(),
-    'anything else here is shipped inside the .sppkg'
-  );
+  const unexpected = fs.readdirSync(path.join(ROOT, 'teams'))
+    .filter((name) => allowed.indexOf(name) === -1);
+
+  assert.deepEqual(unexpected, [], 'these are shipped inside the .sppkg too');
+});
+
+test('the manifest carries what Teams needs to call SharePoint back', () => {
+  /* Documented as required for a developer-provided package: without it, an
+     API call from the Teams desktop and mobile clients fails. The resource is
+     a placeholder on purpose, because it has to be the tenant the Teams client
+     is in, and the id is SharePoint Online's own. */
+  assert.deepEqual(manifest.webApplicationInfo, {
+    resource: 'https://{teamSiteDomain}',
+    id: '00000003-0000-0ff1-ce00-000000000000'
+  });
 });

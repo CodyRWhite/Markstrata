@@ -2125,6 +2125,66 @@ const webPartUrl = 'file://' + path.join(HARNESS_DIST, 'webpart.html');
     }
   });
 
+  /*
+   * A SharePoint page is a single-page application with a router listening for
+   * clicks on the whole document, and it listens before any one element does.
+   * Bubbling up to it meant it saw every click on a document link first: it
+   * put the .md file's address in the address bar and handed the reader the
+   * download this feature exists to replace, and a refresh downloaded it
+   * again. The document did open underneath, which is why it looked like a
+   * double click worked and a single click did not.
+   *
+   * There is no router here, so one is stood up: a listener on the document,
+   * in the same phase SharePoint's uses, that records what reached it.
+   */
+  await step('the page router never sees a click on a document link', async () => {
+    const seen = await page.evaluate(async () => {
+      await window.webPartHarness.start({
+        contentSource: 'library',
+        selectedLibrary: '/sites/demo/Documents',
+        selectedFile: '/sites/demo/Documents/index.md',
+        enableWikiLinks: true,
+        followDocumentLinks: true
+      });
+      await new Promise((resolve) => setTimeout(resolve, 400));
+
+      const reached = [];
+      const router = (event) => {
+        const link = event.target.closest && event.target.closest('a[href]');
+        if (link) { reached.push(link.getAttribute('href')); }
+      };
+      /* Capture, as a router would, so it gets first refusal. */
+      document.addEventListener('click', router, true);
+
+      const wiki = Array.from(document.querySelectorAll('#host article a'))
+        .filter((anchor) => anchor.classList.contains('strata-wiki-link'))[0];
+      wiki.click();
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
+      /* And a link the web part does not claim, to prove the router is alive
+         and that ordinary links are still the page's business. */
+      const outside = document.getElementById('wp-outside-link');
+      outside.addEventListener('click', (event) => event.preventDefault());
+      outside.click();
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
+      document.removeEventListener('click', router, true);
+      const heading = document.querySelector('#host h1');
+      return { reached: reached, heading: heading ? heading.textContent : '' };
+    });
+
+    const tookTheDocumentLink = seen.reached.some((href) => href.indexOf('.md') !== -1);
+    if (tookTheDocumentLink) {
+      throw new Error('the router saw ' + JSON.stringify(seen.reached));
+    }
+    if (seen.reached.length === 0) {
+      throw new Error('the stand-in router saw nothing at all, so it proves nothing');
+    }
+    if (seen.heading.indexOf('Deploying') === -1) {
+      throw new Error('the document did not open: ' + JSON.stringify(seen.heading));
+    }
+  });
+
   await step('a library that will not answer is a message, not a broken page', async () => {
     const shown = await page.evaluate(async () => {
       window.webPartHarness.refuse(true);

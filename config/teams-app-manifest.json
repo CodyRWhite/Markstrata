@@ -40,5 +40,9 @@
     "*.sharepoint-df.com",
     "*.login.microsoftonline.com"
   ],
-  "showLoadingIndicator": false
+  "showLoadingIndicator": false,
+  "webApplicationInfo": {
+    "resource": "https://{teamSiteDomain}",
+    "id": "00000003-0000-0ff1-ce00-000000000000"
+  }
 }

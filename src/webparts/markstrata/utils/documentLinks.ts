@@ -88,17 +88,73 @@ export function followDocumentLinks(
     }
 
     link.classList.add('strata-doc-link');
-    link.addEventListener('click', (event: MouseEvent) => {
+  });
+}
+
+/**
+ * Takes the click on a document link before the page can.
+ *
+ * One listener, on the window, in the capture phase, and both of those are the
+ * whole point. A modern SharePoint page is a single-page application with a
+ * router listening for clicks on the document, and capture runs from the root
+ * downwards - so a listener on the link itself, in any phase, runs after a
+ * listener on the document, whatever order they were added in. Bubbling lost
+ * to it and capturing on the element lost to it too: the router put the .md
+ * file's address in the address bar and handed the reader the download this
+ * exists to replace, while the document opened underneath, which is what made
+ * it look as though a double click worked and a single click did not.
+ *
+ * The window is above the document on that path, so this runs first, and
+ * stopping the event there means the router never learns it happened.
+ *
+ * A listener that outlives a render has to be taken down again, which is why
+ * this is an object and not another line in the function above.
+ */
+export class DocumentLinkWatcher {
+  private onClick: ((event: MouseEvent) => void) | undefined;
+
+  public watch(open: (path: string, heading: string) => void): void {
+    this.stop();
+
+    this.onClick = (event: MouseEvent): void => {
+      /* Only a plain left click. Ctrl, Shift, the middle button and the rest
+         are how people open things in a new tab, and the href is still on the
+         element and still pointing at the real file so those keep working. */
       if (event.defaultPrevented || event.button !== 0
         || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
         return;
       }
+
+      const target: Element | null = event.target as Element;
+      const link: HTMLAnchorElement | null = target && target.closest
+        ? (target.closest('a.strata-doc-link') as HTMLAnchorElement | null)
+        : null;
+      if (!link) {
+        return;
+      }
+
+      const href: string = link.getAttribute('href') || '';
+      if (!href) {
+        return;
+      }
+
       event.preventDefault();
-      const hash: number = target.indexOf('#');
-      open(asPath(hash === -1 ? target : target.slice(0, hash)),
-        hash === -1 ? '' : target.slice(hash + 1));
-    });
-  });
+      event.stopPropagation();
+
+      const hash: number = href.indexOf('#');
+      open(asPath(hash === -1 ? href : href.slice(0, hash)),
+        hash === -1 ? '' : href.slice(hash + 1));
+    };
+
+    window.addEventListener('click', this.onClick, true);
+  }
+
+  public stop(): void {
+    if (this.onClick) {
+      window.removeEventListener('click', this.onClick, true);
+      this.onClick = undefined;
+    }
+  }
 }
 
 /**

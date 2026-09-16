@@ -8,6 +8,32 @@ is normally zero. `scripts/set-version.js` stamps it when a release is cut.
 
 Entries below 0.0.10.0 were written before the switch and are three-part.
 
+## 0.0.18.3
+
+- A click on a link to another document went to the page before it went to the
+  web part. A modern SharePoint page is a single-page application with a router
+  listening for clicks on the whole document, and capture runs from the root
+  downwards, so a listener on the link lost the race however it was
+  registered. The router put the .md file's address in the address bar and
+  handed the reader the download this feature exists to replace, while the
+  document quietly opened underneath - which is why a single click downloaded
+  and a second click appeared to work, why the address bar ended up pointing at
+  a file, and why refreshing downloaded it again. The click is now taken on the
+  window, which is above the document on that path, so the router never learns
+  it happened. Opening in a new tab is untouched: the address is still on the
+  element and only a plain left click is taken.
+- Sync to Teams works again, and now deploys the manifest written here rather
+  than one SharePoint generates. SharePoint looks inside the .sppkg for
+  ./teams/TeamsSPFxApp.zip and, when it is there, publishes that instead - so
+  the descriptions, the documentation link and the tab's configuration page are
+  all ours, and an update to the Teams app arrives the way an update to the web
+  part does, by uploading one package. The manifest also carries the
+  webApplicationInfo entry the documentation requires, without which an API
+  call from the Teams desktop and mobile clients fails.
+- The app catalog listing says which language it is in. `supportedLocales` had
+  never been set, so the store page read "Supported languages are not
+  specified".
+
 ## 0.0.18.2
 
 - A wiki link to a document whose name has a space in it could never open it.

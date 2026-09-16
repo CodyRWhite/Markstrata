@@ -65,6 +65,20 @@ jobs:
       - name: Unit tests
         run: npm test
 
+      # The Teams app, built BEFORE the solution package rather than after.
+      # SharePoint looks inside the .sppkg for ./teams/TeamsSPFxApp.zip when an
+      # administrator presses Sync to Teams, and deploys that instead of
+      # generating a manifest of its own - so it has to be sitting in teams/ by
+      # the time package-solution sweeps that folder up. The version it stamps
+      # is the one set-version wrote a step earlier.
+      - name: Build the Teams app package
+        id: teams
+        run: |
+          npm run teams
+          PATH_TO_TEAMS=teams/TeamsSPFxApp.zip
+          test -f "$PATH_TO_TEAMS"
+          echo "path=$PATH_TO_TEAMS" >> "$GITHUB_OUTPUT"
+
       - name: Build the solution package
         run: npm run package
 
@@ -80,22 +94,6 @@ jobs:
           PATH_TO_PACKAGE=sharepoint/solution/markstrata.sppkg
           test -f "$PATH_TO_PACKAGE"
           echo "path=$PATH_TO_PACKAGE" >> "$GITHUB_OUTPUT"
-
-      # The Teams app, which is a second thing to install and so a second thing
-      # to attach. It is built after the package rather than before, because it
-      # stamps the version the package was just stamped with, and it is built
-      # here rather than committed because it is build output.
-      #
-      # A release without it means the only way to get the Teams app is to
-      # clone the repository and build it, which is not a way to hand somebody
-      # an app to try.
-      - name: Build the Teams app package
-        id: teams
-        run: |
-          npm run teams
-          PATH_TO_TEAMS=dist/teams/markstrata-teams.zip
-          test -f "$PATH_TO_TEAMS"
-          echo "path=$PATH_TO_TEAMS" >> "$GITHUB_OUTPUT"
 
       - name: Publish the release
         env:

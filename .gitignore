@@ -5,6 +5,7 @@ temp/
 release/
 solution/
 sharepoint/solution/
+teams/TeamsSPFxApp.zip
 *.sppkg
 
 # Dependencies

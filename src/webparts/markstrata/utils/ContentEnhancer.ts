@@ -38,7 +38,7 @@ import { attachCopyButtons } from './codeCopy';
 import { HeadingTracker, ITocEntry, adoptAuthoredToc, buildToc, collectHeadings } from './contents';
 import { CopyFeedback } from './copyFeedback';
 import { attachDiagramTools } from './diagramTools';
-import { followDocumentLinks, secureExternalLinks } from './documentLinks';
+import { DocumentLinkWatcher, followDocumentLinks, secureExternalLinks } from './documentLinks';
 import { HeightFiller } from './fillHeight';
 import { enhanceImages } from './images';
 import { validateWikiLinks } from './linkCheck';
@@ -58,6 +58,7 @@ export class ContentEnhancer {
   private readonly height: HeightFiller = new HeightFiller();
   private readonly toTop: BackToTopButton = new BackToTopButton();
   private readonly tables: TableTools = new TableTools();
+  private readonly documentLinks: DocumentLinkWatcher = new DocumentLinkWatcher();
 
   // ------------------------------------------------------------------ code
 
@@ -85,6 +86,13 @@ export class ContentEnhancer {
     open?: (path: string, heading: string) => void
   ): void {
     followDocumentLinks(container, base, open);
+    /* Marking the links is per render; catching the click is not, and has to
+       be taken down again when the web part goes away. */
+    if (open) {
+      this.documentLinks.watch(open);
+    } else {
+      this.documentLinks.stop();
+    }
   }
 
   /** Marks wiki links whose target is not in the library. */
@@ -183,5 +191,6 @@ export class ContentEnhancer {
     this.toTop.stop();
     this.offset.stop();
     this.tables.stop();
+    this.documentLinks.stop();
   }
 }
