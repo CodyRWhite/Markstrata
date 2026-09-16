@@ -329,6 +329,43 @@ test('subscript is written as maths', () => {
   assert.match(markdown.render('$H_2O$'), /katex/);
 });
 
+/*
+ * A comment is where an author writes what the reader is not meant to read.
+ * Rendered verbatim, moving a folder of notes into a document library
+ * published every one of those notes along with the documents.
+ */
+test('a comment inside a line is not shown to the reader', () => {
+  const html = markdown.render('Ready %%ask Dave first%% to ship');
+  assert.match(html, /<p>Ready\s+to ship<\/p>/);
+  assert.doesNotMatch(html, /Dave/);
+});
+
+test('a comment on lines of its own leaves nothing behind', () => {
+  const html = markdown.render('%%\nRewrite this first.\n%%\n\nThe document.');
+  assert.match(html, /<p>The document\.<\/p>/);
+  assert.doesNotMatch(html, /Rewrite/);
+  assert.doesNotMatch(html, /<p><\/p>/);
+});
+
+test('a comment on one line of its own takes the line with it', () => {
+  assert.equal(markdown.render('%%a note%%').trim(), '');
+  const between = markdown.render('before\n\n%%a note%%\n\nafter');
+  assert.match(between, /<p>before<\/p>\s*<p>after<\/p>/);
+});
+
+test('a comment is hidden in a list item and shown inside code', () => {
+  assert.match(markdown.render('- item %%note%%'), /<li>item\s*<\/li>/);
+  assert.match(markdown.render('`%%kept%%`'), /<code>%%kept%%<\/code>/);
+  assert.match(markdown.render('```\n%%kept%%\n```'), /%%kept%%/);
+});
+
+test('a marker with nothing to close it is left where it is', () => {
+  /* Obsidian comments out the rest of the file. A document that quietly comes
+     back shorter than it is is the worse of the two failures. */
+  assert.match(markdown.render('%%unclosed note'), /<p>%%unclosed note<\/p>/);
+  assert.match(markdown.render('a 50%% share'), /50%% share/);
+});
+
 test('rendering never throws on malformed input', () => {
   ['', '   ', '```\nunclosed', '| broken |\n|---', '> [!', '$$', '~~~'].forEach((input) => {
     assert.doesNotThrow(() => markdown.render(input), `input: ${JSON.stringify(input)}`);

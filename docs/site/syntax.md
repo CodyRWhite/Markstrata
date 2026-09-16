@@ -202,6 +202,20 @@ came from writes it:
 A display block can follow straight on from the line that introduces it, and
 works inside a list item and inside a quote.
 
+## Comments
+
+```markdown
+Ready to ship %%ask Dave first%%
+
+%%
+Not for the reader.
+%%
+```
+
+Anything between a pair of `%%` is left out of the page, inline or over
+several lines, the way Obsidian leaves it out. A marker with nothing closing it
+is shown as written rather than hiding the rest of the document.
+
 ## Footnotes
 
 ```markdown

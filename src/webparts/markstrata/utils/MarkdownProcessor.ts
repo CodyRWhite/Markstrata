@@ -22,7 +22,7 @@
  *            imagePaths.ts, frontMatter.ts, markdownItWikiLinks.ts,
  *            markdownItTableCaptions.ts, markdownItAttributeGuard.ts,
  *            markdownItTableCells.ts, markdownItStrikethrough.ts,
- *            markdownItTypes.ts
+ *            markdownItComments.ts, markdownItTypes.ts
  */
 
 import { calloutPlugin } from './markdownItCallouts';
@@ -35,6 +35,7 @@ import { tableCaptionPlugin } from './markdownItTableCaptions';
 import { attributeGuardPlugin } from './markdownItAttributeGuard';
 import { tableCellPlugin } from './markdownItTableCells';
 import { strikethroughPlugin } from './markdownItStrikethrough';
+import { commentPlugin } from './markdownItComments';
 import {
   ILinkifyMatch,
   IMarkdownIt,
@@ -177,6 +178,10 @@ export class MarkdownProcessor {
     this.markdownIt.use(calloutPlugin);
     this.markdownIt.use(taskListPlugin);
     this.markdownIt.use(strikethroughPlugin);
+    /* Nothing gates this: a comment is the author saying the words are not for
+       the page, and rendering them anyway publishes what they wrote in
+       private. */
+    this.markdownIt.use(commentPlugin);
 
     if (this.options.enableWikiLinks) {
       /* Given the same resolver as images, so a link and a picture beside it

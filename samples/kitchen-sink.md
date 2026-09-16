@@ -12,6 +12,7 @@ a [link to SharePoint](https://www.microsoft.com/sharepoint), ==nothing exotic==
 and a keyboard shortcut like <kbd>Ctrl</kbd> + <kbd>K</kbd>.
 
 One tilde strikes through as well as two, so ~this~ and ~~this~~ match.
+%%This note is written for the author and never reaches the page.%%
 Superscript is written 10^6^, and a subscript comes from maths, $H_2O$, or from
 <sub>markup</sub>. Emoji render from their
 shortcodes: :rocket: :warning: :white_check_mark:. An

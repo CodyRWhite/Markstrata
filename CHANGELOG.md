@@ -96,6 +96,17 @@ Entries below 0.0.10.0 were written before the switch and are three-part.
   HTML allowed, both of which work in GitHub, Obsidian and VS Code as well as
   here. `~~this~~`, `10^6^` and a `~~~` code fence are all unchanged.
 
+- An Obsidian comment is no longer published. Anything between a pair of `%%`,
+  inline or over several lines, is where an author writes what the reader is
+  not meant to read: a note to themselves, a name, a number they have not
+  checked. It was rendered verbatim, so a folder of notes moved into a document
+  library published every one of those notes along with the documents. Nothing
+  gates it, because there is no reading of a comment under which showing it is
+  what the author wanted. A `%%` with nothing closing it is left on the page
+  rather than hiding everything after it, which is what Obsidian does with one:
+  a document that quietly comes back shorter than it is would be the worse
+  failure.
+
 ## 0.0.18.3
 
 - The split editor is one editor again. The box you typed in stopped at its own
