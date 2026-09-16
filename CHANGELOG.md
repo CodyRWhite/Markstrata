@@ -33,6 +33,19 @@ Entries below 0.0.10.0 were written before the switch and are three-part.
   one author and that author holds the key; it would not be possible for work
   somebody else wrote. The trees are untouched: the tip's tree hashes the same
   before and after, and the tests pass either side.
+- One name on the history. Twenty-eight commits were authored from a work
+  address and two from a tool's, none of them on a branch: they sat on the
+  v1.0.x line, which only a tag reaches. That address names the company the
+  rest of this scrub spent its time taking out of the files, and half of those
+  commits were already published. The scrub could not have caught it: replacing
+  text rewrites what is in a file, replacing messages rewrites what is written
+  about it, and who wrote it is a third field that neither one reads. Nor could
+  the guard in the tests, which reads files and has no view of commit metadata
+  at all.
+- Dependabot still wrote what Dependabot wrote. Its twenty commits keep their
+  author, because the point of the change above is for the history to say who
+  did the work, and rewriting those would make it say something false.
+
 - Tags are annotated and signed now, rather than lightweight. A lightweight tag
   is a name pointing at a commit and carries no signature of its own, so there
   is nothing on it to verify and nothing to repair when it reads as unverified.
