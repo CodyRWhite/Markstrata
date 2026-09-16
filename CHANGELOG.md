@@ -52,22 +52,6 @@ Entries below 0.0.10.0 were written before the switch and are three-part.
   An annotated tag is an object in its own right and can be signed, which is
   what a released version should be.
 
-## 0.0.18.4
-
-- A real site name is out of the tests, out of a source file's header and out
-  of this changelog. It arrived the way these always do: a fault was reported
-  against a real document, and the reproduction was pasted in as the test case
-  for it. The paths are invented now and still exercise what they were written
-  for, which is spaces surviving encoding.
-- The guard that was supposed to stop that has been widened, because it had two
-  holes and the name went through both. It never knew this name, and it only
-  read prose: samples, the README, the site pages. Tests and source were not
-  covered, and those are exactly where a reproduction lands. The name check now
-  reads everything that ships or is read by a person. The host check stays on
-  prose, because source names real hosts on purpose - the sanitiser's iframe
-  allowlist is a list of them - and running it over code would fail on the code
-  doing its job.
-
 - The app is called "Markstrata - Markdown for SharePoint and Teams" in the App
   Catalog, and both its descriptions describe what it does now. The name said
   "Markdown Web Part for SharePoint Online", which was written before any of the
@@ -85,6 +69,8 @@ Entries below 0.0.10.0 were written before the switch and are three-part.
 - Every file header names the version it first shipped in. Twelve still said
   `unreleased`.
 
+## 0.0.19.2
+
 - The Teams app carries the web part's own component id, so an upload is an
   upgrade of the app a tenant already has rather than a stranger claiming its
   place. Teams keys an installed app by the id in its manifest, and SPFx's own
@@ -95,7 +81,6 @@ Entries below 0.0.10.0 were written before the switch and are three-part.
   rest of the package had always keyed on the component id, the icons included,
   because that is how Sync to Teams finds them. Only the manifest disagreed, and
   nothing compared the two.
-
 - The Teams manifest is validated against the whole v1.17 schema now, by a real
   validator, rather than by a hand-written check of the fields somebody
   remembered. That check was written after a manifest carrying a `packageName`
@@ -106,6 +91,8 @@ Entries below 0.0.10.0 were written before the switch and are three-part.
   because a check that stops running when an unrelated package is upgraded is
   worse than no check. The friendlier hand-written check stays beside it: it
   names the offending key in words.
+
+## 0.0.19.1
 
 - The Share button has a setting of its own, beside the print button, and is
   greyed out where following is off because the link it copies is the one that
@@ -123,6 +110,8 @@ Entries below 0.0.10.0 were written before the switch and are three-part.
   would have passed while testing nothing, which is worse than no test. The
   browser still does the measuring and the harness still drives it against real
   blocks in all three themes.
+
+## 0.0.19.0
 
 - The website is rebuilt. It served two readers as though they were one: an
   administrator deciding whether to install this and somebody who has to write
@@ -149,7 +138,6 @@ Entries below 0.0.10.0 were written before the switch and are three-part.
   resolves against the folder the document is in and nowhere else, because there
   is no vault to search, only a library, a reader's permissions and one request
   at a time.
-
 - A guided page carries specimens: panels of markup that ViewModeRenderer and
   EditModeManager produced at build time, over a jsdom document, dropped onto
   the page where the web part's own stylesheets already are. The toolbar, the
@@ -161,20 +149,17 @@ Entries below 0.0.10.0 were written before the switch and are three-part.
   handlers are properties on the elements and do not survive being written to a
   file, so the panel refuses the pointer, everything in it is out of the tab
   order, and the note under it says so.
-
 - The site follows the reader's light or dark mode rather than being a dark band
   at either end of a light page, and the switch that decides it is in the header
   on every page. It used to be a dropdown in a bar of theme controls that
   appeared above every page whether or not the page was about the rendering; on
   a phone that bar filled the screen before the first sentence. The bar is now
   only on the theme preview and on `npm run demo`, which exist for nothing else.
-
 - The theme preview was rendering `[[deploy]]` as literal brackets and
   `#kitchen-sink` as a word with a hash in front, in the same sentences that say
   what each of them becomes. Wiki links and tags are both off by default in the
   web part, and the page that claims to exercise everything was being built with
   the defaults. It is built with them on, so the document shows what it says.
-
 - The README and CONTRIBUTING.md described a Teams flow that stopped being true
   at 0.0.18.2. Both named a zip at a path the builder does not write, from a
   manifest at a path that does not exist, and CONTRIBUTING said Sync to Teams
@@ -207,7 +192,6 @@ Entries below 0.0.10.0 were written before the switch and are three-part.
   - The **Click a picture or diagram to see it full size** setting now reads
     **Click a picture, diagram or code block to see it full size** and turns
     all three off together. One switch for one idea.
-
 - A code block can be capped in height and scroll inside instead of running
   down the page. A fence says `short`, `medium` or `full` beside `wrap` and
   `numbers`, and there is a **Block height** setting in the **Code blocks**
@@ -238,7 +222,6 @@ Entries below 0.0.10.0 were written before the switch and are three-part.
   - A capped block prints whole. Nothing scrolls on paper, and printing the
     first ten lines of a listing and losing the rest says something false about
     the listing.
-
 - A fenced code block can name a file instead of carrying one. A fence with no
   body and a `src="..."` on it shows the file at that address, and a runbook
   that quotes twenty lines of code no longer has to carry a copy of them - a
@@ -277,6 +260,169 @@ Entries below 0.0.10.0 were written before the switch and are three-part.
     `SRC="HTTPS://GITHUB.COM/..."`, and the colon in `https://` was read as the
     `lang:filename` shorthand. The same slip was there for a fence opening with
     a bare `title="app.ts"`.
+- The release refuses to publish a package with no Teams app inside it. Without
+  the app the package still builds, still installs, and Sync to Teams either
+  does nothing or deploys something SPFx generated instead. That is silent from
+  the outside and it is the failure that cost an evening once already, so it
+  fails the release now rather than a tenant.
+
+## 0.0.18.8
+
+- A Word, Excel or PowerPoint file named by `![[Quarterly report.docx]]` is
+  drawn as a card rather than as a link to a download. The card carries the
+  file's name, a link that opens it in Word for the web, and SharePoint's own
+  preview of it in a frame underneath. The document is never copied anywhere:
+  the frame is SharePoint's page and it answers with the reader's own session,
+  so somebody who may not open the file sees SharePoint refuse rather than
+  seeing the contents.
+  - The link is the feature and the preview is the enhancement, deliberately.
+    Office for the web sets frame-ancestors and a tenant can be configured in
+    ways that refuse the frame, with no way to detect that from the outside. If
+    the preview never appears the name and the way into the editor are still
+    there, which is better than the link this replaced either way.
+  - The link goes to the file itself rather than to an edit address, so
+    SharePoint decides whether a reader gets the editor or the viewer. It opens
+    in a new tab, because the document being read is the page.
+  - A file the library cannot answer for keeps its card and loses the empty box
+    under it: a blank frame reads as a document with nothing in it, which is a
+    different and wrong thing to say.
+- A link inside a document fetched from a URL opens here, the way a link
+  inside a document from a library does. The **File URL** source reads markdown
+  from anywhere that will answer, and everything relative inside that document
+  resolves against the folder its address is in, so a wiki link in it names a
+  real file on that server. Following one used to leave the page for the file
+  itself, which on a raw host hands the reader markdown as plain text: the
+  source of the page they were reading rather than the page.
+  - A GitHub address is translated to the one that holds the file.
+    `github.com/org/repo/blob/main/a.md` is a page about the document; the
+    document is on `raw.githubusercontent.com`. The blob address is the one a
+    browser gives you when you copy a link, so it is the one that has to work.
+  - Only the server the document came from counts. A link from it to anywhere
+    else is still an outside link and still opens in a new tab.
+  - When the other server refuses, the reader is told which it was. A browser
+    reports a blocked cross-origin read as a bare failure and says no more, so
+    the message names both possibilities rather than picking one: the file is
+    not there, or that server does not let pages on this site read it. What it
+    never says is "not found", which sends somebody looking for a file that is
+    exactly where they put it.
+  - `?strataDoc=` takes a whole address too, but only on a page already reading
+    from one. Otherwise it would be a way to point a SharePoint page at any
+    server on the internet, written by whoever wrote the menu entry.
+- A heading five or six levels deep can be linked to. Only h1 to h4 were given
+  an id, for no reason anybody had written down, so a document that went deeper
+  had a floor nothing could reach: no `#fragment`, no `[[Page#Heading]]`, no
+  `?strataDoc=...#heading`, no contents entry. Nothing said so either, the link
+  simply did not move the page. Every level gets one now.
+- And the contents a `[[toc]]` writes reads the same setting the sidebar
+  contents reads. It was fixed at the second and third levels whatever
+  "Deepest heading in the contents" said, so one page could show two contents
+  that disagreed about how deep the document went. The setting now goes to six
+  as well, which it could not sensibly do while the deeper headings had no ids
+  to point at. The inline contents still starts at the second level, because
+  the first heading is the document's own title.
+- Every release tag in this series pointed at the wrong commit. The workflow
+  is dispatched on a branch, builds that branch, and then asked `gh` to create
+  the release without saying which commit it was for - so the tag landed on the
+  repository's default branch instead. v0.0.18.0 through v0.0.18.6 all name one
+  commit, and it is not one any of them was built from. The packages are what
+  they always were, built from the right code; it is the tags beside them that
+  answer "what shipped?" with a straight face and get it wrong, so checking one
+  out or bisecting through it gives you a build nobody released. Fixed for
+  every release from here. The tags already written are left where they are,
+  because moving one changes what a version means to anybody who has already
+  fetched it; this entry is the record of where they really point.
+- Every file header that said `Since: unreleased` now names the version it
+  first shipped in, worked out from which release actually contained it rather
+  than from the tags, which could not be trusted for it.
+
+## 0.0.18.7
+
+- The Teams app package was refused by Teams, which is why Sync to Teams kept
+  failing and why uploading the package by hand failed the same way: the
+  manifest carried a `packageName` property, which the v1.17 schema does not
+  define and does not allow, so Teams rejected the whole thing before reading
+  any of it. One cause, both symptoms. It is gone.
+- The schema is now vendored beside the manifest and read by the test rather
+  than remembered by me. The limits were previously copied into the test by
+  hand, which is exactly how a key Teams does not allow got in: I checked the
+  fields I could remember and never asked the schema what it permits. The
+  check walks every key in the manifest, and every key in the objects inside
+  it, against what the schema defines, and reads the length limits from the
+  schema too. It is not a full JSON Schema validator and says so: the schema is
+  draft-04, the validator to hand does not read that draft, and a validator
+  that quietly disagreed with Teams would be worse than an honest partial
+  check.
+- The way back out of a followed document goes back one document, not out to
+  the start. The bar above a document always said "Back to" whatever the page
+  was configured with and always went there, so every link after the first was
+  a one-way trip: four pages into a wiki the only way back was the beginning,
+  and the trail the reader had walked was gone. It now names the document
+  behind this one and returns there, then the one behind that, and the
+  configured document last. The trail rides inside the browser history entry
+  rather than beside it, so the browser's own Back button walks the same path
+  and the two cannot disagree about where the reader has been.
+- The cell after a `||` is on the page again. A doubled pipe is how a
+  MultiMarkdown table says a cell runs across the column to its right, and the
+  cell that came after one was deleted: not mis-spanned, not mis-placed, gone,
+  with nothing said about it. A row that was nothing but a span lost all of it.
+  markdown-it-attrs did it rather than the table plugin. attrs has a way of
+  writing a span where the author writes every cell and the covered ones are
+  hidden afterwards, and it hides by blanking the text; `||` is the other way
+  round, the covered cell is never written and the span is already set by the
+  time attrs looks, so it found a span, assumed the cells it covers were still
+  in the row, and blanked a real one. Both syntaxes are documented, so neither
+  plugin could go: the span is set aside for the length of attrs' own rule and
+  put back after, which leaves attrs an ordinary row and nothing to do in it.
+  `^^` rowspans and tables with no spans in them are untouched.
+- A release publishes one file again, the `.sppkg`. The Teams app zip was a
+  second asset from when Sync to Teams was failing and the only way into Teams
+  was to upload the zip by hand in the admin centre. Sync works now, and the zip
+  that matters is the one inside the package, which is where SharePoint looks
+  for it. A second copy on the release is the Teams half of the app installable
+  on its own, without the SharePoint half it talks to, and stale the first time
+  anybody uses it. It is still built, because the package needs it; it is no
+  longer handed out.
+- Display maths written the way almost everybody writes it now renders as
+  maths. A `$$` block placed straight under the line that introduces it, with
+  no blank line between, was not maths at all: the whole thing came out as one
+  paragraph with the dollars and the LaTeX showing, and nothing said why. The
+  block rule had never been given permission to interrupt a paragraph, which is
+  also what kept it from working inside a list item or a quote. Three more
+  forms are recognised with it: `$$x$$` inside a sentence, which used to leave
+  a stray dollar either side of the maths; GitHub's `` $`x`$ ``, whose
+  backticks were being typeset as two quote glyphs; and a fence labelled
+  `math`, which GitHub and VS Code both render as display maths and which came
+  out here as a code block headed MATH.
+- An address written as `www.github.com`, with no scheme in front of it, is now
+  a link, which is what GitHub does with one. The switch that allows it also
+  links every bare word ending in something domain shaped, and `md` is the
+  country code for Moldova, so a sentence naming `notes.md` would have been
+  turned into a link to a website. It is narrowed back to the `www.` form that
+  GitHub documents: a file name in a sentence is still a file name.
+- Punctuation is left exactly as the document wrote it. The renderer had the
+  typographer on, which is a setting for making prose look typeset: straight
+  quotes became curly ones and `--` became an en dash. A runbook is not prose.
+  "Run it with --force" was shown as "-force" and a reader who copied that
+  line got a dash no shell will accept, and a JSON key shown as "name" got
+  quotes no parser will read. Code spans were never affected, but the sentence
+  around them was, which is where half of a runbook's commands are written.
+  GitHub and VS Code both leave punctuation alone, and so does this now.
+- A heading gets the id GitHub gives it. `## Step 1: Install` was
+  `step-1%3A-install`, `## C# and .NET` was `c%23-and-.net` and `## What's new?`
+  was `what%E2%80%99s-new%3F`, none of which any other tool produces: an
+  anchor written against the same document on GitHub, in VS Code or in Obsidian
+  landed nowhere here, and one written here travelled nowhere else. The rule is
+  now theirs - lower case, drop the punctuation, spaces to hyphens - and it
+  lives in one function, shared by the heading ids, the generated table of
+  contents and `[[Page#Heading]]`, because a heading whose id is made one way
+  and linked another way is a link to nothing.
+- Anchors already written against the old ids still land. Every
+  `[[Page#Heading]]` and every `#fragment` in a library was written against the
+  old rule, so the old id is kept on an empty anchor inside the heading and a
+  link written last year still finds its paragraph. Where the two forms agree,
+  which is most headings, only the heading is emitted.
+
+## 0.0.18.6
 
 - Raw HTML no longer means raw scripting. With "Allow raw HTML in markdown" on,
   whatever an author wrote went onto the page untouched, so `<script>`,
@@ -302,252 +448,6 @@ Entries below 0.0.10.0 were written before the switch and are three-part.
   `<details>`, `<summary>`, tables, and a `<div>` or `<span>` with a class.
   With the setting off nothing changes and nothing runs, because markdown-it
   has already escaped every tag.
-
-- The Teams app package was refused by Teams, which is why Sync to Teams kept
-  failing and why uploading the package by hand failed the same way: the
-  manifest carried a `packageName` property, which the v1.17 schema does not
-  define and does not allow, so Teams rejected the whole thing before reading
-  any of it. One cause, both symptoms. It is gone.
-- The schema is now vendored beside the manifest and read by the test rather
-  than remembered by me. The limits were previously copied into the test by
-  hand, which is exactly how a key Teams does not allow got in: I checked the
-  fields I could remember and never asked the schema what it permits. The
-  check walks every key in the manifest, and every key in the objects inside
-  it, against what the schema defines, and reads the length limits from the
-  schema too. It is not a full JSON Schema validator and says so: the schema is
-  draft-04, the validator to hand does not read that draft, and a validator
-  that quietly disagreed with Teams would be worse than an honest partial
-  check.
-
-- The way back out of a followed document goes back one document, not out to
-  the start. The bar above a document always said "Back to" whatever the page
-  was configured with and always went there, so every link after the first was
-  a one-way trip: four pages into a wiki the only way back was the beginning,
-  and the trail the reader had walked was gone. It now names the document
-  behind this one and returns there, then the one behind that, and the
-  configured document last. The trail rides inside the browser history entry
-  rather than beside it, so the browser's own Back button walks the same path
-  and the two cannot disagree about where the reader has been.
-
-- A Share button in the toolbar, which copies the address of the document on
-  screen. A reader three links into a wiki is looking at something the page's
-  own address says nothing about: it still reads Wiki.aspx, so sending it to a
-  colleague sends them to the front page. The button builds the same
-  `?strataDoc=` address a menu entry uses, so what arrives is the document they
-  were looking at. At the page's configured document there is nothing to add,
-  because the page address already is its address. It appears only where that
-  address would be honoured coming back in: a button that copies a link leading
-  somewhere else is worse than no button.
-- A document whose name contains a `#` can be named in an address. The value is
-  decoded before it is read, at which point a `#` in a file name looks exactly
-  like the one that separates a heading, so `What is #1 + why.md` was read as a
-  document called "What is " and refused for not being markdown. The split is
-  made at the extension now rather than at the first `#`.
-
-- The release refuses to publish a package with no Teams app inside it. Without
-  the app the package still builds, still installs, and Sync to Teams either
-  does nothing or deploys something SPFx generated instead. That is silent from
-  the outside and it is the failure that cost an evening once already, so it
-  fails the release now rather than a tenant.
-
-- A page address naming a document that cannot be opened now says so, to
-  whoever can fix it. `?strataDoc=` is ignored unless "Open a linked document
-  here" is on and the source is a library or a URL, and unless the value names
-  a markdown file with its `&`, `#` and `+` written as `%26`, `%23` and `%2B`.
-  It was ignored in silence, so the page showed the document it was configured
-  with, which is exactly what a menu entry pointing at the wrong file looks
-  like. Shown only in page edit mode: it names a setting to change, which is
-  not a reader's business and not a reader's to fix.
-
-- A Word, Excel or PowerPoint file named by `![[Quarterly report.docx]]` is
-  drawn as a card rather than as a link to a download. The card carries the
-  file's name, a link that opens it in Word for the web, and SharePoint's own
-  preview of it in a frame underneath. The document is never copied anywhere:
-  the frame is SharePoint's page and it answers with the reader's own session,
-  so somebody who may not open the file sees SharePoint refuse rather than
-  seeing the contents.
-  - The link is the feature and the preview is the enhancement, deliberately.
-    Office for the web sets frame-ancestors and a tenant can be configured in
-    ways that refuse the frame, with no way to detect that from the outside. If
-    the preview never appears the name and the way into the editor are still
-    there, which is better than the link this replaced either way.
-  - The link goes to the file itself rather than to an edit address, so
-    SharePoint decides whether a reader gets the editor or the viewer. It opens
-    in a new tab, because the document being read is the page.
-  - A file the library cannot answer for keeps its card and loses the empty box
-    under it: a blank frame reads as a document with nothing in it, which is a
-    different and wrong thing to say.
-
-- A link inside a document fetched from a URL opens here, the way a link
-  inside a document from a library does. The **File URL** source reads markdown
-  from anywhere that will answer, and everything relative inside that document
-  resolves against the folder its address is in, so a wiki link in it names a
-  real file on that server. Following one used to leave the page for the file
-  itself, which on a raw host hands the reader markdown as plain text: the
-  source of the page they were reading rather than the page.
-  - A GitHub address is translated to the one that holds the file.
-    `github.com/org/repo/blob/main/a.md` is a page about the document; the
-    document is on `raw.githubusercontent.com`. The blob address is the one a
-    browser gives you when you copy a link, so it is the one that has to work.
-  - Only the server the document came from counts. A link from it to anywhere
-    else is still an outside link and still opens in a new tab.
-  - When the other server refuses, the reader is told which it was. A browser
-    reports a blocked cross-origin read as a bare failure and says no more, so
-    the message names both possibilities rather than picking one: the file is
-    not there, or that server does not let pages on this site read it. What it
-    never says is "not found", which sends somebody looking for a file that is
-    exactly where they put it.
-  - `?strataDoc=` takes a whole address too, but only on a page already reading
-    from one. Otherwise it would be a way to point a SharePoint page at any
-    server on the internet, written by whoever wrote the menu entry.
-
-- A heading five or six levels deep can be linked to. Only h1 to h4 were given
-  an id, for no reason anybody had written down, so a document that went deeper
-  had a floor nothing could reach: no `#fragment`, no `[[Page#Heading]]`, no
-  `?strataDoc=...#heading`, no contents entry. Nothing said so either, the link
-  simply did not move the page. Every level gets one now.
-- And the contents a `[[toc]]` writes reads the same setting the sidebar
-  contents reads. It was fixed at the second and third levels whatever
-  "Deepest heading in the contents" said, so one page could show two contents
-  that disagreed about how deep the document went. The setting now goes to six
-  as well, which it could not sensibly do while the deeper headings had no ids
-  to point at. The inline contents still starts at the second level, because
-  the first heading is the document's own title.
-
-- Every release tag in this series pointed at the wrong commit. The workflow
-  is dispatched on a branch, builds that branch, and then asked `gh` to create
-  the release without saying which commit it was for - so the tag landed on the
-  repository's default branch instead. v0.0.18.0 through v0.0.18.6 all name one
-  commit, and it is not one any of them was built from. The packages are what
-  they always were, built from the right code; it is the tags beside them that
-  answer "what shipped?" with a straight face and get it wrong, so checking one
-  out or bisecting through it gives you a build nobody released. Fixed for
-  every release from here. The tags already written are left where they are,
-  because moving one changes what a version means to anybody who has already
-  fetched it; this entry is the record of where they really point.
-- Every file header that said `Since: unreleased` now names the version it
-  first shipped in, worked out from which release actually contained it rather
-  than from the tags, which could not be trusted for it.
-
-- The cell after a `||` is on the page again. A doubled pipe is how a
-  MultiMarkdown table says a cell runs across the column to its right, and the
-  cell that came after one was deleted: not mis-spanned, not mis-placed, gone,
-  with nothing said about it. A row that was nothing but a span lost all of it.
-  markdown-it-attrs did it rather than the table plugin. attrs has a way of
-  writing a span where the author writes every cell and the covered ones are
-  hidden afterwards, and it hides by blanking the text; `||` is the other way
-  round, the covered cell is never written and the span is already set by the
-  time attrs looks, so it found a span, assumed the cells it covers were still
-  in the row, and blanked a real one. Both syntaxes are documented, so neither
-  plugin could go: the span is set aside for the length of attrs' own rule and
-  put back after, which leaves attrs an ordinary row and nothing to do in it.
-  `^^` rowspans and tables with no spans in them are untouched.
-
-- A release publishes one file again, the `.sppkg`. The Teams app zip was a
-  second asset from when Sync to Teams was failing and the only way into Teams
-  was to upload the zip by hand in the admin centre. Sync works now, and the zip
-  that matters is the one inside the package, which is where SharePoint looks
-  for it. A second copy on the release is the Teams half of the app installable
-  on its own, without the SharePoint half it talks to, and stale the first time
-  anybody uses it. It is still built, because the package needs it; it is no
-  longer handed out.
-
-- A line that ends in braces keeps them. `${HOME}` at the end of a list item,
-  `{env}` at the end of a heading, a shell variable in the last cell of a table
-  and the `\end{align}` closing a LaTeX environment were all being deleted, and
-  what was left was a stray `$` or nothing at all. The attribute syntax reads a
-  brace group at the end of a block as a list of classes and ids, and it took
-  the braces before looking inside them: anything it could not use was dropped,
-  along with the text it was holding. Shell variables, template placeholders,
-  config keys and LaTeX environments are what a runbook is made of, and all of
-  them end a line in braces. The syntax still works, because `{.class}` and
-  `{#id}` are documented here and somebody's document uses them; it is now only
-  offered a brace group whose every part is a class, an id or a `key=value`
-  pair. Anything else is text that happens to end in braces, and stays text.
-
-- Display maths written the way almost everybody writes it now renders as
-  maths. A `$$` block placed straight under the line that introduces it, with
-  no blank line between, was not maths at all: the whole thing came out as one
-  paragraph with the dollars and the LaTeX showing, and nothing said why. The
-  block rule had never been given permission to interrupt a paragraph, which is
-  also what kept it from working inside a list item or a quote. Three more
-  forms are recognised with it: `$$x$$` inside a sentence, which used to leave
-  a stray dollar either side of the maths; GitHub's `` $`x`$ ``, whose
-  backticks were being typeset as two quote glyphs; and a fence labelled
-  `math`, which GitHub and VS Code both render as display maths and which came
-  out here as a code block headed MATH.
-- An address written as `www.github.com`, with no scheme in front of it, is now
-  a link, which is what GitHub does with one. The switch that allows it also
-  links every bare word ending in something domain shaped, and `md` is the
-  country code for Moldova, so a sentence naming `notes.md` would have been
-  turned into a link to a website. It is narrowed back to the `www.` form that
-  GitHub documents: a file name in a sentence is still a file name.
-
-- A table row with a single backtick in it is a row again. A backtick was read
-  as opening a code span, so every pipe after it was taken for part of that
-  span and the rest of the row became one cell with a raw pipe showing in it.
-  The table GitHub's own documentation uses to explain tables - a column of
-  characters, one of them a backtick - came out wrong here. A pipe inside a
-  closed code span still stays in its cell, which is the table plugin's own
-  extension and worth keeping.
-- `\|` inside a code span in a table cell is a pipe. It kept its backslash and
-  the reader saw `\|`, because a code span reads no escapes of its own and the
-  backslash has to come off before the cell is read as markdown. It is the only
-  escape a table cell has, so it is the one that had to work.
-- A row with the wrong number of cells is now squared up with the table: a
-  short row is padded out and the excess of a long row is dropped, which is
-  what every other renderer does with one. A ragged row put cells under no
-  heading at all and walked a sortable column out of step with its header. A
-  row using the rowspan or colspan syntax is left alone, since how wide it is
-  is that syntax's answer to give.
-
-- `~struck~` with one tilde is now struck through, and `H~2~O` is no longer a
-  subscript. One tilde used to be Pandoc's subscript, a reading GitHub,
-  Obsidian and VS Code all lack: GitHub Flavoured Markdown says one tilde or
-  two is strikethrough, and GitHub renders `~deprecated~` struck. So a document
-  written anywhere else and read here turned a struck out word into a tiny
-  subscript that said the opposite of what it meant, with no error and nothing
-  to notice. The collision only runs one way, since nobody writes `H~2~O`
-  meaning struck through, and it is settled in GitHub's favour. A subscript is
-  now written `$H_2O$` with **Math (KaTeX)** on, or `<sub>2</sub>` with raw
-  HTML allowed, both of which work in GitHub, Obsidian and VS Code as well as
-  here. `~~this~~`, `10^6^` and a `~~~` code fence are all unchanged.
-
-- An Obsidian comment is no longer published. Anything between a pair of `%%`,
-  inline or over several lines, is where an author writes what the reader is
-  not meant to read: a note to themselves, a name, a number they have not
-  checked. It was rendered verbatim, so a folder of notes moved into a document
-  library published every one of those notes along with the documents. Nothing
-  gates it, because there is no reading of a comment under which showing it is
-  what the author wanted. A `%%` with nothing closing it is left on the page
-  rather than hiding everything after it, which is what Obsidian does with one:
-  a document that quietly comes back shorter than it is would be the worse
-  failure.
-
-- Punctuation is left exactly as the document wrote it. The renderer had the
-  typographer on, which is a setting for making prose look typeset: straight
-  quotes became curly ones and `--` became an en dash. A runbook is not prose.
-  "Run it with --force" was shown as "-force" and a reader who copied that
-  line got a dash no shell will accept, and a JSON key shown as "name" got
-  quotes no parser will read. Code spans were never affected, but the sentence
-  around them was, which is where half of a runbook's commands are written.
-  GitHub and VS Code both leave punctuation alone, and so does this now.
-
-- A heading gets the id GitHub gives it. `## Step 1: Install` was
-  `step-1%3A-install`, `## C# and .NET` was `c%23-and-.net` and `## What's new?`
-  was `what%E2%80%99s-new%3F`, none of which any other tool produces: an
-  anchor written against the same document on GitHub, in VS Code or in Obsidian
-  landed nowhere here, and one written here travelled nowhere else. The rule is
-  now theirs - lower case, drop the punctuation, spaces to hyphens - and it
-  lives in one function, shared by the heading ids, the generated table of
-  contents and `[[Page#Heading]]`, because a heading whose id is made one way
-  and linked another way is a link to nothing.
-- Anchors already written against the old ids still land. Every
-  `[[Page#Heading]]` and every `#fragment` in a library was written against the
-  old rule, so the old id is kept on an empty anchor inside the heading and a
-  link written last year still finds its paragraph. Where the two forms agree,
-  which is most headings, only the heading is emitted.
-
 - A block identifier names its block instead of being shown to the reader.
   Obsidian ends a paragraph, a list item, a quote or a table with a caret and a
   short name, `The build fails on a clean checkout. ^37066d`, hides the marker,
@@ -559,7 +459,6 @@ Entries below 0.0.10.0 were written before the switch and are three-part.
   **Wiki links** setting, since it is the other half of one. A heading keeps
   the id made from its own words, and a marker with no block in front of it is
   left on the page rather than quietly removed.
-
 - `![[picture.png]]` puts the picture on the page. Obsidian's embed was not
   supported at all: the `!` was printed as a stray character and the brackets
   after it became a link, and `![[Engelbart.jpg|100]]` rendered as a link whose
@@ -573,7 +472,6 @@ Entries below 0.0.10.0 were written before the switch and are three-part.
   page, and nothing can be fetched while a document is being rendered, so the
   page says what was meant to be here and links to it rather than pretending.
   PDF and audio embeds are not supported; this is what they render as.
-
 - Tags, under a new **Tags** setting beside the wiki links. `#recipe` and a
   nested `#work/urgent` are how a note written in Obsidian says what it is
   about, and here they were plain words with a hash in front. They are now
@@ -600,6 +498,97 @@ Entries below 0.0.10.0 were written before the switch and are three-part.
   rule that only reads top level keys. A document whose properties were written
   in Obsidian arrived with no tags at all. `tags: [a, b]` and `tags: a, b`
   worked before and still do.
+
+## 0.0.18.5
+
+- A line that ends in braces keeps them. `${HOME}` at the end of a list item,
+  `{env}` at the end of a heading, a shell variable in the last cell of a table
+  and the `\end{align}` closing a LaTeX environment were all being deleted, and
+  what was left was a stray `$` or nothing at all. The attribute syntax reads a
+  brace group at the end of a block as a list of classes and ids, and it took
+  the braces before looking inside them: anything it could not use was dropped,
+  along with the text it was holding. Shell variables, template placeholders,
+  config keys and LaTeX environments are what a runbook is made of, and all of
+  them end a line in braces. The syntax still works, because `{.class}` and
+  `{#id}` are documented here and somebody's document uses them; it is now only
+  offered a brace group whose every part is a class, an id or a `key=value`
+  pair. Anything else is text that happens to end in braces, and stays text.
+- A table row with a single backtick in it is a row again. A backtick was read
+  as opening a code span, so every pipe after it was taken for part of that
+  span and the rest of the row became one cell with a raw pipe showing in it.
+  The table GitHub's own documentation uses to explain tables - a column of
+  characters, one of them a backtick - came out wrong here. A pipe inside a
+  closed code span still stays in its cell, which is the table plugin's own
+  extension and worth keeping.
+- `\|` inside a code span in a table cell is a pipe. It kept its backslash and
+  the reader saw `\|`, because a code span reads no escapes of its own and the
+  backslash has to come off before the cell is read as markdown. It is the only
+  escape a table cell has, so it is the one that had to work.
+- A row with the wrong number of cells is now squared up with the table: a
+  short row is padded out and the excess of a long row is dropped, which is
+  what every other renderer does with one. A ragged row put cells under no
+  heading at all and walked a sortable column out of step with its header. A
+  row using the rowspan or colspan syntax is left alone, since how wide it is
+  is that syntax's answer to give.
+- `~struck~` with one tilde is now struck through, and `H~2~O` is no longer a
+  subscript. One tilde used to be Pandoc's subscript, a reading GitHub,
+  Obsidian and VS Code all lack: GitHub Flavoured Markdown says one tilde or
+  two is strikethrough, and GitHub renders `~deprecated~` struck. So a document
+  written anywhere else and read here turned a struck out word into a tiny
+  subscript that said the opposite of what it meant, with no error and nothing
+  to notice. The collision only runs one way, since nobody writes `H~2~O`
+  meaning struck through, and it is settled in GitHub's favour. A subscript is
+  now written `$H_2O$` with **Math (KaTeX)** on, or `<sub>2</sub>` with raw
+  HTML allowed, both of which work in GitHub, Obsidian and VS Code as well as
+  here. `~~this~~`, `10^6^` and a `~~~` code fence are all unchanged.
+- An Obsidian comment is no longer published. Anything between a pair of `%%`,
+  inline or over several lines, is where an author writes what the reader is
+  not meant to read: a note to themselves, a name, a number they have not
+  checked. It was rendered verbatim, so a folder of notes moved into a document
+  library published every one of those notes along with the documents. Nothing
+  gates it, because there is no reading of a comment under which showing it is
+  what the author wanted. A `%%` with nothing closing it is left on the page
+  rather than hiding everything after it, which is what Obsidian does with one:
+  a document that quietly comes back shorter than it is would be the worse
+  failure.
+
+## 0.0.18.4
+
+- A real site name is out of the tests, out of a source file's header and out
+  of this changelog. It arrived the way these always do: a fault was reported
+  against a real document, and the reproduction was pasted in as the test case
+  for it. The paths are invented now and still exercise what they were written
+  for, which is spaces surviving encoding.
+- The guard that was supposed to stop that has been widened, because it had two
+  holes and the name went through both. It never knew this name, and it only
+  read prose: samples, the README, the site pages. Tests and source were not
+  covered, and those are exactly where a reproduction lands. The name check now
+  reads everything that ships or is read by a person. The host check stays on
+  prose, because source names real hosts on purpose - the sanitiser's iframe
+  allowlist is a list of them - and running it over code would fail on the code
+  doing its job.
+- A Share button in the toolbar, which copies the address of the document on
+  screen. A reader three links into a wiki is looking at something the page's
+  own address says nothing about: it still reads Wiki.aspx, so sending it to a
+  colleague sends them to the front page. The button builds the same
+  `?strataDoc=` address a menu entry uses, so what arrives is the document they
+  were looking at. At the page's configured document there is nothing to add,
+  because the page address already is its address. It appears only where that
+  address would be honoured coming back in: a button that copies a link leading
+  somewhere else is worse than no button.
+- A document whose name contains a `#` can be named in an address. The value is
+  decoded before it is read, at which point a `#` in a file name looks exactly
+  like the one that separates a heading, so `What is #1 + why.md` was read as a
+  document called "What is " and refused for not being markdown. The split is
+  made at the extension now rather than at the first `#`.
+- A page address naming a document that cannot be opened now says so, to
+  whoever can fix it. `?strataDoc=` is ignored unless "Open a linked document
+  here" is on and the source is a library or a URL, and unless the value names
+  a markdown file with its `&`, `#` and `+` written as `%26`, `%23` and `%2B`.
+  It was ignored in silence, so the page showed the document it was configured
+  with, which is exactly what a menu entry pointing at the wrong file looks
+  like. Shown only in page edit mode: it names a setting to change, which is
+  not a reader's business and not a reader's to fix.
 
 ## 0.0.18.3
 
