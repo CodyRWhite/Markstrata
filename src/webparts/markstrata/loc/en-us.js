@@ -98,6 +98,7 @@ define([], function () {
     "PinMetaLabel": "Keep it in view while scrolling",
     "SourceInfoHint": "Needs a file from a document library. Markdown typed into the web part, or fetched from a URL, has no file name or modified date to show.",
     "SaveShortcutHint": "Ctrl+S saves while the editor has focus.",
+    "EditingAnotherDocument": "You are reading a document this web part links to, not the one it is configured to show. Close it, using the bar above, to edit the configured document.",
     "UnconfiguredHeading": "No document chosen yet",
     "UnconfiguredInPane": "Open the property pane and choose where the markdown comes from: a file in a document library, a file at a URL, or markdown typed straight into the web part.",
     "UnconfiguredOnPage": "Somebody who can edit this page needs to choose a document for it in the web part settings.",

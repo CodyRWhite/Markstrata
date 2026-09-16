@@ -533,7 +533,24 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
       : (this.navigator.markdown !== undefined
         ? this.navigator.markdown : this.properties.markdownContent);
 
-    if (this.displayMode === DisplayMode.Edit && this.previewContent === undefined) {
+    /*
+     * Not while another document is open.
+     *
+     * The editor would have shown the followed document's text and saved it
+     * over the configured file, because that is the only file the web part is
+     * configured to write to: the name on the button said Home.md while the
+     * text in the box was somebody's runbook. Saving would have replaced one
+     * with the other and said nothing.
+     *
+     * Version history is already withheld here for the same reason - the
+     * versions it lists are the configured file's - so this is the same rule
+     * applied to the more dangerous of the two operations. Closing the
+     * document, which the bar above it does, gives the editor back.
+     */
+    const followingAnother: boolean = !!this.navigator.path;
+
+    if (this.displayMode === DisplayMode.Edit && this.previewContent === undefined
+      && !followingAnother) {
       this.editManager.render(this.domElement, markdown, {
         settings: settings,
         resolvedMode: mode,
@@ -600,6 +617,9 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
 
     this.updateSearchText();
 
+    if (this.displayMode === DisplayMode.Edit && followingAnother) {
+      this.showBanner(strings.EditingAnotherDocument, 'info');
+    }
     if (this.previewBanner) {
       this.showBanner(this.previewBanner, 'success');
     }

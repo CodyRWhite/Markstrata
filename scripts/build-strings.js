@@ -114,6 +114,13 @@ const STRINGS = {
    * host and only one of them is in front of you, so each host gets its own
    * sentence rather than one that is vague enough to cover all of them.
    */
+  /* Shown where the editor would be, when a reader has followed a link and
+     the page is in edit mode. The editor is withheld there because it could
+     only ever save to the configured file. */
+  EditingAnotherDocument: 'You are reading a document this web part links to, '
+    + 'not the one it is configured to show. Close it, using the bar above, to '
+    + 'edit the configured document.',
+
   UnconfiguredHeading: 'No document chosen yet',
   UnconfiguredInPane: 'Open the property pane and choose where the markdown '
     + 'comes from: a file in a document library, a file at a URL, or markdown '

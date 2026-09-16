@@ -98,6 +98,7 @@ declare interface IMarkstrataWebPartStrings {
 
   SaveShortcutHint: string;
 
+  EditingAnotherDocument: string;
   UnconfiguredHeading: string;
   UnconfiguredInPane: string;
   UnconfiguredOnPage: string;

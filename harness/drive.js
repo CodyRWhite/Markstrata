@@ -68,6 +68,18 @@ const webPartUrl = 'file://' + path.join(HARNESS_DIST, 'webpart.html');
    * Two of them break something on purpose, and a web part that says so on the
    * console is the behaviour being checked, not a fault.
    */
+  /*
+   * A console error for a missing file says only "Failed to load resource",
+   * with no clue which one. CI reported three of those and nothing else, and
+   * finding out which three meant guessing. Playwright knows the address, so
+   * ask it.
+   */
+  page.on('requestfailed', (request) => {
+    const failure = request.failure();
+    const why = failure ? failure.errorText : 'failed';
+    problems.push(`request: ${why} ${request.url()}`);
+  });
+
   const expected = [];
   page.on('console', (message) => {
     if (message.type() !== 'error') return;
@@ -2183,6 +2195,77 @@ const webPartUrl = 'file://' + path.join(HARNESS_DIST, 'webpart.html');
     if (seen.heading.indexOf('Deploying') === -1) {
       throw new Error('the document did not open: ' + JSON.stringify(seen.heading));
     }
+  });
+
+  /*
+   * The editor writes to the file the web part is configured with, because
+   * that is the only file it has. So opening it while the reader has followed
+   * a link somewhere else put somebody's runbook in the box with Home.md on
+   * the save button, and saving would have replaced one with the other without
+   * a word. Version history is already withheld in that state for the same
+   * reason; this is the same rule applied to the operation that destroys
+   * something.
+   */
+  await step('the editor is withheld while another document is open', async () => {
+    const state = await page.evaluate(async () => {
+      await window.webPartHarness.start({
+        contentSource: 'library',
+        selectedLibrary: '/sites/demo/Documents',
+        selectedFile: '/sites/demo/Documents/index.md',
+        enableWikiLinks: true,
+        followDocumentLinks: true
+      });
+      await new Promise((resolve) => setTimeout(resolve, 400));
+
+      /* Follow a link, then have the author open the page for editing. */
+      const link = Array.from(document.querySelectorAll('#host article a'))
+        .filter((anchor) => anchor.classList.contains('strata-wiki-link'))[0];
+      link.click();
+      await new Promise((resolve) => setTimeout(resolve, 600));
+
+      window.webPartHarness.editing(true);
+      await new Promise((resolve) => setTimeout(resolve, 300));
+
+      const banner = document.querySelector('#host .strata-status');
+      return {
+        heading: (document.querySelector('#host h1') || {}).textContent || '',
+        editor: document.querySelectorAll('#host textarea').length,
+        saveButtons: Array.from(document.querySelectorAll('#host button'))
+          .map((button) => (button.textContent || '').trim())
+          .filter((text) => text.toLowerCase().indexOf('save') !== -1),
+        banner: banner ? (banner.textContent || '').trim() : ''
+      };
+    });
+
+    if (state.heading.indexOf('Deploying') === -1) {
+      throw new Error('the followed document is not the one on screen: ' + state.heading);
+    }
+    if (state.editor !== 0) {
+      throw new Error('the editor opened on a document it cannot save');
+    }
+    if (state.saveButtons.length !== 0) {
+      throw new Error('a save button is offered: ' + JSON.stringify(state.saveButtons));
+    }
+    if (state.banner.indexOf('Close it') === -1) {
+      throw new Error('nothing explains why the editor is not there: '
+        + JSON.stringify(state.banner));
+    }
+  });
+
+  await step('and comes back once that document is closed', async () => {
+    const state = await page.evaluate(async () => {
+      /* The bar above the document carries the way back. */
+      const close = document.querySelector('#host .strata-open-doc-back');
+      if (close) { close.click(); }
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
+      return {
+        editor: document.querySelectorAll('#host textarea').length,
+        closed: !close ? 'no way back was offered' : ''
+      };
+    });
+    if (state.closed) throw new Error(state.closed);
+    if (state.editor === 0) throw new Error('the editor did not come back');
   });
 
   await step('a library that will not answer is a message, not a broken page', async () => {
