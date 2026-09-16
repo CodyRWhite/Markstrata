@@ -10,6 +10,25 @@ Entries below 0.0.10.0 were written before the switch and are three-part.
 
 ## 0.0.18.3
 
+- A page can be told which document to show in its address, so a SharePoint
+  menu is a menu again. Every entry on a navigation bar can only point at a
+  page, and a page showed the one document it was configured with, so a wiki's
+  menu worked exactly once: a reader reached the home document and had to find
+  everything else by following links out of it. A menu entry can now name a
+  document, `Wiki.aspx?strataDoc=/sites/wiki/Shared%20Documents/Runbooks/Database.md`
+  or the short form relative to the configured document, with `%23Heading` on
+  the end to land on one. The document opens exactly as a followed link does,
+  with the bar above it going back to the page's own. The value is written by
+  whoever wrote the menu, so it is checked rather than trusted: only a markdown
+  file is accepted, and anything else is ignored quietly, because a menu entry
+  somebody mistyped is not the reader's problem to read about.
+- Opening the editor while a reader had followed a link put that document's
+  text in the box with the configured file's name on the save button. The
+  editor writes to the configured file, so saving would have replaced one
+  document with another without a word, and typing corrupted the configured
+  content whether or not anybody saved. The editor is withheld there now, and
+  says why.
+
 - A click on a link to another document went to the page before it went to the
   web part. A modern SharePoint page is a single-page application with a router
   listening for clicks on the whole document, and capture runs from the root

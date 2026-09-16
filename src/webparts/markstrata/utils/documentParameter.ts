@@ -1,0 +1,145 @@
+/**
+ * .SYNOPSIS
+ * The document named in the page's address, so something outside the web part
+ * can choose what it shows.
+ *
+ * .DESCRIPTION
+ * A wiki has a menu, and a menu is links. Without this, every entry on a
+ * SharePoint navigation bar can only point at the page, which shows whatever
+ * one document the page was configured with, so the menu stops being a menu
+ * after the first item: a reader gets to the home document and has to find
+ * everything else by following links out of it.
+ *
+ * With it, a menu entry points at the page and names a document, and the web
+ * part opens that document the way it opens one a reader followed a link to.
+ * The configured document is still the page's own, and the bar above the
+ * document still goes back to it.
+ *
+ * The value is read from the address bar, which means it is written by
+ * whoever wrote the link, so it is checked rather than trusted. Only a
+ * markdown file is accepted: the path is handed to SharePoint and fetched with
+ * the reader's own session, so SharePoint decides what they may read, but a
+ * renderer is not the place to point at arbitrary files either.
+ *
+ * .USAGE
+ *   import { documentFromAddress, DOCUMENT_PARAMETER } from './utils/documentParameter';
+ *
+ *   // ?strataDoc=/sites/wiki/Shared%20Documents/Runbooks/Database.md
+ *   // ?strataDoc=Runbooks/Database.md            relative to the configured document
+ *   // ?strataDoc=Runbooks/Database.md%23Backups  and straight to a heading in it
+ *   const wanted = documentFromAddress(window.location.search, folderOfTheConfiguredFile);
+ *   if (wanted) {
+ *     void navigator.open(wanted.path, wanted.heading, false);
+ *   }
+ *
+ * .NOTES
+ * Since:     unreleased
+ * Ships in:  the web part bundle
+ * Requires:  imagePaths.ts
+ */
+
+import { resolveAgainst } from './imagePaths';
+
+/**
+ * Named rather than something short like `doc`, because this rides on a
+ * SharePoint page's address beside SharePoint's own parameters and whatever
+ * else a tenant puts there. A collision would be somebody else's bug to
+ * suffer.
+ */
+export const DOCUMENT_PARAMETER: string = 'strataDoc';
+
+export interface IWantedDocument {
+  path: string;
+  /** The heading to land on, empty when the link names none. */
+  heading: string;
+}
+
+/** A markdown file, which is the only thing this web part can render. */
+function isMarkdown(path: string): boolean {
+  return /\.(md|markdown)$/i.test(path);
+}
+
+/**
+ * Reads the document out of a query string.
+ *
+ * `base` is the folder the configured document lives in, so a menu can name a
+ * document the short way, relative to it, rather than repeating the site and
+ * library in every entry. An address that starts with a slash is taken as it
+ * is, which is what somebody pasting a path from SharePoint will have.
+ */
+export function documentFromAddress(
+  search: string,
+  base: string | undefined
+): IWantedDocument | undefined {
+  if (!search) {
+    return undefined;
+  }
+
+  let asked: string | null;
+  try {
+    asked = new URLSearchParams(search).get(DOCUMENT_PARAMETER);
+  } catch {
+    /* A query string that will not parse is one nobody meant. */
+    return undefined;
+  }
+  if (!asked) {
+    return undefined;
+  }
+
+  /* The heading travels inside the value rather than as the address's own
+     fragment, because the fragment belongs to the page and SharePoint uses it.
+     It arrives encoded, which URLSearchParams has already undone. */
+  const hash: number = asked.indexOf('#');
+  const wanted: string = hash === -1 ? asked : asked.slice(0, hash);
+  const heading: string = hash === -1 ? '' : asked.slice(hash + 1);
+
+  if (!wanted || !isMarkdown(wanted)) {
+    return undefined;
+  }
+
+  /* Absolute is used as written; anything else is resolved against the
+     configured document's folder, the same way a link inside one is. */
+  if (wanted.charAt(0) === '/') {
+    return { path: wanted, heading: heading };
+  }
+
+  const resolved: string | undefined = base ? resolveAgainst(base, wanted) : undefined;
+  if (!resolved) {
+    return undefined;
+  }
+  return { path: asPath(resolved), heading: heading };
+}
+
+/**
+ * A path, not a URL.
+ *
+ * resolveAgainst builds addresses for the browser to follow, so it encodes the
+ * folder it resolves against - which leaves a path with an encoded folder and
+ * an unencoded file name stuck together. What comes out of here is handed to
+ * SharePoint to fetch, and SharePoint does its own encoding, so it wants the
+ * plain path.
+ *
+ * This is the same mistake that stopped every wiki link to a file with a space
+ * in its name from opening, one layer along. Writing it down here because the
+ * next thing to resolve a path will meet it too.
+ */
+function asPath(resolved: string): string {
+  try {
+    return decodeURIComponent(resolved);
+  } catch {
+    return resolved;
+  }
+}
+
+/**
+ * The address a menu entry should point at, for a given page and document.
+ *
+ * Here so that the one place that builds these and the one place that reads
+ * them cannot drift apart, and so the documentation can show a real example
+ * rather than a hand-written guess at the format.
+ */
+export function addressForDocument(pageUrl: string, documentPath: string, heading?: string): string {
+  const value: string = heading ? `${documentPath}#${heading}` : documentPath;
+  const separator: string = pageUrl.indexOf('?') === -1 ? '?' : '&';
+  return `${pageUrl}${separator}${DOCUMENT_PARAMETER}=${encodeURIComponent(value)}`;
+}

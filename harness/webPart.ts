@@ -265,6 +265,19 @@ const harness = {
       ? Array.from(select.options).map((option: HTMLOptionElement) => option.text)
       : [];
   },
+  /**
+   * Put a document in the page's address, the way a SharePoint menu entry
+   * does, and start again. Passing undefined clears it.
+   */
+  addressDocument: (value: string | undefined): void => {
+    const url: URL = new URL(window.location.href);
+    if (value) {
+      url.searchParams.set('strataDoc', value);
+    } else {
+      url.searchParams.delete('strataDoc');
+    }
+    window.history.replaceState(window.history.state, '', url.toString());
+  },
   /** The page is being edited by an author, or read by everybody else. */
   editing: (isEditing: boolean): void => {
     if (webPart) {

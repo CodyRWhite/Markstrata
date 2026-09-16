@@ -49,5 +49,6 @@ module.exports = {
   frontMatter: lib('frontMatter'),
   readingTime: lib('readingTime'),
   wikiLinks: lib('wikiLinks'),
+  documentParameter: lib('documentParameter'),
   tables: lib('tables')
 };

@@ -61,6 +61,7 @@ import './styles/print.css';
 import { MarkdownProcessor, IMarkdownProcessorOptions } from './utils/MarkdownProcessor';
 import { folderOf } from './utils/imagePaths';
 import { DocumentNavigator, ILoadedDocument } from './utils/documentNavigator';
+import { documentFromAddress, IWantedDocument } from './utils/documentParameter';
 import { ThemeOverride } from './utils/themeOverride';
 import { PaneSources } from './paneSources';
 import { TocWidthUnit, tocWidthCss, tocWidthForUnit } from './utils/tocWidth';
@@ -265,6 +266,7 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
 
     void this.paneSources.loadAll().then(() => this.context.propertyPane.refresh());
     await this.loadContent(false);
+    await this.openDocumentFromAddress();
   }
 
   /*
@@ -410,6 +412,38 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
       console.error('[Markstrata] The web part could not draw itself', error);
       this.drawFailure();
     }
+  }
+
+  /**
+   * Opens the document the page's address names, if it names one.
+   *
+   * This is what lets a SharePoint menu be a menu. Every entry on a navigation
+   * bar can only point at a page, and a page shows the one document it was
+   * configured with, so without this a wiki's menu works once: a reader
+   * reaches the home document and has to find everything else by following
+   * links out of it.
+   *
+   * Last in starting up, and deliberately: a relative address is relative to
+   * the configured document's folder, so that document has to have been
+   * loaded for the folder to be known.
+   *
+   * Held to the same two conditions as following a link, because it is the
+   * same thing done by a different hand - the web part showing a document
+   * other than its own. No history is pushed, because the address already is
+   * the history: the reader arrived at it.
+   */
+  private async openDocumentFromAddress(): Promise<void> {
+    if (!this.properties.followDocumentLinks || this.properties.contentSource !== 'library') {
+      return;
+    }
+
+    const wanted: IWantedDocument | undefined = documentFromAddress(
+      window.location.search, this.imageBasePath()
+    );
+    if (!wanted) {
+      return;
+    }
+    await this.navigator.open(wanted.path, wanted.heading, false);
   }
 
   /**

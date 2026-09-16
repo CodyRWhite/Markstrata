@@ -35,6 +35,18 @@
     display: block;
   }
 
+  /* Nothing scrolls on paper. The editor's panes are a fixed height with the
+     overflow inside them on screen, which on a printer would put the first
+     screenful on the page and drop the rest of the document. */
+  .strata-editor,
+  .strata-preview-pane,
+  .strata-preview-box {
+    height: auto;
+    max-height: none;
+    min-height: 0;
+    overflow: visible;
+  }
+
   .strata-toc-sidebar {
     position: static;
     width: 100%;

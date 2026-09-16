@@ -1163,6 +1163,93 @@ const webPartUrl = 'file://' + path.join(HARNESS_DIST, 'webpart.html');
 
   await page.screenshot({ path: path.join(HARNESS_DIST, 'harness-edit-split.png'), fullPage: false });
 
+  /*
+   * A document long enough that both halves have somewhere to scroll to, so
+   * the two checks below are read off the case they exist for rather than off
+   * a document that happens to fit.
+   */
+  const longDocument = '# Split view\n' + Array.from({ length: 40 }, (unused, index) =>
+    `\n## Section ${index + 1}\n\nA paragraph about section ${index + 1}, long enough `
+    + 'to wrap in the source and in the preview both.\n'
+  ).join('');
+
+  /*
+   * The two halves of a split view are read across, and they could not be:
+   * the source stopped at its own minimum height while the preview ran on to
+   * the bottom of the row, and the MARKDOWN label sat outside its box while
+   * PREVIEW sat inside its border, so the panes began 22px apart.
+   */
+  await step('both halves of the split view are the same box', async () => {
+    await page.getByRole('button', { name: 'Split', exact: true }).click();
+    await page.fill('.strata-editor-input', longDocument);
+    await page.waitForTimeout(800);
+    const split = await page.evaluate(() => {
+      const box = (selector) => {
+        const found = document.querySelector(selector);
+        if (!found) return null;
+        const bounds = found.getBoundingClientRect();
+        return { top: Math.round(bounds.top), height: Math.round(bounds.height) };
+      };
+      return {
+        sourcePane: box('.strata-editor-pane'),
+        previewPane: box('.strata-preview-pane'),
+        source: box('.strata-editor-input'),
+        preview: box('.strata-preview-box')
+      };
+    });
+    if (!split.preview) throw new Error('the preview has no box to scroll');
+    if (Math.abs(split.sourcePane.top - split.previewPane.top) > 1) {
+      throw new Error('panes start at ' + split.sourcePane.top + ' and ' + split.previewPane.top);
+    }
+    if (Math.abs(split.sourcePane.height - split.previewPane.height) > 1) {
+      throw new Error('panes are ' + split.sourcePane.height + ' and ' + split.previewPane.height + ' tall');
+    }
+    if (Math.abs(split.source.top - split.preview.top) > 1) {
+      throw new Error('the boxes start at ' + split.source.top + ' and ' + split.preview.top);
+    }
+    if (Math.abs(split.source.height - split.preview.height) > 1) {
+      throw new Error('the boxes are ' + split.source.height + ' and ' + split.preview.height + ' tall');
+    }
+    /* And the boxes fill their panes, rather than both stopping short of the
+       row by the same amount. A pane is its label and then its box. */
+    if (split.source.height < split.sourcePane.height - 40) {
+      throw new Error('the source box is ' + split.source.height + ' in a pane of ' + split.sourcePane.height);
+    }
+  });
+
+  /* Scrolling is shared by the proportion of the way down each pane is: the
+     source is monospace text and the preview is headings, code and images, so
+     the same line is never at the same pixel in both. */
+  await step('scrolling either half takes the other with it', async () => {
+    const moved = await page.evaluate(async () => {
+      const source = document.querySelector('.strata-editor-input');
+      const preview = document.querySelector('.strata-preview-box');
+      const room = (pane) => pane.scrollHeight - pane.clientHeight;
+      const settle = () => new Promise((done) => setTimeout(done, 200));
+      if (room(source) < 200 || room(preview) < 200) {
+        return { room: [room(source), room(preview)] };
+      }
+
+      source.scrollTop = 0;
+      preview.scrollTop = 0;
+      await settle();
+      source.scrollTop = Math.round(room(source) * 0.5);
+      await settle();
+      const previewFollowed = preview.scrollTop / room(preview);
+
+      preview.scrollTop = Math.round(room(preview) * 0.9);
+      await settle();
+      return { previewFollowed, sourceFollowed: source.scrollTop / room(source) };
+    });
+    if (moved.room) throw new Error('nothing to scroll: ' + moved.room.join(' and '));
+    if (Math.abs(moved.previewFollowed - 0.5) > 0.05) {
+      throw new Error('the source at halfway put the preview at ' + moved.previewFollowed.toFixed(2));
+    }
+    if (Math.abs(moved.sourceFollowed - 0.9) > 0.05) {
+      throw new Error('the preview at nine tenths put the source at ' + moved.sourceFollowed.toFixed(2));
+    }
+  });
+
   await step('Ctrl+S saves', async () => {
     await page.locator('.strata-editor-input').press('Control+s');
     await page.waitForTimeout(400);
@@ -2266,6 +2353,86 @@ const webPartUrl = 'file://' + path.join(HARNESS_DIST, 'webpart.html');
     });
     if (state.closed) throw new Error(state.closed);
     if (state.editor === 0) throw new Error('the editor did not come back');
+  });
+
+  /*
+   * A SharePoint menu can only point at a page, and a page shows the one
+   * document it was configured with, so a wiki's navigation bar worked exactly
+   * once: a reader reached the home document and had to find the rest by
+   * following links out of it. Naming the document in the address is what
+   * makes the other entries on the menu mean something.
+   */
+  await step('a document named in the address is the one that opens', async () => {
+    const shown = await page.evaluate(async () => {
+      window.webPartHarness.addressDocument('/sites/demo/Documents/Runbooks/Deploy notes.md');
+      await window.webPartHarness.start({
+        contentSource: 'library',
+        selectedLibrary: '/sites/demo/Documents',
+        selectedFile: '/sites/demo/Documents/index.md',
+        followDocumentLinks: true
+      });
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      const heading = document.querySelector('#host h1');
+      const bar = document.querySelector('#host .strata-open-doc');
+      return {
+        heading: heading ? heading.textContent : '',
+        wayBack: !!(bar && bar.querySelector('.strata-open-doc-back'))
+      };
+    });
+    if (shown.heading.indexOf('Deploying') === -1) {
+      throw new Error('the address was ignored; it shows ' + JSON.stringify(shown.heading));
+    }
+    /* And it is still plainly a document other than the page's own, with the
+       way back to it, exactly as a followed link is. */
+    if (!shown.wayBack) throw new Error('no way back to the configured document');
+  });
+
+  await step('and the configured one opens when the address names none', async () => {
+    const shown = await page.evaluate(async () => {
+      window.webPartHarness.addressDocument(undefined);
+      await window.webPartHarness.start({
+        contentSource: 'library',
+        selectedLibrary: '/sites/demo/Documents',
+        selectedFile: '/sites/demo/Documents/index.md',
+        followDocumentLinks: true
+      });
+      await new Promise((resolve) => setTimeout(resolve, 400));
+      const heading = document.querySelector('#host h1');
+      return {
+        heading: heading ? heading.textContent : '',
+        bar: !!document.querySelector('#host .strata-open-doc')
+      };
+    });
+    if (shown.heading.indexOf('Wiki index') === -1) {
+      throw new Error('it shows ' + JSON.stringify(shown.heading));
+    }
+    if (shown.bar) throw new Error('it thinks it is showing somebody else document');
+  });
+
+  await step('an address naming something that is not markdown is ignored', async () => {
+    const shown = await page.evaluate(async () => {
+      window.webPartHarness.addressDocument('/sites/demo/Documents/payroll.xlsx');
+      await window.webPartHarness.start({
+        contentSource: 'library',
+        selectedLibrary: '/sites/demo/Documents',
+        selectedFile: '/sites/demo/Documents/index.md',
+        followDocumentLinks: true
+      });
+      await new Promise((resolve) => setTimeout(resolve, 400));
+      window.webPartHarness.addressDocument(undefined);
+      const heading = document.querySelector('#host h1');
+      const banner = document.querySelector('#host .strata-status');
+      return {
+        heading: heading ? heading.textContent : '',
+        banner: banner ? (banner.textContent || '').trim() : ''
+      };
+    });
+    /* The configured document, with no error: a menu entry somebody typed
+       wrongly is not the reader's problem to read about. */
+    if (shown.heading.indexOf('Wiki index') === -1) {
+      throw new Error('it shows ' + JSON.stringify(shown.heading));
+    }
+    if (shown.banner) throw new Error('it complained at the reader: ' + shown.banner);
   });
 
   await step('a library that will not answer is a message, not a broken page', async () => {

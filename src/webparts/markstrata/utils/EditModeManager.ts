@@ -21,7 +21,7 @@
  * Since:     0.0.6
  * Ships in:  the web part bundle
  * Requires:  MarkdownProcessor.ts, MermaidRenderer.ts, ContentEnhancer.ts,
- *            mermaidConfig.ts, ThemeManager.ts
+ *            mermaidConfig.ts, ThemeManager.ts, scrollSync.ts
  */
 
 import { MarkdownProcessor } from './MarkdownProcessor';
@@ -29,6 +29,7 @@ import { MermaidRenderer } from './MermaidRenderer';
 import { ContentEnhancer } from './ContentEnhancer';
 import { DiagramWidth } from './mermaidConfig';
 import { ThemeManager, IThemeSettings, ResolvedMode } from './ThemeManager';
+import { ScrollSync } from './scrollSync';
 
 export type EditorLayout = 'edit' | 'split' | 'preview';
 
@@ -65,6 +66,7 @@ export class EditModeManager {
   private preview: HTMLElement | undefined;
   private status: HTMLElement | undefined;
   private saveButton: HTMLButtonElement | undefined;
+  private readonly scrollSync: ScrollSync = new ScrollSync();
 
   constructor(
     processor: MarkdownProcessor,
@@ -117,13 +119,25 @@ export class EditModeManager {
     previewPane.className = 'strata-preview-pane';
     previewPane.appendChild(this.paneLabel('Preview'));
 
+    /* The box rather than the pane is what is bordered and what scrolls, so
+       that it lines up with the textarea beside it: both panes are a label
+       above a box, and the labels sit outside the boxes in each. */
+    const previewBox: HTMLElement = document.createElement('div');
+    previewBox.className = 'strata-preview-box';
+
     this.preview = document.createElement('div');
     this.preview.className = 'strata-content';
-    previewPane.appendChild(this.preview);
+    previewBox.appendChild(this.preview);
+    previewPane.appendChild(previewBox);
 
     editor.appendChild(editorPane);
     editor.appendChild(previewPane);
     host.appendChild(editor);
+
+    /* Reading the source and reading the preview are the same act of reading,
+       and a split view where the two halves go their own ways is a split view
+       nobody uses on a document long enough to need one. */
+    this.scrollSync.pair(this.textarea, previewBox);
 
     this.refreshPreview(markdown, options);
   }
@@ -290,5 +304,6 @@ export class EditModeManager {
     if (this.previewTimer !== undefined) {
       window.clearTimeout(this.previewTimer);
     }
+    this.scrollSync.stop();
   }
 }

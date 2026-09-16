@@ -282,20 +282,41 @@
 
 /* ------------------------------------------------------------------ editor */
 
+/*
+ * The editor is one row of a fixed height with the panes stretched into it,
+ * rather than two boxes each as tall as whatever is in it. Sized from the
+ * content, the source stopped at 420px while the preview ran on beside it, so
+ * the half of the split you type into was the half with an empty area under
+ * it - and the two halves cannot be read across if they are not the same box.
+ */
 .strata-editor {
   display: grid;
   gap: 12px;
   grid-template-columns: 1fr;
-  align-items: start;
+  height: 70vh;
+  min-height: 420px;
 }
 
 .strata-editor[data-layout='split'] {
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
 }
 
+/*
+ * Each pane is a label above a box, and the box takes the rest of the pane.
+ * The label is outside the box in both, because it was outside the textarea
+ * and inside the preview's border, which started the two panes at different
+ * heights and put every line of the source a label's worth below its own
+ * rendering.
+ */
 .strata-editor-pane,
 .strata-preview-pane {
+  display: flex;
+  flex-direction: column;
   min-width: 0;
+  /* A flex item is floored at its content, and the preview's content is the
+     whole document: without this the pane grows to fit it and drags the row
+     it was given out of shape. */
+  min-height: 0;
 }
 
 .strata-editor[data-layout='preview'] .strata-editor-pane,
@@ -303,33 +324,33 @@
   display: none;
 }
 
-.strata-editor-input {
-  display: block;
-  width: 100%;
-  min-height: 420px;
+.strata-editor-input,
+.strata-preview-box {
+  flex: 1 1 0;
+  min-height: 0;
+  overflow-y: auto;
   padding: 12px 14px;
   border: 1px solid var(--strata-border);
   border-radius: var(--strata-radius-md);
+}
+
+.strata-editor-input {
+  display: block;
+  width: 100%;
   background-color: var(--strata-code-bg);
   color: var(--strata-code-text);
   font-family: var(--strata-font-mono);
   font-size: var(--strata-code-font-size);
   line-height: var(--strata-code-line-height);
-  resize: vertical;
+  /* The pane decides how tall this is now, and a dragged corner would only
+     put the two halves back out of step with each other. */
+  resize: none;
   tab-size: 2;
 }
 
 .strata-editor-input:focus {
   outline: 2px solid var(--strata-link);
   outline-offset: -1px;
-}
-
-.strata-preview-pane {
-  padding: 12px 14px;
-  border: 1px solid var(--strata-border);
-  border-radius: var(--strata-radius-md);
-  max-height: 70vh;
-  overflow-y: auto;
 }
 
 .strata-pane-label {
@@ -346,10 +367,15 @@
 @container mdf (max-width: 720px) {
   .strata-editor[data-layout='split'] {
     grid-template-columns: 1fr;
+    /* Stacked, the panes are read one after the other rather than across, so
+       each takes a height of its own instead of halving one row between
+       them. */
+    height: auto;
   }
 
+  .strata-editor[data-layout='split'] .strata-editor-pane,
   .strata-editor[data-layout='split'] .strata-preview-pane {
-    max-height: 40vh;
+    height: 40vh;
   }
 }
 
@@ -357,6 +383,12 @@
   @media (max-width: 900px) {
     .strata-editor[data-layout='split'] {
       grid-template-columns: 1fr;
+      height: auto;
+    }
+
+    .strata-editor[data-layout='split'] .strata-editor-pane,
+    .strata-editor[data-layout='split'] .strata-preview-pane {
+      height: 40vh;
     }
   }
 }
