@@ -3144,6 +3144,99 @@ const LIBRARY_PATH = '/sites/demo/Documents';
   });
 
   /*
+   * The same address, with the heading written the way a person writes one.
+   *
+   * The check above names it `#tables`, which is already lower case and is
+   * already the id the heading was given, so it matched whatever the lookup
+   * did with it. A menu entry is written by hand against a heading that reads
+   * "Tables", and that is the spelling that found nothing: the reader landed
+   * at the top of the right document and reported the anchor as ignored.
+   */
+  await step('and honours a heading named the way a person writes it', async () => {
+    const landed = await page.evaluate(async () => {
+      window.webPartHarness.addressDocument('/sites/demo/Documents/handbook.md#Tables');
+      await window.webPartHarness.start({
+        contentSource: 'library',
+        selectedLibrary: '/sites/demo/Documents',
+        selectedFile: '/sites/demo/Documents/handbook.md',
+        followDocumentLinks: true
+      });
+      await new Promise((resolve) => setTimeout(resolve, 1200));
+
+      const heading = document.getElementById('tables');
+      if (!heading) { return { failed: 'the document has no heading with that id' }; }
+      return { top: Math.round(heading.getBoundingClientRect().top) };
+    });
+
+    if (landed.failed) throw new Error(landed.failed);
+    if (landed.top > 200 || landed.top < -200) {
+      throw new Error('the named heading sits at ' + landed.top + ', so nothing landed on it');
+    }
+  });
+
+  /*
+   * And an anchor inside the document, which is the other half of the fault.
+   *
+   * Left to the browser this is not a scroll. A SharePoint page is a
+   * single-page application with a router listening for clicks, a fragment is
+   * a navigation as far as it is concerned, and what the reader got was
+   * wiki.aspx with the anchor on the address and the configured document back
+   * on the screen - a heading that document has not got. The click is taken
+   * before the router the same way a click on a document link already is.
+   */
+  await step('an anchor in the document scrolls instead of leaving it', async () => {
+    const moved = await page.evaluate(async () => {
+      window.webPartHarness.addressDocument('');
+      await window.webPartHarness.start({
+        contentSource: 'library',
+        selectedLibrary: '/sites/demo/Documents',
+        selectedFile: '/sites/demo/Documents/Runbooks/rollback.md',
+        enableWikiLinks: true,
+        followDocumentLinks: true
+      });
+      /* Long enough that the document has finished being drawn. Measured
+         earlier, the heading is wherever the half-built article left it. */
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+
+      /* By its href, not by being the first one: the permalink beside every
+         heading is an anchor into this document too, and is the first in the
+         article. It is taken by the same handler for the same reason, which is
+         why there is more than one of these to choose from. */
+      const link = Array.from(
+        document.querySelectorAll('#host article a.strata-anchor-link')
+      ).filter((a) => a.getAttribute('href') === '#when-to-roll-back')[0];
+      if (!link) { return { failed: 'the anchor did not render as one the web part takes' }; }
+
+      const before = window.location.href;
+      link.click();
+      /* A smooth scroll of a couple of thousand pixels is not instant. */
+      await new Promise((resolve) => setTimeout(resolve, 2500));
+
+      const heading = document.getElementById('when-to-roll-back');
+      if (!heading) { return { failed: 'the document has no heading with that id' }; }
+      const title = document.querySelector('#host article h1');
+      return {
+        top: Math.round(heading.getBoundingClientRect().top),
+        title: title ? title.textContent : '',
+        addressChanged: window.location.href !== before
+      };
+    });
+
+    if (moved.failed) throw new Error(moved.failed);
+    /* Still the document that carried the link, rather than the configured one
+       the router used to send the reader back to. */
+    if (moved.title.indexOf('Rolling back') === -1) {
+      throw new Error('the click left the document; it now shows ' + JSON.stringify(moved.title));
+    }
+    if (moved.addressChanged) {
+      throw new Error('the click put a fragment on the address, which is what the router follows');
+    }
+    if (moved.top > 200 || moved.top < -200) {
+      throw new Error('the named heading sits at ' + moved.top + ', so nothing scrolled to it');
+    }
+  });
+
+  /*
    * A document that is not in this tenant at all.
    *
    * The File URL source reads markdown from anywhere that will answer, and a

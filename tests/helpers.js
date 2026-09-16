@@ -68,5 +68,6 @@ module.exports = {
   remoteCode: lib('remoteCode'),
   codeZoom: lib('codeZoom'),
   tables: lib('tables'),
-  folderTree: lib('folderTree')
+  folderTree: lib('folderTree'),
+  headingLanding: lib('headingLanding')
 };

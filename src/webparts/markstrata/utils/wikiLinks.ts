@@ -90,6 +90,68 @@ export function legacyHeadingAnchor(heading: string): string {
   );
 }
 
+/**
+ * Every id a named heading might actually have on the page, best first.
+ *
+ * A heading name reaches this web part from two places that disagree about
+ * what shape it is in. A wiki link has already been through headingSlug, so
+ * `[[Runbook#Rollback]]` arrives as `rollback` and matches. A heading named on
+ * the page's own address has not been through anything: `?strataDoc=Runbook.md
+ * %23Rollback` arrives as `Rollback`, which is how a person writes a heading
+ * and is not the id of anything, so the landing found no element and the
+ * reader was left at the top of the right document. That is the whole of
+ * "the anchor is not honoured".
+ *
+ * Rather than slugging at one end and hoping every caller agrees, the lookup
+ * asks for each form in turn and takes the first that is on the page:
+ *
+ *   as written      an author's own `{#custom-id}`, or a name already slugged
+ *   decoded         the address bar hands over what was typed, still encoded
+ *   slugged         GitHub's rule, which is what a heading's id is made with
+ *   legacy slugged  the rule headings used before that, still honoured
+ *
+ * Both spellings of the raw value are slugged, because `Step%201` and
+ * `Step 1` are the same heading written by two different link writers.
+ */
+export function headingTargets(heading: string): string[] {
+  const written: string = (heading || '').trim();
+  if (!written) {
+    return [];
+  }
+
+  const decoded: string = decodeOrKeep(written);
+  const forms: string[] = [
+    written,
+    decoded,
+    headingSlug(written),
+    headingSlug(decoded),
+    legacyHeadingAnchor(written),
+    legacyHeadingAnchor(decoded)
+  ];
+
+  const seen: string[] = [];
+  forms.forEach((form: string) => {
+    if (form && seen.indexOf(form) === -1) {
+      seen.push(form);
+    }
+  });
+  return seen;
+}
+
+/**
+ * The decoded form, or what was handed over when that is not valid encoding.
+ *
+ * A heading with a per cent sign in it is a heading, not a mistake, and
+ * throwing while working out where to scroll would lose the document.
+ */
+function decodeOrKeep(text: string): string {
+  try {
+    return decodeURIComponent(text);
+  } catch {
+    return text;
+  }
+}
+
 export interface IWikiTarget {
   /** The page, empty when the link points inside this document. */
   page: string;
