@@ -1197,13 +1197,13 @@ const webPartUrl = 'file://' + path.join(HARNESS_DIST, 'webpart.html');
         preview: box('.strata-preview-box')
       };
     });
-    if (!split.preview) throw new Error('the preview has no box to scroll');
     if (Math.abs(split.sourcePane.top - split.previewPane.top) > 1) {
       throw new Error('panes start at ' + split.sourcePane.top + ' and ' + split.previewPane.top);
     }
     if (Math.abs(split.sourcePane.height - split.previewPane.height) > 1) {
       throw new Error('panes are ' + split.sourcePane.height + ' and ' + split.previewPane.height + ' tall');
     }
+    if (!split.preview) throw new Error('the preview has no box of its own to scroll');
     if (Math.abs(split.source.top - split.preview.top) > 1) {
       throw new Error('the boxes start at ' + split.source.top + ' and ' + split.preview.top);
     }
@@ -1224,6 +1224,7 @@ const webPartUrl = 'file://' + path.join(HARNESS_DIST, 'webpart.html');
     const moved = await page.evaluate(async () => {
       const source = document.querySelector('.strata-editor-input');
       const preview = document.querySelector('.strata-preview-box');
+      if (!source || !preview) return { missing: true };
       const room = (pane) => pane.scrollHeight - pane.clientHeight;
       const settle = () => new Promise((done) => setTimeout(done, 200));
       if (room(source) < 200 || room(preview) < 200) {
@@ -1241,6 +1242,7 @@ const webPartUrl = 'file://' + path.join(HARNESS_DIST, 'webpart.html');
       await settle();
       return { previewFollowed, sourceFollowed: source.scrollTop / room(source) };
     });
+    if (moved.missing) throw new Error('the split view has no pair of boxes to scroll');
     if (moved.room) throw new Error('nothing to scroll: ' + moved.room.join(' and '));
     if (Math.abs(moved.previewFollowed - 0.5) > 0.05) {
       throw new Error('the source at halfway put the preview at ' + moved.previewFollowed.toFixed(2));
