@@ -119,7 +119,9 @@ the upload refused; the version lives in the tag and inside the package.
   is in the package: parsing, highlighting, every theme, KaTeX's stylesheet and
   fonts, and Mermaid. It works in tenants that block outbound requests, and no
   external service can change what executes on your pages.
-- Raw HTML in markdown is escaped unless you turn **Allow raw HTML** on.
+- Raw HTML in markdown is escaped unless you turn **Allow raw HTML** on, and
+  sanitised with DOMPurify when you do: no `<script>`, no `on*` handlers, no
+  `javascript:` addresses, and `<iframe>` only from a short list of embed hosts.
   Callout titles are escaped either way.
 - Mermaid runs with `securityLevel: 'strict'` and HTML labels disabled, so
   diagram text can never become markup.

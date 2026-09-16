@@ -88,7 +88,7 @@ define([], function () {
     "WikiLinksHint": "Turns [[Another page]] into a link to that file in the same folder, the way Obsidian and older wikis write one. [[Page|worded differently]] and [[Page#Heading]] both work. With a library file, links to pages that are not there are marked: the folder is listed once and every link into it answered from that, rather than asked one at a time.",
     "MathLabel": "Math (KaTeX)",
     "AllowHtmlLabel": "Allow raw HTML in markdown",
-    "AllowHtmlHint": "Leave off unless you trust everyone who can edit the source. With it on, HTML in the markdown is rendered as-is.",
+    "AllowHtmlHint": "With it on, HTML in the markdown is rendered rather than escaped. It is sanitised first: no scripting, and embeds only from known hosts.",
     "ToolbarGroupName": "Toolbar",
     "ToolbarVisibilityLabel": "Show toolbar",
     "ToolbarHint": "The reload, version history, theme and print controls all live in the toolbar. With \"Only while editing the page\", readers of the page never see them.",

@@ -20,7 +20,7 @@
  * .NOTES
  * Since:     0.0.6
  * Ships in:  nothing - it builds or drives what ships
- * Requires:  brand-assets.ts, site.ts
+ * Requires:  brand-assets.ts, site.ts, jsdom
  */
 
 const fs = require('fs');
@@ -68,6 +68,7 @@ function compileProcessor() {
     path.join(root, 'node_modules', '.bin', 'tsc'),
     [
       path.join(root, 'src', 'webparts', 'markstrata', 'utils', 'MarkdownProcessor.ts'),
+      path.join(root, 'src', 'webparts', 'markstrata', 'utils', 'htmlSanitiser.ts'),
       path.join(root, 'src', 'webparts', 'markstrata', 'utils', 'ThemeManager.ts'),
       path.join(root, 'src', 'webparts', 'markstrata', 'utils', 'mermaidConfig.ts'),
       '--outDir', libDir,
@@ -137,6 +138,13 @@ function copyAssets() {
 
 function build() {
   compileProcessor();
+
+  /* The pipeline sanitises its own output when raw HTML is allowed, and
+     DOMPurify needs a DOM to do it. Node has none, so jsdom stands one up
+     here. It is a devDependency of this project and a build-time import in
+     this file; nothing in the bundle reaches for it. */
+  const { JSDOM } = require('jsdom');
+  require(path.join(libDir, 'htmlSanitiser.js')).useSanitiserWindow(new JSDOM('').window);
 
   const { MarkdownProcessor } = require(path.join(libDir, 'MarkdownProcessor.js'));
   const { ThemeManager } = require(path.join(libDir, 'ThemeManager.js'));

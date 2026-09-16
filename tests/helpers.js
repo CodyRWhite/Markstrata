@@ -10,10 +10,11 @@
  * .NOTES
  * Since:     0.0.6
  * Ships in:  nothing - it runs at test time only
- * Requires:  nothing else in this project
+ * Requires:  nothing else in this project, jsdom
  */
 
 const path = require('path');
+const { JSDOM } = require('jsdom');
 
 const TEST_LIB = path.join(__dirname, '..', 'temp', 'test-lib');
 
@@ -38,8 +39,20 @@ function lib(name) {
   }
 }
 
+/*
+ * DOMPurify needs a DOM, and Node has none. Handed no window it returns what it
+ * was given, unchanged, so a test of a sanitiser would pass without a sanitiser
+ * running - which is why htmlSanitiser refuses instead, and why the window is
+ * installed here, once, before any test renders anything.
+ *
+ * jsdom is a devDependency. Nothing in the bundle reaches for it.
+ */
+const htmlSanitiser = lib('htmlSanitiser');
+htmlSanitiser.useSanitiserWindow(new JSDOM('').window);
+
 module.exports = {
   MarkdownProcessor: lib('MarkdownProcessor').MarkdownProcessor,
+  htmlSanitiser: htmlSanitiser,
   ThemeManager: lib('ThemeManager').ThemeManager,
   codeBlocks: lib('codeBlocks'),
   imagePaths: lib('imagePaths'),

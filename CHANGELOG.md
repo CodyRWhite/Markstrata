@@ -10,6 +10,31 @@ Entries below 0.0.10.0 were written before the switch and are three-part.
 
 ## 0.0.18.4
 
+- Raw HTML no longer means raw scripting. With "Allow raw HTML in markdown" on,
+  whatever an author wrote went onto the page untouched, so `<script>`,
+  `<img onerror=...>` and `<a href="javascript:...">` all ran - in the next
+  reader's browser, in that reader's SharePoint session. In a document library
+  the author is anyone with write access to the library, which is not the same
+  set of people as the reader, whatever the property pane hint says. Rendered
+  HTML is now sanitised with DOMPurify before it reaches the page.
+
+  Gone: `<script>` in every spelling, every `on*` handler, a `javascript:`
+  address in an `href` or a `src` however it is obfuscated, and `<object>`,
+  `<embed>`, `<base>`, `<form>` and `<meta>`.
+
+  `<iframe>` stays, because an embedded video is the reason most people turn
+  the setting on, but only pointed at a host on a fixed list: YouTube and
+  YouTube-nocookie, Vimeo, Microsoft Stream, Forms, Power BI, Teams, any
+  `*.sharepoint.com`, and the site the page itself is served from. The host is
+  read off the parsed address, so `https://evil.example/?x=www.youtube.com` is
+  not YouTube. An `srcdoc` is refused whatever the host, since an iframe
+  carrying its own document never visits the host it names.
+
+  Ordinary formatting HTML is untouched: `<sub>`, `<sup>`, `<kbd>`, `<br>`,
+  `<details>`, `<summary>`, tables, and a `<div>` or `<span>` with a class.
+  With the setting off nothing changes and nothing runs, because markdown-it
+  has already escaped every tag.
+
 - The Teams app package was refused by Teams, which is why Sync to Teams kept
   failing and why uploading the package by hand failed the same way: the
   manifest carried a `packageName` property, which the v1.17 schema does not
