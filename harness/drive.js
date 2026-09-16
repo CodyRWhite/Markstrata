@@ -3754,6 +3754,54 @@ const LIBRARY_PATH = '/sites/demo/Documents';
           })
       };
 
+      /*
+       * And what the laid-out document looks like, which is a separate
+       * question from whether it paginated.
+       *
+       * Every theme token is declared on the root under an attribute
+       * selector - .strata-root[data-strata-theme='github'] - so a copy that
+       * carries the class and not the attribute resolves none of them. CSS
+       * does not complain about that: font-size: var(--strata-h2-size) with
+       * nothing behind the variable is an invalid declaration, which is
+       * dropped, so the heading inherits body size, and border: var(...) solid
+       * with nothing behind it is dropped too, so the table has no rules. The
+       * pages all come out and the document reads as a wall of text.
+       *
+       * Measured against the live root rather than against fixed numbers: the
+       * claim is that an export looks like what it was exported from.
+       */
+      const styled = (() => {
+        const live = document.querySelector('#host .strata-root');
+        /* Across the whole export rather than inside the first fragment of
+           it. Paged.js gives every page its own copy of the ancestor chain,
+           so `.strata-export-content` on page three holds the top of the
+           document and nothing else: a table six pages in is in a different
+           one, and looking for it in the first found nothing and read as a
+           table with no rules. */
+        const find = (selector) => root.querySelector('.strata-export-content ' + selector);
+        const size = (element, property) => element
+          ? parseFloat(window.getComputedStyle(element)[property])
+          : undefined;
+        const cell = find('table td') || find('table th');
+        return {
+          liveTheme: live ? live.getAttribute('data-strata-theme') : undefined,
+          exportTheme: root.getAttribute('data-strata-theme'),
+          exportMode: root.getAttribute('data-strata-mode'),
+          headingSize: size(find('h2'), 'fontSize'),
+          bodySize: size(find('p'), 'fontSize'),
+          foundCell: !!cell,
+          cellBorder: size(cell, 'borderBottomWidth'),
+          cellPadding: size(cell, 'paddingLeft'),
+          /* A listing scrolls sideways on screen and a sheet of paper does
+             not, so a line wider than the block is a line whose end is not
+             printed. Counted rather than eyeballed, because the part that
+             goes missing is off the edge of the page. */
+          spilledLines: Array.prototype.slice
+            .call(root.querySelectorAll('.strata-export-content .strata-code-pre'))
+            .filter((pre) => pre.scrollWidth > pre.clientWidth + 2).length
+        };
+      })();
+
       const before = {
         article: !!document.querySelector('#host .strata-content'),
         prefixed: document.querySelectorAll('#host .strata-content [id^="strata-export-id-"]').length
@@ -3775,6 +3823,7 @@ const LIBRARY_PATH = '/sites/demo/Documents';
         pages: laidOut.pages,
         cover: laidOut.cover,
         entries: laidOut.entries,
+        styled: styled,
         askedToPrint: asked,
         before: before,
         after: after
@@ -3817,6 +3866,49 @@ const LIBRARY_PATH = '/sites/demo/Documents';
        it was understood rather than dropped. */
     if (exported.entries[0].rendered.indexOf('counter(') === -1) {
       throw new Error('the page number was not resolved: ' + exported.entries[0].rendered);
+    }
+
+    /*
+     * The export is the document, not a plain-text rendering of it.
+     *
+     * The theme goes on the copy as attributes because that is what the theme
+     * tokens are declared against, and without them a heading is body size and
+     * a table has no rules: every page still comes out, and what comes out is
+     * a wall of text. So the three things a reader notices first are checked
+     * here, and each one is a variable that has to have resolved for it to
+     * hold.
+     */
+    const styled = exported.styled;
+    if (styled.exportTheme !== styled.liveTheme) {
+      throw new Error('the export is themed ' + JSON.stringify(styled.exportTheme)
+        + ' and the document it came from ' + JSON.stringify(styled.liveTheme));
+    }
+    /* Paper is white whatever the reader is looking at. */
+    if (styled.exportMode !== 'light') {
+      throw new Error('the export was laid out in ' + styled.exportMode + ' mode');
+    }
+    if (!(styled.headingSize > styled.bodySize * 1.2)) {
+      throw new Error('a heading in the export is ' + styled.headingSize
+        + 'px against body text at ' + styled.bodySize
+        + 'px, so --strata-h2-size resolved to nothing');
+    }
+    /* The check below says nothing at all if the document being exported has
+       no table in it, so say so rather than passing. */
+    if (!styled.foundCell) {
+      throw new Error('the exported document has no table in it, so the rules'
+        + ' on one were not checked');
+    }
+    if (!(styled.cellBorder > 0)) {
+      throw new Error('a table cell in the export has no rule under it, so'
+        + ' --strata-table-border resolved to nothing');
+    }
+    if (!(styled.cellPadding > 0)) {
+      throw new Error('a table cell in the export has no padding, so the'
+        + ' spacing tokens resolved to nothing');
+    }
+    if (styled.spilledLines) {
+      throw new Error(styled.spilledLines + ' listings run off the side of the'
+        + ' page rather than wrapping onto it');
     }
 
     if (exported.askedToPrint.length !== 1) {

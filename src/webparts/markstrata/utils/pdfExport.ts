@@ -90,6 +90,29 @@ const IMAGE_TIMEOUT_MS: number = 4000;
  */
 const TEARDOWN_FALLBACK_MS: number = 60000;
 
+/**
+ * What the copy is told about itself whatever the reader is looking at.
+ *
+ * Everything else about the theme is taken from the root the reader has in
+ * front of them. These four are answers to the shape of a window or to the
+ * state of a page, and an export has neither.
+ */
+const EXPORT_ATTRIBUTES: { [name: string]: string } = {
+  /*
+   * Paper is white. A reader in a dark theme exporting light text on a dark
+   * ground gets a page the printer fills edge to edge and a PDF that is
+   * unreadable the moment anybody prints it, so the export is laid out in the
+   * light half of whatever theme they chose rather than in a different theme.
+   */
+  'data-strata-mode': 'light',
+  /* Fill-the-height is a min-height in pixels measured off a screen. */
+  'data-strata-fill': 'content',
+  /* And pinned metadata sticks to the top of one. */
+  'data-strata-meta': 'flow',
+  /* The page being edited is not something the export is part of. */
+  'data-strata-editing': 'false'
+};
+
 export class PdfExport {
   private holder: HTMLElement | undefined;
   private sheet: HTMLStyleElement | undefined;
@@ -267,6 +290,21 @@ export class PdfExport {
    * Carries the web part's own root class and whatever theme the reader is
    * looking at, so the copy is styled by the same stylesheets the document is
    * and an export does not quietly look like a different product.
+   *
+   * The class alone is not the theme, and finding that out cost an export.
+   * Every token a theme declares is declared against an attribute on the root
+   * - `.strata-root[data-strata-theme='github']` and, for the colours,
+   * `[data-strata-mode='light']` with it - so a copy carrying `strata-root`
+   * and none of the attributes resolves not one of them. CSS says nothing
+   * about that: `font-size: var(--strata-h2-size)` with nothing behind the
+   * variable is an invalid declaration and is dropped, so the heading inherits
+   * body size, and `border: var(--strata-table-border) solid` goes the same
+   * way, so the table loses its rules. Every page comes out, correctly
+   * paginated, and what comes out is a flat wall of text.
+   *
+   * So the attributes come across with the class, and the four that are
+   * answers to a window rather than to a theme are then set to what a sheet of
+   * paper needs.
    */
   private buildHolder(root: HTMLElement | undefined, options: IExportOptions): HTMLElement {
     const holder: HTMLElement = document.createElement('div');
@@ -274,9 +312,18 @@ export class PdfExport {
 
     if (root) {
       root.classList.forEach((name: string) => holder.classList.add(name));
+      copyTheme(root, holder);
     } else {
       holder.classList.add('strata-root');
     }
+
+    Object.keys(EXPORT_ATTRIBUTES).forEach((name: string) => {
+      holder.setAttribute(name, EXPORT_ATTRIBUTES[name]);
+    });
+    /* So the browser picks light form controls and scrollbars to match, the
+       same reason ThemeManager sets it on the root. */
+    holder.style.colorScheme = 'light';
+
     if (options.sectionBreaks) {
       holder.classList.add('strata-export-sections');
     }
@@ -344,6 +391,23 @@ export class PdfExport {
       this.fallbackTimer = undefined;
     }
   }
+}
+
+/**
+ * The theme the reader chose, brought across to the copy.
+ *
+ * Only the `data-strata-*` attributes, and none of the inline style: the root
+ * carries a measured `min-height` when the web part is filling the window and
+ * a scroll offset for clearing the page's chrome, both of which are lengths
+ * taken off a screen that the export has nothing to do with.
+ */
+function copyTheme(root: HTMLElement, holder: HTMLElement): void {
+  const attributes: Attr[] = Array.prototype.slice.call(root.attributes);
+  attributes.forEach((attribute: Attr) => {
+    if (attribute.name.indexOf('data-strata-') === 0) {
+      holder.setAttribute(attribute.name, attribute.value);
+    }
+  });
 }
 
 /**
