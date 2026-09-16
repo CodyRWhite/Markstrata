@@ -552,3 +552,54 @@
     padding: 6px 9px;
   }
 }
+
+/*
+ * A web part nobody has pointed at a document yet.
+ *
+ * Outside the themed root on purpose: there is no document, so there is no
+ * theme to sit inside, and this has to be legible on whatever the page or the
+ * Teams tab is painted with. It follows the reader's colour scheme directly
+ * rather than the web part's, for the same reason.
+ */
+.strata-unconfigured {
+  max-width: 34em;
+  margin: 24px auto;
+  padding: 20px 22px;
+  border: 1px dashed #8a8886;
+  border-radius: 8px;
+  background: #faf9f8;
+  color: #323130;
+  font: 14px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  text-align: center;
+}
+
+.strata-unconfigured-heading {
+  margin: 0 0 6px;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.strata-unconfigured-body { margin: 0; }
+
+.strata-unconfigured-sample {
+  margin-top: 14px;
+  padding: 8px 16px;
+  border: 1px solid #0E7C86;
+  border-radius: 4px;
+  background: #0E7C86;
+  color: #ffffff;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.strata-unconfigured-sample:hover { background: #0a626a; border-color: #0a626a; }
+.strata-unconfigured-sample:focus-visible { outline: 2px solid #F0A442; outline-offset: 2px; }
+
+@media (prefers-color-scheme: dark) {
+  .strata-unconfigured {
+    border-color: #605e5c;
+    background: #201f1e;
+    color: #f3f2f1;
+  }
+}

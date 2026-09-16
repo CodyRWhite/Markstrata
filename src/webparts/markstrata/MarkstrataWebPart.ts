@@ -326,7 +326,13 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
   private applyDefaults(): void {
     const defaults: Partial<IMarkstrataWebPartProps> = {
       contentSource: 'manual',
-      markdownContent: strings.SampleContent,
+      /* Empty, not the sample. A web part that ships showing a document about
+         itself is indistinguishable from a configured one, so nobody can tell
+         a page that was never set up from a page that was - least of all a
+         reader, and least of all in a Teams tab, where there is no property
+         pane in sight to suggest otherwise. The sample is one click away in
+         the panel below instead. */
+      markdownContent: '',
       fileUrl: '',
       selectedLibrary: '',
       selectedFolder: '',
@@ -454,7 +460,66 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
     this.domElement.appendChild(box);
   }
 
+  /**
+   * What a web part nobody has set up should say.
+   *
+   * Where it says to go depends on the host, because the way in is different
+   * and only one of them is obvious. On a SharePoint page an author edits the
+   * page and the property pane is right there. In a Teams tab there is no page
+   * to edit and no pane to open: the way in is the tab's own settings, and a
+   * reader who does not own the tab has no way in at all - so they are told
+   * that plainly rather than shown a document about a web part.
+   */
+  private drawUnconfigured(): void {
+    const host: string = this.hostName();
+    const inTeams: boolean = host.indexOf('teams') === 0;
+    const editing: boolean = this.displayMode === DisplayMode.Edit;
+
+    this.domElement.textContent = '';
+
+    const panel: HTMLElement = document.createElement('div');
+    panel.className = 'strata-unconfigured';
+    panel.setAttribute('data-strata-host', host);
+
+    const heading: HTMLElement = document.createElement('p');
+    heading.className = 'strata-unconfigured-heading';
+    heading.textContent = strings.UnconfiguredHeading;
+    panel.appendChild(heading);
+
+    const guidance: HTMLElement = document.createElement('p');
+    guidance.className = 'strata-unconfigured-body';
+    guidance.textContent = inTeams
+      ? strings.UnconfiguredInTeams
+      : (editing ? strings.UnconfiguredInPane : strings.UnconfiguredOnPage);
+    panel.appendChild(guidance);
+
+    /* Only where somebody can act on it. Offering the sample to a reader who
+       cannot save it is an offer of nothing. */
+    if (editing && !inTeams) {
+      const sample: HTMLButtonElement = document.createElement('button');
+      sample.type = 'button';
+      sample.className = 'strata-unconfigured-sample';
+      sample.textContent = strings.UnconfiguredSampleButton;
+      sample.addEventListener('click', () => {
+        this.properties.contentSource = 'manual';
+        this.properties.markdownContent = strings.SampleContent;
+        this.updateSearchText();
+        this.render();
+      });
+      panel.appendChild(sample);
+    }
+
+    this.domElement.appendChild(panel);
+  }
+
   private draw(): void {
+    /* Before anything is built for a document: there is not one. */
+    if (this.isConfigured() === false && this.previewContent === undefined
+      && this.navigator.markdown === undefined) {
+      this.drawUnconfigured();
+      return;
+    }
+
     // The panel lives inside the element we are about to rebuild, so drop it
     // rather than leave the toggle thinking it is still open.
     this.versionPanel.close();
@@ -643,6 +708,23 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
   // ------------------------------------------------------------ reader theme
 
   // ----------------------------------------------------------------- content
+
+  /**
+   * Whether anybody has told this web part what to show.
+   *
+   * Each source answers it differently, and none of them can be answered by
+   * looking at the rendered document: markdown that renders is not the same as
+   * markdown somebody chose.
+   */
+  private isConfigured(): boolean {
+    if (this.properties.contentSource === 'library') {
+      return !!this.properties.selectedFile;
+    }
+    if (this.properties.contentSource === 'url') {
+      return !!this.properties.fileUrl;
+    }
+    return !!this.properties.markdownContent;
+  }
 
   private canSaveToSharePoint(): boolean {
     return this.properties.contentSource === 'library' && !!this.properties.selectedFile;

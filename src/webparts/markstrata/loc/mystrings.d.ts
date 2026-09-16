@@ -98,6 +98,11 @@ declare interface IMarkstrataWebPartStrings {
 
   SaveShortcutHint: string;
 
+  UnconfiguredHeading: string;
+  UnconfiguredInPane: string;
+  UnconfiguredOnPage: string;
+  UnconfiguredInTeams: string;
+  UnconfiguredSampleButton: string;
   SampleContent: string;
 }
 

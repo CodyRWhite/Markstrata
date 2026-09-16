@@ -1541,11 +1541,20 @@ const webPartUrl = 'file://' + path.join(HARNESS_DIST, 'webpart.html');
   });
 
   await step('it drew a document, with its toolbar and its contents', async () => {
-    const drawn = await page.evaluate(() => ({
-      toolbar: !!document.querySelector('.strata-toolbar'),
-      headings: document.querySelectorAll('#host h1, #host h2').length,
-      code: document.querySelectorAll('#host pre').length
-    }));
+    /* Given a document: a web part nobody has configured draws a panel saying
+       so, which is checked further down and is why this has to ask for one. */
+    const drawn = await page.evaluate(async () => {
+      await window.webPartHarness.start({
+        contentSource: 'library',
+        selectedLibrary: '/sites/demo/Documents',
+        selectedFile: '/sites/demo/Documents/handbook.md'
+      });
+      return {
+        toolbar: !!document.querySelector('.strata-toolbar'),
+        headings: document.querySelectorAll('#host h1, #host h2').length,
+        code: document.querySelectorAll('#host pre').length
+      };
+    });
     if (!drawn.toolbar) throw new Error('no toolbar');
     if (drawn.headings < 2) throw new Error('only ' + drawn.headings + ' headings');
     if (drawn.code < 1) throw new Error('no code blocks');
@@ -1949,6 +1958,116 @@ const webPartUrl = 'file://' + path.join(HARNESS_DIST, 'webpart.html');
       throw new Error('it is showing ' + JSON.stringify(drawn.heading));
     }
     if (!drawn.toolbar) throw new Error('no toolbar in a Teams tab');
+  });
+
+  /*
+   * A web part nobody has set up.
+   *
+   * It used to answer that by rendering the sample document, which reads as a
+   * configured web part showing a document about Markstrata - and in a Teams
+   * tab, where there is no property pane anywhere in sight, that is all anyone
+   * ever saw. It says so now, and says where the way in is, which differs by
+   * host and is only obvious in one of them.
+   */
+  await step('a web part nobody set up says so rather than showing a sample', async () => {
+    const shown = await page.evaluate(async () => {
+      window.webPartHarness.inTeams(undefined);
+      await window.webPartHarness.start();
+      const panel = document.querySelector('#host .strata-unconfigured');
+      return {
+        panel: panel ? (panel.textContent || '').trim() : '',
+        document: document.querySelectorAll('#host .strata-root').length,
+        toolbar: document.querySelectorAll('#host .strata-toolbar').length
+      };
+    });
+    if (!shown.panel) throw new Error('nothing was said; the host holds nothing');
+    if (shown.document !== 0) throw new Error('a document was rendered anyway');
+    if (shown.toolbar !== 0) throw new Error('a toolbar was rendered over nothing');
+    if (shown.panel.indexOf('No document chosen yet') === -1) {
+      throw new Error('it says ' + JSON.stringify(shown.panel.slice(0, 80)));
+    }
+  });
+
+  await step('and points at the way in, which is different in each host', async () => {
+    const said = await page.evaluate(async () => {
+      const read = () => {
+        const panel = document.querySelector('#host .strata-unconfigured');
+        return panel ? (panel.textContent || '').trim() : '';
+      };
+
+      window.webPartHarness.inTeams(undefined);
+      await window.webPartHarness.start();
+      const onPage = read();
+      window.webPartHarness.editing(true);
+      const editingPage = read();
+
+      window.webPartHarness.inTeams('desktop');
+      await window.webPartHarness.start();
+      const inTeams = read();
+      window.webPartHarness.inTeams(undefined);
+
+      return { onPage: onPage, editingPage: editingPage, inTeams: inTeams };
+    });
+
+    if (said.onPage.indexOf('edit this page') === -1) {
+      throw new Error('a reader on a page is told: ' + JSON.stringify(said.onPage));
+    }
+    if (said.editingPage.indexOf('property pane') === -1) {
+      throw new Error('an author is told: ' + JSON.stringify(said.editingPage));
+    }
+    if (said.inTeams.indexOf("tab's settings") === -1) {
+      throw new Error('a Teams tab is told: ' + JSON.stringify(said.inTeams));
+    }
+    /* The one that mattered: a Teams tab must not be told to open a property
+       pane that a Teams tab does not have. */
+    if (said.inTeams.indexOf('property pane') !== -1) {
+      throw new Error('a Teams tab is pointed at a property pane it has not got');
+    }
+  });
+
+  await step('an author can take the sample, and a reader is not offered it', async () => {
+    const outcome = await page.evaluate(async () => {
+      await window.webPartHarness.start();
+      const offeredToReader = !!document.querySelector('.strata-unconfigured-sample');
+
+      window.webPartHarness.editing(true);
+      const button = document.querySelector('.strata-unconfigured-sample');
+      if (!button) { return { offeredToReader: offeredToReader, took: 'no button' }; }
+      button.click();
+      await new Promise((resolve) => setTimeout(resolve, 300));
+
+      const heading = document.querySelector('#host .strata-root h1');
+      return {
+        offeredToReader: offeredToReader,
+        took: heading ? heading.textContent : 'nothing was rendered',
+        panelGone: !document.querySelector('.strata-unconfigured')
+      };
+    });
+
+    if (outcome.offeredToReader) throw new Error('a reader was offered the sample');
+    if (outcome.took.indexOf('Markstrata') === -1) {
+      throw new Error('after taking the sample it shows ' + JSON.stringify(outcome.took));
+    }
+    if (!outcome.panelGone) throw new Error('the panel is still there');
+  });
+
+  await step('and a web part that is set up shows the document, not the panel', async () => {
+    const shown = await page.evaluate(async () => {
+      await window.webPartHarness.start({
+        contentSource: 'library',
+        selectedLibrary: '/sites/demo/Documents',
+        selectedFile: '/sites/demo/Documents/Runbooks/deploy.md'
+      });
+      const heading = document.querySelector('#host h1');
+      return {
+        panel: !!document.querySelector('.strata-unconfigured'),
+        heading: heading ? heading.textContent : ''
+      };
+    });
+    if (shown.panel) throw new Error('a configured web part shows the panel');
+    if (shown.heading.indexOf('Deploying') === -1) {
+      throw new Error('it is showing ' + JSON.stringify(shown.heading));
+    }
   });
 
   await step('a library that will not answer is a message, not a broken page', async () => {

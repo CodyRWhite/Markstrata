@@ -1,0 +1,44 @@
+{
+  "$schema": "https://developer.microsoft.com/en-us/json-schemas/teams/v1.17/MicrosoftTeams.schema.json",
+  "manifestVersion": "1.17",
+  "version": "0.0.0",
+  "id": "9f2c1d64-5a7e-4b31-8f0c-2d6a41e7b905",
+  "packageName": "com.markstrata.webpart",
+  "developer": {
+    "name": "Cody White",
+    "websiteUrl": "https://markstrata.com/",
+    "privacyUrl": "https://markstrata.com/privacy/",
+    "termsOfUseUrl": "https://markstrata.com/terms/",
+    "mpnId": ""
+  },
+  "publisherDocsUrl": "https://markstrata.com/docs/",
+  "icons": {
+    "color": "color.png",
+    "outline": "outline.png"
+  },
+  "name": {
+    "short": "Markstrata",
+    "full": "Markstrata - markdown for SharePoint and Teams"
+  },
+  "description": {
+    "short": "Read markdown from this team's files, themed and rendered properly.",
+    "full": "Markstrata renders markdown files the way you wrote them. Point a tab at a .md file in this team's Files and it is rendered with a table of contents, working code blocks with syntax highlighting, GitHub alerts and Obsidian callouts, Mermaid diagrams, KaTeX maths and sortable tables, in a theme modelled on GitHub, Obsidian or VS Code, in light or dark.\n\nA channel's Files are a SharePoint document library, so the documents are the ones already there. Nothing is copied anywhere and nothing leaves your tenant: the tab reads the file with your own signed-in session. Links between markdown documents open in the tab rather than downloading the file, so a folder of documentation reads as a set rather than as files."
+  },
+  "accentColor": "#0E7C86",
+  "configurableTabs": [
+    {
+      "configurationUrl": "https://{teamSiteDomain}/_layouts/15/TeamsLogon.aspx?SPFX=true&dest=/_layouts/15/teamshostedapp.aspx%3Fteams%26componentId=74aecd51-7619-4ca6-b81a-6c670d6098b3%26openPropertyPane=true%26forceLocale={locale}",
+      "canUpdateConfiguration": true,
+      "scopes": [
+        "team",
+        "groupChat"
+      ]
+    }
+  ],
+  "validDomains": [
+    "*.sharepoint.com",
+    "*.sharepoint-df.com",
+    "*.login.microsoftonline.com"
+  ],
+  "showLoadingIndicator": false
+}

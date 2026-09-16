@@ -265,6 +265,12 @@ const harness = {
       ? Array.from(select.options).map((option: HTMLOptionElement) => option.text)
       : [];
   },
+  /** The page is being edited by an author, or read by everybody else. */
+  editing: (isEditing: boolean): void => {
+    if (webPart) {
+      webPart.hostSetDisplayMode(isEditing ? DisplayMode.Edit : DisplayMode.Read);
+    }
+  },
   /**
    * Start the next web part as though the page were a Teams tab. 'desktop',
    * 'web', 'android', 'ios' are what Teams reports; undefined is SharePoint.
