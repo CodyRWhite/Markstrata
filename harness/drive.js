@@ -3654,6 +3654,19 @@ const LIBRARY_PATH = '/sites/demo/Documents';
     if (shared.atDocument.indexOf('Deploy%20notes.md') === -1) {
       throw new Error('it named ' + JSON.stringify(shared.atDocument));
     }
+
+    /* Named against the folder the page reads from, not from the server root.
+       The whole path was written out before, carrying the site and the library
+       whether or not they said anything. */
+    if (shared.atDocument.indexOf('strataDoc=Runbooks/Deploy%20notes.md') === -1) {
+      throw new Error('not the short form: ' + JSON.stringify(shared.atDocument));
+    }
+
+    /* And escaped only where it has to be. Every slash was %2F before, which
+       is most of what made the link unreadable. */
+    if (shared.atDocument.indexOf('%2F') !== -1) {
+      throw new Error('slashes came back encoded: ' + JSON.stringify(shared.atDocument));
+    }
   });
 
   await step('a library that will not answer is a message, not a broken page', async () => {

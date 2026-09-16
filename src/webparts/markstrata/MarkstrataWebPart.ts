@@ -495,7 +495,7 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
   private addressToShare(): string {
     const here: string = window.location.href;
     return this.navigator.path
-      ? addressForDocument(here, this.navigator.path)
+      ? addressForDocument(here, this.navigator.path, undefined, this.configuredFolder())
       : addressWithoutDocument(here);
   }
 
@@ -870,6 +870,20 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
     if (this.navigator.path) {
       return folderOf(this.navigator.path);
     }
+    return this.configuredFolder();
+  }
+
+  /**
+   * The folder the page itself reads from, whatever is open on top of it.
+   *
+   * Kept apart from imageBasePath because the two answer different questions.
+   * That one asks what the document on screen resolves against, which moves
+   * as a reader follows links. This one asks what the page resolves against
+   * when it is handed an address and has not opened anything yet, which is
+   * what a shared link is resolved against on the way back in, and so what a
+   * shared link has to be written against on the way out.
+   */
+  private configuredFolder(): string | undefined {
     if (this.properties.contentSource === 'library' && this.properties.selectedFile) {
       return folderOf(this.properties.selectedFile);
     }
