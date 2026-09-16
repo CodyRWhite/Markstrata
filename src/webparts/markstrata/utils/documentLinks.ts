@@ -95,10 +95,34 @@ export function followDocumentLinks(
       }
       event.preventDefault();
       const hash: number = target.indexOf('#');
-      open(hash === -1 ? target : target.slice(0, hash),
+      open(asPath(hash === -1 ? target : target.slice(0, hash)),
         hash === -1 ? '' : target.slice(hash + 1));
     });
   });
+}
+
+/**
+ * A href is a URL and SharePoint wants a path, and between the two is every
+ * space in every file name anybody has ever used.
+ *
+ * The href has to stay encoded: it is what the browser follows when somebody
+ * opens the link in a new tab, and it is left on the element for exactly that.
+ * What is handed over to be fetched is a server-relative path, which is what
+ * SharePoint reports and what it expects back - it does its own encoding, so
+ * an already-encoded path is asked for twice and found never.
+ *
+ * Nothing in a document with an ASCII name showed this: "deploy.md" is the
+ * same string either way. "Deploy notes.md" is not, and a wiki of any size is
+ * full of the second kind.
+ */
+function asPath(href: string): string {
+  try {
+    return decodeURIComponent(href);
+  } catch {
+    /* Not valid percent-encoding, so it was never encoded: use it as written
+       rather than refusing to open a document over a stray per cent sign. */
+    return href;
+  }
 }
 
 /* A markdown file, whatever else the link carries. */

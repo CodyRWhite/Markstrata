@@ -36,7 +36,7 @@ const path = require('node:path');
 
 const ROOT = path.join(__dirname, '..');
 const manifest = JSON.parse(
-  fs.readFileSync(path.join(ROOT, 'teams', 'manifest.json'), 'utf8')
+  fs.readFileSync(path.join(ROOT, 'config', 'teams-app-manifest.json'), 'utf8')
 );
 const webPart = JSON.parse(fs.readFileSync(
   path.join(ROOT, 'src', 'webparts', 'markstrata', 'MarkstrataWebPart.manifest.json'), 'utf8'
@@ -136,4 +136,26 @@ test('the icons it names are the ones the package carries', () => {
     const source = path.join(ROOT, 'teams', `${webPart.id}_${which}.png`);
     assert.ok(fs.existsSync(source), `teams/${webPart.id}_${which}.png is missing`);
   });
+});
+
+test('nothing but the icons is left where SPFx will ship it', () => {
+  /*
+   * SPFx globs every file under teams/ into the solution package. The first
+   * cut of this kept the hand-written manifest there and wrote the zip to
+   * teams/dist, so a .sppkg built after npm run teams carried
+   * ClientSideAssets/manifest.json - a generic name beside SPFx's own assets -
+   * and a stale copy of the whole Teams app inside the SharePoint one.
+   *
+   * Only the two icons belong in that folder, because those are what it is
+   * for: they are named by component id so that SharePoint's Sync to Teams
+   * can find them, which is the fallback if anybody ever uses it.
+   */
+  const inside = fs.readdirSync(path.join(ROOT, 'teams'));
+  const expected = [`${webPart.id}_color.png`, `${webPart.id}_outline.png`];
+
+  assert.deepEqual(
+    inside.sort(),
+    expected.sort(),
+    'anything else here is shipped inside the .sppkg'
+  );
 });

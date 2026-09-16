@@ -123,7 +123,18 @@ export function folderOf(href: string): string {
   }
   const path: string = href.split('#')[0].split('?')[0];
   const lastSlash: number = path.lastIndexOf('/');
-  return lastSlash <= 0 ? '' : path.slice(0, lastSlash);
+  const folder: string = lastSlash <= 0 ? '' : path.slice(0, lastSlash);
+
+  /* Decoded, exactly as fileOf below decodes the name beside it: this is
+     handed to SharePoint to list, and SharePoint does its own encoding. A
+     library called "Shared Documents" - which is most of them - was asked for
+     as "Shared%20Documents", found nothing, and every link in it went
+     unchecked without anything to show for it. */
+  try {
+    return decodeURIComponent(folder);
+  } catch {
+    return folder;
+  }
 }
 
 /** The file name a href ends in, decoded back to how SharePoint reports it. */

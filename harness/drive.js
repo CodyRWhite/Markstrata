@@ -2070,6 +2070,61 @@ const webPartUrl = 'file://' + path.join(HARNESS_DIST, 'webpart.html');
     }
   });
 
+  /*
+   * The shape a reader reported and the shape nothing here had: an index at
+   * the root of a library, a wiki link into a subfolder, and a file whose name
+   * has a space in it.
+   *
+   * Every document in these checks had an ASCII name, so every href was the
+   * same string encoded or not, so nothing noticed that the encoded one was
+   * being handed to SharePoint as a path. SharePoint encodes paths itself, so
+   * it was encoded twice and matched nothing. "deploy.md" hid it; "Deploy
+   * notes.md" does not, and neither does "Shared Documents", which is what the
+   * library is called in most tenants.
+   */
+  await step('a wiki link into a subfolder opens the document it names', async () => {
+    const opened = await page.evaluate(async () => {
+      await window.webPartHarness.start({
+        contentSource: 'library',
+        selectedLibrary: '/sites/demo/Documents',
+        selectedFile: '/sites/demo/Documents/index.md',
+        enableWikiLinks: true,
+        followDocumentLinks: true
+      });
+      await new Promise((resolve) => setTimeout(resolve, 400));
+
+      const link = Array.from(document.querySelectorAll('#host article a'))
+        .filter((anchor) => anchor.classList.contains('strata-wiki-link'))[0];
+      if (!link) { return { failed: 'the wiki link did not render as a link' }; }
+      if (!link.classList.contains('strata-doc-link')) {
+        return { failed: 'the web part did not take the click' };
+      }
+
+      const href = link.getAttribute('href');
+      link.click();
+      await new Promise((resolve) => setTimeout(resolve, 600));
+
+      const heading = document.querySelector('#host h1');
+      const banner = document.querySelector('#host .strata-status');
+      return {
+        href: href,
+        heading: heading ? heading.textContent : '',
+        banner: banner ? (banner.textContent || '').trim() : ''
+      };
+    });
+
+    if (opened.failed) throw new Error(opened.failed);
+    /* The href stays encoded, because that is what the browser follows when
+       somebody opens it in a new tab. */
+    if (opened.href.indexOf('%20') === -1) {
+      throw new Error('the href was left unencoded: ' + opened.href);
+    }
+    if (opened.banner) throw new Error(opened.banner);
+    if (opened.heading.indexOf('Deploying') === -1) {
+      throw new Error('after the click the web part shows ' + JSON.stringify(opened.heading));
+    }
+  });
+
   await step('a library that will not answer is a message, not a broken page', async () => {
     const shown = await page.evaluate(async () => {
       window.webPartHarness.refuse(true);

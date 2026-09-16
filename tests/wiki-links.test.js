@@ -103,7 +103,13 @@ const { folderOf, fileOf, byFolder } = wikiLinks;
 
 test('the folder is what gets asked, and the file is what is looked for', () => {
   const href = '/sites/team/Shared%20Documents/runbooks/Deploy%20runbook.md';
-  assert.equal(folderOf(href), '/sites/team/Shared%20Documents/runbooks');
+  /* Both decoded. This test used to expect the folder encoded, which is what
+     the code did and what made it wrong: the two halves are read together and
+     compared against one listing from SharePoint, and SharePoint reports
+     names decoded and encodes paths itself. A folder asked for as
+     "Shared%20Documents" was asked for as "Shared%2520Documents" and found
+     nothing, so every link in the library went unchecked in silence. */
+  assert.equal(folderOf(href), '/sites/team/Shared Documents/runbooks');
   assert.equal(fileOf(href), 'Deploy runbook.md', 'compared against SharePoint names, so decoded');
 });
 
@@ -128,4 +134,52 @@ test('links to one folder are asked for once', () => {
 
 test('a name that is not valid encoding is compared as written', () => {
   assert.equal(fileOf('/a/b/100%.md'), '100%.md');
+});
+
+/*
+ * A href is a URL and SharePoint wants a path.
+ *
+ * Every wiki link is written as a page name and turned into a href, which is
+ * percent-encoded because a href has to be. What is then asked of SharePoint
+ * is a server-relative path, and SharePoint encodes those itself - so an
+ * already-encoded one is encoded twice and matches nothing.
+ *
+ * Nothing caught it because every document in the tests and in the harness had
+ * an ASCII name: "deploy.md" is the same string encoded or not. "Deploy
+ * notes.md" is not, and neither is "Shared Documents", which is the name of
+ * the library in most tenants.
+ */
+test('the folder handed to SharePoint is a path, not a URL', () => {
+  assert.equal(
+    wikiLinks.folderOf('/sites/wiki/Shared%20Documents/Runbooks/Database%20setup/Server%20notes.md'),
+    '/sites/wiki/Shared Documents/Runbooks/Database setup'
+  );
+  /* The name beside it has always been decoded; these two are read together
+     and compared against one listing, so they have to agree. */
+  assert.equal(
+    wikiLinks.fileOf('/sites/wiki/Shared%20Documents/Runbooks/Database%20setup/Server%20notes.md'),
+    'Server notes.md'
+  );
+});
+
+test('a folder with nothing to decode is unchanged', () => {
+  assert.equal(
+    wikiLinks.folderOf('/sites/team/Docs/Runbooks/deploy.md'),
+    '/sites/team/Docs/Runbooks'
+  );
+  assert.equal(wikiLinks.folderOf('deploy.md'), '');
+  assert.equal(wikiLinks.folderOf('#heading'), '');
+});
+
+test('a stray per cent sign is not a reason to give up on a folder', () => {
+  /* Not valid percent-encoding, so it was never encoded. Better to hand back
+     what was written than to throw while rendering a document. */
+  assert.equal(
+    wikiLinks.folderOf('/sites/team/100%25 done/notes.md'),
+    '/sites/team/100% done'
+  );
+  assert.equal(
+    wikiLinks.folderOf('/sites/team/50% of it/notes.md'),
+    '/sites/team/50% of it'
+  );
 });

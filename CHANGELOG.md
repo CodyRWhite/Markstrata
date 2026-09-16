@@ -10,6 +10,21 @@ Entries below 0.0.10.0 were written before the switch and are three-part.
 
 ## 0.0.18.2
 
+- A wiki link to a document whose name has a space in it could never open it.
+  The link is written as a page name and turned into a href, which is
+  percent-encoded because a href has to be - and that encoded string was then
+  handed to SharePoint as a file path, which SharePoint encodes again, so it
+  asked for a file nobody has ever named. The same fault ran through link
+  checking: the folder was asked for encoded, found nothing, and every link in
+  the library went unchecked in silence. A library called "Shared Documents"
+  was enough to trigger it, which is most of them.
+- Nothing caught it because every document in the tests and the harness had an
+  ASCII name, where the encoded and unencoded strings are the same string. The
+  harness library now has an index at its root, a subfolder, and a document
+  called "Deploy notes.md", and a browser check clicks the wiki link and reads
+  what comes back. One of the existing tests had the fault written into it as
+  the expected answer, and now says why it does not.
+
 - A web part nobody has configured now says so. It used to render the sample
   document, which looks exactly like a configured web part showing a document
   about Markstrata, so the one state that needs an instruction was the one
@@ -34,7 +49,7 @@ Entries below 0.0.10.0 were written before the switch and are three-part.
   short name over 30 characters is refused at upload and the admin centre is a
   slow place to learn that.
 - `npm run teams` builds it: the manifest and the two icons, zipped into
-  `teams/dist/markstrata-teams.zip`, with the version stamped from
+  `dist/teams/markstrata-teams.zip`, with the version stamped from
   `package.json`. A tenant uploads that zip in the Teams admin centre instead
   of pressing Sync to Teams, and removes an app an earlier sync left behind so
   there are not two of them. Nothing new is hosted - the tab loads the

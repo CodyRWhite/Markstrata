@@ -96,7 +96,26 @@ function put(path: string, markdown: string): void {
   files[path] = { markdown: markdown, modified: '2026-01-05T09:00:00Z' };
 }
 
+/*
+ * An index at the root of the library pointing into a subfolder, which is how
+ * a wiki of any size is arranged and is the shape a reader reported a fault
+ * in: the link renders, the web part takes the click, and the file downloads
+ * anyway. The name carries a space because theirs did and because a space is
+ * the difference between a path and an encoded one.
+ */
+const INDEX: string = [
+  '# Wiki index',
+  '',
+  '## Testing',
+  '',
+  '- [[Runbooks/Deploy notes|the deploy notes]]',
+  '- [Deploy notes, as an ordinary link](Runbooks/Deploy%20notes.md)',
+  ''
+].join('\n');
+
 put(`${LIBRARY}/handbook.md`, typeof SAMPLE === 'string' ? SAMPLE : '# Handbook\n');
+put(`${LIBRARY}/index.md`, INDEX);
+put(`${LIBRARY}/Runbooks/Deploy notes.md`, DEPLOY);
 put(`${LIBRARY}/Runbooks/deploy.md`, DEPLOY);
 put(`${LIBRARY}/Runbooks/rollback.md`, ROLLBACK);
 

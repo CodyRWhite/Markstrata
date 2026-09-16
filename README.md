@@ -170,7 +170,7 @@ on every push.
 Markstrata also runs as a **Teams tab**: a channel's Files are a SharePoint
 library, so the same web part configured against the same libraries works
 there. The Teams app package is written here rather than synced from the app
-catalog - `npm run teams` builds `teams/dist/markstrata-teams.zip` from
+catalog - `npm run teams` builds `dist/teams/markstrata-teams.zip` from
 `teams/manifest.json` and the icons in `teams/`, and a tenant uploads that zip
 in the Teams admin centre. The `.sppkg` still has to be installed in the
 SharePoint app catalog, because that is where the tab loads the web part from.
