@@ -2,7 +2,12 @@ name: CI
 
 on:
   push:
-    branches: ['**']
+    # Everything except archive/**, which holds history rather than work in
+    # progress. archive/inkora-v1 is the project as it stood before the rename,
+    # built against a toolchain two years of dependencies ago; running CI over
+    # it tests nothing and reports a red mark on a branch nobody is going to
+    # fix. A negative pattern later in the list wins over the '**' before it.
+    branches: ['**', '!archive/**']
   pull_request:
   workflow_dispatch:
 
