@@ -181,7 +181,10 @@ const LIBRARY_PATH = '/sites/demo/Documents';
     if (bar.order.join(' ') !== expected.join(' ')) {
       throw new Error('the bar holds ' + JSON.stringify(bar.order));
     }
-    if (bar.actions.join(' ') !== 'Reload History Print Dark mode') {
+    /* Reload and History are about the file, Share and Print are about the
+       document on screen, and the mode switch is about the page. Share sits
+       with Print rather than beside Reload for that reason. */
+    if (bar.actions.join(' ') !== 'Reload History Share Print Dark mode') {
       throw new Error('the actions are ' + JSON.stringify(bar.actions));
     }
     if (Math.abs(bar.top - bar.bottom) > 0.5) {
@@ -3018,6 +3021,88 @@ const LIBRARY_PATH = '/sites/demo/Documents';
     }
     if (seen.toAuthor.indexOf('Open a linked document here') === -1) {
       throw new Error('an author was told ' + JSON.stringify(seen.toAuthor));
+    }
+  });
+
+  /*
+   * The share button. A reader three links into a wiki is looking at a
+   * document the page's own address says nothing about - it still reads
+   * Wiki.aspx - so sending that address sends a colleague to the front page.
+   * This copies the address of the document on screen.
+   */
+  await step('sharing copies the address of the document on screen', async () => {
+    const shared = await page.evaluate(async () => {
+      const settle = () => new Promise((resolve) => setTimeout(resolve, 600));
+      window.webPartHarness.addressDocument(undefined);
+      await window.webPartHarness.start({
+        contentSource: 'library',
+        selectedLibrary: '/sites/demo/Documents',
+        selectedFile: '/sites/demo/Documents/index.md',
+        enableWikiLinks: true,
+        followDocumentLinks: true,
+        showToolbar: 'always'
+      });
+      await settle();
+
+      const shareButton = () => Array.prototype.slice
+        .call(document.querySelectorAll('#host .strata-toolbar-actions .strata-btn'))
+        .filter((button) => (button.textContent || '').indexOf('Share') !== -1)[0];
+
+      if (!shareButton()) { return { failed: 'there is no share button' }; }
+
+      /* The clipboard is not readable from a file:// page without a
+         permission nobody grants a test, so the write is intercepted. That
+         still proves the whole path: the button was found, clicked, and asked
+         to copy something, and what it asked to copy is what is checked. */
+      const copied = [];
+      const realClipboard = navigator.clipboard;
+      Object.defineProperty(navigator, 'clipboard', {
+        configurable: true,
+        value: { writeText: (text) => { copied.push(text); return Promise.resolve(); } }
+      });
+
+      shareButton().click();
+      await settle();
+      const atHome = copied[copied.length - 1];
+
+      const link = Array.from(document.querySelectorAll('#host article a'))
+        .filter((anchor) => anchor.classList.contains('strata-doc-link')
+          && (anchor.getAttribute('href') || '').indexOf('Deploy%20notes') !== -1)[0];
+      if (!link) {
+        Object.defineProperty(navigator, 'clipboard', { configurable: true, value: realClipboard });
+        return { failed: 'no link to follow before sharing' };
+      }
+      link.click();
+      await settle();
+
+      shareButton().click();
+      await settle();
+      const atDocument = copied[copied.length - 1];
+
+      Object.defineProperty(navigator, 'clipboard', { configurable: true, value: realClipboard });
+      return { atHome: atHome, atDocument: atDocument, copies: copied.length };
+    });
+
+    if (shared.failed) throw new Error(shared.failed);
+    if (shared.copies !== 2) {
+      throw new Error('the button copied ' + shared.copies + ' times, expected two');
+    }
+
+    /* At the configured document the page address already is its address, so
+       there is nothing to add to it. */
+    if (shared.atHome.indexOf('strataDoc') !== -1) {
+      throw new Error('the page own document was shared as ' + JSON.stringify(shared.atHome));
+    }
+
+    /* And a followed one is named, encoded, exactly once. */
+    if (shared.atDocument.indexOf('strataDoc=') === -1) {
+      throw new Error('a followed document was shared as ' + JSON.stringify(shared.atDocument));
+    }
+    if (shared.atDocument.split('strataDoc=').length - 1 !== 1) {
+      throw new Error('two documents on one address: ' + JSON.stringify(shared.atDocument));
+    }
+    if (shared.atDocument.indexOf('Deploy%20notes.md') === -1) {
+      throw new Error('it named ' + JSON.stringify(shared.atDocument));
     }
   });
 

@@ -61,7 +61,10 @@ import './styles/print.css';
 import { MarkdownProcessor, IMarkdownProcessorOptions } from './utils/MarkdownProcessor';
 import { folderOf } from './utils/imagePaths';
 import { DocumentNavigator, ILoadedDocument } from './utils/documentNavigator';
-import { documentFromAddress, DOCUMENT_PARAMETER, IWantedDocument } from './utils/documentParameter';
+import {
+  documentFromAddress, addressForDocument, addressWithoutDocument,
+  DOCUMENT_PARAMETER, IWantedDocument
+} from './utils/documentParameter';
 import { isRemote, fetchableUrl, remoteFailure } from './utils/remoteDocuments';
 import { ThemeOverride } from './utils/themeOverride';
 import { PaneSources } from './paneSources';
@@ -478,6 +481,21 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
     await this.navigator.open(wanted.path, wanted.heading, false);
   }
 
+  /**
+   * The address of the document on screen.
+   *
+   * A reader deep in a wiki is looking at something the page's own address
+   * says nothing about: it still reads Wiki.aspx, so sending it to a colleague
+   * sends them to the front page. The configured document is the exception and
+   * needs no parameter, because the page address already is its address.
+   */
+  private addressToShare(): string {
+    const here: string = window.location.href;
+    return this.navigator.path
+      ? addressForDocument(here, this.navigator.path)
+      : addressWithoutDocument(here);
+  }
+
   /* Drawn on a render of its own, because working this out is the last thing
      startUp does and the render that would have carried it has already been
      and gone. Nothing is drawn for a reader, so nothing is redrawn for one. */
@@ -693,6 +711,13 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
         ? (path: string) => this.sharePoint.getFileId(path)
         : undefined,
       webUrl: this.context.pageContext.web.serverRelativeUrl,
+      /* Only where the address it builds would be honoured on the way back in.
+         A button that copies a link leading somewhere else is worse than no
+         button, and following being off is exactly that. */
+      shareAddress: this.properties.followDocumentLinks
+        && this.properties.contentSource !== 'manual'
+        ? () => this.addressToShare()
+        : undefined,
       /* A library or a URL can hand over another document; markdown typed
          into the web part cannot, because there is no folder for a link in it
          to mean anything against. And only a reader is reading: in page edit

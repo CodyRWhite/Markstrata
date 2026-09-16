@@ -57,6 +57,20 @@ function readCode(block: HTMLElement): string {
   return code ? code.textContent || '' : '';
 }
 
+/**
+ * Puts `text` on the clipboard and tells the reader it worked, on `button`.
+ *
+ * Exported because the toolbar's share button wants exactly this and there is
+ * no second way to copy something that is worth having: the fallback for a
+ * page the clipboard API will not serve is the fiddly part, and two copies of
+ * it would drift.
+ */
+export function copyToClipboard(
+  text: string, button: HTMLButtonElement, feedback: CopyFeedback
+): void {
+  copy(text, button, feedback);
+}
+
 function copy(text: string, button: HTMLButtonElement, feedback: CopyFeedback): void {
   const done = (success: boolean): void => feedback.show(button, success);
 

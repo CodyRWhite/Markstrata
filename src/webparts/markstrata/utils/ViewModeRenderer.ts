@@ -38,7 +38,7 @@ import type { IFileMetadata } from './SharePointService';
 import { splitFrontMatter, IFrontMatter } from './frontMatter';
 import { BackToTop } from './backToTop';
 import {
-  CLOCK_ICON, RELOAD_ICON, HISTORY_ICON, PRINT_ICON, themeIcon
+  CLOCK_ICON, RELOAD_ICON, HISTORY_ICON, LINK_ICON, PRINT_ICON, themeIcon
 } from './icons';
 
 export type TocPosition = 'left' | 'right' | 'inline' | 'off';
@@ -81,6 +81,12 @@ export interface IViewOptions {
   officeFileId?: (path: string) => Promise<string | undefined>;
   /** The site the page is on, server relative: the preview is addressed from it. */
   webUrl?: string;
+  /**
+   * The address of what is on screen, to put on the clipboard. Undefined
+   * leaves the share button out, which is right wherever the address would
+   * not bring somebody back to the same document.
+   */
+  shareAddress?: () => string;
   /** A heading in the document to land on once it is drawn, from a link. */
   landOnHeading?: string;
   backToTop?: BackToTop;
@@ -388,6 +394,24 @@ export class ViewModeRenderer {
     if (options.canShowVersions) {
       actions.appendChild(this.button('History', 'Show previous versions of this file',
         () => this.callbacks.onShowVersions(), HISTORY_ICON));
+    }
+    /*
+     * A reader who has followed links into a wiki is looking at a document the
+     * page's own address says nothing about: the address bar still reads
+     * Wiki.aspx, so sending it to somebody sends them to the front page. This
+     * copies the address of the document actually on screen.
+     *
+     * Only where that address would work. It is built out of ?strataDoc=, so
+     * it needs a page that will honour one, and a button that copies a link
+     * leading somewhere else is worse than no button.
+     */
+    if (options.shareAddress) {
+      const share: HTMLButtonElement = this.button(
+        'Share', 'Copy a link to this document', () => {
+          this.enhancer.copyToClipboard((options.shareAddress as () => string)(), share);
+        }, LINK_ICON
+      );
+      actions.appendChild(share);
     }
     if (options.showPrintButton) {
       actions.appendChild(this.button('Print', 'Print or save as PDF',

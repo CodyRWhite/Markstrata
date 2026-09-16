@@ -40,6 +40,11 @@ export const HISTORY_ICON: string =
   `${SVG_OPEN}<path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/>` +
   '<path d="M12 8v4l3 2"/></svg>';
 
+/** Two links of a chain, for copying the address of what is on screen. */
+export const LINK_ICON: string =
+  `${SVG_OPEN}<path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/>` +
+  '<path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg>';
+
 /** A printer. */
 export const PRINT_ICON: string =
   `${SVG_OPEN}<path d="M7 9V3h10v6"/><path d="M7 19H5a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>` +

@@ -54,11 +54,6 @@ export interface IWantedDocument {
   heading: string;
 }
 
-/** A markdown file, which is the only thing this web part can render. */
-function isMarkdown(path: string): boolean {
-  return /\.(md|markdown)$/i.test(path);
-}
-
 /**
  * Reads the document out of a query string.
  *
@@ -86,16 +81,31 @@ export function documentFromAddress(
     return undefined;
   }
 
-  /* The heading travels inside the value rather than as the address's own
-     fragment, because the fragment belongs to the page and SharePoint uses it.
-     It arrives encoded, which URLSearchParams has already undone. */
-  const hash: number = asked.indexOf('#');
-  const wanted: string = hash === -1 ? asked : asked.slice(0, hash);
-  const heading: string = hash === -1 ? '' : asked.slice(hash + 1);
-
-  if (!wanted || !isMarkdown(wanted)) {
+  /*
+   * The heading travels inside the value rather than as the address's own
+   * fragment, because the fragment belongs to the page and SharePoint uses it.
+   * It arrives encoded, which URLSearchParams has already undone - and that is
+   * the difficulty: once decoded, a # that is part of a file name looks exactly
+   * like the one separating the heading.
+   *
+   * So the split is made at the extension rather than at the first #. The
+   * document part has to end in .md or .markdown, because that is the only
+   * thing this can open, and everything after that is the heading. Splitting on
+   * the first # instead meant a file called "What is #1 + why.md" was read as a
+   * document called "What is " and refused for not being markdown, which is a
+   * refusal with nothing in it a reader could act on.
+   *
+   * Non-greedy, so "notes.md#see-a.md" is notes.md and a heading rather than
+   * one long file name. A folder that ends in .md still works, because the
+   * match has to reach the end of the value and backtracks until it does.
+   */
+  const split: RegExpExecArray | null =
+    /^(.*?\.(?:md|markdown))(?:#(.*))?$/i.exec(asked);
+  if (!split) {
     return undefined;
   }
+  const wanted: string = split[1];
+  const heading: string = split[2] || '';
 
   /* A whole address, which a menu entry can only usefully carry when the page
      is already reading from one: the base it would otherwise be resolved
@@ -149,7 +159,38 @@ function asPath(resolved: string): string {
  * rather than a hand-written guess at the format.
  */
 export function addressForDocument(pageUrl: string, documentPath: string, heading?: string): string {
+  const base: string = addressWithoutDocument(pageUrl);
   const value: string = heading ? `${documentPath}#${heading}` : documentPath;
-  const separator: string = pageUrl.indexOf('?') === -1 ? '?' : '&';
-  return `${pageUrl}${separator}${DOCUMENT_PARAMETER}=${encodeURIComponent(value)}`;
+  const separator: string = base.indexOf('?') === -1 ? '?' : '&';
+  return `${base}${separator}${DOCUMENT_PARAMETER}=${encodeURIComponent(value)}`;
+}
+
+/**
+ * The same page address with any document taken off it.
+ *
+ * A reader following links arrived at one of these, so the address to build
+ * from already carries a document and appending a second would leave two of
+ * the same parameter, with the browser free to read either. Also what the
+ * address is for the page's own configured document: not an empty parameter,
+ * no parameter.
+ *
+ * Everything else on the address is left where it is. A tenant puts its own
+ * parameters on a page and they are not this code's to tidy up.
+ */
+export function addressWithoutDocument(pageUrl: string): string {
+  const url: string = pageUrl || '';
+  const mark: number = url.indexOf('?');
+  if (mark === -1) {
+    return url;
+  }
+
+  const hash: number = url.indexOf('#', mark);
+  const query: string = hash === -1 ? url.slice(mark + 1) : url.slice(mark + 1, hash);
+  const fragment: string = hash === -1 ? '' : url.slice(hash);
+
+  const kept: string[] = query.split('&').filter((pair: string) =>
+    pair.length > 0 && pair.split('=')[0] !== DOCUMENT_PARAMETER);
+
+  const head: string = url.slice(0, mark);
+  return kept.length ? `${head}?${kept.join('&')}${fragment}` : `${head}${fragment}`;
 }

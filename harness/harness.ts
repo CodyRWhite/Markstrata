@@ -284,6 +284,9 @@ function draw(showing?: string, heading?: string): void {
       ? ['handbook.md'].concat(navigator.trailNames, [navigator.name])
       : undefined,
     onGoToCrumb: (index: number) => { void navigator.goTo(index - 1, true); },
+    shareAddress: () => (navigator.path
+      ? `${window.location.href}?strataDoc=${encodeURIComponent(navigator.path)}`
+      : window.location.href),
     landOnHeading: heading !== undefined ? heading : navigator.takeHeading(),
     canReload: state.canReload,
     canShowVersions: state.canShowVersions,

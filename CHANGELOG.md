@@ -61,6 +61,21 @@ Entries below 0.0.10.0 were written before the switch and are three-part.
   rather than beside it, so the browser's own Back button walks the same path
   and the two cannot disagree about where the reader has been.
 
+- A Share button in the toolbar, which copies the address of the document on
+  screen. A reader three links into a wiki is looking at something the page's
+  own address says nothing about: it still reads Wiki.aspx, so sending it to a
+  colleague sends them to the front page. The button builds the same
+  `?strataDoc=` address a menu entry uses, so what arrives is the document they
+  were looking at. At the page's configured document there is nothing to add,
+  because the page address already is its address. It appears only where that
+  address would be honoured coming back in: a button that copies a link leading
+  somewhere else is worse than no button.
+- A document whose name contains a `#` can be named in an address. The value is
+  decoded before it is read, at which point a `#` in a file name looks exactly
+  like the one that separates a heading, so `What is #1 + why.md` was read as a
+  document called "What is " and refused for not being markdown. The split is
+  made at the extension now rather than at the first `#`.
+
 - The release refuses to publish a package with no Teams app inside it. Without
   the app the package still builds, still installs, and Sync to Teams either
   does nothing or deploys something SPFx generated instead. That is silent from

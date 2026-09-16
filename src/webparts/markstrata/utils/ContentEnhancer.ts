@@ -34,7 +34,7 @@
 
 import { BackToTop, BackToTopButton } from './backToTop';
 import { ScrollOffset, chromeAbove } from './chromeOffset';
-import { attachCopyButtons } from './codeCopy';
+import { attachCopyButtons, copyToClipboard } from './codeCopy';
 import { HeadingTracker, ITocEntry, adoptAuthoredToc, buildToc, collectHeadings } from './contents';
 import { CopyFeedback } from './copyFeedback';
 import { attachDiagramTools } from './diagramTools';
@@ -66,6 +66,15 @@ export class ContentEnhancer {
   /** Wires every copy button inside `container` exactly once. */
   public attachCopyButtons(container: HTMLElement): void {
     attachCopyButtons(container, this.feedback);
+  }
+
+  /**
+   * Puts `text` on the clipboard and says so on `button`, the same way a code
+   * block's Copy does. Here rather than in the renderer because the thing that
+   * tells the reader it worked lives here.
+   */
+  public copyToClipboard(text: string, button: HTMLButtonElement): void {
+    copyToClipboard(text, button, this.feedback);
   }
 
   /** Puts Expand and Copy over every diagram. */

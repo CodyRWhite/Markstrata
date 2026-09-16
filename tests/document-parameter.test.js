@@ -106,3 +106,71 @@ test('the address a menu entry needs is built by the same file that reads it', (
   assert.equal(documentFromAddress(withHeading.slice(withHeading.indexOf('?')), undefined).heading,
     'Backups');
 });
+
+/*
+ * The address of the document on screen, for a reader who wants to send it to
+ * somebody. A reader deep in a wiki is looking at something the page's own
+ * address says nothing about: it still reads Wiki.aspx, so sending that sends
+ * them to the front page.
+ */
+const { addressWithoutDocument } = documentParameter;
+
+const PAGE = 'https://contoso.sharepoint.com/sites/wiki/SitePages/Wiki.aspx';
+
+test('an address for a document is the page plus the document', () => {
+  assert.equal(
+    addressForDocument(PAGE, '/sites/wiki/Shared Documents/Runbooks/Deploy notes.md'),
+    `${PAGE}?strataDoc=`
+      + '%2Fsites%2Fwiki%2FShared%20Documents%2FRunbooks%2FDeploy%20notes.md'
+  );
+});
+
+test('and it reads back as the document it named', () => {
+  /* The two halves have to agree, which is the whole reason they live in one
+     file. Every character that has to be encoded is in this name. */
+  const path = '/sites/wiki/Shared Documents/Q&A/What is #1 + why.md';
+  const address = addressForDocument(PAGE, path);
+  const read = documentFromAddress(
+    address.slice(address.indexOf('?')), '/sites/wiki/Shared Documents'
+  );
+  assert.equal(read.path, path);
+});
+
+test('a heading travels with it', () => {
+  const address = addressForDocument(PAGE, '/sites/wiki/docs/a.md', 'backups');
+  const read = documentFromAddress(
+    address.slice(address.indexOf('?')), '/sites/wiki/docs'
+  );
+  assert.equal(read.heading, 'backups');
+});
+
+/*
+ * A reader following links arrived at an address that already names a
+ * document. Appending a second would leave two of the same parameter on one
+ * address, with the browser free to read either.
+ */
+test('a document already on the address is replaced, not doubled', () => {
+  const arrived = `${PAGE}?strataDoc=%2Fsites%2Fwiki%2Fdocs%2Fold.md`;
+  const shared = addressForDocument(arrived, '/sites/wiki/docs/new.md');
+  assert.equal(shared.split('strataDoc=').length - 1, 1, shared);
+  assert.match(shared, /new\.md/);
+  assert.doesNotMatch(shared, /old\.md/);
+});
+
+test('the page own address is the page with no document on it', () => {
+  assert.equal(addressWithoutDocument(`${PAGE}?strataDoc=%2Fa%2Fb.md`), PAGE);
+  assert.equal(addressWithoutDocument(PAGE), PAGE);
+});
+
+test('and a tenant own parameters are left exactly where they were', () => {
+  /* A page carries whatever a tenant puts on it, and none of it is this
+     code's to tidy up. */
+  assert.equal(
+    addressWithoutDocument(`${PAGE}?env=test&strataDoc=%2Fa.md&mode=wide`),
+    `${PAGE}?env=test&mode=wide`
+  );
+  assert.equal(
+    addressWithoutDocument(`${PAGE}?strataDoc=%2Fa.md#section`),
+    `${PAGE}#section`
+  );
+});
