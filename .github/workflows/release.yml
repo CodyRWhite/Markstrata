@@ -2,7 +2,14 @@ name: Release
 
 # Tag a commit to cut a release:
 #   node scripts/set-version.js 1.2.0.0
-#   git commit -am "Cut 1.2.0.0" && git tag v1.2.0.0 && git push --follow-tags
+#   git commit -am "Cut 1.2.0.0" && git tag -s v1.2.0.0 -m "Markstrata 1.2.0.0"
+#   git push --follow-tags
+#
+# -s, because a tag cut any other way is lightweight: a bare name on a commit,
+# with no signature of its own and nothing for anybody to check. Note that a
+# release dispatched from the Actions tab rather than tagged here writes a
+# lightweight tag, since the runner has no key to sign with and should not be
+# given one. Tag locally when the tag matters.
 #
 # Versions are four-part, matching what SharePoint compares. A three-part tag
 # still works and is treated as build zero.

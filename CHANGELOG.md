@@ -26,10 +26,18 @@ Entries below 0.0.10.0 were written before the switch and are three-part.
   is a reference, and leaving those in place would have kept the old commits
   reachable and the name with them. They were superseded pre-releases of a
   pre-1.0 product and this release replaces all of them.
-- One consequence worth knowing about: the commits before this no longer carry
-  their signatures. Rewriting a commit invalidates the signature over it, and
-  there is no way to re-sign somebody else's work. Commits from here on are
-  signed as before.
+- Every commit is signed again, all 283 of them. The rewrite had stripped the
+  signatures, because a signature covers the commit object and changing the
+  object invalidates it, so the whole history came through unverified. It was
+  re-signed afterwards, which is only possible because every commit here has
+  one author and that author holds the key; it would not be possible for work
+  somebody else wrote. The trees are untouched: the tip's tree hashes the same
+  before and after, and the tests pass either side.
+- Tags are annotated and signed now, rather than lightweight. A lightweight tag
+  is a name pointing at a commit and carries no signature of its own, so there
+  is nothing on it to verify and nothing to repair when it reads as unverified.
+  An annotated tag is an object in its own right and can be signed, which is
+  what a released version should be.
 
 ## 0.0.18.4
 
