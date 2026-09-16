@@ -116,7 +116,13 @@ const PAGES = [
   },
   {
     id: 'support', folder: 'support', label: 'Support', title: 'Support - Markstrata',
-    section: 'evaluate',
+    /* Out of the navigation and into the footer, beside the privacy policy and
+       the terms. It sat in Evaluate because it was in the old navigation, but
+       nobody deciding whether to install this is reading about ways to help;
+       it is a page somebody arrives at on purpose, which is what the footer is
+       for. Hidden has never meant orphaned here and there is a check for
+       that. */
+    hidden: true,
     source: 'docs/site/support.md',
     description: 'Markstrata is free and MIT licensed. Ways to help, most of which cost nothing.'
   },

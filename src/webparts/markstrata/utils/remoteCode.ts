@@ -108,7 +108,7 @@ async function fill(block: HTMLElement, fetchCode: FetchCode): Promise<void> {
     const fetched: string = await fetchCode(fetchableUrl(src));
     show(block, sliceLines(fetched, fragmentRange(src)));
   } catch (error) {
-    fail(block, remoteFailure(src, error));
+    fail(block, remoteFailure(src, error, 'file'));
   }
 }
 

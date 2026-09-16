@@ -165,3 +165,25 @@ test('and a relative entry still works on a page reading from a URL', () => {
   );
   assert.equal(wanted.path, 'https://raw.githubusercontent.com/c/w/main/docs/sub/a.md');
 });
+
+/*
+ * The same failure, worded for what the caller went looking for. A code fence
+ * naming a source file is reading somebody's code, not opening a page, and
+ * telling a reader their code block could not read a "document" is a small lie
+ * that makes them look for the wrong thing.
+ */
+test('a failure says what was being looked for', () => {
+  const asDocument = remoteFailure('https://example.com/a.md', new TypeError('Failed to fetch'));
+  const asFile = remoteFailure('https://example.com/a.ts', new TypeError('Failed to fetch'), 'file');
+
+  assert.match(asDocument, /read this document from/);
+  assert.match(asFile, /read this file from/);
+  /* Everything else about it is the same, including never saying not found. */
+  assert.match(asFile, /does not allow pages on this site to read it/);
+  assert.doesNotMatch(asFile, /not found/i);
+});
+
+test('and a server that answered still speaks for itself either way', () => {
+  const reported = new Error('Could not load https://example.com/a.ts (HTTP 403)');
+  assert.match(remoteFailure('https://example.com/a.ts', reported, 'file'), /HTTP 403/);
+});

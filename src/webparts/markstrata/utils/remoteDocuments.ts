@@ -94,8 +94,12 @@ function hostOf(url: string): string {
  * from the error, and the message says both rather than picking one and being
  * wrong half the time. What it must not do is say "not found", which sends
  * somebody to look for a file that is sitting right where they put it.
+ *
+ * `kind` is what the caller went looking for, and defaults to "document"
+ * because that is what most of them want. A code fence naming a source file
+ * says "file": it is showing somebody's code, not opening a page.
  */
-export function remoteFailure(url: string, error: unknown): string {
+export function remoteFailure(url: string, error: unknown, kind?: string): string {
   const host: string = hostOf(fetchableUrl(url)) || 'that server';
   const reported: string = (error as Error) && (error as Error).message
     ? (error as Error).message : '';
@@ -106,7 +110,11 @@ export function remoteFailure(url: string, error: unknown): string {
     return reported;
   }
 
-  return `Could not read this document from ${host}.`
+  /* "document" where a document was asked for, "file" in a code block, which
+     is reading somebody's source rather than a page. The word is the caller's
+     because only the caller knows which it asked for. */
+  const what: string = kind || 'document';
+  return `Could not read this ${what} from ${host}.`
     + ` Either it is not there, or ${host} does not allow pages on this site to`
     + ' read it. A server has to opt in to that and most do not.';
 }

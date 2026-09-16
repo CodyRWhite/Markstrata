@@ -10,6 +10,23 @@ Entries below 0.0.10.0 were written before the switch and are three-part.
 
 ## 0.0.18.4
 
+- The Share button has a setting of its own, beside the print button, and is
+  greyed out where following is off because the link it copies is the one that
+  setting reads.
+- A code fence that cannot reach the file it names says "file" rather than
+  "document". It reuses the wording written for a document that would not open,
+  and telling somebody their code block could not read a document sends them
+  looking for the wrong thing.
+- Support has moved out of the navigation and into the footer, beside the
+  privacy policy and the terms. Nobody deciding whether to install this is
+  reading about ways to help; it is a page somebody arrives at on purpose.
+- The rule deciding when a code block offers to open full size can be checked
+  without a browser. It is split from the measuring, because jsdom has no
+  layout: every measurement there is zero, so a test written against an element
+  would have passed while testing nothing, which is worse than no test. The
+  browser still does the measuring and the harness still drives it against real
+  blocks in all three themes.
+
 - The website is rebuilt. It served two readers as though they were one: an
   administrator deciding whether to install this and somebody who has to write
   a document in it were offered the same seven links in the same bar. The

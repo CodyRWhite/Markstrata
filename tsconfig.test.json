@@ -27,6 +27,7 @@
     "src/webparts/markstrata/utils/remoteDocuments.ts",
     "src/webparts/markstrata/utils/officeEmbeds.ts",
     "src/webparts/markstrata/utils/remoteCode.ts",
+    "src/webparts/markstrata/utils/codeZoom.ts",
     "src/webparts/markstrata/utils/tables.ts"
   ]
 }

@@ -78,6 +78,7 @@ export interface IMarkstrataWebPartProps {
   tocWidthValue: number;
   toolbarVisibility: 'always' | 'editing' | 'never';
   showPrintButton: boolean;
+  showShareButton: boolean;
   showSourceInfo: boolean;
   pinMeta: boolean;
   enableVersionHistory: boolean;

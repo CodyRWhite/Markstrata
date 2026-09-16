@@ -113,13 +113,50 @@ function worthOpening(block: HTMLElement): boolean {
   if (!pre) {
     return false;
   }
-  if (pre.scrollHeight > pre.clientHeight + FITS_WITHIN) {
+  return overflows({
+    scrollHeight: pre.scrollHeight,
+    clientHeight: pre.clientHeight,
+    scrollWidth: pre.scrollWidth,
+    clientWidth: pre.clientWidth,
+    blockHeight: block.getBoundingClientRect().height,
+    windowHeight: window.innerHeight
+  });
+}
+
+/** What a block measures, for the rule below to read. */
+export interface ICodeExtent {
+  scrollHeight: number;
+  clientHeight: number;
+  scrollWidth: number;
+  clientWidth: number;
+  blockHeight: number;
+  windowHeight: number;
+}
+
+/**
+ * The rule itself, taking numbers rather than an element.
+ *
+ * Split out so it can be checked without a browser. jsdom has no layout, so
+ * every one of these is zero there and a test written against an element would
+ * be testing nothing while reading as though it tested something - which is
+ * worse than no test. Given the numbers, the three cases are ordinary
+ * arithmetic and can be stated one at a time.
+ *
+ * Measuring is still the browser's job, and the harness still drives the whole
+ * thing against real blocks in all three themes.
+ */
+export function overflows(extent: ICodeExtent): boolean {
+  /* Capped, so there is more below the fold of the block. */
+  if (extent.scrollHeight > extent.clientHeight + FITS_WITHIN) {
     return true;
   }
-  if (pre.scrollWidth > pre.clientWidth + FITS_WITHIN) {
+  /* Long lines, so there is more to the right of it. */
+  if (extent.scrollWidth > extent.clientWidth + FITS_WITHIN) {
     return true;
   }
-  return block.getBoundingClientRect().height > window.innerHeight;
+  /* Neither, but taller than the window: a two hundred line block with no cap
+     overflows nothing, because it is exactly as tall as its code. */
+  return extent.blockHeight > extent.windowHeight;
 }
 
 function expandButton(block: HTMLElement, zoom: ZoomOverlay): HTMLButtonElement {

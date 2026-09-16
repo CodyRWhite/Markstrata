@@ -143,3 +143,52 @@ test('trailing newline does not add an empty line', () => {
   const html = markdown.render('```\none\n```');
   assert.equal((html.match(/strata-code-line"/g) || []).length, 1);
 });
+
+/*
+ * When a code block offers to open full size.
+ *
+ * The rule lives in the browser, because only a browser knows how tall
+ * anything is: jsdom has no layout, so every measurement there is zero and a
+ * test written against an element would pass while testing nothing. The rule
+ * is split from the measuring for that reason, and what is checked here is the
+ * arithmetic, one case at a time. The harness still drives the whole thing
+ * against real blocks in all three themes, which is where the measuring is
+ * proved.
+ */
+const { overflows } = require('./helpers').codeZoom;
+
+const FITS = {
+  scrollHeight: 300, clientHeight: 300,
+  scrollWidth: 600, clientWidth: 600,
+  blockHeight: 340, windowHeight: 900
+};
+const like = (changes) => Object.assign({}, FITS, changes);
+
+test('a block that fits offers nothing', () => {
+  assert.equal(overflows(FITS), false);
+});
+
+test('a capped block has more below its own fold', () => {
+  assert.equal(overflows(like({ scrollHeight: 900, clientHeight: 300 })), true);
+});
+
+test('a block with long lines has more to the right', () => {
+  assert.equal(overflows(like({ scrollWidth: 1400, clientWidth: 600 })), true);
+});
+
+test('and one taller than the window overflows neither and still counts', () => {
+  /* Two hundred lines with no cap: the pre is exactly as tall as its code, so
+     nothing scrolls inside it. The window is the only thing it is too big
+     for. */
+  assert.equal(overflows(like({
+    scrollHeight: 4000, clientHeight: 4000, blockHeight: 4040
+  })), true);
+});
+
+test('a hair over is not over', () => {
+  /* Sub-pixel layout and rounding put a pixel or two of slack on almost every
+     block. Without the tolerance every block on the page would offer to open
+     itself. */
+  assert.equal(overflows(like({ scrollHeight: 301, clientHeight: 300 })), false);
+  assert.equal(overflows(like({ scrollWidth: 601, clientWidth: 600 })), false);
+});

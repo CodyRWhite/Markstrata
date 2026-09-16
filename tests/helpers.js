@@ -66,5 +66,6 @@ module.exports = {
   remoteDocuments: lib('remoteDocuments'),
   officeEmbeds: lib('officeEmbeds'),
   remoteCode: lib('remoteCode'),
+  codeZoom: lib('codeZoom'),
   tables: lib('tables')
 };

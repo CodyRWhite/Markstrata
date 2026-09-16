@@ -397,6 +397,7 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
       tocWidthValue: 15,
       toolbarVisibility: 'always',
       showPrintButton: true,
+      showShareButton: true,
       showSourceInfo: true,
       pinMeta: false,
       fillHeight: false,
@@ -720,7 +721,8 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
       /* Only where the address it builds would be honoured on the way back in.
          A button that copies a link leading somewhere else is worse than no
          button, and following being off is exactly that. */
-      shareAddress: this.properties.followDocumentLinks
+      shareAddress: this.properties.showShareButton
+        && this.properties.followDocumentLinks
         && this.properties.contentSource !== 'manual'
         ? () => this.addressToShare()
         : undefined,

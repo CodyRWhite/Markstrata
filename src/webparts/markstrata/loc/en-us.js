@@ -96,6 +96,8 @@ define([], function () {
     "ToolbarVisibilityLabel": "Show toolbar",
     "ToolbarHint": "The reload, version history, theme and print controls all live in the toolbar. With \"Only while editing the page\", readers of the page never see them.",
     "PrintButtonLabel": "Show print button",
+    "ShareButtonLabel": "Show share button",
+    "ShareButtonHint": "Copies a link to the document on screen. A reader who has followed links to another document is looking at something the page address says nothing about, so sending that address sends somebody to the page's own document instead. Needs \"Open a linked document here\", since the link it copies is the one that setting reads.",
     "ReadingTimeLabel": "Show reading time",
     "BackToTopLabel": "Back to top button",
     "FileInfoGroupName": "File information",

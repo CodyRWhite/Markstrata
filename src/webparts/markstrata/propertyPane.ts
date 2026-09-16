@@ -495,6 +495,14 @@ export function paneConfiguration(
                 offText: 'Off',
                 disabled: properties.toolbarVisibility !== 'always'
               }),
+              PropertyPaneToggle('showShareButton', {
+                label: strings.ShareButtonLabel,
+                /* Off with following off, because the link it copies is the
+                   one that setting reads: a button offering a link nobody can
+                   follow back is worse than no button. */
+                disabled: !properties.followDocumentLinks
+              }),
+              PropertyPaneLabel('shareButtonHint', { text: strings.ShareButtonHint }),
               PropertyPaneToggle('showReadingTime', {
                 label: strings.ReadingTimeLabel,
                 onText: 'On',
