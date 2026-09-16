@@ -184,6 +184,38 @@ export function resolveMode(mode: ColorMode, isInverted?: boolean): ResolvedMode
 }
 ```
 
+A fence can cap its own height and scroll inside instead of running down the
+page. `short` is about ten lines, `medium` about twenty-five, and `full`, the
+default, is as tall as the code:
+
+```python short
+from dataclasses import dataclass, field
+from typing import Dict, List
+
+
+@dataclass
+class Settings:
+    theme: str = "obsidian"
+    mode: str = "dark"
+    features: List[str] = field(default_factory=list)
+    limits: Dict[str, int] = field(default_factory=dict)
+
+    def enabled(self, name: str) -> bool:
+        return name in self.features
+
+    def limit(self, name: str, fallback: int = 0) -> int:
+        return self.limits.get(name, fallback)
+
+    def describe(self) -> str:
+        on = ", ".join(sorted(self.features)) or "nothing"
+        return f"{self.theme}/{self.mode} with {on}"
+
+
+settings = Settings(features=["mermaid", "katex"], limits={"toc": 3})
+print(settings.describe())
+print(settings.limit("toc"), settings.limit("width", 860))
+```
+
 A fence can also point at a file somewhere else instead of carrying a body,
 and quote a few lines out of it by the fragment GitHub puts in the address bar.
 The block is drawn waiting and filled in once that server answers, so nothing

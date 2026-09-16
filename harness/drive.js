@@ -715,6 +715,96 @@ const LIBRARY_PATH = '/sites/demo/Documents';
   });
 
   /*
+   * A capped block. This is layout, so a browser is the only place it can be
+   * checked: the cap is written in the block's own line height and code font
+   * size, both of which come from the theme, so what a rule says and what a
+   * reader gets are two different questions.
+   *
+   * The count is what is checked, not a pixel height. Ten lines is the promise;
+   * how many pixels that is depends on the theme, which is the whole reason the
+   * cap is not written in pixels.
+   */
+  await step('a fence capped short shows about ten lines and scrolls the rest', async () => {
+    const capped = await page.evaluate(() => {
+      const block = document.querySelector('.strata-code--short');
+      if (!block) { return { error: 'no block capped short' }; }
+      const pre = block.querySelector('pre');
+      const line = block.querySelector('.strata-code-line');
+      const lineHeight = line.getBoundingClientRect().height;
+      /* clientHeight carries the block's padding, and the three themes pad by
+         different amounts. The cap counts lines, so measure lines. */
+      const style = getComputedStyle(pre);
+      const padding = parseFloat(style.paddingTop) + parseFloat(style.paddingBottom);
+      return {
+        shown: (pre.clientHeight - padding) / lineHeight,
+        held: (pre.scrollHeight - padding) / lineHeight,
+        scrolls: pre.scrollHeight > pre.clientHeight + 1,
+        /* The whole block, header and padding included, against the window. */
+        block: Math.round(block.getBoundingClientRect().height),
+        window: window.innerHeight
+      };
+    });
+    if (capped.error) throw new Error(capped.error);
+    if (!capped.scrolls) throw new Error('nothing was capped: ' + JSON.stringify(capped));
+    if (capped.held < 12) throw new Error('the sample block is too short to cap');
+    /* Ten lines of code, plus the padding that sits outside them. */
+    if (capped.shown < 9.8 || capped.shown > 10.2) {
+      throw new Error('it shows ' + capped.shown.toFixed(1) + ' lines, not ten');
+    }
+    /* And the point of it: a capped block leaves room for the document. */
+    if (capped.block > capped.window / 2) {
+      throw new Error('a short block took ' + capped.block + 'px of a '
+        + capped.window + 'px window');
+    }
+  });
+
+  /* The same cap, in every theme, because the line height it counts in is the
+     theme's. Written in pixels this would be ten lines in one theme and nine
+     and a bit in the next. */
+  await step('the cap is the same number of lines in all three themes', async () => {
+    for (const family of ['github', 'obsidian', 'vscode']) {
+      await page.evaluate((name) => window.harness.setTheme(name, 'light'), family);
+      await page.waitForTimeout(250);
+      const shown = await page.evaluate(() => {
+        const block = document.querySelector('.strata-code--short');
+        const pre = block.querySelector('pre');
+        const style = getComputedStyle(pre);
+        const padding = parseFloat(style.paddingTop) + parseFloat(style.paddingBottom);
+        const line = block.querySelector('.strata-code-line').getBoundingClientRect().height;
+        return (pre.clientHeight - padding) / line;
+      });
+      if (shown < 9.8 || shown > 10.2) {
+        throw new Error(family + ' shows ' + shown.toFixed(1) + ' lines');
+      }
+    }
+    await page.evaluate(() => window.harness.setTheme('vscode', 'light'));
+    await page.waitForTimeout(250);
+  });
+
+  /* And the page setting, which a fence beats. */
+  await step('the page setting caps every block a fence has not spoken for', async () => {
+    await page.evaluate(() => window.harness.setCodeHeight('medium'));
+    await page.waitForTimeout(400);
+    const counts = await page.evaluate(() => ({
+      medium: document.querySelectorAll('.strata-code--medium').length,
+      short: document.querySelectorAll('.strata-code--short').length,
+      blocks: document.querySelectorAll('.strata-code').length
+    }));
+    if (counts.medium < counts.blocks - counts.short) {
+      throw new Error('only ' + counts.medium + ' of ' + counts.blocks + ' took the setting');
+    }
+    /* The sample's own `short` fence is still short: a word on a fence beats
+       the page, the way wrap and numbers already do. */
+    if (counts.short !== 1) throw new Error('the fence lost to the page setting');
+
+    await page.evaluate(() => window.harness.setCodeHeight('full'));
+    await page.waitForTimeout(400);
+    const left = await page.evaluate(() =>
+      document.querySelectorAll('.strata-code--medium').length);
+    if (left !== 0) throw new Error(left + ' blocks stayed capped');
+  });
+
+  /*
    * A fence that named an address instead of a body. The address is fetched
    * after the document is drawn, so this is the one thing about the feature a
    * unit test cannot see: that the block really is filled in on the page, by

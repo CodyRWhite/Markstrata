@@ -63,6 +63,8 @@ const STRINGS = {
   LineNumbersLabel: 'Show line numbers',
   WrapCodeLabel: 'Long lines',
   CodeSizeLabel: 'Code text size',
+  CodeHeightLabel: 'Block height',
+  CodeHeightHint: 'Caps how tall a code block is and scrolls inside it, so a long listing does not push the rest of the document off the screen. Short is about ten lines and medium about twenty-five, counted in the line height of the theme that is on. A fence can say short, medium or full for itself, and that beats this the way wrap and numbers already do.',
 
   ContentsPageDescription: 'Finding your way around a document, and between documents.',
   ContentsGroupName: 'Contents',

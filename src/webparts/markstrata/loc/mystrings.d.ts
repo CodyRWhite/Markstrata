@@ -52,6 +52,8 @@ declare interface IMarkstrataWebPartStrings {
   LineNumbersLabel: string;
   WrapCodeLabel: string;
   CodeSizeLabel: string;
+  CodeHeightLabel: string;
+  CodeHeightHint: string;
 
   ContentsPageDescription: string;
   ContentsGroupName: string;

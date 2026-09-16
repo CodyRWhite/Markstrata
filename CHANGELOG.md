@@ -10,6 +10,37 @@ Entries below 0.0.10.0 were written before the switch and are three-part.
 
 ## 0.0.18.4
 
+- A code block can be capped in height and scroll inside instead of running
+  down the page. A fence says `short`, `medium` or `full` beside `wrap` and
+  `numbers`, and there is a **Block height** setting in the **Code blocks**
+  group for the page default, so a page can make every block medium without
+  touching the documents. A word on a fence beats the setting, the way
+  `wrap` and `nowrap` already beat it.
+
+  ````markdown
+  ```python short
+  ```
+  ````
+
+  - `full` is the default and is what a block has always been: as tall as its
+    code. It carries no class of its own, so nothing in the stylesheet has to
+    undo anything for the case that has not changed.
+  - Short is ten lines and medium twenty-five, counted rather than written in
+    pixels. The three themes disagree about both numbers that decide how tall a
+    line is - GitHub sets 0.85em at line-height 1.45, Obsidian 0.875em at 1.5,
+    VS Code 0.9em at 1.5 on a 15px body rather than 16px - and the code size
+    setting moves the first of those again. Written in pixels a cap would be a
+    different number of lines in every theme. Written in the block's own line
+    height and code font size it is the same number of lines in all of them.
+    Measured in a browser, a short block is 229px in GitHub, 238px in Obsidian
+    and 227px in VS Code: roughly a paragraph of prose. A medium one is about
+    525px, 553px and 530px, which is over half the content area of a laptop
+    window, so a capped block still has the text before and after it on screen
+    with it. That is the whole reason to cap one.
+  - A capped block prints whole. Nothing scrolls on paper, and printing the
+    first ten lines of a listing and losing the rest says something false about
+    the listing.
+
 - A fenced code block can name a file instead of carrying one. A fence with no
   body and a `src="..."` on it shows the file at that address, and a runbook
   that quotes twenty lines of code no longer has to carry a copy of them - a

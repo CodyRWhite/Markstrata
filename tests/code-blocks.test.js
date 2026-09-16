@@ -44,6 +44,37 @@ test('a fence flag overrides the web part default', () => {
   assert.doesNotMatch(notWrapping.render('```python nowrap\nx = 1\n```'), /strata-code--wrap/);
 });
 
+test('a fence can cap its own height', () => {
+  assert.equal(codeBlocks.parseInfo('python short').height, 'short');
+  assert.equal(codeBlocks.parseInfo('python medium').height, 'medium');
+  assert.equal(codeBlocks.parseInfo('python full').height, 'full');
+  assert.equal(codeBlocks.parseInfo('python').height, undefined);
+  // Beside the other fence words, not instead of them.
+  const both = codeBlocks.parseInfo('python short wrap nonumbers');
+  assert.equal(both.height, 'short');
+  assert.equal(both.wrap, true);
+  assert.equal(both.lineNumbers, false);
+});
+
+test('the height becomes a class, and full carries none', () => {
+  assert.match(markdown.render('```js short\nx\n```'), /strata-code--short/);
+  assert.match(markdown.render('```js medium\nx\n```'), /strata-code--medium/);
+  const full = markdown.render('```js full\nx\n```');
+  assert.doesNotMatch(full, /strata-code--short|strata-code--medium|strata-code--full/);
+});
+
+test('a height on a fence beats the page setting, the way wrap does', () => {
+  const capped = new MarkdownProcessor({ codeHeight: 'medium' });
+  // Every block takes the page default...
+  assert.match(capped.render('```js\nx\n```'), /strata-code--medium/);
+  // ...unless its own fence says otherwise, in either direction.
+  assert.match(capped.render('```js short\nx\n```'), /strata-code--short/);
+  assert.doesNotMatch(capped.render('```js full\nx\n```'), /strata-code--medium/);
+
+  // And the default default is a block as tall as its code.
+  assert.doesNotMatch(markdown.render('```js\nx\n```'), /strata-code--short|strata-code--medium/);
+});
+
 test('language label is humanised', () => {
   assert.equal(codeBlocks.languageLabel('ts'), 'TypeScript');
   assert.equal(codeBlocks.languageLabel('ps1'), 'PowerShell');

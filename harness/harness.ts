@@ -65,6 +65,7 @@ const state: any = {
   showCodeHeader: true,
   showLineNumbers: true,
   wrapCodeLines: false,
+  codeHeight: 'full',
   codeSize: 'normal',
   imageAlign: 'left',
   // Contents
@@ -96,8 +97,8 @@ const state: any = {
 /* The options the processor is built from, as opposed to the ones the
    renderer reads at draw time. Changing any of these rebuilds markdown-it. */
 const PROCESSOR_KEYS: string[] = ['enableSyntaxHighlighting', 'showCodeHeader',
-  'showLineNumbers', 'wrapCodeLines', 'allowHtml', 'enableMath', 'enableMermaid',
-  'enableAnchors', 'enableWikiLinks'];
+  'showLineNumbers', 'wrapCodeLines', 'codeHeight', 'allowHtml', 'enableMath',
+  'enableMermaid', 'enableAnchors', 'enableWikiLinks'];
 
 function processorOptions(): any {
   return {
@@ -105,6 +106,7 @@ function processorOptions(): any {
     showCodeHeader: state.showCodeHeader,
     showLineNumbers: state.showLineNumbers,
     wrapCodeLines: state.wrapCodeLines,
+    codeHeight: state.codeHeight,
     allowHtml: state.allowHtml,
     enableMath: state.enableMath,
     enableMermaid: state.enableMermaid,
@@ -330,6 +332,11 @@ function log(message: string): void {
     state.markdown = markdown || SAMPLE;
     draw();
   },
+  setCodeHeight: (height: any) => {
+    state.codeHeight = height;
+    processor.updateOptions(processorOptions());
+    draw();
+  },
   setBackToTop: (position: any) => {
     state.backToTop = position;
     draw();
@@ -463,7 +470,16 @@ const PANEL_PAGES: IPanelPage[] = [
           { key: 'codeSize', label: 'Code text size', type: 'dropdown', options: [
             { value: 'small', text: 'Small' },
             { value: 'normal', text: 'Normal' },
-            { value: 'large', text: 'Large' }] }
+            { value: 'large', text: 'Large' }] },
+          { key: 'codeHeight', label: 'Block height', type: 'dropdown', options: [
+            { value: 'full', text: 'As tall as the code' },
+            { value: 'short', text: 'Short, about ten lines' },
+            { value: 'medium', text: 'Medium, about twenty-five lines' }],
+            hint: 'Caps how tall a code block is and scrolls inside it, so a long '
+              + 'listing does not push the rest of the document off the screen. Short '
+              + 'is about ten lines and medium about twenty-five, counted in the line '
+              + 'height of the theme that is on. A fence can say short, medium or full '
+              + 'for itself, and that beats this the way wrap and numbers already do.' }
         ]
       },
       {

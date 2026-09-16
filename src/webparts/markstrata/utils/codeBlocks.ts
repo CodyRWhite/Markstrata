@@ -47,11 +47,25 @@ hljs.registerLanguage('dockerfile', dockerfile);
 hljs.registerLanguage('dos', dos);
 hljs.registerLanguage('http', http);
 
+/**
+ * How tall a block is allowed to be.
+ *
+ * `full` is a block as tall as its code, which is what a fenced block has
+ * always been. The other two cap it and scroll inside; the line counts they
+ * mean are in code.css, because that is where the line height they are counted
+ * in lives.
+ */
+export type CodeHeight = 'short' | 'medium' | 'full';
+
+const CODE_HEIGHTS: CodeHeight[] = ['short', 'medium', 'full'];
+
 export interface ICodeBlockOptions {
   highlight: boolean;
   showHeader: boolean;
   lineNumbers: boolean;
   wrap: boolean;
+  /** The page's default height, which a word on a fence overrides. */
+  height?: CodeHeight;
 }
 
 /**
@@ -160,6 +174,8 @@ export interface IFenceInfo {
   highlight?: number[];
   /** Where the code is, from a `src="..."` on the fence. */
   src?: string;
+  /** Per-fence override of the height cap. */
+  height?: CodeHeight;
 }
 
 /**
@@ -172,6 +188,8 @@ export interface IFenceInfo {
  *   ```python nowrap numbers  and the opposites, per block
  *   ```js {2,4-6}             call out those lines, as Docusaurus and VitePress do
  *   ```ts src="https://..."   fetch the code from there instead of writing a body
+ *   ```ts short                cap the height at ten lines and scroll inside
+ *   ```ts medium               the same at twenty-five; `full` is the default
  */
 export function parseInfo(info: string): IFenceInfo {
   const trimmed: string = (info || '').trim();
@@ -212,6 +230,12 @@ export function parseInfo(info: string): IFenceInfo {
   } else if (flags.indexOf('nonumbers') !== -1 || flags.indexOf('nolinenums') !== -1) {
     parsed.lineNumbers = false;
   }
+
+  CODE_HEIGHTS.forEach((height: CodeHeight) => {
+    if (parsed.height === undefined && flags.indexOf(height) !== -1) {
+      parsed.height = height;
+    }
+  });
 
   const lines: number[] = parseHighlightedLines(trimmed);
   if (lines.length) {
@@ -375,6 +399,9 @@ export function renderCodeBlock(code: string, info: string, options: ICodeBlockO
   const parsed: IFenceInfo = parseInfo(info);
   const lineNumbers: boolean = parsed.lineNumbers === undefined ? options.lineNumbers : parsed.lineNumbers;
   const wrap: boolean = parsed.wrap === undefined ? options.wrap : parsed.wrap;
+  /* A word on the fence beats the page setting, the way wrap and numbers
+     already do: the author of the document knows which block is the long one. */
+  const height: CodeHeight = parsed.height || options.height || 'full';
   const called: number[] = parsed.highlight || [];
 
   /* A `src` is only a source when there is nothing else to show. An author who
@@ -395,6 +422,11 @@ export function renderCodeBlock(code: string, info: string, options: ICodeBlockO
   }
   if (wrap) {
     classes.push('strata-code--wrap');
+  }
+  /* Full is what a block has always been, so it carries no class of its own
+     and nothing in the stylesheet has to undo anything. */
+  if (height !== 'full') {
+    classes.push(`strata-code--${height}`);
   }
   /* Dimming the rest only reads as deliberate when something is called out. */
   if (called.length) {

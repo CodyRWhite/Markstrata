@@ -100,6 +100,7 @@ const REBUILDS_THE_PROCESSOR: string[] = [
   'showCodeHeader',
   'showLineNumbers',
   'wrapCodeLines',
+  'codeHeight',
   'allowHtml'
 ];
 
@@ -367,6 +368,7 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
       showCodeHeader: true,
       showLineNumbers: false,
       wrapCodeLines: false,
+      codeHeight: 'full',
       enableMermaid: true,
       diagramWidth: 'fit',
       enableImageZoom: true,
@@ -768,6 +770,7 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
       showCodeHeader: this.properties.showCodeHeader,
       showLineNumbers: this.properties.showLineNumbers,
       wrapCodeLines: this.properties.wrapCodeLines,
+      codeHeight: this.properties.codeHeight,
       allowHtml: this.properties.allowHtml,
       imageBasePath: this.imageBasePath()
     };

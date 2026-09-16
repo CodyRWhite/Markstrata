@@ -315,7 +315,17 @@ export function paneConfiguration(
                 label: strings.CodeSizeLabel,
                 options: toDropdown(CODE_SIZES),
                 selectedKey: properties.codeSize
-              })
+              }),
+              PropertyPaneDropdown('codeHeight', {
+                label: strings.CodeHeightLabel,
+                options: [
+                  { key: 'full', text: 'As tall as the code' },
+                  { key: 'short', text: 'Short, about ten lines' },
+                  { key: 'medium', text: 'Medium, about twenty-five lines' }
+                ],
+                selectedKey: properties.codeHeight
+              }),
+              PropertyPaneLabel('codeHeightHint', { text: strings.CodeHeightHint })
             ]
           },
           {

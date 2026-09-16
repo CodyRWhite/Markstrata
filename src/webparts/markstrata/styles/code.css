@@ -252,6 +252,74 @@
   overflow-wrap: anywhere;
 }
 
+/*
+ * ------------------------------------------------------------ block height
+ *
+ * A block is as tall as its code unless a fence, or the page setting, says
+ * `short` or `medium`. Those cap it and scroll inside.
+ *
+ * The caps are counted in lines rather than written in pixels because the
+ * three themes disagree about both numbers that decide how tall a line is:
+ * GitHub sets 0.85em at line-height 1.45, Obsidian 0.875em at 1.5, VS Code
+ * 0.9em at 1.5 on a 15px body rather than 16px, and the code size setting
+ * moves the first of those again. Written in pixels a cap would be a different
+ * number of lines in every theme. Written this way it is the same number of
+ * lines in all of them: line-height is a plain multiplier, 1em inside the
+ * <pre> is the code font size, so their product is exactly one rendered line.
+ *
+ * Ten and twenty-five, measured in a browser at the default text size, as the
+ * whole block including its header and padding:
+ *
+ *   short   229px in GitHub, 238px in Obsidian, 227px in VS Code. Roughly a
+ *           paragraph of prose, so a block set short reads as something to
+ *           glance at, and a page of them is still a page that scrolls rather
+ *           than a stack of things that each scroll.
+ *   medium  about 525px, 553px and 530px. Over half the content area of a
+ *           laptop window, so a block still has the text before and after it on
+ *           screen with it - which is the whole reason to cap one.
+ *
+ * Both are approximate on purpose, both move with the code size setting as they
+ * should, and both are named here rather than in the renderer, because the line
+ * height they are counted in is here.
+ */
+.strata-code {
+  --strata-code-short-lines: 10;
+  --strata-code-medium-lines: 25;
+}
+
+/*
+ * Sized by its content for these two, so the cap counts lines and the block's
+ * own padding sits outside them. Everything else in this project is
+ * border-box, where a ten line cap would be ten lines minus the padding and
+ * the last line would be cut in half.
+ *
+ * The padding below the tenth line is scrollable, so a sliver of the eleventh
+ * shows through it. That is left alone: something half visible at the bottom
+ * edge is the plainest way of saying there is more under it.
+ */
+.strata-code--short .strata-code-pre,
+.strata-code--medium .strata-code-pre {
+  box-sizing: content-box;
+  overflow-y: auto;
+}
+
+.strata-code--short .strata-code-pre {
+  max-height: calc(var(--strata-code-short-lines) * var(--strata-code-line-height) * 1em);
+}
+
+.strata-code--medium .strata-code-pre {
+  max-height: calc(var(--strata-code-medium-lines) * var(--strata-code-line-height) * 1em);
+}
+
+/* On paper nothing scrolls, so a capped block prints whole rather than
+   printing the first ten lines and losing the rest. */
+@media print {
+  .strata-code--short .strata-code-pre,
+  .strata-code--medium .strata-code-pre {
+    max-height: none;
+  }
+}
+
 /* Scrollbars inside code blocks should read as part of the block. */
 .strata-code pre::-webkit-scrollbar {
   height: 10px;

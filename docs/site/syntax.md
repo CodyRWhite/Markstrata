@@ -173,6 +173,7 @@ matter:
 |---|---|
 | `wrap` / `nowrap` | wrap long lines, or scroll them |
 | `numbers` / `nonumbers` | show or hide the line gutter |
+| `short` / `medium` / `full` | cap the block's height, or leave it as tall as its code |
 | `{2,4-6}` | call out those lines and fade the rest |
 
 ````markdown
@@ -182,6 +183,30 @@ matter:
 ```js {2,4-6}
 ```
 ````
+
+### Block height
+
+`short` caps a block at about ten lines and `medium` at about twenty-five, and
+either scrolls inside rather than running down the page. `full` is the default
+and is a block as tall as its code.
+
+````markdown
+```python short
+```
+````
+
+The caps are counted in lines rather than written in pixels, so they mean the
+same thing in every theme and follow the **Code text size** setting. Ten lines
+is roughly a paragraph of prose; twenty-five is over half a laptop window, so a
+capped block still has the text before and after it on screen with it.
+
+There is a page setting for the default, **Block height** in the **Code blocks**
+group, so a page can make every block medium without touching the documents. A
+word on a fence beats it, the way `wrap` and `numbers` already do.
+
+A capped block prints whole. There is no scrolling on paper, and printing the
+first ten lines of a listing and losing the rest is worse than printing all of
+it.
 
 ### Code from a URL
 
