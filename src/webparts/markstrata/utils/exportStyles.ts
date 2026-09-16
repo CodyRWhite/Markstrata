@@ -216,7 +216,23 @@ export const PAGED: string = `
   height: auto;
 }
 
-.strata-export-content .strata-code pre { white-space: pre-wrap; }
+/*
+ * Long lines wrap rather than run off the edge of the sheet.
+ *
+ * A listing scrolls sideways on screen, and a sheet of paper does not: a line
+ * wider than the text block simply leaves the page, and the half of it past
+ * the margin is not printed. The rule that has to give way is
+ * the white-space: pre that code.css puts on .strata-code pre code, which is
+ * on the code element rather than on the pre, so a rule aimed at the pre loses
+ * to it and the line was still cut off at the margin. Breaking anywhere is for
+ * the token with no break in it at all, usually the long URL or the base64
+ * that caused this in the first place.
+ */
+.strata-export-content .strata-code pre,
+.strata-export-content .strata-code pre code {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
 .strata-export-content .strata-code-line { width: auto; }
 
 /* Controls that cannot be used on paper, and a closed callout that would
