@@ -77,7 +77,13 @@ const PUBLIC_HOSTS = [
   'primer.style',
   'katex.org',
   'nodejs.org',
-  'opensource.org'
+  'opensource.org',
+  /* GitHub's raw host. Named rather than described because it is the one
+     server known to let a page here read a document from it, so a check that
+     says "use a server that allows cross-origin reads" and does not name one
+     is a check nobody can carry out. It belongs to GitHub, not to any tenant,
+     which is the distinction this list is for. */
+  'raw.githubusercontent.com'
 ];
 
 /* Reserved for documentation, so safe by construction. */
