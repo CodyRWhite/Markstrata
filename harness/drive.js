@@ -24,6 +24,7 @@
  * Requires:  nothing else in this project
  */
 
+const fs = require('fs');
 const path = require('path');
 
 let chromium;
@@ -53,6 +54,8 @@ const demoUrl = 'file://' + path.join(__dirname, '..', 'site', 'demo', 'index.ht
  * lifecycle, against the SharePoint stand-ins in harness/spfx.
  */
 const webPartUrl = 'file://' + path.join(HARNESS_DIST, 'webpart.html');
+/* The library harness/spfx/sharePoint.ts stands up, as a path. */
+const LIBRARY_PATH = '/sites/demo/Documents';
 
 (async () => {
   // PLAYWRIGHT_CHROMIUM lets a preinstalled browser be used instead.
@@ -60,6 +63,38 @@ const webPartUrl = 'file://' + path.join(HARNESS_DIST, 'webpart.html');
     process.env.PLAYWRIGHT_CHROMIUM ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM } : {}
   );
   const page = await browser.newPage({ viewport: { width: 1200, height: 900 }, deviceScaleFactor: 1.5 });
+
+  /*
+   * The stand-in library, one layer further out than harness/spfx reaches.
+   *
+   * The web part resolves a relative image against the folder its document is
+   * in, which is right and is what production does: the sample writes
+   * `brand/mark.svg` and the web part asks SharePoint for
+   * /sites/demo/Documents/brand/mark.svg. Under file:// that is the root of
+   * the filesystem, so the picture never arrived - which is what the three
+   * unnamed ERR_FILE_NOT_FOUND in CI were, every one of them this same file.
+   *
+   * harness/spfx cannot answer it, because an <img> goes over the network
+   * rather than through the SPHttpClient stand-in, so the stand-in never sees
+   * the request. This does, and serves it out of the harness build, where the
+   * same file really is sitting.
+   *
+   * Only what the library would actually hold is served. Anything else under
+   * that path is aborted rather than passed through, so a request for a file
+   * that is not there still reports as a failure: watching for failed
+   * requests is worth nothing if the harness answers all of them.
+   */
+  await page.route('**/sites/demo/**', (route, request) => {
+    const asked = new URL(request.url()).pathname;
+    const within = asked.indexOf(LIBRARY_PATH) === 0
+      ? asked.slice(LIBRARY_PATH.length + 1)
+      : '';
+    const file = within ? path.join(HARNESS_DIST, within) : '';
+    if (file && file.indexOf(HARNESS_DIST) === 0 && fs.existsSync(file)) {
+      return route.fulfill({ path: file });
+    }
+    return route.abort();
+  });
 
   const problems = [];
   page.on('pageerror', (error) => problems.push('pageerror: ' + error.message));
