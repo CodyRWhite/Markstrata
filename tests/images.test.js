@@ -128,3 +128,65 @@ test('changing the base path re-resolves; repeating it does not rebuild', () => 
   assert.notEqual(processor.markdownIt, before, 'did not rebuild for a changed option');
   assert.equal(srcOf(processor.render('![d](a.png)')), '/sites/it/Policies/a.png');
 });
+
+/*
+ * A document does not have to come from SharePoint. The "File URL" source
+ * fetches one from anywhere that will answer, and everything relative inside
+ * it - every picture, every ordinary link, every wiki link - resolves against
+ * the folder that URL is in.
+ *
+ * It resolved against it as though it were a SharePoint path: encodePath ran
+ * over the whole thing, so `https://host/docs` came back as `/https%3A/host/docs`,
+ * an address on the tenant rather than on the other server, and any %20 in it
+ * was encoded a second time into %2520. Nothing in the document loaded, and
+ * the report was a wall of 404s.
+ */
+const REMOTE = 'https://raw.githubusercontent.com/org/repo/main/docs';
+
+test('a document fetched from a URL resolves against that URL', () => {
+  assert.equal(resolveAgainst(REMOTE, 'images/flow.png'),
+    'https://raw.githubusercontent.com/org/repo/main/docs/images/flow.png');
+  assert.equal(resolveAgainst(REMOTE, 'Runbook.md'),
+    'https://raw.githubusercontent.com/org/repo/main/docs/Runbook.md');
+});
+
+test('the scheme survives, rather than becoming a folder on the site', () => {
+  const resolved = resolveAgainst(REMOTE, 'a.md');
+  assert.ok(resolved.indexOf('https://') === 0, `got ${resolved}`);
+  assert.doesNotMatch(resolved, /%3A/, 'the colon was encoded, so the host became a path segment');
+});
+
+test('a base that is already encoded is not encoded again', () => {
+  /* The tenant's own library reached through its URL rather than its path,
+     which is what somebody pastes out of the browser. */
+  assert.equal(
+    resolveAgainst('https://contoso.sharepoint.com/sites/wiki/Shared%20Documents', 'Runbook.md'),
+    'https://contoso.sharepoint.com/sites/wiki/Shared%20Documents/Runbook.md'
+  );
+});
+
+test('a port belongs to the host, not to the path', () => {
+  assert.equal(resolveAgainst('https://example.com:8443/docs', 'a.md'),
+    'https://example.com:8443/docs/a.md');
+});
+
+test('.. walks the remote folders and stops at the host', () => {
+  assert.equal(resolveAgainst(REMOTE, '../Other/Page.md'),
+    'https://raw.githubusercontent.com/org/repo/main/Other/Page.md');
+  assert.equal(resolveAgainst('https://example.com/docs', '../../../../etc/passwd'), undefined,
+    'climbing past the host should be refused, as climbing past the site is');
+});
+
+test('a SharePoint path still resolves exactly as it did', () => {
+  assert.equal(resolveAgainst(LIBRARY, 'images/flow.png'),
+    '/sites/it/Shared%20Documents/runbooks/images/flow.png');
+  assert.equal(resolveAgainst('/sites/team/Runbooks', '../Other/p.md'), '/sites/team/Other/p.md');
+});
+
+test('a wiki link in a document fetched from a URL points at that server', () => {
+  const html = new MarkdownProcessor({ enableWikiLinks: true, imageBasePath: REMOTE })
+    .render('See [[Deploy runbook]].');
+  assert.match(html, /href="https:\/\/raw\.githubusercontent\.com\/org\/repo\/main\/docs\/Deploy%20runbook\.md"/);
+  assert.doesNotMatch(html, /%3A/);
+  assert.doesNotMatch(html, /%2520/);
+});
