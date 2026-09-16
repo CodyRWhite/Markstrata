@@ -138,7 +138,16 @@ function message(error: Error | undefined): string {
 
 // ------------------------------------------------------- starting and stopping
 
-async function start(configured?: Partial<IMarkstrataWebPartProps>): Promise<IStartUpOutcome> {
+/*
+ * `editing` has to be given here rather than switched on afterwards. Some of
+ * what the web part does happens once, while it is starting - reading the
+ * document named in the page address is one - and what it does then depends on
+ * whether a reader or an author is in front of it. Setting the mode after it
+ * has started is a different situation and cannot stand in for this one.
+ */
+async function start(
+  configured?: Partial<IMarkstrataWebPartProps>, editing?: boolean
+): Promise<IStartUpOutcome> {
   dispose();
   webPart = new MarkstrataWebPart();
   outcome = undefined;
@@ -148,7 +157,7 @@ async function start(configured?: Partial<IMarkstrataWebPartProps>): Promise<ISt
     context: context(),
     properties: startingProperties(configured),
     domElement: host,
-    displayMode: DisplayMode.Read
+    displayMode: editing ? DisplayMode.Edit : DisplayMode.Read
   });
 
   showStatus();

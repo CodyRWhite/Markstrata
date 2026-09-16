@@ -61,7 +61,7 @@ import './styles/print.css';
 import { MarkdownProcessor, IMarkdownProcessorOptions } from './utils/MarkdownProcessor';
 import { folderOf } from './utils/imagePaths';
 import { DocumentNavigator, ILoadedDocument } from './utils/documentNavigator';
-import { documentFromAddress, IWantedDocument } from './utils/documentParameter';
+import { documentFromAddress, DOCUMENT_PARAMETER, IWantedDocument } from './utils/documentParameter';
 import { isRemote, fetchableUrl, remoteFailure } from './utils/remoteDocuments';
 import { ThemeOverride } from './utils/themeOverride';
 import { PaneSources } from './paneSources';
@@ -146,6 +146,12 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
   /** Suppresses the extra render on first load; SPFx renders straight after onInit. */
   private contentLoadedOnce: boolean = false;
   private previewBanner: string | undefined;
+  /**
+   * A menu entry named a document and nothing opened it. Held rather than
+   * shown where it is worked out, because that happens while the web part is
+   * starting and every render after it draws its own banner over the top.
+   */
+  private addressNotice: string | undefined;
   private previewContent: string | undefined;
 
   /** A document the reader followed a link to, and the history that goes with it. */
@@ -449,7 +455,16 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
    * the history: the reader arrived at it.
    */
   private async openDocumentFromAddress(): Promise<void> {
+    const asked: boolean = window.location.search
+      .indexOf(`${DOCUMENT_PARAMETER}=`) !== -1;
+
     if (!this.properties.followDocumentLinks || this.properties.contentSource === 'manual') {
+      /* A menu entry named a document and the page is not set up to open one,
+         so nothing happens and the configured document appears instead -
+         which looks exactly like a menu entry pointing at the wrong place.
+         Said only to somebody editing the page, because it is a setting to
+         change rather than news for a reader. */
+      this.noticeAboutAddress(asked ? strings.AddressIgnored : undefined);
       return;
     }
 
@@ -457,9 +472,20 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
       window.location.search, this.imageBasePath()
     );
     if (!wanted) {
+      this.noticeAboutAddress(asked ? strings.AddressNotUnderstood : undefined);
       return;
     }
     await this.navigator.open(wanted.path, wanted.heading, false);
+  }
+
+  /* Drawn on a render of its own, because working this out is the last thing
+     startUp does and the render that would have carried it has already been
+     and gone. Nothing is drawn for a reader, so nothing is redrawn for one. */
+  private noticeAboutAddress(notice: string | undefined): void {
+    this.addressNotice = notice;
+    if (notice && this.displayMode === DisplayMode.Edit) {
+      this.render();
+    }
   }
 
   /**
@@ -614,6 +640,11 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
       // The editor renders a live preview, which is the same rendered text the
       // search index wants - and edit mode is when the page gets saved.
       this.updateSearchText();
+      /* Edit mode returns here, before the banners below, so anything an
+         author has to be told has to be said on this path as well. This is
+         the only one of them that is for an author rather than for a reader,
+         which is exactly why it would otherwise never be seen. */
+      this.showAddressNotice();
       return;
     }
 
@@ -691,6 +722,19 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
     }
     if (this.loadError) {
       this.showBanner(this.loadError, 'error');
+    }
+    /* Last, because it is the one thing here that nothing else will say and
+       the banner is one slot: an editor drawing "Editing x.md" over it would
+       leave an author with a menu that silently does nothing and no clue why.
+       Only to an author, because it names a setting to change. */
+    this.showAddressNotice();
+  }
+
+  /* Only to an author: it names a setting to change, which is not a reader's
+     business and not a reader's to fix. */
+  private showAddressNotice(): void {
+    if (this.addressNotice && this.displayMode === DisplayMode.Edit) {
+      this.showBanner(this.addressNotice, 'info');
     }
   }
 

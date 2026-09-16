@@ -99,6 +99,8 @@ declare interface IMarkstrataWebPartStrings {
   SourceInfoHint: string;
 
   SaveShortcutHint: string;
+  AddressIgnored: string;
+  AddressNotUnderstood: string;
 
   EditingAnotherDocument: string;
   UnconfiguredHeading: string;

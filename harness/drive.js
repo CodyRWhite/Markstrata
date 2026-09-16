@@ -2970,6 +2970,62 @@ const LIBRARY_PATH = '/sites/demo/Documents';
     if (shown.banner) throw new Error('it complained at the reader: ' + shown.banner);
   });
 
+  /*
+   * And says so to whoever can fix it. A menu entry that names a document the
+   * page is not set up to open produced nothing at all: the configured
+   * document appeared, which is exactly what a menu entry pointing at the
+   * wrong file looks like. Only in page edit mode, because it names a setting
+   * to change and that is not a reader's business.
+   */
+  await step('an address that cannot be honoured says so to an author', async () => {
+    const seen = await page.evaluate(async () => {
+      const settle = () => new Promise((resolve) => setTimeout(resolve, 600));
+      /* A direct child of the themed root, which is where the web part puts a
+         banner. The editor has a status line of its own that also carries the
+         class strata-status - it is a span inside the editor and it says
+         "Editing x.md" - and a plain .strata-status selector finds that one
+         first, which is how this check first reported the wrong element. */
+      const banner = () => {
+        const found = document.querySelector('#host .strata-root > div.strata-status');
+        return found ? (found.textContent || '').trim() : '';
+      };
+
+      window.webPartHarness.addressDocument('/sites/demo/Documents/Runbooks/Deploy notes.md');
+
+      /* Following turned off, which is the setting the message names. */
+      await window.webPartHarness.start({
+        contentSource: 'library',
+        selectedLibrary: '/sites/demo/Documents',
+        selectedFile: '/sites/demo/Documents/index.md',
+        followDocumentLinks: false
+      });
+      await settle();
+      const toReader = banner();
+
+      /* Started in edit mode rather than switched into it, because reading the
+         address happens once while the web part starts. */
+      await window.webPartHarness.start({
+        contentSource: 'library',
+        selectedLibrary: '/sites/demo/Documents',
+        selectedFile: '/sites/demo/Documents/index.md',
+        followDocumentLinks: false
+      }, true);
+      await settle();
+      const toAuthor = banner();
+      window.webPartHarness.addressDocument(undefined);
+
+      return { toReader: toReader, toAuthor: toAuthor };
+    });
+
+    if (seen.toReader) {
+      throw new Error('a reader was shown a setting to change: '
+        + JSON.stringify(seen.toReader));
+    }
+    if (seen.toAuthor.indexOf('Open a linked document here') === -1) {
+      throw new Error('an author was told ' + JSON.stringify(seen.toAuthor));
+    }
+  });
+
   await step('a library that will not answer is a message, not a broken page', async () => {
     const shown = await page.evaluate(async () => {
       window.webPartHarness.refuse(true);

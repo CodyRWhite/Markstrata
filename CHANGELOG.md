@@ -61,6 +61,15 @@ Entries below 0.0.10.0 were written before the switch and are three-part.
   rather than beside it, so the browser's own Back button walks the same path
   and the two cannot disagree about where the reader has been.
 
+- A page address naming a document that cannot be opened now says so, to
+  whoever can fix it. `?strataDoc=` is ignored unless "Open a linked document
+  here" is on and the source is a library or a URL, and unless the value names
+  a markdown file with its `&`, `#` and `+` written as `%26`, `%23` and `%2B`.
+  It was ignored in silence, so the page showed the document it was configured
+  with, which is exactly what a menu entry pointing at the wrong file looks
+  like. Shown only in page edit mode: it names a setting to change, which is
+  not a reader's business and not a reader's to fix.
+
 - A Word, Excel or PowerPoint file named by `![[Quarterly report.docx]]` is
   drawn as a card rather than as a link to a download. The card carries the
   file's name, a link that opens it in Word for the web, and SharePoint's own

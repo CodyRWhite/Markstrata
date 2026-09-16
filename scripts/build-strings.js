@@ -112,6 +112,20 @@ const STRINGS = {
   SaveShortcutHint: 'Ctrl+S saves while the editor has focus.',
 
   /*
+   * A menu entry named a document and nothing opened it. Both of these are
+   * shown only in page edit mode: they name a setting to change, which is not
+   * a reader's business and not a reader's to fix. Without them the page shows
+   * the document it was configured with, which is indistinguishable from a
+   * menu entry pointing at the wrong file.
+   */
+  AddressIgnored: 'This page address names a document to open, and it was '
+    + 'ignored. Opening one needs "Open a linked document here" turned on, and '
+    + 'a source other than markdown typed into the web part.',
+  AddressNotUnderstood: 'This page address names a document to open, and it '
+    + 'could not be used. It has to be a markdown file, and any & # or + in '
+    + 'the name has to be written as %26 %23 or %2B.',
+
+  /*
    * A web part nobody has pointed at a document yet. The way in differs by
    * host and only one of them is in front of you, so each host gets its own
    * sentence rather than one that is vague enough to cover all of them.
