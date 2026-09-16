@@ -18,8 +18,8 @@ on:
       version:
         description: 'Version to build, four-part, without the leading v (e.g. 1.2.0.0)'
         required: true
-      prerelease:
-        description: 'Publish as a pre-release, for testing before it is the recommended download'
+      recommended:
+        description: 'Publish as the recommended download instead of a pre-release. Nothing below 1.0 should be'
         type: boolean
         default: false
       replace:
@@ -96,7 +96,7 @@ jobs:
           # nothing useful. On a recommended release it is a liability: a Teams
           # app that installs without the SharePoint half it talks to, and that
           # goes stale in a tenant that keeps an old copy.
-          if [ "${{ inputs.prerelease }}" = "true" ]; then
+          if [ "${{ inputs.recommended }}" != "true" ]; then
             echo "path=teams/TeamsSPFxApp.zip" >> "$GITHUB_OUTPUT"
           else
             echo "path=" >> "$GITHUB_OUTPUT"
@@ -139,7 +139,14 @@ jobs:
           # The solution version stays four-part numeric either way: SharePoint
           # will not install a package whose version carries a semver suffix, so
           # a pre-release is marked on the GitHub release, not in the number.
-          PRERELEASE: ${{ inputs.prerelease && '--prerelease' || '' }}
+          # Pre-release unless somebody deliberately says otherwise, and a tag
+          # push says nothing at all: inputs are empty there. It read the other
+          # way round until now, so 0.0.17.0, 0.0.17.1 and 0.0.17.2 were
+          # published as the recommended download by a tag push, which is not
+          # a thing this project has ever meant to do. Nothing below 1.0 is
+          # recommended, and the default should not be the answer that needs
+          # undoing.
+          PRERELEASE: ${{ inputs.recommended && '' || '--prerelease' }}
           REPLACE: ${{ inputs.replace }}
         run: |
           NOTES=$(node scripts/release-notes.js "$VERSION")
