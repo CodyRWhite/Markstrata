@@ -910,6 +910,81 @@ const LIBRARY_PATH = '/sites/demo/Documents';
     }
   });
 
+  /*
+   * A SharePoint page keeps bars stuck across the top of the window, and the
+   * overlay is built inside the web part so that what it shows is painted from
+   * the reader's own theme. That is also why it cannot be raised above them:
+   * they are in a stacking context it is not in, and no z-index reaches them.
+   * It has to lay out below them instead.
+   *
+   * The report was a code block opened full size with its filename and its
+   * close button both under the menubar - openable, and then neither readable
+   * nor dismissable except with Escape.
+   *
+   * Geometry rather than a screenshot: the close button and the panel both
+   * start below the strip the page keeps, and the button is not sitting on the
+   * panel to manage it.
+   */
+  await step('an expanded block clears the bars across the top of the page', async () => {
+    /*
+     * What a SharePoint page keeps for its suite bar and its command bar,
+     * written here rather than read off the overlay: a figure the harness
+     * takes from the stylesheet is a figure that agrees with the stylesheet
+     * whatever the stylesheet says.
+     */
+    const CHROME = 75;
+
+    const block = page.locator('.strata-code--short').first();
+    await block.scrollIntoViewIfNeeded();
+    await block.locator('.strata-code-expand').click();
+    await page.waitForSelector('.strata-zoom .strata-zoom-code', { timeout: 3000 });
+
+    const laidOut = await page.evaluate(() => {
+      const box = (selector) => {
+        const found = document.querySelector(selector);
+        return found ? found.getBoundingClientRect() : undefined;
+      };
+      const close = box('.strata-zoom-close');
+      const panel = box('.strata-zoom-code');
+      const header = box('.strata-zoom-code .strata-code-header');
+      return {
+        closeTop: close ? close.top : undefined,
+        closeBottom: close ? close.bottom : undefined,
+        panelTop: panel ? panel.top : undefined,
+        headerTop: header ? header.top : undefined
+      };
+    });
+
+    /* Put away first, so a failure below leaves the page as the next step
+       expects to find it rather than with an overlay still over it. */
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(200);
+    if (await page.locator('.strata-zoom').count() !== 0) {
+      throw new Error('Escape did not close it');
+    }
+
+    if (!(laidOut.closeTop >= CHROME)) {
+      throw new Error('the close button is ' + laidOut.closeTop + 'px down, inside the '
+        + CHROME + 'px the page keeps for its own bars');
+    }
+    if (!(laidOut.panelTop >= CHROME)) {
+      throw new Error('the panel starts ' + laidOut.panelTop + 'px down, inside the '
+        + CHROME + 'px the page keeps for its own bars');
+    }
+    if (!(laidOut.panelTop >= laidOut.closeBottom)) {
+      throw new Error('the close button overlaps the panel it closes');
+    }
+    /* The title is the first thing in the panel, so it is the first thing a
+       bar across the top takes away. */
+    if (laidOut.headerTop === undefined) {
+      throw new Error('this block has no header, so nothing said its title is readable');
+    }
+    if (!(laidOut.headerTop >= CHROME)) {
+      throw new Error('the block title is ' + laidOut.headerTop + 'px down, inside the '
+        + CHROME + 'px the page keeps for its own bars');
+    }
+  });
+
   await step('a click on the block opens it, and a click on Copy does not', async () => {
     await page.context().grantPermissions(['clipboard-read', 'clipboard-write']);
     const block = page.locator('.strata-code--short').first();
