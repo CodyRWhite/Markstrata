@@ -1,7 +1,7 @@
 {
   "$schema": "https://developer.microsoft.com/json-schemas/spfx-build/package-solution.schema.json",
   "solution": {
-    "name": "Markstrata - Markdown Web Part for SharePoint Online",
+    "name": "Markstrata - Markdown for SharePoint and Teams",
     "id": "7160b942-6869-49d0-b3e9-db7b50ca5fdc",
     "version": "0.0.18.4",
     "includeClientSideAssets": true,
@@ -20,10 +20,10 @@
     },
     "metadata": {
       "shortDescription": {
-        "default": "Markdown renderer for SharePoint with GitHub, Obsidian and VS Code themes"
+        "default": "Markdown from your document libraries, on SharePoint pages and as a Teams tab, themed like GitHub, Obsidian or VS Code."
       },
       "longDescription": {
-        "default": "Renders markdown from SharePoint libraries, URLs or inline content with readable, faithful themes modelled on GitHub, Obsidian and VS Code - including proper code block contrast, GitHub alerts and Obsidian callouts, Mermaid diagrams, KaTeX math and a table of contents."
+        "default": "Renders markdown files from a SharePoint document library, from a URL, or typed straight into the web part. A Teams channel\u2019s Files are a document library, so the same web part shows the same documents as a tab.\n\nThemes are modelled on GitHub, Obsidian and VS Code, in light and dark, and are data rather than code: typography, code block contrast, callout shape and syntax colours all follow the editor the documentation was written in.\n\nDocuments link to each other. A wiki link, an ordinary relative link, or an address on the page all open the next document in place, with a trail back through the ones before it and a button that copies a link to whichever is on screen. Word, Excel and PowerPoint files embed as a card with SharePoint\u2019s own preview inside it.\n\nAlso renders GitHub alerts and Obsidian callouts, Mermaid diagrams, KaTeX maths, sortable tables, footnotes, task lists, and code blocks that can show a file from a URL, cap their own height, or open full size."
       },
       "screenshotPaths": [
         "screenshots/github-light.png",

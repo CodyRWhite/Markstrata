@@ -131,14 +131,36 @@ test('the solution points at that tile, at the package root', () => {
     `sharepoint/${iconPath} is missing`);
 });
 
-/* The title the App Catalog lists the app under. */
+/*
+ * The title the App Catalog lists the app under.
+ *
+ * Written as properties rather than as one expected string. It used to pin the
+ * exact title, which pinned "Markdown Web Part for SharePoint Online" through
+ * every version that made it a Teams app as well - the check passed the whole
+ * time, because it was checking that nobody had changed the words rather than
+ * that the words were true.
+ */
 test('the solution is titled for people, not for the scaffold', () => {
   const solution = JSON.parse(
     fs.readFileSync(path.join(__dirname, '..', 'config', 'package-solution.json'), 'utf8')
   );
-  assert.equal(solution.solution.name, 'Markstrata - Markdown Web Part for SharePoint Online');
-  assert.ok(!/client-side-solution/.test(solution.solution.name),
+  const name = solution.solution.name;
+
+  assert.ok(/^Markstrata\b/.test(name),
+    `the App Catalog title should lead with the product name: ${name}`);
+  assert.ok(!/client-side-solution/.test(name),
     'the generated scaffold name is still showing in the App Catalog');
+
+  /* The web part is a Teams tab as well as a SharePoint web part, and has been
+     since 0.0.18.0. A title that names only one of the two is the state this
+     sat in for a dozen releases. */
+  const teamsManifest = JSON.parse(
+    fs.readFileSync(path.join(__dirname, '..', 'config', 'teams-app-manifest.json'), 'utf8')
+  );
+  if (teamsManifest.configurableTabs || teamsManifest.staticTabs) {
+    assert.ok(/teams/i.test(name),
+      `this ships a Teams tab, so the App Catalog title should say so: ${name}`);
+  }
 });
 
 test('the icon PNGs are the sizes their names claim', () => {

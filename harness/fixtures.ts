@@ -19,7 +19,7 @@
  *   await fetchRemoteCode('https://raw.githubusercontent.com/contoso/...');
  *
  * .NOTES
- * Since:     unreleased
+ * Since:     0.0.19.0
  * Ships in:  nothing - it stands in for another server at harness time
  * Requires:  nothing else in this project
  */

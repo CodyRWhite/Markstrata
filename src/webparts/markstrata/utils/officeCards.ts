@@ -25,7 +25,7 @@
  *   void buildOfficeCards(article, webUrl, (path) => sharePoint.getFileId(path));
  *
  * .NOTES
- * Since:     unreleased
+ * Since:     0.0.18.8
  * Ships in:  the web part bundle
  * Requires:  officeEmbeds.ts
  */

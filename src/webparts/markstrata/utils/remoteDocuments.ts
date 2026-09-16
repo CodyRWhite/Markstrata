@@ -41,7 +41,7 @@
  *   }
  *
  * .NOTES
- * Since:     unreleased
+ * Since:     0.0.18.8
  * Ships in:  the web part bundle
  * Requires:  nothing else in this project
  */

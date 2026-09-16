@@ -34,7 +34,7 @@
  *   builder compiles them and passes its own.
  *
  * .NOTES
- * Since:     unreleased
+ * Since:     0.0.19.0
  * Ships in:  nothing - it builds or drives what ships
  * Requires:  site.ts, jsdom, and the compiled renderer classes
  */

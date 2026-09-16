@@ -86,9 +86,21 @@ jobs:
       # release is a version of the app that can be installed without the
       # SharePoint side it talks to, and drifts the moment anybody uses it.
       - name: Build the Teams app package
+        id: teams
         run: |
           npm run teams
           test -f teams/TeamsSPFxApp.zip
+          # Attached to a pre-release and to nothing else. It is the only way
+          # to test the Teams half on its own, which is what it was needed for
+          # the day Sync to Teams refused the app and SharePoint reported
+          # nothing useful. On a recommended release it is a liability: a Teams
+          # app that installs without the SharePoint half it talks to, and that
+          # goes stale in a tenant that keeps an old copy.
+          if [ "${{ inputs.prerelease }}" = "true" ]; then
+            echo "path=teams/TeamsSPFxApp.zip" >> "$GITHUB_OUTPUT"
+          else
+            echo "path=" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Build the solution package
         run: npm run package
@@ -123,6 +135,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           VERSION: ${{ steps.version.outputs.version }}
           PACKAGE: ${{ steps.package.outputs.path }}
+          TEAMS: ${{ steps.teams.outputs.path }}
           # The solution version stays four-part numeric either way: SharePoint
           # will not install a package whose version carries a semver suffix, so
           # a pre-release is marked on the GitHub release, not in the number.
@@ -138,7 +151,7 @@ jobs:
             gh release delete "v$VERSION" --yes --cleanup-tag
           fi
           if gh release view "v$VERSION" >/dev/null 2>&1; then
-            gh release upload "v$VERSION" "$PACKAGE" --clobber
+            gh release upload "v$VERSION" "$PACKAGE" $TEAMS --clobber
           else
             # --target, because without it gh tags the repository's DEFAULT
             # branch rather than the commit this run built. Every 0.0.18.x tag
@@ -148,7 +161,7 @@ jobs:
             # commit is worse than no tag - it answers "what shipped?" with a
             # straight face and gets it wrong, and bisecting or checking one
             # out gives you a build nobody released.
-            gh release create "v$VERSION" "$PACKAGE" \
+            gh release create "v$VERSION" "$PACKAGE" $TEAMS \
               --target "$GITHUB_SHA" \
               --title "v$VERSION" \
               --notes "$NOTES" \

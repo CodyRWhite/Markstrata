@@ -8,7 +8,7 @@
  *   node --test tests/remote-code.test.js   this one
  *
  * .NOTES
- * Since:     unreleased
+ * Since:     0.0.19.0
  * Ships in:  nothing - it runs at test time only
  * Requires:  helpers.js, jsdom
  */

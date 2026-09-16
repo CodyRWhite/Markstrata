@@ -10,6 +10,23 @@ Entries below 0.0.10.0 were written before the switch and are three-part.
 
 ## 0.0.18.4
 
+- The app is called "Markstrata - Markdown for SharePoint and Teams" in the App
+  Catalog, and both its descriptions describe what it does now. The name said
+  "Markdown Web Part for SharePoint Online", which was written before any of the
+  Teams work and had become half the product; the descriptions were a version
+  behind that, listing themes and diagrams and none of the linking, embedding or
+  sharing. The Teams manifest and the website had said the fuller thing for some
+  time, so the SharePoint package was the last place still describing the old
+  scope.
+- A pre-release carries the Teams app zip again, and a recommended release does
+  not. It was dropped when Sync to Teams started working, and then turned out to
+  be the only way to test the Teams half on its own the day the sync refused the
+  app and SharePoint reported nothing useful. On a recommended release it stays
+  off: a Teams app that installs without the SharePoint half it talks to is a
+  liability, and one kept in a tenant goes stale.
+- Every file header names the version it first shipped in. Twelve still said
+  `unreleased`.
+
 - The Teams app carries the web part's own component id, so an upload is an
   upgrade of the app a tenant already has rather than a stranger claiming its
   place. Teams keys an installed app by the id in its manifest, and SPFx's own

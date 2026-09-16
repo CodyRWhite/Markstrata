@@ -37,7 +37,7 @@
  *   void fillRemoteCode(article, (url) => SharePointService.fetchUrl(url));
  *
  * .NOTES
- * Since:     unreleased
+ * Since:     0.0.19.0
  * Ships in:  the web part bundle
  * Requires:  codeBlocks.ts, remoteDocuments.ts
  */

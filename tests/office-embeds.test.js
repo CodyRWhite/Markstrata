@@ -8,7 +8,7 @@
  *   node --test tests/office-embeds.test.js   this one
  *
  * .NOTES
- * Since:     unreleased
+ * Since:     0.0.18.8
  * Ships in:  nothing - it runs at test time only
  * Requires:  helpers.ts
  */
