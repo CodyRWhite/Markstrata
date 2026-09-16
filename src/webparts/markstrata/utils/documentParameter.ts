@@ -152,17 +152,116 @@ function asPath(resolved: string): string {
 }
 
 /**
+ * The characters that have to be written as an escape, and no others.
+ *
+ * A query value only needs protecting from the things that would end it or be
+ * read as something else on the way back: a per cent sign, because it opens an
+ * escape; an ampersand, because it starts the next parameter; a hash, because
+ * the fragment belongs to the page; and a plus, because URLSearchParams reads
+ * one as a space. Everything else, a slash and a bracket and an accented
+ * letter included, survives the round trip as written.
+ *
+ * Running the whole value through encodeURIComponent instead turned every
+ * slash into %2F and every space into %20, so a link to a document three
+ * folders down was a wall of escapes that said nothing to the person it was
+ * sent to. What comes out of here is a path somebody can read.
+ *
+ * A space is escaped even so. It is not one of the four and does not need to
+ * be for this to be read back correctly, but a raw space ends the link as far
+ * as Teams and Outlook are concerned: they stop autolinking there, and what
+ * arrives is half an address. A shared link that does not survive being shared
+ * is not worth the two characters saved.
+ *
+ * The per cent sign goes first. Escaped last, it would escape the per cent
+ * signs of the escapes written before it.
+ */
+export function guardedEncode(value: string): string {
+  return (value || '')
+    .replace(/%/g, '%25')
+    .replace(/&/g, '%26')
+    .replace(/#/g, '%23')
+    .replace(/\+/g, '%2B')
+    .replace(/ /g, '%20');
+}
+
+/**
+ * How far to climb before a relative path stops being clearer than a full one.
+ *
+ * One is a folder beside this one, which reads as what it is. Two or more is a
+ * walk back up through the site to come down somewhere unrelated, and
+ * `../../other/Docs/page.md` tells a reader less than the path it stands for.
+ */
+const CLIMB_LIMIT: number = 1;
+
+/**
+ * A document named the short way, against the folder the page reads from.
+ *
+ * `?strataDoc=` has always taken a relative value and resolved it the way a
+ * link inside a document is resolved, but the Share button wrote the whole
+ * server-relative path every time, so the address it copied carried the site
+ * and the library in it whether or not they said anything.
+ *
+ * Returns the path unchanged wherever relative would be worse: a document on
+ * another site, an address rather than a path, or anything far enough up that
+ * the climb is longer than the walk.
+ */
+export function relativeToFolder(folder: string | undefined, path: string): string {
+  if (!folder || !path || path.charAt(0) !== '/' || folder.charAt(0) !== '/') {
+    return path;
+  }
+
+  const from: string[] = folder.split('/').filter((part: string) => part.length > 0);
+  const to: string[] = path.split('/').filter((part: string) => part.length > 0);
+
+  let shared: number = 0;
+  /* Never past the last segment of the path, which is the file itself: a file
+     whose name matches the folder it is in is still a file. */
+  while (shared < from.length && shared < to.length - 1 && from[shared] === to[shared]) {
+    shared++;
+  }
+
+  /* Nothing in common means another site, and the whole path is the answer. */
+  if (shared === 0) {
+    return path;
+  }
+
+  const climb: number = from.length - shared;
+  if (climb > CLIMB_LIMIT) {
+    return path;
+  }
+
+  const down: string[] = to.slice(shared);
+  const up: string[] = [];
+  for (let step: number = 0; step < climb; step++) {
+    up.push('..');
+  }
+  return up.concat(down).join('/');
+}
+
+/**
  * The address a menu entry should point at, for a given page and document.
  *
  * Here so that the one place that builds these and the one place that reads
  * them cannot drift apart, and so the documentation can show a real example
  * rather than a hand-written guess at the format.
+ *
+ * `relativeTo` is the folder the page reads from, and naming it shortens the
+ * value to what a link inside a document would have said. It has to be the
+ * configured document's folder rather than the open one's, because that is
+ * the base documentFromAddress resolves against when somebody follows the
+ * link into a page that is showing nothing yet.
  */
-export function addressForDocument(pageUrl: string, documentPath: string, heading?: string): string {
+export function addressForDocument(
+  pageUrl: string,
+  documentPath: string,
+  heading?: string,
+  relativeTo?: string
+): string {
   const base: string = addressWithoutDocument(pageUrl);
-  const value: string = heading ? `${documentPath}#${heading}` : documentPath;
+  const named: string = relativeTo ? relativeToFolder(relativeTo, documentPath) : documentPath;
+  const value: string = heading ? `${named}#${heading}` : named;
   const separator: string = base.indexOf('?') === -1 ? '?' : '&';
-  return `${base}${separator}${DOCUMENT_PARAMETER}=${encodeURIComponent(value)}`;
+  return `${base}${separator}${DOCUMENT_PARAMETER}=${guardedEncode(value)}`;
 }
 
 /**
