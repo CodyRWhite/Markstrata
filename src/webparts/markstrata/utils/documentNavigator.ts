@@ -38,6 +38,8 @@
  *
  *   void navigator.open('/sites/team/Runbooks/deploy.md', 'rollback', true);
  *   void navigator.back(true);      // back one document, or to the configured one
+ *   void navigator.goTo(0, true);   // to a named point on the trail
+ *   navigator.trailNames;           // the documents behind this one, to draw
  *   navigator.close(true);          // straight back to the configured document
  *   navigator.markdown;             // what to render, or undefined
  *   navigator.takeHeading();        // the heading to land on, read once
@@ -123,6 +125,18 @@ export class DocumentNavigator {
   }
 
   /**
+   * The documents walked through to reach this one, oldest first, by name.
+   *
+   * Neither the configured document nor the one being read is in it: the
+   * first is the web part's to name and the second has its own getter. What
+   * this holds is the middle of the trail, which is the part nothing else
+   * knows about.
+   */
+  public get trailNames(): string[] {
+    return this.trail.map((path: string) => fileOf(path));
+  }
+
+  /**
    * The heading the link named, handed over once.
    *
    * Read-once on purpose: a re-render for a theme change must not send the
@@ -159,15 +173,29 @@ export class DocumentNavigator {
    * was the beginning.
    */
   public async back(push: boolean): Promise<void> {
+    await this.goTo(this.trail.length - 1, push);
+  }
+
+  /**
+   * To a document on the trail, by its place in `trailNames`.
+   *
+   * Below zero is the configured document, which sits before the trail
+   * starts. Everything after the one asked for is dropped, because the reader
+   * has just said it is behind them: stepping back and then forward again
+   * would otherwise leave a trail through documents nobody is reading.
+   *
+   * This is what a breadcrumb does when it is clicked.
+   */
+  public async goTo(index: number, push: boolean): Promise<void> {
     if (!this.openPath) {
       return;
     }
-    if (!this.trail.length) {
+    if (index < 0 || !this.trail.length) {
       this.close(push);
       return;
     }
-    const previous: string = this.trail[this.trail.length - 1];
-    await this.go(previous, '', push, this.trail.slice(0, this.trail.length - 1));
+    const wanted: number = Math.min(index, this.trail.length - 1);
+    await this.go(this.trail[wanted], '', push, this.trail.slice(0, wanted));
   }
 
   /** Straight back to the document the page is configured to show. */

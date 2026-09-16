@@ -38,7 +38,7 @@ import type { IFileMetadata } from './SharePointService';
 import { splitFrontMatter, IFrontMatter } from './frontMatter';
 import { BackToTop } from './backToTop';
 import {
-  BACK_ICON, CLOCK_ICON, RELOAD_ICON, HISTORY_ICON, PRINT_ICON, themeIcon
+  CLOCK_ICON, RELOAD_ICON, HISTORY_ICON, PRINT_ICON, themeIcon
 } from './icons';
 
 export type TocPosition = 'left' | 'right' | 'inline' | 'off';
@@ -67,11 +67,12 @@ export interface IViewOptions {
   /** The followed document being read, when one is: empty when at home. */
   openDocumentName?: string;
   /**
-   * What the way back goes back to: the document the reader came from, or the
-   * configured one when they came from there.
+   * Every document from the configured one to the one being read, in order.
+   * Drawn as breadcrumbs, so the last entry is where the reader is now.
    */
-  backDocumentName?: string;
-  onGoBack?: () => void;
+  documentTrail?: string[];
+  /** A crumb was clicked, by its place in documentTrail. */
+  onGoToCrumb?: (index: number) => void;
   /** A heading in the document to land on once it is drawn, from a link. */
   landOnHeading?: string;
   backToTop?: BackToTop;
@@ -121,7 +122,7 @@ export class ViewModeRenderer {
 
     /* Above the toolbar, because it answers "where am I", which comes before
        anything a reader might do here. */
-    if (options.openDocumentName && options.onGoBack) {
+    if (options.openDocumentName && options.onGoToCrumb) {
       host.appendChild(this.buildOpenDocumentBar(options));
     }
 
@@ -284,31 +285,45 @@ export class ViewModeRenderer {
    * that depends on a history the host page also writes to, and this does not.
    */
   private buildOpenDocumentBar(options: IViewOptions): HTMLElement {
-    const bar: HTMLElement = document.createElement('div');
+    const bar: HTMLElement = document.createElement('nav');
     bar.className = 'strata-open-doc';
+    bar.setAttribute('aria-label', 'Document trail');
 
-    const label: HTMLElement = document.createElement('span');
-    label.textContent = 'Reading';
-    bar.appendChild(label);
+    const list: HTMLElement = document.createElement('ol');
+    list.className = 'strata-crumbs';
 
-    const name: HTMLElement = document.createElement('span');
-    name.className = 'strata-open-doc-name';
-    name.textContent = options.openDocumentName as string;
-    bar.appendChild(name);
+    const trail: string[] = options.documentTrail && options.documentTrail.length
+      ? options.documentTrail
+      : [options.openDocumentName as string];
+    const goTo: (index: number) => void = options.onGoToCrumb as (index: number) => void;
 
-    /* Named rather than a bare "Back", because the reader has a second Back
-       button an inch away in the browser and the two do the same thing only
-       by accident. */
-    const previous: string = options.backDocumentName || 'this page';
-    const back: HTMLButtonElement = this.button(
-      `Back to ${previous}`,
-      `Go back to ${previous}`,
-      () => (options.onGoBack as () => void)(),
-      BACK_ICON
-    );
-    back.classList.add('strata-open-doc-back');
-    bar.appendChild(back);
+    trail.forEach((name: string, index: number) => {
+      const item: HTMLElement = document.createElement('li');
+      item.className = 'strata-crumb';
 
+      /* The last crumb is where the reader already is, so it is text. A
+         button that does nothing is worse than no button: it reads as a way
+         somewhere and then is not one. */
+      if (index === trail.length - 1) {
+        const here: HTMLElement = document.createElement('span');
+        here.className = 'strata-crumb-here';
+        here.setAttribute('aria-current', 'page');
+        here.textContent = name;
+        item.appendChild(here);
+      } else {
+        const step: HTMLButtonElement = document.createElement('button');
+        step.type = 'button';
+        step.className = 'strata-crumb-link';
+        step.textContent = name;
+        step.title = `Go back to ${name}`;
+        step.onclick = () => goTo(index);
+        item.appendChild(step);
+      }
+
+      list.appendChild(item);
+    });
+
+    bar.appendChild(list);
     return bar;
   }
 

@@ -504,19 +504,22 @@ const LIBRARY_PATH = '/sites/demo/Documents';
       heading: ((document.querySelector('.strata-content h1') || {}).textContent || '')
         .replace('#', '').trim(),
       bar: !!document.querySelector('.strata-open-doc'),
-      name: (document.querySelector('.strata-open-doc-name') || {}).textContent,
-      back: (document.querySelector('.strata-open-doc-back') || {}).textContent
+      name: (document.querySelector('.strata-crumb-here') || {}).textContent,
+      crumbs: Array.prototype.slice
+        .call(document.querySelectorAll('.strata-crumb-link'))
+        .map((crumb) => (crumb.textContent || '').trim())
     }));
     if (opened.heading !== 'Deploying') {
       throw new Error('the document on screen is "' + opened.heading + '"');
     }
     if (!opened.bar) throw new Error('nothing says which document is open');
     if (opened.name !== 'deploy.md') throw new Error('the bar names "' + opened.name + '"');
-    if (!/^Back to /.test(opened.back || '')) {
-      throw new Error('the way back reads "' + opened.back + '"');
+    /* One link in, the only crumb behind this one is the configured document. */
+    if (opened.crumbs.length !== 1 || opened.crumbs[0] !== 'handbook.md') {
+      throw new Error('the trail behind it reads ' + JSON.stringify(opened.crumbs));
     }
 
-    await page.locator('.strata-open-doc-back').click();
+    await page.locator('.strata-crumb-link').first().click();
     await page.waitForTimeout(600);
     const home = await page.evaluate(() => ({
       heading: ((document.querySelector('.strata-content h1') || {}).textContent || '')
@@ -551,7 +554,7 @@ const LIBRARY_PATH = '/sites/demo/Documents';
       throw new Error('the heading sits at ' + Math.round(landed.top)
         + ' with the line at ' + Math.round(landed.offset));
     }
-    await page.locator('.strata-open-doc-back').click();
+    await page.locator('.strata-crumb-link').first().click();
     await page.waitForTimeout(400);
   });
 
@@ -2281,11 +2284,18 @@ const LIBRARY_PATH = '/sites/demo/Documents';
         const found = document.querySelector('#host h1');
         return found ? (found.textContent || '').trim() : '';
       };
-      const backButton = () => document.querySelector('#host .strata-open-doc-back');
+      /* The way back is the last crumb before the one the reader is on. */
+      const backButton = () => {
+        const links = document.querySelectorAll('#host .strata-crumb-link');
+        return links.length ? links[links.length - 1] : null;
+      };
       const backSays = () => {
         const button = backButton();
         return button ? (button.textContent || '').trim() : '';
       };
+      const crumbs = () => Array.prototype.slice
+        .call(document.querySelectorAll('#host .strata-crumb'))
+        .map((crumb) => (crumb.textContent || '').trim());
 
       await window.webPartHarness.start({
         contentSource: 'library',
@@ -2308,11 +2318,11 @@ const LIBRARY_PATH = '/sites/demo/Documents';
       const steps = [];
       if (!follow('Deploy%20notes')) { return { failed: 'no link to the deploy notes' }; }
       await settle();
-      steps.push({ at: heading(), back: backSays() });
+      steps.push({ at: heading(), back: backSays(), trail: crumbs() });
 
       if (!follow('rollback')) { return { failed: 'the deploy notes link nowhere' }; }
       await settle();
-      steps.push({ at: heading(), back: backSays() });
+      steps.push({ at: heading(), back: backSays(), trail: crumbs() });
 
       /* Said rather than thrown. Against the old behaviour the first way back
          went all the way out, so the bar was gone by the second click and the
@@ -2327,7 +2337,7 @@ const LIBRARY_PATH = '/sites/demo/Documents';
       const first = goBack('after two links in');
       if (first) { return { failed: first, steps: steps }; }
       await settle();
-      steps.push({ at: heading(), back: backSays() });
+      steps.push({ at: heading(), back: backSays(), trail: crumbs() });
 
       const second = goBack('after going back once, which means it went out to the start');
       if (second) { return { failed: second, steps: steps }; }
@@ -2344,13 +2354,22 @@ const LIBRARY_PATH = '/sites/demo/Documents';
 
     /* One link in, the way back is the configured document, which is the only
        name the navigator does not hold itself. */
-    if (one.back.indexOf('index.md') === -1) {
+    if (one.back !== 'index.md') {
       throw new Error('one link in, the way back says ' + JSON.stringify(one.back));
+    }
+    /* Two crumbs: where the reader started, and where they are. */
+    if (one.trail.length !== 2) {
+      throw new Error('one link in, the trail reads ' + JSON.stringify(one.trail));
     }
     /* Two in, and this is the whole point: it names the page just left, not
        the one the page is configured with. */
-    if (two.back.indexOf('Deploy notes.md') === -1) {
+    if (two.back !== 'Deploy notes.md') {
       throw new Error('two links in, the way back says ' + JSON.stringify(two.back));
+    }
+    /* And every step of the way is on screen and clickable, which is the
+       whole reason this is a trail rather than a button. */
+    if (two.trail.length !== 3 || two.trail[0] !== 'index.md') {
+      throw new Error('two links in, the trail reads ' + JSON.stringify(two.trail));
     }
     if (two.at.indexOf('Rolling back') === -1 && two.at.indexOf('Roll') === -1) {
       throw new Error('two links in, the document is ' + JSON.stringify(two.at));
@@ -2359,12 +2378,89 @@ const LIBRARY_PATH = '/sites/demo/Documents';
     if (three.at.indexOf('Deploying') === -1) {
       throw new Error('after going back the document is ' + JSON.stringify(three.at));
     }
-    if (three.back.indexOf('index.md') === -1) {
+    if (three.back !== 'index.md') {
       throw new Error('after going back the way back says ' + JSON.stringify(three.back));
+    }
+    /* The crumb walked back from is dropped, not left hanging off the end. */
+    if (three.trail.length !== 2) {
+      throw new Error('after going back the trail reads ' + JSON.stringify(three.trail));
     }
     /* And back again leaves the trail entirely, so the bar goes with it. */
     if (four.bar) {
       throw new Error('back at the configured document the bar is still there');
+    }
+  });
+
+  /*
+   * And a crumb in the middle is a way straight there, which is the point of
+   * drawing the trail rather than one button: four documents deep, going back
+   * three times to reach the second one is not navigation.
+   *
+   * index.md -> Runbooks/Deploy notes.md -> rollback.md -> deploy.md, then a
+   * click on the second crumb.
+   */
+  await step('a crumb in the middle goes straight there and drops the rest', async () => {
+    const jumped = await page.evaluate(async () => {
+      const settle = () => new Promise((resolve) => setTimeout(resolve, 600));
+      const crumbs = () => Array.prototype.slice
+        .call(document.querySelectorAll('#host .strata-crumb'))
+        .map((crumb) => (crumb.textContent || '').trim());
+
+      await window.webPartHarness.start({
+        contentSource: 'library',
+        selectedLibrary: '/sites/demo/Documents',
+        selectedFile: '/sites/demo/Documents/index.md',
+        enableWikiLinks: true,
+        followDocumentLinks: true
+      });
+      await settle();
+
+      const follow = (within) => {
+        const link = Array.from(document.querySelectorAll('#host article a'))
+          .filter((anchor) => anchor.classList.contains('strata-doc-link')
+            && (anchor.getAttribute('href') || '').indexOf(within) !== -1)[0];
+        if (!link) { return false; }
+        link.click();
+        return true;
+      };
+
+      if (!follow('Deploy%20notes')) { return { failed: 'no link to the deploy notes' }; }
+      await settle();
+      if (!follow('rollback')) { return { failed: 'the deploy notes link nowhere' }; }
+      await settle();
+      if (!follow('deploy.md')) { return { failed: 'rollback links nowhere' }; }
+      await settle();
+
+      const deep = crumbs();
+      const links = document.querySelectorAll('#host .strata-crumb-link');
+      if (links.length < 2) {
+        return { failed: 'four deep there are ' + links.length + ' crumbs to click', deep: deep };
+      }
+      /* The second crumb: the first document followed to, two behind. */
+      links[1].click();
+      await settle();
+
+      const heading = document.querySelector('#host h1');
+      return {
+        deep: deep,
+        at: heading ? (heading.textContent || '').trim() : '',
+        after: crumbs()
+      };
+    });
+
+    if (jumped.failed) {
+      throw new Error(jumped.failed + '; the trail was ' + JSON.stringify(jumped.deep));
+    }
+    if (jumped.deep.length !== 4) {
+      throw new Error('four documents in, the trail reads ' + JSON.stringify(jumped.deep));
+    }
+    if (jumped.at.indexOf('Deploying') === -1) {
+      throw new Error('the crumb went to ' + JSON.stringify(jumped.at));
+    }
+    /* Everything the reader has just said is behind them is gone, rather than
+       left on the end to be walked forward into again. */
+    if (jumped.after.length !== 2) {
+      throw new Error('after the jump the trail reads ' + JSON.stringify(jumped.after));
     }
   });
 
@@ -2485,8 +2581,9 @@ const LIBRARY_PATH = '/sites/demo/Documents';
 
   await step('and comes back once that document is closed', async () => {
     const state = await page.evaluate(async () => {
-      /* The bar above the document carries the way back. */
-      const close = document.querySelector('#host .strata-open-doc-back');
+      /* The trail above the document carries the way back: the first crumb
+         is the configured document. */
+      const close = document.querySelector('#host .strata-crumb-link');
       if (close) { close.click(); }
       await new Promise((resolve) => setTimeout(resolve, 500));
 
@@ -2520,7 +2617,7 @@ const LIBRARY_PATH = '/sites/demo/Documents';
       const bar = document.querySelector('#host .strata-open-doc');
       return {
         heading: heading ? heading.textContent : '',
-        wayBack: !!(bar && bar.querySelector('.strata-open-doc-back'))
+        wayBack: !!(bar && bar.querySelector('.strata-crumb-link'))
       };
     });
     if (shown.heading.indexOf('Deploying') === -1) {
@@ -2529,6 +2626,40 @@ const LIBRARY_PATH = '/sites/demo/Documents';
     /* And it is still plainly a document other than the page's own, with the
        way back to it, exactly as a followed link is. */
     if (!shown.wayBack) throw new Error('no way back to the configured document');
+  });
+
+  /*
+   * And the heading in that address, which is the half of it a menu entry
+   * actually uses: a wiki's navigation points at sections, not only at files.
+   *
+   * The document here is the page's own configured one, because that is the
+   * case a menu hits most: every entry points at the same page, and most of
+   * them name a heading in the document it already shows. Reported as "it just
+   * loaded the home page", which is what landing on the top of the right
+   * document looks like.
+   */
+  await step('and lands on the heading that address names', async () => {
+    const landed = await page.evaluate(async () => {
+      window.webPartHarness.addressDocument('/sites/demo/Documents/handbook.md#tables');
+      await window.webPartHarness.start({
+        contentSource: 'library',
+        selectedLibrary: '/sites/demo/Documents',
+        selectedFile: '/sites/demo/Documents/handbook.md',
+        followDocumentLinks: true
+      });
+      await new Promise((resolve) => setTimeout(resolve, 1200));
+
+      const heading = document.getElementById('tables');
+      if (!heading) { return { failed: 'the document has no heading with that id' }; }
+      return { top: Math.round(heading.getBoundingClientRect().top) };
+    });
+
+    if (landed.failed) throw new Error(landed.failed);
+    /* Somewhere near the top of the window rather than far down it, which is
+       where it sits if nothing scrolled. */
+    if (landed.top > 200 || landed.top < -200) {
+      throw new Error('the named heading sits at ' + landed.top + ', so nothing landed on it');
+    }
   });
 
   await step('and the configured one opens when the address names none', async () => {

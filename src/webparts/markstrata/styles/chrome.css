@@ -255,10 +255,8 @@
 .strata-open-doc {
   display: flex;
   align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
   margin-bottom: 12px;
-  padding: 6px 6px 6px 12px;
+  padding: 6px 12px;
   border: 1px solid var(--strata-border);
   border-radius: var(--strata-radius-sm);
   background-color: var(--strata-bg-elevated);
@@ -266,13 +264,56 @@
   color: var(--strata-text-muted);
 }
 
-.strata-open-doc-name {
-  font-weight: 600;
-  color: var(--strata-text);
+/*
+ * The trail the reader walked, as breadcrumbs. Wraps rather than scrolling or
+ * collapsing: a crumb that is off the edge or behind an ellipsis is a way back
+ * the reader cannot see, which is the thing this replaced a single Back button
+ * to fix.
+ */
+.strata-crumbs {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 2px 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
 
-.strata-open-doc-back {
-  margin-left: auto;
+.strata-crumb {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+/* On the separator rather than between the items, so a wrapped line does not
+   begin with one. */
+.strata-crumb + .strata-crumb::before {
+  content: '\203A';
+  color: var(--strata-text-muted);
+  opacity: 0.7;
+}
+
+.strata-crumb-link {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: var(--strata-link);
+  cursor: pointer;
+}
+
+.strata-crumb-link:hover,
+.strata-crumb-link:focus-visible {
+  text-decoration: underline;
+}
+
+/* Where the reader is. Not a button, so it carries the document's weight
+   rather than a link's colour. */
+.strata-crumb-here {
+  font-weight: 600;
+  color: var(--strata-text);
 }
 
 /* On paper the bar is chrome, and the document is the point. */

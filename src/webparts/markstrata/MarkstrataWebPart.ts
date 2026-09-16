@@ -628,11 +628,17 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
       /* Drawn by the renderer with everything else on the page, rather than
          pushed in over the top of it afterwards. */
       openDocumentName: this.navigator.name,
-      /* The document behind this one, which is the configured document only
-         when the reader has followed exactly one link. */
-      backDocumentName: this.navigator.previousName
-        || (this.properties.fileMetadata ? this.properties.fileMetadata.name : ''),
-      onGoBack: () => { void this.navigator.back(true); },
+      /* The whole trail, so it can be drawn as breadcrumbs: the configured
+         document first, every document followed through after it, and the one
+         being read last. The configured document is in here rather than in
+         the navigator because its name comes from the page's own settings. */
+      documentTrail: this.navigator.path
+        ? [this.properties.fileMetadata ? this.properties.fileMetadata.name : 'Start']
+          .concat(this.navigator.trailNames, [this.navigator.name])
+        : undefined,
+      /* Crumb zero is the configured document, which sits before the trail
+         the navigator keeps, so everything after it is offset by one. */
+      onGoToCrumb: (index: number) => { void this.navigator.goTo(index - 1, true); },
       landOnHeading: landOn,
       /* Only a library can hand over another document, and only a reader is
          reading: in page edit mode a click on a link belongs to the author

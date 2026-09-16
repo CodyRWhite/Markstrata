@@ -280,8 +280,10 @@ function draw(showing?: string, heading?: string): void {
       ? (path: string, heading: string) => void navigator.open(path, heading, true)
       : undefined,
     openDocumentName: navigator.name,
-    backDocumentName: navigator.previousName || 'handbook.md',
-    onGoBack: () => { void navigator.back(true); },
+    documentTrail: navigator.path
+      ? ['handbook.md'].concat(navigator.trailNames, [navigator.name])
+      : undefined,
+    onGoToCrumb: (index: number) => { void navigator.goTo(index - 1, true); },
     landOnHeading: heading !== undefined ? heading : navigator.takeHeading(),
     canReload: state.canReload,
     canShowVersions: state.canShowVersions,

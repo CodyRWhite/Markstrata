@@ -40,10 +40,6 @@ export const HISTORY_ICON: string =
   `${SVG_OPEN}<path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/>` +
   '<path d="M12 8v4l3 2"/></svg>';
 
-/** An arrow back the way you came. */
-export const BACK_ICON: string =
-  `${SVG_OPEN}<path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>`;
-
 /** A printer. */
 export const PRINT_ICON: string =
   `${SVG_OPEN}<path d="M7 9V3h10v6"/><path d="M7 19H5a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>` +
