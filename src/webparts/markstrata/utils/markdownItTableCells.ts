@@ -25,6 +25,14 @@
  *   walked the sortable columns out of step with their headers. Every other
  *   renderer pads a short row and ignores the excess of a long one.
  *
+ *   The pipe in `[[Page|Label]]` ended the cell. Obsidian documents `\\|` as the
+ *   way to write that link in a table and this has always honoured it, but the
+ *   bare pipe is what a folder of notes actually arrives full of: it is what
+ *   Obsidian itself writes outside a table, and what somebody moving a link
+ *   into one types. Split there, the link came apart across two cells and both
+ *   halves rendered as literal brackets. A pipe inside a wiki link's brackets
+ *   is now content, the same way a pipe inside a code span already was.
+ *
  * So the rows are read again here, from the document, and only put right where
  * they are wrong. A row the plugin got right is left exactly as the plugin
  * built it, along with everything it can do that this cannot: a row carrying a
@@ -35,7 +43,7 @@
  *   import { tableCellPlugin } from './utils/markdownItTableCells';
  *
  *   markdownIt.use(markdownItMultimdTable, { ... });
- *   markdownIt.use(tableCellPlugin);
+ *   markdownIt.use(tableCellPlugin, { wikiLinks: true });
  *
  * .NOTES
  * Since:     0.0.18.5
@@ -106,15 +114,58 @@ function inSpan(spans: [number, number][], position: number): boolean {
   return spans.some((span: [number, number]) => position >= span[0] && position < span[1]);
 }
 
+/** What the plugin needs to know about the rest of the pipeline. */
+export interface ITableCellOptions {
+  /**
+   * Whether `[[Page|Label]]` is a link here.
+   *
+   * Only then is the pipe inside one content rather than a cell boundary. With
+   * the links off those brackets are ordinary text, and a row is split where
+   * the document's pipes are, which is what it has always done.
+   */
+  wikiLinks?: boolean;
+}
+
+/**
+ * The ranges of a line that are inside a wiki link's brackets.
+ *
+ * The rule is the one the wiki link rule itself applies: a bracket between the
+ * pairs means these are not a link's brackets, so `[[1,2],[3,4]]` is an array
+ * and its pipes, if it had any, would still end a cell. Nothing here decides
+ * whether the link resolves, only where it starts and stops.
+ */
+function wikiSpans(line: string): [number, number][] {
+  const spans: [number, number][] = [];
+
+  for (let index: number = 0; index + 1 < line.length; index++) {
+    if (line.charAt(index) !== '[' || line.charAt(index + 1) !== '[') {
+      continue;
+    }
+    const end: number = line.indexOf(']]', index + 2);
+    if (end === -1) {
+      break;
+    }
+    if (/[[\]]/.test(line.slice(index + 2, end))) {
+      continue;
+    }
+    spans.push([index, end + 2]);
+    index = end + 1;
+  }
+
+  return spans;
+}
+
 /**
  * Splits one line of a table into its cells.
  *
- * On an unescaped pipe that is not inside a code span, with the one pipe a row
- * may open with and the one it may close with dropped, which is what every
- * other renderer does and what lets `| a | b |` and `a | b` mean the same row.
+ * On an unescaped pipe that is not inside a code span and not inside a wiki
+ * link's brackets, with the one pipe a row may open with and the one it may
+ * close with dropped, which is what every other renderer does and what lets
+ * `| a | b |` and `a | b` mean the same row.
  */
-export function splitRow(line: string): string[] {
-  const spans: [number, number][] = codeSpans(line);
+export function splitRow(line: string, wikiLinks?: boolean): string[] {
+  const spans: [number, number][] = codeSpans(line)
+    .concat(wikiLinks ? wikiSpans(line) : []);
   const bounds: number[] = [];
 
   for (let index: number = 0; index < line.length; index++) {
@@ -162,8 +213,8 @@ export function unescapePipes(text: string): string {
 }
 
 /** Is this line the one that rules the table, and so says how wide it is? */
-function isSeparator(line: string): boolean {
-  const cells: string[] = splitRow(line);
+function isSeparator(line: string, wikiLinks: boolean): boolean {
+  const cells: string[] = splitRow(line, wikiLinks);
   return cells.length > 0 && cells.every((cell: string) => SEPARATOR.test(cell));
 }
 
@@ -174,7 +225,10 @@ function width(token: IToken): number {
   return value > 0 ? value : 1;
 }
 
-export function tableCellPlugin(markdownIt: IMarkdownIt): void {
+export function tableCellPlugin(markdownIt: IMarkdownIt, options?: unknown): void {
+  const settings: ITableCellOptions = (options as ITableCellOptions) || {};
+  const wikiLinks: boolean = settings.wikiLinks === true;
+
   const rule = (state: IStateCore): void => {
     const lines: string[] = state.src.split('\n');
 
@@ -184,7 +238,7 @@ export function tableCellPlugin(markdownIt: IMarkdownIt): void {
       }
       const close: number = closeOf(state.tokens, index, 'table_close');
       if (close !== -1) {
-        repair(state.tokens, state.Token, index, close, lines);
+        repair(state.tokens, state.Token, index, close, lines, wikiLinks);
         index = close;
       }
     }
@@ -211,7 +265,8 @@ function repair(
   Token: TokenConstructor,
   open: number,
   close: number,
-  lines: string[]
+  lines: string[],
+  wikiLinks: boolean
 ): void {
   const rows: IRow[] = readRows(tokens, open, close);
   if (rows.length === 0) {
@@ -225,7 +280,7 @@ function repair(
     });
   });
 
-  const columns: number = columnsOf(tokens[open], lines);
+  const columns: number = columnsOf(tokens[open], lines, wikiLinks);
   if (columns === 0) {
     return;
   }
@@ -241,7 +296,7 @@ function repair(
 
   /* Back to front, so that rebuilding one row does not move the next. */
   for (let index: number = rows.length - 1; index >= 0; index--) {
-    rebuildIfWrong(tokens, Token, rows[index], rows[0], columns, lines);
+    rebuildIfWrong(tokens, Token, rows[index], rows[0], columns, lines, wikiLinks);
   }
 }
 
@@ -290,14 +345,14 @@ function readRows(tokens: IToken[], open: number, close: number): IRow[] {
  * row like any other and can be the one that was split wrongly. Every other
  * renderer counts the columns the same way.
  */
-function columnsOf(table: IToken, lines: string[]): number {
+function columnsOf(table: IToken, lines: string[], wikiLinks: boolean): number {
   const map: [number, number] | null = table.map;
   if (!map) {
     return 0;
   }
   for (let line: number = map[0]; line < map[1] && line < lines.length; line++) {
-    if (isSeparator(lines[line])) {
-      return splitRow(lines[line]).length;
+    if (isSeparator(lines[line], wikiLinks)) {
+      return splitRow(lines[line], wikiLinks).length;
     }
   }
   return 0;
@@ -310,7 +365,8 @@ function rebuildIfWrong(
   row: IRow,
   header: IRow,
   columns: number,
-  lines: string[]
+  lines: string[],
+  wikiLinks: boolean
 ): void {
   const map: [number, number] | null = tokens[row.open].map;
   /* A row written across several lines belongs to the plugin's multiline
@@ -324,7 +380,7 @@ function rebuildIfWrong(
     return;
   }
 
-  const written: string[] = splitRow(lines[map[0]]);
+  const written: string[] = splitRow(lines[map[0]], wikiLinks);
   if (written.length === 0) {
     return;
   }
@@ -388,4 +444,4 @@ function made(Token: TokenConstructor, type: string, tag: string, nesting: numbe
   return token;
 }
 
-export const plugin: (markdownIt: IMarkdownIt) => void = tableCellPlugin;
+export const plugin: (markdownIt: IMarkdownIt, options?: unknown) => void = tableCellPlugin;

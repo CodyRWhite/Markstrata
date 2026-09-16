@@ -337,9 +337,14 @@ export class MarkdownProcessor {
        brackets stays a row. */
     register('table captions', tableCaptionPlugin);
     /* And the cells of a row, read again where that plugin read them wrongly:
-       a lone backtick in a cell, an escaped pipe inside a code span, and a row
-       with the wrong number of cells in it. */
-    register('table cells', tableCellPlugin);
+       a lone backtick in a cell, an escaped pipe inside a code span, a row
+       with the wrong number of cells in it, and the pipe in `[[Page|Label]]`,
+       which ended the cell and broke the link across two of them.
+
+       Told whether wiki links are on, because that last one only holds where
+       those brackets mean something. With the links off they are ordinary
+       text and a row splits where its pipes are, as it always has. */
+    register('table cells', tableCellPlugin, { wikiLinks: this.options.enableWikiLinks });
 
     if (this.options.enableAnchors || this.options.enableToc) {
       const anchor: typeof markdownItAnchor = resolvePlugin(markdownItAnchor) as typeof markdownItAnchor;
