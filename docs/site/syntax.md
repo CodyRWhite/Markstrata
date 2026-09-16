@@ -69,6 +69,40 @@ Off by default, under **Wiki links**.
 
 With a library file, a link to a page that is not there is marked.
 
+### Embeds
+
+`![[picture.png]]` puts the picture on the page, and takes the same sizes a
+markdown image does:
+
+| Write | Effect |
+|---|---|
+| `![[Engelbart.jpg]]` | the picture, resolved against this document's folder |
+| `![[Engelbart.jpg\|100]]` | 100 pixels wide |
+| `![[Engelbart.jpg\|100x145]]` | and told the picture's shape |
+| `![[Engelbart.jpg\|A portrait]]` | wording that is not a size is the alt text |
+
+An embed of anything that is not a picture - another document, a PDF, a sound
+file - is rendered as a link marked as an embed rather than as the thing
+itself. Putting one on the page means fetching it, and nothing can be fetched
+while a document is being rendered.
+
+### Naming a block
+
+A paragraph, a list item, a quote or a table can be named, so a wiki link can
+point straight at it:
+
+```markdown
+The build fails on a clean checkout. ^37066d
+
+| Service | Host |
+|---------|------|
+| Orders  | db01 |
+^hosts
+```
+
+The marker is not shown. `[[Runbook#^37066d]]` links to the block it names. A
+heading is named by its own words instead, `[[Runbook#Rollback]]`.
+
 ## Lists
 
 ```markdown
@@ -206,6 +240,28 @@ came from writes it:
 
 A display block can follow straight on from the line that introduces it, and
 works inside a list item and inside a quote.
+
+## Tags
+
+With **Tags** on, `#recipe` and a nested `#work/urgent` are shown as tags
+rather than as words with a hash in front, the way a note written in Obsidian
+writes them. A tag holds letters, digits, `_`, `-` and `/`, has to contain at
+least one character that is not a digit, and cannot be joined onto the end of a
+word, so `C#` and `#1984` are not tags. They are styled and nothing more: this
+web part cannot see the other documents in a library, so a tag that looked like
+a link would go nowhere.
+
+Frontmatter tags are read as well, written any of the three ways:
+
+```markdown
+---
+tags: [recipe, cooking]
+tags: recipe, cooking
+tags:
+  - recipe
+  - cooking
+---
+```
 
 ## Comments
 

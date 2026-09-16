@@ -36,6 +36,32 @@ test('the block is removed and read', () => {
   assert.equal(split.body, '\n# Real title\n');
 });
 
+/*
+ * The third way YAML writes a list, and the one Obsidian's own documentation
+ * of tags uses. Nothing after the colon was read as no value at all, so the
+ * key was skipped and the indented lines under it were skipped too by the rule
+ * that only reads top level keys: every tag in the file was dropped.
+ */
+test('tags are read from an indented list under the key', () => {
+  assert.deepEqual(
+    splitFrontMatter('---\ntags:\n  - recipe\n  - cooking\n---\n').data.tags,
+    ['recipe', 'cooking']
+  );
+});
+
+test('an indented list stops where it stops', () => {
+  const data = splitFrontMatter(
+    '---\ntitle: Dinner\ntags:\n  - recipe\nauthor: Cody\n---\n'
+  ).data;
+  assert.deepEqual(data.tags, ['recipe']);
+  assert.equal(data.author, 'Cody');
+  assert.equal(data.title, 'Dinner');
+});
+
+test('a key with nothing under it is still no tags', () => {
+  assert.equal(splitFrontMatter('---\ntags:\nauthor: Cody\n---\n').data.tags, undefined);
+});
+
 test('tags are read as a list, bracketed or not', () => {
   assert.deepEqual(splitFrontMatter('---\ntags: [ops, sharepoint]\n---\n').data.tags,
     ['ops', 'sharepoint']);

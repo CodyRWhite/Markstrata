@@ -313,6 +313,38 @@
 }
 
 /*
+ * A tag, `#recipe` or `#work/urgent`, which is how a note written in Obsidian
+ * says what it is about. Shown as the pill it is there, in the accent colour
+ * the links around it already use, and deliberately not as a link: this web
+ * part cannot see the other documents in a library, so a tag that looked
+ * clickable would be a promise it cannot keep.
+ */
+.strata-content .strata-tag {
+  display: inline;
+  padding: 0.1em 0.45em;
+  border-radius: var(--strata-radius-lg);
+  background-color: rgba(var(--strata-color-blue), 0.12);
+  color: rgb(var(--strata-color-blue));
+  font-size: 0.9em;
+  white-space: nowrap;
+}
+
+/*
+ * An embed of something that is not a picture: another document, a PDF, a
+ * sound file. None of those can be put on the page while a string is being
+ * rendered, since that would mean fetching them, so the document says what it
+ * was asked to embed and links to it. The mark is what keeps that honest: the
+ * reader can see that something was meant to sit here, rather than reading a
+ * link that looks like any other.
+ */
+.strata-content a.strata-wiki-embed::before {
+  content: '\29C9';
+  margin-right: 0.3em;
+  font-size: 0.9em;
+  opacity: 0.75;
+}
+
+/*
  * Said to a screen reader and to nobody else. Not display:none, which would
  * take it out of the accessibility tree along with everything else.
  */

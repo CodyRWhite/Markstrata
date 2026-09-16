@@ -434,6 +434,15 @@ export function paneConfiguration(
                     })
                   ]
                 : []),
+              /* Beside the wiki links rather than on a page of its own: both
+                 are how a folder of notes says what belongs with what, and
+                 somebody turning one on has come here for the other. */
+              PropertyPaneToggle('enableTags', {
+                label: strings.TagsLabel,
+                onText: 'On',
+                offText: 'Off'
+              }),
+              PropertyPaneLabel('tagsHint', { text: strings.TagsHint }),
               PropertyPaneToggle('followDocumentLinks', {
                 label: strings.FollowLinksLabel,
                 onText: 'On',

@@ -79,6 +79,8 @@ declare interface IMarkstrataWebPartStrings {
   CheckWikiLinksLabel: string;
   FollowLinksLabel: string;
   FollowLinksHint: string;
+  TagsLabel: string;
+  TagsHint: string;
   WikiLinksHint: string;
   MathLabel: string;
   AllowHtmlLabel: string;

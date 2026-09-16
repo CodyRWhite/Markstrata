@@ -13,6 +13,7 @@ and a keyboard shortcut like <kbd>Ctrl</kbd> + <kbd>K</kbd>.
 
 One tilde strikes through as well as two, so ~this~ and ~~this~~ match.
 %%This note is written for the author and never reaches the page.%%
+With **Tags** on, #kitchen-sink and #themes/obsidian are shown as tags.
 Superscript is written 10^6^, and a subscript comes from maths, $H_2O$, or from
 <sub>markup</sub>. Emoji render from their
 shortcodes: :rocket: :warning: :white_check_mark:. An
@@ -68,7 +69,10 @@ folder, the way Obsidian and older wikis write one. A link to [[deploy]] points
 at a page that is there; a link to [[a page nobody wrote]] is marked, because
 the folder was listed and it was not in it. You can also write
 [[deploy|a label of your own]] or jump to [[deploy#Rollback]], and [[#Images]]
-goes to a heading in this document.
+goes to a heading in this document. A link inside a table is written with an
+escaped pipe, [[deploy\|the runbook]], so the pipe does not end the cell.
+
+This paragraph is named, so a link elsewhere can point straight at it. ^kitchen
 
 ## Images
 
@@ -76,6 +80,10 @@ A relative source resolves against the folder the markdown lives in, the way it
 does on GitHub, rather than against the page it is rendered on:
 
 ![The Markstrata mark](brand/mark.svg "Resolved relative to this document")
+
+An embed puts a picture on the page the way Obsidian writes one,
+![[brand/mark.svg|48]], and an embed of something that cannot be put on a page
+without fetching it, ![[deploy]], is marked as an embed and linked instead.
 
 An absolute source is left exactly as written, so a data URI renders without
 fetching anything. Note that markdown-it accepts `data:` only for `png`, `gif`,

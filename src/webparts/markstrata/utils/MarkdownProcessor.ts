@@ -22,7 +22,8 @@
  *            imagePaths.ts, frontMatter.ts, markdownItWikiLinks.ts,
  *            markdownItTableCaptions.ts, markdownItAttributeGuard.ts,
  *            markdownItTableCells.ts, markdownItStrikethrough.ts,
- *            markdownItComments.ts, markdownItTypes.ts
+ *            markdownItComments.ts, markdownItBlockIds.ts,
+ *            markdownItTags.ts, markdownItTypes.ts
  */
 
 import { calloutPlugin } from './markdownItCallouts';
@@ -37,6 +38,8 @@ import { tableCellPlugin } from './markdownItTableCells';
 import { strikethroughPlugin } from './markdownItStrikethrough';
 import { commentPlugin } from './markdownItComments';
 import { headingSlug, legacyHeadingAnchor } from './wikiLinks';
+import { blockIdPlugin } from './markdownItBlockIds';
+import { tagPlugin } from './markdownItTags';
 import {
   ILinkifyMatch,
   IMarkdownIt,
@@ -67,6 +70,7 @@ export interface IMarkdownProcessorOptions {
   enableToc: boolean;
   enableAnchors: boolean;
   enableWikiLinks: boolean;
+  enableTags: boolean;
   showCodeHeader: boolean;
   showLineNumbers: boolean;
   wrapCodeLines: boolean;
@@ -91,6 +95,7 @@ export const DEFAULT_PROCESSOR_OPTIONS: IMarkdownProcessorOptions = {
   enableToc: true,
   enableAnchors: true,
   enableWikiLinks: false,
+  enableTags: false,
   showCodeHeader: true,
   showLineNumbers: false,
   wrapCodeLines: false,
@@ -193,7 +198,16 @@ export class MarkdownProcessor {
        private. */
     this.markdownIt.use(commentPlugin);
 
+    if (this.options.enableTags) {
+      this.markdownIt.use(tagPlugin);
+    }
+
     if (this.options.enableWikiLinks) {
+      /* A block identifier is the other half of `[[Note#^37066d]]`, so it
+         belongs to the same setting: with the links off there is nothing that
+         could point at a named block. */
+      this.markdownIt.use(blockIdPlugin);
+
       /* Given the same resolver as images, so a link and a picture beside it
          agree about which folder this document is in. */
       this.markdownIt.use(wikiLinkPlugin, {

@@ -64,6 +64,7 @@ export interface IMarkstrataWebPartProps {
   followDocumentLinks: boolean;
   enableWikiLinks: boolean;
   checkWikiLinks: boolean;
+  enableTags: boolean;
   showReadingTime: boolean;
   backToTop: BackToTop;
   enableMath: boolean;

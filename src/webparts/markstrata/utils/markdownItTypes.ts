@@ -118,6 +118,7 @@ export interface IStateInline {
   src: string;
   pos: number;
   posMax: number;
+  Token: TokenConstructor;
   tokens: IToken[];
   /** Per token, whatever a rule hung on it; markers live here. */
   tokens_meta: ({ delimiters?: IDelimiter[] } | undefined)[];

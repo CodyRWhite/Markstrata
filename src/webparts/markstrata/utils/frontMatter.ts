@@ -92,10 +92,12 @@ export function splitFrontMatter(source: string): ISplitDocument {
 
 function parse(block: string): IFrontMatter {
   const data: IFrontMatter = {};
+  const lines: string[] = block.split(/\r?\n/);
 
-  block.split(/\r?\n/).forEach((line: string) => {
+  lines.forEach((line: string, index: number) => {
     /* Only top level keys. An indented line belongs to a nested structure this
-       does not read, and treating it as a key would invent values. */
+       does not read, and treating it as a key would invent values. The one
+       exception is read below, by the key it belongs to. */
     const match: RegExpMatchArray | null = line.match(/^([A-Za-z][A-Za-z0-9_-]*)[ \t]*:[ \t]*(.*)$/);
     if (!match) {
       return;
@@ -103,24 +105,60 @@ function parse(block: string): IFrontMatter {
 
     const key: string = match[1].toLowerCase();
     const value: string = match[2].trim();
-    if (!value) {
-      return;
-    }
 
     if (SCALARS.indexOf(key) !== -1) {
-      (data as { [name: string]: unknown })[key] = unquote(value);
+      if (value) {
+        (data as { [name: string]: unknown })[key] = unquote(value);
+      }
       return;
     }
 
-    if (LISTS.indexOf(key) !== -1) {
-      const items: string[] = readList(value);
-      if (items.length) {
-        data.tags = (data.tags || []).concat(items);
-      }
+    if (LISTS.indexOf(key) === -1) {
+      return;
+    }
+
+    /*
+     * Nothing after the colon does not mean nothing: it is how YAML introduces
+     * a list written down the page, which is the form Obsidian's own
+     * documentation of tags uses and the form its editor writes. Read as an
+     * empty value, every tag in the file was dropped, and a document whose
+     * properties were written in Obsidian arrived with no tags at all.
+     */
+    const items: string[] = value ? readList(value) : readIndentedList(lines, index + 1);
+    if (items.length) {
+      data.tags = (data.tags || []).concat(items);
     }
   });
 
   return data;
+}
+
+/**
+ * The `- item` lines under a key.
+ *
+ *   tags:
+ *     - recipe
+ *     - cooking
+ *
+ * Stops at the first line that is not one of them, which is the next key, the
+ * end of the block, or anything this does not understand. Nothing is guessed
+ * at past that point.
+ */
+function readIndentedList(lines: string[], from: number): string[] {
+  const items: string[] = [];
+
+  for (let index: number = from; index < lines.length; index++) {
+    const item: RegExpMatchArray | null = lines[index].match(/^[ \t]*-[ \t]*(.*)$/);
+    if (!item) {
+      break;
+    }
+    const text: string = unquote(item[1].trim());
+    if (text) {
+      items.push(text);
+    }
+  }
+
+  return items;
 }
 
 /** `[one, two]` or `one, two`, which is how tags are usually written. */

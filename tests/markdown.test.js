@@ -18,6 +18,9 @@ const assert = require('node:assert/strict');
 const { MarkdownProcessor } = require('./helpers');
 
 const markdown = new MarkdownProcessor();
+/* The Obsidian shapes - wiki links, embeds, named blocks - all hang off the
+   one setting, which is off by default. */
+const wiki = new MarkdownProcessor({ enableWikiLinks: true });
 
 test('two adjacent tables stay two tables', () => {
   const html = markdown.render('| a | b |\n|---|---|\n| 1 | 2 |\n\n| c | d |\n|---|---|\n| 3 | 4 |');
@@ -425,6 +428,121 @@ test('punctuation in prose is left exactly as it was written', () => {
 
 test('a code span is unaffected either way', () => {
   assert.match(markdown.render('run `--dry-run` now'), /<code>--dry-run<\/code>/);
+});
+
+/*
+ * Obsidian names a block by putting a caret and a short name at the end of it,
+ * hides the marker, and links to it as `[[Runbook#^37066d]]`. The marker was
+ * shown to the reader as a stray `^37066d`, and the link that named it had
+ * nothing to find.
+ */
+test('a block identifier names its block instead of being shown', () => {
+  const html = wiki.render('The build fails on a clean checkout. ^37066d');
+  assert.match(html, /<p id="37066d">The build fails on a clean checkout\.<\/p>/);
+  assert.doesNotMatch(html, /\^37066d/);
+});
+
+test('a list item and a quote can be named too', () => {
+  assert.match(wiki.render('- item one ^abc\n- item two'), /<li id="abc">item one<\/li>/);
+  assert.match(wiki.render('> quoted ^q1'), /<p id="q1">quoted<\/p>/);
+});
+
+test('a name on a line of its own belongs to the block above it', () => {
+  assert.match(wiki.render('| a | b |\n|---|---|\n| 1 | 2 |\n\n^hosts'), /<table id="hosts">/);
+  assert.match(wiki.render('- one\n- two\n\n^list'), /<ul id="list">/);
+});
+
+test('a wiki link to a named block points at the id that block was given', () => {
+  assert.match(wiki.render('[[Note#^37066d]]'), /href="[^"]*Note\.md#37066d"/);
+});
+
+test('what a block identifier is not', () => {
+  /* A footnote, a superscript, a marker in the middle of a sentence, and a
+     marker with no block in front of it are all left as they were written. */
+  assert.match(markdown.render('text[^1]\n\n[^1]: note'), /footnote-ref/);
+  assert.match(wiki.render('x^2^ here'), /<sup>2<\/sup>/);
+  assert.match(wiki.render('Some text. ^37066d then more'), /\^37066d then more/);
+  assert.match(wiki.render('^orphan'), /<p>\^orphan<\/p>/);
+});
+
+test('block identifiers follow the wiki links setting', () => {
+  assert.match(markdown.render('Some text. ^37066d'), /\^37066d/);
+});
+
+/*
+ * `![[...]]` means "put the thing here". The `!` used to be printed as a stray
+ * character and the size after the pipe was read as the link's wording, so
+ * `![[Engelbart.jpg|100]]` rendered as a link reading "100".
+ */
+test('an embedded picture is a picture', () => {
+  const sized = new MarkdownProcessor({ enableWikiLinks: true, imageBasePath: '/sites/x/docs' });
+  assert.match(sized.render('![[Engelbart.jpg]]'), /<img src="\/sites\/x\/docs\/Engelbart\.jpg"/);
+  assert.doesNotMatch(sized.render('![[Engelbart.jpg]]'), /!/);
+});
+
+test('an embedded picture takes the size written after the pipe', () => {
+  const html = wiki.render('![[Engelbart.jpg|100]]');
+  assert.match(html, /width="100"/);
+  assert.doesNotMatch(html, />100</);
+
+  const both = wiki.render('![[Engelbart.jpg|100x145]]');
+  assert.match(both, /width="100"/);
+  assert.match(both, /height="145"/);
+});
+
+test('words after the pipe are the alt text, not a size', () => {
+  assert.match(wiki.render('![[Engelbart.jpg|A portrait]]'), /alt="A portrait"/);
+});
+
+test('an embed of something that cannot be embedded says so', () => {
+  /* A document, a PDF and a sound file all need fetching, which cannot happen
+     while a string is being rendered. A link that admits what it is can be
+     followed; an empty frame cannot. */
+  ['![[Note]]', '![[manual.pdf]]', '![[song.mp3]]'].forEach((source) => {
+    const html = wiki.render(source);
+    assert.match(html, /class="strata-wiki-link strata-wiki-embed"/, source);
+    assert.match(html, /data-embed="true"/, source);
+    assert.doesNotMatch(html, /<img/, source);
+  });
+});
+
+test('an embed follows the wiki links setting', () => {
+  assert.match(markdown.render('![[Engelbart.jpg]]'), /\[\[Engelbart\.jpg\]\]/);
+});
+
+/*
+ * A tag is how a note written in Obsidian says what it is about. Rendered here
+ * they were plain words with a hash in front. They become a span with a class
+ * and nothing more: this web part cannot see the other documents in a library,
+ * so a tag that looked like a link would go nowhere.
+ */
+test('a tag is marked as a tag, and a nested one keeps its levels', () => {
+  const tagged = new MarkdownProcessor({ enableTags: true });
+  assert.match(tagged.render('A #recipe here'), /<span class="strata-tag" data-tag="recipe">#recipe<\/span>/);
+  assert.match(tagged.render('A #work\/urgent here'), /data-tag="work\/urgent">#work\/urgent</);
+});
+
+test('what Obsidian says is not a tag is not one here either', () => {
+  const tagged = new MarkdownProcessor({ enableTags: true });
+  /* At least one character that is not a digit, nothing joined onto the end of
+     a word, and nothing inside code. */
+  assert.doesNotMatch(tagged.render('#1984 was a year'), /strata-tag/);
+  assert.match(tagged.render('#1984-review was not'), /strata-tag/);
+  assert.doesNotMatch(tagged.render('C# is a language'), /strata-tag/);
+  assert.doesNotMatch(tagged.render('see issue#4'), /strata-tag/);
+  assert.doesNotMatch(tagged.render('`#code`'), /strata-tag/);
+});
+
+test('a heading is still a heading', () => {
+  /* No argument to have: a heading needs a space after its hashes and a tag
+     cannot contain one, so no line can be read as both. */
+  const tagged = new MarkdownProcessor({ enableTags: true });
+  assert.match(tagged.render('# Heading'), /<h1 [^>]*>/);
+  assert.doesNotMatch(tagged.render('# Heading'), /strata-tag/);
+});
+
+test('tags are off unless they are asked for', () => {
+  assert.match(markdown.render('A #recipe here'), /<p>A #recipe here<\/p>/);
 });
 
 test('rendering never throws on malformed input', () => {

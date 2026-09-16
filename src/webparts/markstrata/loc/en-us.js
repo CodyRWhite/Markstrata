@@ -83,6 +83,8 @@ define([], function () {
     "CheckWikiLinksLabel": "Mark links to pages that are not there",
     "FollowLinksLabel": "Open a linked document here",
     "FollowLinksHint": "A link to another markdown file - a wiki link or an ordinary one - opens that document in the web part instead of handing the reader the file, which SharePoint offers as raw text or as a download. A bar above the document says which one is open and goes back, and so does the browser's Back button. Opening a link in a new tab still goes to the file itself. Needs a document library, since that is what the other documents are in.",
+    "TagsLabel": "Tags",
+    "TagsHint": "Shows #tag and #nested/tag as tags rather than as words with a hash in front, the way a note written in Obsidian writes them. They are styled, not searchable: this web part cannot see the other documents in the library, so a tag that looked like a link would go nowhere.",
     "WikiLinksHint": "Turns [[Another page]] into a link to that file in the same folder, the way Obsidian and older wikis write one. [[Page|worded differently]] and [[Page#Heading]] both work. With a library file, links to pages that are not there are marked: the folder is listed once and every link into it answered from that, rather than asked one at a time.",
     "MathLabel": "Math (KaTeX)",
     "AllowHtmlLabel": "Allow raw HTML in markdown",

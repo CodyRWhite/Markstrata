@@ -141,6 +141,59 @@ Entries below 0.0.10.0 were written before the switch and are three-part.
   link written last year still finds its paragraph. Where the two forms agree,
   which is most headings, only the heading is emitted.
 
+- A block identifier names its block instead of being shown to the reader.
+  Obsidian ends a paragraph, a list item, a quote or a table with a caret and a
+  short name, `The build fails on a clean checkout. ^37066d`, hides the marker,
+  and links to it as `[[Runbook#^37066d]]`. Here the marker was printed as a
+  stray `^37066d` at the end of the sentence and the link that named it had
+  nothing to find. The marker now comes off and the block carries the name as
+  its id, through the same slug rule a heading id goes through, so the link and
+  the block agree without either having to know about the other. It follows the
+  **Wiki links** setting, since it is the other half of one. A heading keeps
+  the id made from its own words, and a marker with no block in front of it is
+  left on the page rather than quietly removed.
+
+- `![[picture.png]]` puts the picture on the page. Obsidian's embed was not
+  supported at all: the `!` was printed as a stray character and the brackets
+  after it became a link, and `![[Engelbart.jpg|100]]` rendered as a link whose
+  wording was "100", because the size was read as the link's label. An embedded
+  picture is now an ordinary image, so the folder it resolves against, the
+  `|300` and `|300x200` sizes, the lazy loading and the click to see it full
+  size all work as they do for a picture written the markdown way. Wording
+  after the pipe that is not a size is the alt text.
+- An embed of anything that is not a picture is marked as an embed and linked.
+  Another document, a PDF or a sound file all have to be fetched to be put on a
+  page, and nothing can be fetched while a document is being rendered, so the
+  page says what was meant to be here and links to it rather than pretending.
+  PDF and audio embeds are not supported; this is what they render as.
+
+- Tags, under a new **Tags** setting beside the wiki links. `#recipe` and a
+  nested `#work/urgent` are how a note written in Obsidian says what it is
+  about, and here they were plain words with a hash in front. They are now
+  marked as tags so a theme can show them as the pills they are, following
+  Obsidian's own rules for what may be one: letters, digits, `_`, `-` and `/`,
+  at least one character that is not a digit, and nothing joined onto the end
+  of a word, so `C#` and `#1984` are not tags. Styled and nothing more: this
+  web part cannot see the other documents in a library, so a tag that looked
+  like a link would go nowhere. Off by default, like the wiki links, because it
+  restyles any word in a document that starts with a hash. There is no argument
+  with headings: a heading needs a space after its hashes and a tag cannot
+  contain one.
+- Tags written down the page in the frontmatter are read at last. The form
+  Obsidian's own documentation uses and its editor writes,
+
+  ```
+  tags:
+    - recipe
+    - cooking
+  ```
+
+  was being dropped entirely: nothing after the colon was read as no value, so
+  the key was skipped, and the indented lines under it were skipped too by the
+  rule that only reads top level keys. A document whose properties were written
+  in Obsidian arrived with no tags at all. `tags: [a, b]` and `tags: a, b`
+  worked before and still do.
+
 ## 0.0.18.3
 
 - The split editor is one editor again. The box you typed in stopped at its own
