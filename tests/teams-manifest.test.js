@@ -276,3 +276,46 @@ function manifestValidator() {
   ajv.addMetaSchema(require('ajv/lib/refs/json-schema-draft-04.json'));
   return ajv.compile(schema);
 }
+
+/*
+ * The app's id is the web part's component id, and not a new one.
+ *
+ * Teams keys an installed app by the id in its manifest. SPFx's own generated
+ * Teams app uses the web part's component id, so that is what a tenant already
+ * has registered from any earlier Sync to Teams - and an upload carrying a
+ * different id is not an upgrade of that app, it is a stranger claiming its
+ * place. Teams refuses it:
+ *
+ *   Tenant app external.id doesn't match existing tenant app external.id.
+ *   Exist externalId: '74aecd51-...'  ExternalId: '9f2c1d64-...'
+ *
+ * The hand-written manifest invented an id, and the invented one is the second
+ * of those. Nothing said the two had to agree, so nothing noticed. The rest of
+ * the package had always keyed on the component id: the icons are named for
+ * it, because that is how Sync to Teams finds them.
+ *
+ * The same shape as the packageName failure before it. A value taken from
+ * memory rather than from the thing that defines it, and no check comparing
+ * the two.
+ */
+test('the Teams app is the web part, by id', () => {
+  const webPart = JSON.parse(fs.readFileSync(
+    path.join(ROOT, 'src', 'webparts', 'markstrata', 'MarkstrataWebPart.manifest.json'), 'utf8'
+  ));
+
+  assert.equal(manifest.id, webPart.id,
+    'the Teams manifest id and the web part component id have to be the same value, '
+    + 'or an upload is a different app to the one a tenant already has and Teams '
+    + 'refuses it as an external id mismatch');
+});
+
+test('and the icons are named for that same id', () => {
+  /* They always were. This states the relationship so that moving one moves
+     the other, rather than leaving the manifest free to drift again. */
+  const built = path.join(ROOT, 'teams');
+  for (const which of ['color', 'outline']) {
+    assert.ok(fs.existsSync(path.join(built, `${manifest.id}_${which}.png`)),
+      `teams/${manifest.id}_${which}.png is missing, so the manifest id and the `
+      + 'icon names have drifted apart');
+  }
+});

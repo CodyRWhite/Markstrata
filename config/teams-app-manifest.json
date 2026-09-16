@@ -2,7 +2,7 @@
   "$schema": "https://developer.microsoft.com/en-us/json-schemas/teams/v1.17/MicrosoftTeams.schema.json",
   "manifestVersion": "1.17",
   "version": "0.0.0",
-  "id": "9f2c1d64-5a7e-4b31-8f0c-2d6a41e7b905",
+  "id": "74aecd51-7619-4ca6-b81a-6c670d6098b3",
   "developer": {
     "name": "Cody White",
     "websiteUrl": "https://markstrata.com/",

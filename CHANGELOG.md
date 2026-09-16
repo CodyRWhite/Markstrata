@@ -10,6 +10,17 @@ Entries below 0.0.10.0 were written before the switch and are three-part.
 
 ## 0.0.18.4
 
+- The Teams app carries the web part's own component id, so an upload is an
+  upgrade of the app a tenant already has rather than a stranger claiming its
+  place. Teams keys an installed app by the id in its manifest, and SPFx's own
+  generated Teams app uses the component id, so that is what any tenant already
+  had registered from an earlier Sync to Teams. The hand-written manifest
+  invented a new id, and every upload since was refused:
+  "Tenant app external.id doesn't match existing tenant app external.id." The
+  rest of the package had always keyed on the component id, the icons included,
+  because that is how Sync to Teams finds them. Only the manifest disagreed, and
+  nothing compared the two.
+
 - The Teams manifest is validated against the whole v1.17 schema now, by a real
   validator, rather than by a hand-written check of the fields somebody
   remembered. That check was written after a manifest carrying a `packageName`
