@@ -252,14 +252,16 @@
  * which one is open and offers the way back, and it sits above everything else
  * because it is the answer to "where am I".
  */
+/*
+ * No box. It was a bordered, filled bar when it held one sentence and a
+ * button, which needed separating from the document under it. A trail does
+ * not: it reads as the line above a page, the way breadcrumbs do everywhere
+ * else, and a panel around it competes with the document for the eye.
+ */
 .strata-open-doc {
   display: flex;
   align-items: center;
-  margin-bottom: 12px;
-  padding: 6px 12px;
-  border: 1px solid var(--strata-border);
-  border-radius: var(--strata-radius-sm);
-  background-color: var(--strata-bg-elevated);
+  margin-bottom: 10px;
   font-size: 0.8125em;
   color: var(--strata-text-muted);
 }

@@ -120,16 +120,19 @@ export class ViewModeRenderer {
     const host: HTMLElement = ThemeManager.mount(container, options.settings, options.resolvedMode);
     host.setAttribute('data-strata-editing', String(options.isPageEditing));
 
-    /* Above the toolbar, because it answers "where am I", which comes before
-       anything a reader might do here. */
-    if (options.openDocumentName && options.onGoToCrumb) {
-      host.appendChild(this.buildOpenDocumentBar(options));
-    }
-
     let toolbar: HTMLElement | undefined;
     if (options.showToolbar) {
       toolbar = this.buildToolbar(options);
       host.appendChild(toolbar);
+    }
+
+    /* Under the toolbar rather than over it. The toolbar is the web part's own
+       furniture and sits in the same place on every document; the trail
+       belongs to the document under it and changes as the reader moves, so it
+       reads as the top of the document rather than as another row of
+       controls. */
+    if (options.openDocumentName && options.onGoToCrumb) {
+      host.appendChild(this.buildOpenDocumentBar(options));
     }
 
     const layout: HTMLElement = document.createElement('div');
@@ -308,13 +311,17 @@ export class ViewModeRenderer {
         const here: HTMLElement = document.createElement('span');
         here.className = 'strata-crumb-here';
         here.setAttribute('aria-current', 'page');
-        here.textContent = name;
+        here.textContent = withoutMarkdownExtension(name);
+        here.title = name;
         item.appendChild(here);
       } else {
         const step: HTMLButtonElement = document.createElement('button');
         step.type = 'button';
         step.className = 'strata-crumb-link';
-        step.textContent = name;
+        step.textContent = withoutMarkdownExtension(name);
+        /* The file name in full on hover. The trail reads as a path, and a
+           path of file names is noisier than a path of pages, but the file is
+           still what a reader is being sent to. */
         step.title = `Go back to ${name}`;
         step.onclick = () => goTo(index);
         item.appendChild(step);
@@ -518,4 +525,18 @@ export class ViewModeRenderer {
     button.addEventListener('click', onClick);
     return button;
   }
+}
+
+/**
+ * A crumb reads as a page, not as a file: "Deploy notes", not
+ * "Deploy notes.md". Every document here is markdown, so the extension is on
+ * every crumb and tells a reader nothing.
+ *
+ * Only markdown is dropped. A trail through a linked .txt or .pdf keeps its
+ * extension, because there the extension is the one thing that says this
+ * entry is not like the others. The full name stays in the title attribute
+ * either way.
+ */
+function withoutMarkdownExtension(name: string): string {
+  return name.replace(/\.(md|markdown)$/i, '') || name;
 }

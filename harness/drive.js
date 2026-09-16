@@ -505,6 +505,7 @@ const LIBRARY_PATH = '/sites/demo/Documents';
         .replace('#', '').trim(),
       bar: !!document.querySelector('.strata-open-doc'),
       name: (document.querySelector('.strata-crumb-here') || {}).textContent,
+      hover: (document.querySelector('.strata-crumb-here') || {}).title,
       crumbs: Array.prototype.slice
         .call(document.querySelectorAll('.strata-crumb-link'))
         .map((crumb) => (crumb.textContent || '').trim())
@@ -513,9 +514,15 @@ const LIBRARY_PATH = '/sites/demo/Documents';
       throw new Error('the document on screen is "' + opened.heading + '"');
     }
     if (!opened.bar) throw new Error('nothing says which document is open');
-    if (opened.name !== 'deploy.md') throw new Error('the bar names "' + opened.name + '"');
+    if (opened.name !== 'deploy') throw new Error('the bar names "' + opened.name + '"');
+    /* The extension is dropped from what is drawn, because every document
+       here is markdown and it is on every crumb. The file name itself is
+       still what the reader is being sent to, so it stays on hover. */
+    if (opened.hover !== 'deploy.md') {
+      throw new Error('the crumb no longer names the file: "' + opened.hover + '"');
+    }
     /* One link in, the only crumb behind this one is the configured document. */
-    if (opened.crumbs.length !== 1 || opened.crumbs[0] !== 'handbook.md') {
+    if (opened.crumbs.length !== 1 || opened.crumbs[0] !== 'handbook') {
       throw new Error('the trail behind it reads ' + JSON.stringify(opened.crumbs));
     }
 
@@ -2354,7 +2361,7 @@ const LIBRARY_PATH = '/sites/demo/Documents';
 
     /* One link in, the way back is the configured document, which is the only
        name the navigator does not hold itself. */
-    if (one.back !== 'index.md') {
+    if (one.back !== 'index') {
       throw new Error('one link in, the way back says ' + JSON.stringify(one.back));
     }
     /* Two crumbs: where the reader started, and where they are. */
@@ -2363,12 +2370,12 @@ const LIBRARY_PATH = '/sites/demo/Documents';
     }
     /* Two in, and this is the whole point: it names the page just left, not
        the one the page is configured with. */
-    if (two.back !== 'Deploy notes.md') {
+    if (two.back !== 'Deploy notes') {
       throw new Error('two links in, the way back says ' + JSON.stringify(two.back));
     }
     /* And every step of the way is on screen and clickable, which is the
        whole reason this is a trail rather than a button. */
-    if (two.trail.length !== 3 || two.trail[0] !== 'index.md') {
+    if (two.trail.length !== 3 || two.trail[0] !== 'index') {
       throw new Error('two links in, the trail reads ' + JSON.stringify(two.trail));
     }
     if (two.at.indexOf('Rolling back') === -1 && two.at.indexOf('Roll') === -1) {
@@ -2378,7 +2385,7 @@ const LIBRARY_PATH = '/sites/demo/Documents';
     if (three.at.indexOf('Deploying') === -1) {
       throw new Error('after going back the document is ' + JSON.stringify(three.at));
     }
-    if (three.back !== 'index.md') {
+    if (three.back !== 'index') {
       throw new Error('after going back the way back says ' + JSON.stringify(three.back));
     }
     /* The crumb walked back from is dropped, not left hanging off the end. */
