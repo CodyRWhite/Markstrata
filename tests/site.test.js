@@ -17,7 +17,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('fs');
 const path = require('path');
-const { PAGES, page, linkTo } = require('../scripts/site');
+const { PAGES, SECTIONS, page, linkTo } = require('../scripts/site');
 
 const root = path.join(__dirname, '..');
 
@@ -84,6 +84,43 @@ test('and marks the one being read, when it is one of them', () => {
   }
 });
 
+/*
+ * The site serves two readers. An administrator deciding whether to install it
+ * wants a different set of pages from somebody who has to write a document in
+ * it, and running all of them together as one bar told neither of them which
+ * half was theirs. So each page in the navigation names the half it belongs to,
+ * and both halves are drawn on every page.
+ */
+test('every page in the navigation belongs to a section', () => {
+  const known = SECTIONS.map((section) => section.id);
+  for (const entry of SHOWN) {
+    assert.ok(known.indexOf(entry.section) !== -1,
+      `${entry.id} is in the navigation with section ${JSON.stringify(entry.section)}`);
+  }
+});
+
+test('a page kept out of the navigation has no section to be in', () => {
+  for (const entry of HIDDEN) {
+    assert.equal(entry.section, undefined,
+      `${entry.id} is hidden, so it is in no section of the navigation`);
+  }
+});
+
+test('neither section is empty, and both are drawn on every page', () => {
+  for (const section of SECTIONS) {
+    const inIt = SHOWN.filter((entry) => entry.section === section.id);
+    assert.ok(inIt.length >= 2, `${section.id} has ${inIt.length} pages in it`);
+  }
+
+  for (const entry of PAGES) {
+    const html = require('../scripts/site').header(entry.id);
+    for (const section of SECTIONS) {
+      assert.ok(html.indexOf(`>${section.label}</span>`) !== -1,
+        `${entry.id} does not draw the ${section.label} section`);
+    }
+  }
+});
+
 test('a page kept out of the navigation is still reachable', () => {
   /* Otherwise hidden means orphaned, and the addresses in the web part's
      package would be the only way to it. */
@@ -110,7 +147,7 @@ test('a page kept out of the navigation is still reachable', () => {
  */
 const PROSE = [
   'README.md', 'CONTRIBUTING.md', 'THEMES.md', 'CHANGELOG.md',
-  'scripts/site.js', 'harness/build.js',
+  'scripts/site.js', 'scripts/specimens.js', 'harness/build.js',
   'samples/welcome.md', 'samples/kitchen-sink.md',
   'src/webparts/markstrata/loc/en-us.js',
   'src/webparts/markstrata/MarkstrataWebPart.manifest.json',

@@ -76,9 +76,9 @@ fs.mkdirSync(outDir, { recursive: true });
 function pageStyles(pageId) {
   return `<style>
   /* Matches the rest of the site: the surface around the web part follows the
-     reader's system setting until they choose a mode in the pane. */
-  :root { color-scheme: light; --site-canvas: #f3f2f1; --site-intro: #424242; }
-  :root[data-site-mode="dark"] { color-scheme: dark; --site-canvas: #0A1417; --site-intro: #9FBCBE; }
+     reader's system setting until they choose a mode, in the header or in the
+     pane, which are the same choice written in the same place. */
+${site.SITE_TOKENS_CSS}
   body { margin: 0; font-family: system-ui, sans-serif; background: var(--site-canvas); }
   /* Stands in for the SharePoint page canvas around the web part. */
   .page { padding: 24px; background: var(--site-canvas); min-height: 100vh; }
@@ -236,6 +236,7 @@ ${pageId ? '<aside id="demo-panel" hidden aria-label="Markstrata web part proper
 <div id="log"></div>
 <script src="sample.js"></script>
 <script src="bundle.js"></script>
+${site.MODE_SCRIPT}
 </body>
 </html>
 `
