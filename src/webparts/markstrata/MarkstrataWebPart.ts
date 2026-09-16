@@ -62,6 +62,7 @@ import { MarkdownProcessor, IMarkdownProcessorOptions } from './utils/MarkdownPr
 import { folderOf } from './utils/imagePaths';
 import { DocumentNavigator, ILoadedDocument } from './utils/documentNavigator';
 import { documentFromAddress, IWantedDocument } from './utils/documentParameter';
+import { isRemote, fetchableUrl, remoteFailure } from './utils/remoteDocuments';
 import { ThemeOverride } from './utils/themeOverride';
 import { PaneSources } from './paneSources';
 import { TocWidthUnit, tocWidthCss, tocWidthForUnit } from './utils/tocWidth';
@@ -208,10 +209,23 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
      */
     this.navigator = new DocumentNavigator({
       instanceId: this.context.instanceId,
-      load: async (path: string): Promise<ILoadedDocument> => ({
-        markdown: await this.sharePoint.getFileContent(path),
-        metadata: await this.sharePoint.getFileMetadata(path)
-      }),
+      /* Two kinds of document, because a web part pointed at a URL links to
+         documents on that same server. A path is a file in this tenant and is
+         read with the reader's own session; an address of its own is fetched,
+         and only opens if that server allows this page to read it. */
+      load: async (path: string): Promise<ILoadedDocument> => {
+        if (isRemote(path)) {
+          try {
+            return { markdown: await SharePointService.fetchUrl(fetchableUrl(path)) };
+          } catch (error) {
+            throw new Error(remoteFailure(path, error));
+          }
+        }
+        return {
+          markdown: await this.sharePoint.getFileContent(path),
+          metadata: await this.sharePoint.getFileMetadata(path)
+        };
+      },
       onChange: () => {
         this.loadError = undefined;
         this.previewContent = undefined;
@@ -435,7 +449,7 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
    * the history: the reader arrived at it.
    */
   private async openDocumentFromAddress(): Promise<void> {
-    if (!this.properties.followDocumentLinks || this.properties.contentSource !== 'library') {
+    if (!this.properties.followDocumentLinks || this.properties.contentSource === 'manual') {
       return;
     }
 
@@ -642,11 +656,13 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
          the navigator keeps, so everything after it is offset by one. */
       onGoToCrumb: (index: number) => { void this.navigator.goTo(index - 1, true); },
       landOnHeading: landOn,
-      /* Only a library can hand over another document, and only a reader is
-         reading: in page edit mode a click on a link belongs to the author
-         editing the page, not to somebody following it. */
+      /* A library or a URL can hand over another document; markdown typed
+         into the web part cannot, because there is no folder for a link in it
+         to mean anything against. And only a reader is reading: in page edit
+         mode a click on a link belongs to the author editing the page, not to
+         somebody following it. */
       openDocument: this.properties.followDocumentLinks
-        && this.properties.contentSource === 'library'
+        && this.properties.contentSource !== 'manual'
         && this.displayMode !== DisplayMode.Edit
         ? (path: string, heading: string) => void this.navigator.open(path, heading, true)
         : undefined,

@@ -63,5 +63,6 @@ module.exports = {
   readingTime: lib('readingTime'),
   wikiLinks: lib('wikiLinks'),
   documentParameter: lib('documentParameter'),
+  remoteDocuments: lib('remoteDocuments'),
   tables: lib('tables')
 };

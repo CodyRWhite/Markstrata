@@ -24,6 +24,7 @@
     "src/webparts/markstrata/utils/readingTime.ts",
     "src/webparts/markstrata/utils/wikiLinks.ts",
     "src/webparts/markstrata/utils/documentParameter.ts",
+    "src/webparts/markstrata/utils/remoteDocuments.ts",
     "src/webparts/markstrata/utils/tables.ts"
   ]
 }

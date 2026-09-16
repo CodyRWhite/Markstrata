@@ -97,6 +97,16 @@ export function documentFromAddress(
     return undefined;
   }
 
+  /* A whole address, which a menu entry can only usefully carry when the page
+     is already reading from one: the base it would otherwise be resolved
+     against is a URL, and the documents around it are on that server. Left
+     encoded, because it is fetched rather than looked up. */
+  if (/^https?:\/\//i.test(wanted)) {
+    return base && /^https?:\/\//i.test(base)
+      ? { path: wanted, heading: heading }
+      : undefined;
+  }
+
   /* Absolute is used as written; anything else is resolved against the
      configured document's folder, the same way a link inside one is. */
   if (wanted.charAt(0) === '/') {

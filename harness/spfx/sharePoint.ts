@@ -113,6 +113,41 @@ const INDEX: string = [
   ''
 ].join('\n');
 
+/*
+ * Two documents that are not in this tenant at all, keyed by their address
+ * rather than by a path. The File URL source reads one of these, and a wiki
+ * link inside it resolves against the folder that address is in, so following
+ * it asks for the other one by URL. Nothing here goes near the network: the
+ * stand-in's fetchUrl reads the same map, keyed by the address asked for.
+ *
+ * REMOTE_HOME links to the second by its github.com blob address, which is the
+ * one anybody copies out of a browser, while the document itself is stored
+ * under the raw address. So following it only works if the translation between
+ * the two happens, which is the point.
+ */
+const REMOTE_RAW: string = 'https://raw.githubusercontent.com/contoso/wiki/main/docs';
+
+const REMOTE_HOME: string = [
+  '# Remote handbook',
+  '',
+  'A document that is not in this tenant.',
+  '',
+  '- [[Deploy runbook]] as a wiki link',
+  '- [the same page](https://github.com/contoso/wiki/blob/main/docs/Deploy%20runbook.md)',
+  '  written the way GitHub gives it to you',
+  ''
+].join('\n');
+
+const REMOTE_DEPLOY: string = [
+  '# Remote deploying',
+  '',
+  'The other end of the link, fetched from the raw host.',
+  ''
+].join('\n');
+
+put(`${REMOTE_RAW}/Home.md`, REMOTE_HOME);
+put(`${REMOTE_RAW}/Deploy%20runbook.md`, REMOTE_DEPLOY);
+
 put(`${LIBRARY}/handbook.md`, typeof SAMPLE === 'string' ? SAMPLE : '# Handbook\n');
 put(`${LIBRARY}/index.md`, INDEX);
 put(`${LIBRARY}/Runbooks/Deploy notes.md`, DEPLOY);

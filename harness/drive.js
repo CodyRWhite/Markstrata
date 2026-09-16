@@ -2669,6 +2669,125 @@ const LIBRARY_PATH = '/sites/demo/Documents';
     }
   });
 
+  /*
+   * A document that is not in this tenant at all.
+   *
+   * The File URL source reads markdown from anywhere that will answer, and a
+   * wiki link inside that document resolves against the folder its address is
+   * in - so following one asks another server for another document. That used
+   * to leave the page for the file itself, which on a raw host hands the
+   * reader markdown as plain text: the source of the page they were reading
+   * rather than the page.
+   *
+   * The link in the sample is written as a github.com blob address, which is
+   * the one a browser gives you, while the document is stored under the raw
+   * address. So this only passes if the two are translated between.
+   */
+  await step('a link in a document fetched from a URL opens here too', async () => {
+    const opened = await page.evaluate(async () => {
+      const settle = () => new Promise((resolve) => setTimeout(resolve, 600));
+      /* The check before this one left a document named in the address, and it
+         is still there: replaceState outlives a restart of the web part. With
+         it set, the web part opens that document over this one and the check
+         reads the wrong page. */
+      window.webPartHarness.addressDocument(undefined);
+      await window.webPartHarness.start({
+        contentSource: 'url',
+        fileUrl: 'https://raw.githubusercontent.com/contoso/wiki/main/docs/Home.md',
+        enableWikiLinks: true,
+        followDocumentLinks: true
+      });
+      await settle();
+
+      const first = document.querySelector('#host h1');
+      const wiki = Array.from(document.querySelectorAll('#host article a'))
+        .filter((anchor) => anchor.classList.contains('strata-doc-link'))[0];
+      if (!wiki) {
+        return { failed: 'no link in the remote document was claimed by the web part' };
+      }
+
+      const href = wiki.getAttribute('href');
+      wiki.click();
+      await settle();
+
+      const heading = document.querySelector('#host h1');
+      const banner = document.querySelector('#host .strata-status');
+      const crumbs = Array.prototype.slice
+        .call(document.querySelectorAll('#host .strata-crumb'))
+        .map((crumb) => (crumb.textContent || '').trim());
+      return {
+        started: first ? (first.textContent || '').trim() : '',
+        href: href,
+        at: heading ? (heading.textContent || '').trim() : '',
+        banner: banner ? (banner.textContent || '').trim() : '',
+        crumbs: crumbs
+      };
+    });
+
+    if (opened.failed) throw new Error(opened.failed);
+    if (opened.started.indexOf('Remote handbook') === -1) {
+      throw new Error('the configured URL did not load; it shows '
+        + JSON.stringify(opened.started));
+    }
+    /* The href is the address on that server, not a path on this tenant. */
+    if (opened.href.indexOf('https://raw.githubusercontent.com/') !== 0) {
+      throw new Error('the wiki link points at ' + JSON.stringify(opened.href));
+    }
+    if (opened.banner) throw new Error(opened.banner);
+    if (opened.at.indexOf('Remote deploying') === -1) {
+      throw new Error('after the click the web part shows ' + JSON.stringify(opened.at));
+    }
+    /* And it is a followed document like any other, with a way back. */
+    if (opened.crumbs.length !== 2) {
+      throw new Error('the trail reads ' + JSON.stringify(opened.crumbs));
+    }
+  });
+
+  /*
+   * And the same document reached by the address a browser gives you, which is
+   * GitHub's blob page rather than the file. Written as an ordinary markdown
+   * link rather than a wiki link, because that is how somebody pastes one.
+   */
+  await step('and a GitHub blob address opens the file it is a page about', async () => {
+    const opened = await page.evaluate(async () => {
+      const settle = () => new Promise((resolve) => setTimeout(resolve, 600));
+      /* The check before this one left a document named in the address, and it
+         is still there: replaceState outlives a restart of the web part. With
+         it set, the web part opens that document over this one and the check
+         reads the wrong page. */
+      window.webPartHarness.addressDocument(undefined);
+      await window.webPartHarness.start({
+        contentSource: 'url',
+        fileUrl: 'https://raw.githubusercontent.com/contoso/wiki/main/docs/Home.md',
+        enableWikiLinks: true,
+        followDocumentLinks: true
+      });
+      await settle();
+
+      const blob = Array.from(document.querySelectorAll('#host article a'))
+        .filter((anchor) => (anchor.getAttribute('href') || '').indexOf('github.com/contoso') !== -1)[0];
+      if (!blob) { return { failed: 'the blob link is not in the sample' }; }
+      if (!blob.classList.contains('strata-doc-link')) {
+        return { failed: 'the web part did not claim the blob link' };
+      }
+      blob.click();
+      await settle();
+
+      const heading = document.querySelector('#host h1');
+      const banner = document.querySelector('#host .strata-status');
+      return {
+        at: heading ? (heading.textContent || '').trim() : '',
+        banner: banner ? (banner.textContent || '').trim() : ''
+      };
+    });
+
+    if (opened.failed) throw new Error(opened.failed);
+    if (opened.banner) throw new Error(opened.banner);
+    if (opened.at.indexOf('Remote deploying') === -1) {
+      throw new Error('the blob address went to ' + JSON.stringify(opened.at));
+    }
+  });
+
   await step('and the configured one opens when the address names none', async () => {
     const shown = await page.evaluate(async () => {
       window.webPartHarness.addressDocument(undefined);

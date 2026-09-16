@@ -61,6 +61,29 @@ Entries below 0.0.10.0 were written before the switch and are three-part.
   rather than beside it, so the browser's own Back button walks the same path
   and the two cannot disagree about where the reader has been.
 
+- A link inside a document fetched from a URL opens here, the way a link
+  inside a document from a library does. The **File URL** source reads markdown
+  from anywhere that will answer, and everything relative inside that document
+  resolves against the folder its address is in, so a wiki link in it names a
+  real file on that server. Following one used to leave the page for the file
+  itself, which on a raw host hands the reader markdown as plain text: the
+  source of the page they were reading rather than the page.
+  - A GitHub address is translated to the one that holds the file.
+    `github.com/org/repo/blob/main/a.md` is a page about the document; the
+    document is on `raw.githubusercontent.com`. The blob address is the one a
+    browser gives you when you copy a link, so it is the one that has to work.
+  - Only the server the document came from counts. A link from it to anywhere
+    else is still an outside link and still opens in a new tab.
+  - When the other server refuses, the reader is told which it was. A browser
+    reports a blocked cross-origin read as a bare failure and says no more, so
+    the message names both possibilities rather than picking one: the file is
+    not there, or that server does not let pages on this site read it. What it
+    never says is "not found", which sends somebody looking for a file that is
+    exactly where they put it.
+  - `?strataDoc=` takes a whole address too, but only on a page already reading
+    from one. Otherwise it would be a way to point a SharePoint page at any
+    server on the internet, written by whoever wrote the menu entry.
+
 - A heading five or six levels deep can be linked to. Only h1 to h4 were given
   an id, for no reason anybody had written down, so a document that went deeper
   had a floor nothing could reach: no `#fragment`, no `[[Page#Heading]]`, no

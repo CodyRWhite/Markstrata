@@ -16,6 +16,7 @@
  */
 
 import { resolveAgainst } from './imagePaths';
+import { fetchableUrl } from './remoteDocuments';
 
 /** Opens off-site links in a new tab without handing over window.opener. */
 export function secureExternalLinks(container: HTMLElement): void {
@@ -72,8 +73,15 @@ export function followDocumentLinks(
     }
     /* Somebody else's site, and none of this applies. Read from the element
        rather than from the string: the browser has already worked out what the
-       href means, which is the question being asked. */
-    if (link.hostname && link.hostname !== window.location.hostname) {
+       href means, which is the question being asked.
+
+       Unless the document itself came from somebody else's site. A web part
+       reading from a URL is showing a document whose neighbours are all on
+       that same server, so a link to one of them is not an outside link, it is
+       the rest of the wiki. Only that server counts: a link from it to
+       anywhere else is still an outside link. */
+    if (link.hostname && link.hostname !== window.location.hostname
+      && !sameServerAs(base, link.href)) {
       return;
     }
 
@@ -172,6 +180,13 @@ export class DocumentLinkWatcher {
  * full of the second kind.
  */
 function asPath(href: string): string {
+  /* Unless it is not a path at all. A document fetched from a URL links to
+     documents on that same server, so a href here can be a whole address, and
+     an address stays an address: it is handed to fetch, which wants it
+     encoded, and decoding it would hand over a URL with spaces in it. */
+  if (/^[a-z][a-z0-9+.-]*:\/\//i.test(href)) {
+    return href;
+  }
   try {
     return decodeURIComponent(href);
   } catch {
@@ -185,4 +200,28 @@ function asPath(href: string): string {
 function isDocument(href: string): boolean {
   const path: string = href.split('#')[0].split('?')[0];
   return /\.(md|markdown)$/i.test(path);
+}
+
+
+/**
+ * Whether a link points at the same server the document came from.
+ *
+ * `fetchableUrl` is applied to both sides, so a link written as GitHub's blob
+ * page counts as being on the raw host the document was read from. That is the
+ * address a browser gives you when you copy a link to a file, and the two are
+ * the same document store wearing two names; refusing it would mean the link
+ * people actually paste is the one that does not work.
+ */
+function sameServerAs(base: string | undefined, href: string): boolean {
+  if (!base) {
+    return false;
+  }
+  const from: string = originOf(fetchableUrl(base));
+  return !!from && originOf(fetchableUrl(href)) === from;
+}
+
+/** The scheme and host at the front of an address, or empty. */
+function originOf(url: string): string {
+  const found: RegExpExecArray | null = /^[a-z][a-z0-9+.-]*:\/\/[^/?#]*/i.exec(url || '');
+  return found ? found[0].toLowerCase() : '';
 }
