@@ -1335,8 +1335,9 @@ const LIBRARY_PATH = '/sites/demo/Documents';
    * was: its own from [[toc]], and a generated one beside it.
    */
   await step('every page of the site shows one contents', async () => {
-    const pages = ['index.html', 'docs/index.html', 'themes/index.html',
-      'about/index.html', 'support/index.html'];
+    const pages = ['docs/index.html', 'themes/index.html', 'about/index.html',
+      'support/index.html', 'install/index.html', 'teams/index.html',
+      'linking/index.html', 'reading/index.html', 'editing/index.html'];
     for (const name of pages) {
       await page.goto('file://' + path.join(__dirname, '..', 'site', name),
         { waitUntil: 'load' });
@@ -1351,6 +1352,165 @@ const LIBRARY_PATH = '/sites/demo/Documents';
       }
       if (counts.entries < 2) throw new Error(name + ' has an empty contents');
     }
+  });
+
+  /*
+   * The front page asks for none, and asking for none has to mean none was
+   * built rather than one built and hidden: a panel nothing can reach is still
+   * a panel, still in the tab order, and still read out.
+   */
+  await step('the front page carries no contents at all', async () => {
+    await page.goto('file://' + path.join(__dirname, '..', 'site', 'index.html'),
+      { waitUntil: 'load' });
+    await page.waitForTimeout(300);
+    const panels = await page.evaluate(() =>
+      document.querySelectorAll('.strata-toc-sidebar, .strata-toc-inline, .strata-toc').length);
+    if (panels !== 0) throw new Error('the front page drew ' + panels + ' of them');
+  });
+
+  /*
+   * The site serves two readers who want different things, and the navigation
+   * says which half is which. Both halves are on every page, the pages that are
+   * out of the navigation included, or a reader who arrived on the privacy
+   * policy from the app catalog has a dead end rather than a site.
+   */
+  await step('the navigation is split into two labelled sections', async () => {
+    for (const name of ['index.html', 'docs/index.html', 'privacy/index.html']) {
+      await page.goto('file://' + path.join(__dirname, '..', 'site', name),
+        { waitUntil: 'load' });
+      const nav = await page.evaluate(() => ({
+        groups: [...document.querySelectorAll('.site-nav-group')].map((group) => ({
+          label: (group.querySelector('.site-nav-label') || {}).textContent,
+          links: group.querySelectorAll('.site-nav-link').length
+        })),
+        current: document.querySelectorAll('.site-nav-link[aria-current="page"]').length
+      }));
+      if (nav.groups.length !== 2) {
+        throw new Error(name + ' has ' + nav.groups.length + ' navigation groups');
+      }
+      for (const group of nav.groups) {
+        if (!group.label) throw new Error(name + ' has an unlabelled group');
+        if (group.links < 2) throw new Error(name + ': ' + group.label + ' has too few links');
+      }
+      /* The privacy policy is out of the navigation, so nothing in it is where
+         the reader is. Every other page marks exactly one entry. */
+      const expected = name === 'privacy/index.html' ? 0 : 1;
+      if (nav.current !== expected) {
+        throw new Error(name + ' marks ' + nav.current + ' entries as current');
+      }
+    }
+  });
+
+  /*
+   * Light and dark is one choice for the whole site, made in the header and
+   * remembered. It used to be a dropdown in a bar of theme controls, which was
+   * on every page whether the page was about the rendering or not.
+   */
+  await step('the switch in the header changes the mode and remembers it', async () => {
+    await page.goto('file://' + path.join(__dirname, '..', 'site', 'docs', 'index.html'),
+      { waitUntil: 'load' });
+    await page.waitForTimeout(300);
+
+    const before = await page.evaluate(() =>
+      document.documentElement.getAttribute('data-site-mode'));
+    await page.click('#site-mode-toggle');
+    await page.waitForTimeout(200);
+
+    const after = await page.evaluate(() => ({
+      site: document.documentElement.getAttribute('data-site-mode'),
+      /* The web part's own root has to move with the page, or a dark document
+         sits on a light one. */
+      webPart: document.querySelector('.strata-root').getAttribute('data-strata-mode'),
+      stored: window.localStorage.getItem('markstrata-site-mode'),
+      label: document.getElementById('site-mode-toggle').getAttribute('aria-label')
+    }));
+
+    if (after.site === before) throw new Error('the page stayed ' + before);
+    if (after.webPart !== after.site) {
+      throw new Error('the page is ' + after.site + ' and the document ' + after.webPart);
+    }
+    if (after.stored !== after.site) throw new Error('the choice was not remembered');
+    if (after.label.indexOf(after.site === 'dark' ? 'light' : 'dark') === -1) {
+      throw new Error('the switch says ' + JSON.stringify(after.label));
+    }
+
+    /* Another page of the site opens in the mode that was chosen on this one. */
+    await page.goto('file://' + path.join(__dirname, '..', 'site', 'reading', 'index.html'),
+      { waitUntil: 'load' });
+    const carried = await page.evaluate(() =>
+      document.documentElement.getAttribute('data-site-mode'));
+    if (carried !== after.site) {
+      throw new Error('the next page opened ' + carried + ' rather than ' + after.site);
+    }
+    await page.evaluate(() => window.localStorage.removeItem('markstrata-site-mode'));
+  });
+
+  /*
+   * A guided page drops panels of real web part markup into itself, drawn at
+   * build time by the same ViewModeRenderer and EditModeManager a SharePoint
+   * page runs. The point of them is that they cannot drift, so this checks the
+   * markup is the web part's own rather than a drawing of it, and that nothing
+   * in one is reachable: they are stills, their handlers did not survive being
+   * written to a file, and a control that looks live and is not is worse than a
+   * picture.
+   */
+  await step('a guided page carries real web part markup, inert', async () => {
+    await page.goto('file://' + path.join(__dirname, '..', 'site', 'linking', 'index.html'),
+      { waitUntil: 'load' });
+    await page.waitForTimeout(400);
+
+    const found = await page.evaluate(() => ({
+      panels: document.querySelectorAll('.site-specimen').length,
+      unfilled: document.querySelectorAll('[data-specimen]').length,
+      notes: document.querySelectorAll('.site-specimen-note').length,
+      crumbs: document.querySelectorAll('.site-specimen .strata-crumb-link').length,
+      here: document.querySelectorAll('.site-specimen .strata-crumb-here').length,
+      wiki: document.querySelectorAll('.site-specimen a.strata-wiki-link').length,
+      missing: document.querySelectorAll('.site-specimen a.strata-wiki-link--missing').length,
+      focusable: [...document.querySelectorAll('.site-specimen a[href], .site-specimen button')]
+        .filter((element) => element.getAttribute('tabindex') !== '-1').length,
+      /* Nothing in a panel carries a theme of its own, or it would sit out the
+         theme the rest of the page is drawn in. */
+      pinned: document.querySelectorAll('.site-specimen [data-strata-theme]').length
+    }));
+
+    if (found.panels < 4) throw new Error('only ' + found.panels + ' specimens');
+    if (found.unfilled) throw new Error(found.unfilled + ' placeholders were never filled');
+    if (found.notes !== found.panels) throw new Error('a specimen has no note under it');
+    if (found.crumbs < 3) throw new Error('the trail never builds up');
+    if (found.here < 3) throw new Error('a trail does not say where the reader is');
+    if (!found.wiki) throw new Error('no wiki links were rendered');
+    if (!found.missing) throw new Error('no link to a missing page was marked');
+    if (found.focusable) throw new Error(found.focusable + ' controls are still in the tab order');
+    if (found.pinned) throw new Error('a specimen is pinned to a theme of its own');
+
+    /* The panel refuses the pointer, so a reader cannot click a button that
+       would do nothing. */
+    const clickable = await page.evaluate(() =>
+      window.getComputedStyle(document.querySelector('.site-specimen-frame')).pointerEvents);
+    if (clickable !== 'none') throw new Error('a specimen takes clicks: ' + clickable);
+  });
+
+  await step('the editor specimen is the real split editor', async () => {
+    await page.goto('file://' + path.join(__dirname, '..', 'site', 'editing', 'index.html'),
+      { waitUntil: 'load' });
+    await page.waitForTimeout(400);
+    const editor = await page.evaluate(() => {
+      const split = document.querySelector('.site-specimen .strata-editor');
+      const box = document.querySelector('.site-specimen .strata-editor-input');
+      return {
+        layout: split ? split.getAttribute('data-layout') : 'nothing',
+        /* A textarea's value is a property. Written to a file it comes back
+           empty unless the text was put in the element as well. */
+        text: box ? box.value.length : 0,
+        preview: document.querySelectorAll('.site-specimen .strata-preview-box table').length,
+        save: document.querySelectorAll('.site-specimen .strata-btn-primary').length
+      };
+    });
+    if (editor.layout !== 'split') throw new Error('the editor is laid out ' + editor.layout);
+    if (editor.text < 40) throw new Error('the editing half is empty');
+    if (!editor.preview) throw new Error('the preview half rendered nothing');
+    if (!editor.save) throw new Error('there is no save button');
   });
 
   /*
