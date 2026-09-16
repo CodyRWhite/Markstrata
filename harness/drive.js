@@ -2265,7 +2265,7 @@ const LIBRARY_PATH = '/sites/demo/Documents';
       await new Promise((resolve) => setTimeout(resolve, 600));
 
       const heading = document.querySelector('#host h1');
-      const banner = document.querySelector('#host .strata-status');
+      const banner = document.querySelector('#host .strata-banner');
       return {
         href: href,
         heading: heading ? heading.textContent : '',
@@ -2574,7 +2574,7 @@ const LIBRARY_PATH = '/sites/demo/Documents';
       window.webPartHarness.editing(true);
       await new Promise((resolve) => setTimeout(resolve, 300));
 
-      const banner = document.querySelector('#host .strata-status');
+      const banner = document.querySelector('#host .strata-banner');
       return {
         heading: (document.querySelector('#host h1') || {}).textContent || '',
         editor: document.querySelectorAll('#host textarea').length,
@@ -2725,7 +2725,7 @@ const LIBRARY_PATH = '/sites/demo/Documents';
       await settle();
 
       const heading = document.querySelector('#host h1');
-      const banner = document.querySelector('#host .strata-status');
+      const banner = document.querySelector('#host .strata-banner');
       const crumbs = Array.prototype.slice
         .call(document.querySelectorAll('#host .strata-crumb'))
         .map((crumb) => (crumb.textContent || '').trim());
@@ -2788,7 +2788,7 @@ const LIBRARY_PATH = '/sites/demo/Documents';
       await settle();
 
       const heading = document.querySelector('#host h1');
-      const banner = document.querySelector('#host .strata-status');
+      const banner = document.querySelector('#host .strata-banner');
       return {
         at: heading ? (heading.textContent || '').trim() : '',
         banner: banner ? (banner.textContent || '').trim() : ''
@@ -2956,7 +2956,7 @@ const LIBRARY_PATH = '/sites/demo/Documents';
       await new Promise((resolve) => setTimeout(resolve, 400));
       window.webPartHarness.addressDocument(undefined);
       const heading = document.querySelector('#host h1');
-      const banner = document.querySelector('#host .strata-status');
+      const banner = document.querySelector('#host .strata-banner');
       return {
         heading: heading ? heading.textContent : '',
         banner: banner ? (banner.textContent || '').trim() : ''
@@ -2980,13 +2980,8 @@ const LIBRARY_PATH = '/sites/demo/Documents';
   await step('an address that cannot be honoured says so to an author', async () => {
     const seen = await page.evaluate(async () => {
       const settle = () => new Promise((resolve) => setTimeout(resolve, 600));
-      /* A direct child of the themed root, which is where the web part puts a
-         banner. The editor has a status line of its own that also carries the
-         class strata-status - it is a span inside the editor and it says
-         "Editing x.md" - and a plain .strata-status selector finds that one
-         first, which is how this check first reported the wrong element. */
       const banner = () => {
-        const found = document.querySelector('#host .strata-root > div.strata-status');
+        const found = document.querySelector('#host .strata-banner');
         return found ? (found.textContent || '').trim() : '';
       };
 
@@ -3036,7 +3031,7 @@ const LIBRARY_PATH = '/sites/demo/Documents';
       });
       window.webPartHarness.refuse(false);
       const strip = document.getElementById('wp-status');
-      const banner = document.querySelector('#host .strata-status');
+      const banner = document.querySelector('#host .strata-banner');
       return {
         state: strip.dataset.state,
         banner: banner ? (banner.textContent || '').trim() : '',

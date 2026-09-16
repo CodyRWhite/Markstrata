@@ -765,7 +765,12 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
 
   private showBanner(message: string, tone: string): void {
     const banner: HTMLElement = document.createElement('div');
-    banner.className = 'strata-status';
+    /* Two classes, and both earn their place. strata-status is what the
+       stylesheet paints, and the editor's own status line carries it too, so
+       a selector on it alone finds whichever comes first in the document -
+       which is how a check here read "Editing x.md" and reported it as a
+       banner. strata-banner is what this one is. */
+    banner.className = 'strata-status strata-banner';
     banner.setAttribute('data-tone', tone);
     banner.style.display = 'block';
     banner.style.marginBottom = '12px';
