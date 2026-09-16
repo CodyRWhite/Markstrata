@@ -628,9 +628,11 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
       /* Drawn by the renderer with everything else on the page, rather than
          pushed in over the top of it afterwards. */
       openDocumentName: this.navigator.name,
-      homeDocumentName: this.properties.fileMetadata
-        ? this.properties.fileMetadata.name : '',
-      onCloseDocument: () => this.navigator.close(true),
+      /* The document behind this one, which is the configured document only
+         when the reader has followed exactly one link. */
+      backDocumentName: this.navigator.previousName
+        || (this.properties.fileMetadata ? this.properties.fileMetadata.name : ''),
+      onGoBack: () => { void this.navigator.back(true); },
       landOnHeading: landOn,
       /* Only a library can hand over another document, and only a reader is
          reading: in page edit mode a click on a link belongs to the author

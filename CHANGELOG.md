@@ -26,6 +26,16 @@ Entries below 0.0.10.0 were written before the switch and are three-part.
   that quietly disagreed with Teams would be worse than an honest partial
   check.
 
+- The way back out of a followed document goes back one document, not out to
+  the start. The bar above a document always said "Back to" whatever the page
+  was configured with and always went there, so every link after the first was
+  a one-way trip: four pages into a wiki the only way back was the beginning,
+  and the trail the reader had walked was gone. It now names the document
+  behind this one and returns there, then the one behind that, and the
+  configured document last. The trail rides inside the browser history entry
+  rather than beside it, so the browser's own Back button walks the same path
+  and the two cannot disagree about where the reader has been.
+
 - A release publishes one file again, the `.sppkg`. The Teams app zip was a
   second asset from when Sync to Teams was failing and the only way into Teams
   was to upload the zip by hand in the admin centre. Sync works now, and the zip

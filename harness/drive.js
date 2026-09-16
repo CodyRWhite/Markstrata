@@ -2262,6 +2262,113 @@ const LIBRARY_PATH = '/sites/demo/Documents';
   });
 
   /*
+   * The way back goes back one document, not all the way out.
+   *
+   * The bar closed straight to the configured document however deep the
+   * reader had gone, so every link after the first was a one-way trip: three
+   * pages into a wiki the only way back was the beginning, and the trail the
+   * reader had walked was gone. It now names the document behind this one and
+   * returns there, and the browser's own Back button walks the same trail
+   * because the trail rides in the history entry.
+   *
+   * index.md -> Runbooks/Deploy notes.md -> Runbooks/rollback.md, which is a
+   * chain the stand-in library already holds.
+   */
+  await step('the way back goes back one document, not out to the start', async () => {
+    const walk = await page.evaluate(async () => {
+      const settle = () => new Promise((resolve) => setTimeout(resolve, 600));
+      const heading = () => {
+        const found = document.querySelector('#host h1');
+        return found ? (found.textContent || '').trim() : '';
+      };
+      const backButton = () => document.querySelector('#host .strata-open-doc-back');
+      const backSays = () => {
+        const button = backButton();
+        return button ? (button.textContent || '').trim() : '';
+      };
+
+      await window.webPartHarness.start({
+        contentSource: 'library',
+        selectedLibrary: '/sites/demo/Documents',
+        selectedFile: '/sites/demo/Documents/index.md',
+        enableWikiLinks: true,
+        followDocumentLinks: true
+      });
+      await settle();
+
+      const follow = (within) => {
+        const link = Array.from(document.querySelectorAll('#host article a'))
+          .filter((anchor) => anchor.classList.contains('strata-doc-link')
+            && (anchor.getAttribute('href') || '').indexOf(within) !== -1)[0];
+        if (!link) { return false; }
+        link.click();
+        return true;
+      };
+
+      const steps = [];
+      if (!follow('Deploy%20notes')) { return { failed: 'no link to the deploy notes' }; }
+      await settle();
+      steps.push({ at: heading(), back: backSays() });
+
+      if (!follow('rollback')) { return { failed: 'the deploy notes link nowhere' }; }
+      await settle();
+      steps.push({ at: heading(), back: backSays() });
+
+      /* Said rather than thrown. Against the old behaviour the first way back
+         went all the way out, so the bar was gone by the second click and the
+         check died on a null instead of reporting what it had found. */
+      const goBack = (which) => {
+        const button = backButton();
+        if (!button) { return `the way back was gone ${which}`; }
+        button.click();
+        return '';
+      };
+
+      const first = goBack('after two links in');
+      if (first) { return { failed: first, steps: steps }; }
+      await settle();
+      steps.push({ at: heading(), back: backSays() });
+
+      const second = goBack('after going back once, which means it went out to the start');
+      if (second) { return { failed: second, steps: steps }; }
+      await settle();
+      steps.push({ at: heading(), back: backSays(), bar: !!document.querySelector('#host .strata-open-doc') });
+
+      return { steps: steps };
+    });
+
+    if (walk.failed) {
+      throw new Error(walk.failed + '; got to ' + JSON.stringify(walk.steps));
+    }
+    const [one, two, three, four] = walk.steps;
+
+    /* One link in, the way back is the configured document, which is the only
+       name the navigator does not hold itself. */
+    if (one.back.indexOf('index.md') === -1) {
+      throw new Error('one link in, the way back says ' + JSON.stringify(one.back));
+    }
+    /* Two in, and this is the whole point: it names the page just left, not
+       the one the page is configured with. */
+    if (two.back.indexOf('Deploy notes.md') === -1) {
+      throw new Error('two links in, the way back says ' + JSON.stringify(two.back));
+    }
+    if (two.at.indexOf('Rolling back') === -1 && two.at.indexOf('Roll') === -1) {
+      throw new Error('two links in, the document is ' + JSON.stringify(two.at));
+    }
+    /* Back once lands on the middle document, not on the configured one. */
+    if (three.at.indexOf('Deploying') === -1) {
+      throw new Error('after going back the document is ' + JSON.stringify(three.at));
+    }
+    if (three.back.indexOf('index.md') === -1) {
+      throw new Error('after going back the way back says ' + JSON.stringify(three.back));
+    }
+    /* And back again leaves the trail entirely, so the bar goes with it. */
+    if (four.bar) {
+      throw new Error('back at the configured document the bar is still there');
+    }
+  });
+
+  /*
    * A SharePoint page is a single-page application with a router listening for
    * clicks on the whole document, and it listens before any one element does.
    * Bubbling up to it meant it saw every click on a document link first: it

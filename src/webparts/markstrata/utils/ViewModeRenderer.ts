@@ -66,9 +66,12 @@ export interface IViewOptions {
   openDocument?: (path: string, heading: string) => void;
   /** The followed document being read, when one is: empty when at home. */
   openDocumentName?: string;
-  /** What the way back goes back to. */
-  homeDocumentName?: string;
-  onCloseDocument?: () => void;
+  /**
+   * What the way back goes back to: the document the reader came from, or the
+   * configured one when they came from there.
+   */
+  backDocumentName?: string;
+  onGoBack?: () => void;
   /** A heading in the document to land on once it is drawn, from a link. */
   landOnHeading?: string;
   backToTop?: BackToTop;
@@ -118,7 +121,7 @@ export class ViewModeRenderer {
 
     /* Above the toolbar, because it answers "where am I", which comes before
        anything a reader might do here. */
-    if (options.openDocumentName && options.onCloseDocument) {
+    if (options.openDocumentName && options.onGoBack) {
       host.appendChild(this.buildOpenDocumentBar(options));
     }
 
@@ -293,11 +296,14 @@ export class ViewModeRenderer {
     name.textContent = options.openDocumentName as string;
     bar.appendChild(name);
 
-    const home: string = options.homeDocumentName || 'this page';
+    /* Named rather than a bare "Back", because the reader has a second Back
+       button an inch away in the browser and the two do the same thing only
+       by accident. */
+    const previous: string = options.backDocumentName || 'this page';
     const back: HTMLButtonElement = this.button(
-      `Back to ${home}`,
-      `Go back to ${home}`,
-      () => (options.onCloseDocument as () => void)(),
+      `Back to ${previous}`,
+      `Go back to ${previous}`,
+      () => (options.onGoBack as () => void)(),
       BACK_ICON
     );
     back.classList.add('strata-open-doc-back');
