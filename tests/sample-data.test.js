@@ -118,7 +118,12 @@ const BANNED = new Set([
   'ebb2669b51499d0b',
   '7d0a15aad660939c',
   '8a678105cbbc8d3e',
-  '855b88692f1d948d'
+  '855b88692f1d948d',
+  /* A site and a tenant that reached the tests and a source header, through
+     the one route this list did not watch: a fault reported against a real
+     document, reproduced verbatim as the test case for it. */
+  'd257dab657b413a5',
+  'a45284a09f173c6e'
 ]);
 
 /* The names are one token each under this split, which is the widest thing
@@ -129,8 +134,55 @@ function digest(token) {
   return crypto.createHash('sha256').update(token).digest('hex').slice(0, 16);
 }
 
-CONTENT.forEach((file) => {
+/*
+ * Everything that ships or is read by a person, for the banned-name check
+ * only.
+ *
+ * Wider than CONTENT on purpose, and narrower in what it checks. A real name
+ * reached this repository through tests and a source file's own header, not
+ * through the prose CONTENT covers: a fault was reported against a real
+ * document and the reproduction was pasted in as the test case, which is the
+ * most natural thing in the world to do and the reason this list exists.
+ *
+ * The host check below cannot be widened the same way. Source carries real
+ * hostnames on purpose - the sanitiser's iframe allowlist names YouTube,
+ * Vimeo and SharePoint - so running it over code would fail on the code doing
+ * its job. Names are different: there is no reason for one of these to appear
+ * anywhere, ever.
+ */
+const EVERYTHING = CONTENT
+  .concat(['CHANGELOG.md'])
+  .concat(walk('src'))
+  .concat(walk('tests'))
+  .concat(walk('harness').filter((file) => file.indexOf('harness/dist') !== 0))
+  .concat(walk('scripts'))
+  .concat(walk('config'))
+  .filter((file, index, all) => all.indexOf(file) === index)
+  .filter((file) => fs.existsSync(path.join(ROOT, file)));
+
+function walk(from) {
+  const here = path.join(ROOT, from);
+  if (!fs.existsSync(here)) { return []; }
+  return fs.readdirSync(here, { withFileTypes: true }).reduce((found, entry) => {
+    const next = `${from}/${entry.name}`;
+    if (entry.isDirectory()) { return found.concat(walk(next)); }
+    return /\.(ts|js|json|md|css)$/.test(entry.name) ? found.concat([next]) : found;
+  }, []);
+}
+
+EVERYTHING.forEach((file) => {
   test(`${file} does not name a known internal host`, () => {
+    const text = fs.readFileSync(path.join(ROOT, file), 'utf8').toLowerCase();
+    const banned = (text.match(TOKEN) || []).some((token) => BANNED.has(digest(token)));
+
+    assert.equal(banned, false,
+      `${file} names a host or database from a real tenant. Example data `
+      + 'belongs on example.com.');
+  });
+});
+
+CONTENT.forEach((file) => {
+  test(`${file} does not name a known internal host, in prose`, () => {
     const text = fs.readFileSync(path.join(ROOT, file), 'utf8').toLowerCase();
     const banned = (text.match(TOKEN) || []).some((token) => BANNED.has(digest(token)));
 

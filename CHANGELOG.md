@@ -10,6 +10,20 @@ Entries below 0.0.10.0 were written before the switch and are three-part.
 
 ## 0.0.18.4
 
+- A real site name is out of the tests, out of a source file's header and out
+  of this changelog. It arrived the way these always do: a fault was reported
+  against a real document, and the reproduction was pasted in as the test case
+  for it. The paths are invented now and still exercise what they were written
+  for, which is spaces surviving encoding.
+- The guard that was supposed to stop that has been widened, because it had two
+  holes and the name went through both. It never knew this name, and it only
+  read prose: samples, the README, the site pages. Tests and source were not
+  covered, and those are exactly where a reproduction lands. The name check now
+  reads everything that ships or is read by a person. The host check stays on
+  prose, because source names real hosts on purpose - the sanitiser's iframe
+  allowlist is a list of them - and running it over code would fail on the code
+  doing its job.
+
 - The app is called "Markstrata - Markdown for SharePoint and Teams" in the App
   Catalog, and both its descriptions describe what it does now. The name said
   "Markdown Web Part for SharePoint Online", which was written before any of the

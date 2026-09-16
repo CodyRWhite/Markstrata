@@ -44,7 +44,9 @@ test('a short one is relative to the configured document', () => {
      library in all of them. */
   const wanted = documentFromAddress('?strataDoc=Runbooks%2FDatabase%20setup.md', LIBRARY);
   /* A path, not a URL: this is handed to SharePoint, which encodes its own.
-     The first cut of this returned "/sites/wiki/Shared%20Documents/Runbooks/Database setup.md", half encoded and half not, which SharePoint would never find. */
+     The first cut of this returned
+     "/sites/wiki/Shared%20Documents/Runbooks/Database setup.md", half encoded
+     and half not, which SharePoint would never find. */
   assert.equal(wanted.path, '/sites/wiki/Shared Documents/Runbooks/Database setup.md');
 });
 
