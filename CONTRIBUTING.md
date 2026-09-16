@@ -137,9 +137,12 @@ never loads.
 5. With the colour mode set to **Follow the page**, switch Teams between light
    and dark. Whether SPFx passes a Teams theme change through to the web part
    is the open question - record what happens rather than assuming either way.
-6. Try the print button. In the Teams desktop client printing an embedded frame
-   may do nothing. If it does nothing, that is worth knowing before deciding
-   whether to hide the button there; nothing has been guessed about it in code.
+6. Try the export button. It lays the document out as pages and then opens the
+   browser's print dialog, and in the Teams desktop client printing an embedded
+   frame may do nothing. Record which half fails: pages laid out and no dialog
+   is a different problem from no pages at all. If the dialog never appears,
+   that is worth knowing before deciding whether to hide the button there;
+   nothing has been guessed about it in code.
 7. Follow a link to another markdown document, then use the browser's or the
    client's back gesture. The history entry is pushed inside the tab's frame,
    and Teams has a router of its own. Follow two or three links first: the
