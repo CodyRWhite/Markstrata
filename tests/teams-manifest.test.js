@@ -59,11 +59,14 @@ const schema = JSON.parse(fs.readFileSync(
  * objects we populate.
  *
  * This is not a JSON Schema validator and does not pretend to be one: it
- * checks names, requiredness and lengths, which is the class of mistake that
- * reaches Teams as a refused upload. Types and enums it leaves alone. The
- * schema is draft-04 and the validator available here does not read that
- * draft, and a validator that quietly disagrees with the real one would be
- * worse than an honest partial check.
+ * checks names, requiredness and lengths, and it names the offending key in
+ * words, which a validator's error path does not always do.
+ *
+ * The real validation is the check at the foot of this file. It was left out
+ * when this was written, on the grounds that the schema is draft-04 and
+ * nothing here read that draft. That turned out to be wrong: ajv is already
+ * in the tree and reads draft-04 given its meta-schema. So both run, and this
+ * one is the friendlier message rather than the only line of defence.
  */
 function undefinedKeys(value, node, trail) {
   if (!node || !node.properties || typeof value !== 'object' || value === null) {
@@ -231,3 +234,45 @@ test('the manifest carries what Teams needs to call SharePoint back', () => {
     id: '00000003-0000-0ff1-ce00-000000000000'
   });
 });
+
+/*
+ * The whole schema, by a real validator.
+ *
+ * Written after a manifest carrying a `packageName` reached a tenant and was
+ * refused by Teams, because the check beside it listed the fields somebody
+ * remembered rather than the ones the schema defines. The reasoning for not
+ * doing this properly was that the schema is draft-04 and nothing to hand
+ * read that draft. ajv does, given its draft-04 meta-schema, and it has been
+ * installed the whole time.
+ *
+ * ajv is added to devDependencies rather than left as somebody else's
+ * transitive dependency: a check that silently stops running when an
+ * unrelated package is upgraded is worse than no check.
+ */
+test('the manifest validates against the whole v1.17 schema', () => {
+  const validate = manifestValidator();
+  const valid = validate(manifest);
+  assert.ok(valid, valid ? '' : (validate.errors || [])
+    .map((error) => `${error.dataPath || '(root)'} ${error.message}`).join('; '));
+});
+
+test('and the validator really would refuse a bad one', () => {
+  /* The exact shape that reached a tenant: a key the schema does not define,
+     on a manifest that is otherwise correct. A validator that passes
+     everything is not a validator. */
+  const validate = manifestValidator();
+  const withInvented = Object.assign({}, manifest, { packageName: 'com.example.markstrata' });
+  assert.equal(validate(withInvented), false,
+    'an undefined property was accepted, so this check proves nothing');
+
+  const withoutRequired = Object.assign({}, manifest);
+  delete withoutRequired.id;
+  assert.equal(validate(withoutRequired), false, 'a manifest with no id was accepted');
+});
+
+function manifestValidator() {
+  const Ajv = require('ajv');
+  const ajv = new Ajv({ schemaId: 'auto', allErrors: true });
+  ajv.addMetaSchema(require('ajv/lib/refs/json-schema-draft-04.json'));
+  return ajv.compile(schema);
+}

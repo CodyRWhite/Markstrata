@@ -10,6 +10,17 @@ Entries below 0.0.10.0 were written before the switch and are three-part.
 
 ## 0.0.18.4
 
+- The Teams manifest is validated against the whole v1.17 schema now, by a real
+  validator, rather than by a hand-written check of the fields somebody
+  remembered. That check was written after a manifest carrying a `packageName`
+  reached a tenant and was refused, and it was left partial on the grounds that
+  the schema is draft-04 and nothing here read that draft. ajv does, given its
+  draft-04 meta-schema, and it had been installed the whole time. It is pinned
+  in devDependencies rather than left as somebody else's transitive dependency,
+  because a check that stops running when an unrelated package is upgraded is
+  worse than no check. The friendlier hand-written check stays beside it: it
+  names the offending key in words.
+
 - The Share button has a setting of its own, beside the print button, and is
   greyed out where following is off because the link it copies is the one that
   setting reads.
