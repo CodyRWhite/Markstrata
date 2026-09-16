@@ -609,3 +609,61 @@ test('a table with no spans in it is untouched', () => {
   assert.match(html, /<td>2<\/td>/);
   assert.doesNotMatch(html, /colspan/);
 });
+
+/*
+ * A heading nothing can link to.
+ *
+ * Heading ids stopped at h4, for no reason anybody had written down. A
+ * document that went five levels deep had a floor that no `#fragment`, no
+ * `[[Page#Heading]]`, no `?strataDoc=...#heading` and no contents entry could
+ * reach, and nothing said so: the link simply did not move the page.
+ */
+const SIX_DEEP = '# Title\n\n## Two\n\n### Three\n\n#### Four\n\n##### Five\n\n###### Six\n';
+
+test('every heading gets an id, not just the first four levels', () => {
+  const html = new MarkdownProcessor({}).render(SIX_DEEP);
+  for (const id of ['title', 'two', 'three', 'four', 'five', 'six']) {
+    assert.match(html, new RegExp(`id="${id}"`), `no id for ${id}`);
+  }
+});
+
+test('a link to a fifth level heading has something to land on', () => {
+  const html = new MarkdownProcessor({ enableWikiLinks: true })
+    .render(`${SIX_DEEP}\nSee [[#Five]].`);
+  assert.match(html, /href="#five"/);
+  assert.match(html, /id="five"/);
+});
+
+/*
+ * And the contents that `[[toc]]` writes now reads the same setting the
+ * sidebar contents does. It was fixed at h2 and h3 whatever the setting said,
+ * so one page could show two contents that disagreed about how deep the
+ * document went.
+ */
+/* Read out of the contents rather than out of the page: every heading also
+   carries a permalink to itself, so the whole string holds an href for every
+   level whatever the contents lists. */
+const contentsOf = (html) => /<div class="strata-toc">[\s\S]*?<\/div>/.exec(html)[0];
+
+test('the inline contents goes as deep as the setting says', () => {
+  const shallow = contentsOf(new MarkdownProcessor({ enableToc: true, tocMaxLevel: 3 })
+    .render(`[[toc]]\n\n${SIX_DEEP}`));
+  assert.match(shallow, /href="#three"/);
+  assert.doesNotMatch(shallow, /href="#four"/);
+
+  const deep = contentsOf(new MarkdownProcessor({ enableToc: true, tocMaxLevel: 6 })
+    .render(`[[toc]]\n\n${SIX_DEEP}`));
+  assert.match(deep, /href="#six"/);
+});
+
+test('the inline contents starts at the second level, never the title', () => {
+  /* The first heading is the document's name, and an entry for it is a line
+     pointing at the page you are already on. */
+  for (const deepest of [1, 2, 6]) {
+    const html = new MarkdownProcessor({ enableToc: true, tocMaxLevel: deepest })
+      .render(`[[toc]]\n\n${SIX_DEEP}`);
+    const toc = contentsOf(html);
+    assert.doesNotMatch(toc, /href="#title"/, `at ${deepest}`);
+    assert.match(toc, /href="#two"/, `at ${deepest}, an empty contents is not a setting`);
+  }
+});

@@ -738,6 +738,10 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
       enableMath: this.properties.enableMath,
       enableMermaid: this.properties.enableMermaid,
       enableToc: true,
+      /* The same number the sidebar contents uses, so a document carrying
+         [[toc]] and a sidebar does not show two contents that disagree about
+         how deep it goes. */
+      tocMaxLevel: this.properties.tocMaxLevel,
       enableAnchors: this.properties.enableAnchors,
       enableWikiLinks: this.properties.enableWikiLinks,
       enableTags: this.properties.enableTags,

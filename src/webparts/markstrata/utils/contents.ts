@@ -46,8 +46,8 @@ const BOTTOM_SLACK: number = 4;
  * from a `[[toc]]` marker so the sidebar works for any document.
  */
 export function collectHeadings(container: HTMLElement, maxLevel: number): ITocEntry[] {
-  const selector: string = ['h1', 'h2', 'h3', 'h4']
-    .slice(0, Math.max(1, Math.min(4, maxLevel)))
+  const selector: string = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6']
+    .slice(0, Math.max(1, Math.min(6, maxLevel)))
     .join(',');
   const headings: HTMLElement[] =
     Array.prototype.slice.call(container.querySelectorAll(selector));

@@ -61,6 +61,19 @@ Entries below 0.0.10.0 were written before the switch and are three-part.
   rather than beside it, so the browser's own Back button walks the same path
   and the two cannot disagree about where the reader has been.
 
+- A heading five or six levels deep can be linked to. Only h1 to h4 were given
+  an id, for no reason anybody had written down, so a document that went deeper
+  had a floor nothing could reach: no `#fragment`, no `[[Page#Heading]]`, no
+  `?strataDoc=...#heading`, no contents entry. Nothing said so either, the link
+  simply did not move the page. Every level gets one now.
+- And the contents a `[[toc]]` writes reads the same setting the sidebar
+  contents reads. It was fixed at the second and third levels whatever
+  "Deepest heading in the contents" said, so one page could show two contents
+  that disagreed about how deep the document went. The setting now goes to six
+  as well, which it could not sensibly do while the deeper headings had no ids
+  to point at. The inline contents still starts at the second level, because
+  the first heading is the document's own title.
+
 - Every release tag in this series pointed at the wrong commit. The workflow
   is dispatched on a branch, builds that branch, and then asked `gh` to create
   the release without saying which commit it was for - so the tag landed on the

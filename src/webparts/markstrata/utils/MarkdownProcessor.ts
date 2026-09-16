@@ -70,6 +70,13 @@ export interface IMarkdownProcessorOptions {
   enableMath: boolean;
   enableMermaid: boolean;
   enableToc: boolean;
+  /**
+   * The deepest heading a `[[toc]]` lists, from the same setting the sidebar
+   * contents reads. Without it the inline contents listed h2 and h3 whatever
+   * the setting said, so the two kinds of contents on one page disagreed
+   * about how deep a document goes.
+   */
+  tocMaxLevel?: number;
   enableAnchors: boolean;
   enableWikiLinks: boolean;
   enableTags: boolean;
@@ -342,7 +349,12 @@ export class MarkdownProcessor {
             })
           : undefined;
       register('heading anchors', anchor, {
-        level: [1, 2, 3, 4],
+        /* Every level, because an id costs nothing and a heading without one
+           cannot be reached by anything: not `#fragment`, not
+           `[[Page#Heading]]`, not `?strataDoc=...#heading`, not the contents.
+           It stopped at four for no reason anybody wrote down, so a document
+           that went five deep had a floor nothing could link to. */
+        level: [1, 2, 3, 4, 5, 6],
         permalink: permalink,
         tabIndex: false,
         /* GitHub's rule, and the same function the table of contents below and
@@ -363,7 +375,10 @@ export class MarkdownProcessor {
 
     if (this.options.enableToc) {
       register('table of contents', markdownItTOC, {
-        includeLevel: [2, 3],
+        /* From h2, because h1 is the document's title and an entry for it is
+           an entry for the page you are on. Down to whatever the setting says,
+           which this used to ignore. */
+        includeLevel: tocLevels(this.options.tocMaxLevel),
         containerClass: 'strata-toc',
         listType: 'ul',
         /* Its own copy of the slug rule, which it falls back on for a heading
@@ -858,4 +873,22 @@ export class MarkdownProcessor {
       return defaultFence(tokens, index, options, environment, self);
     };
   }
+}
+
+/**
+ * The heading levels a `[[toc]]` lists, from the setting that says how deep
+ * the contents go.
+ *
+ * Always starts at 2: the first heading in a document is its title, and a
+ * contents whose first entry is the page itself is a contents with a wasted
+ * line. A setting of 1 therefore still gives h2 alone rather than nothing at
+ * all, because an empty contents is not what anybody chose.
+ */
+function tocLevels(deepest: number | undefined): number[] {
+  const bottom: number = Math.max(2, Math.min(6, deepest === undefined ? 3 : deepest));
+  const levels: number[] = [];
+  for (let level: number = 2; level <= bottom; level++) {
+    levels.push(level);
+  }
+  return levels;
 }

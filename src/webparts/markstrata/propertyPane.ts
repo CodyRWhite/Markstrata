@@ -387,7 +387,10 @@ export function paneConfiguration(
               PropertyPaneSlider('tocMaxLevel', {
                 label: strings.TocLevelLabel,
                 min: 1,
-                max: 4,
+                /* Six, because every heading has an id now. It stopped at four
+                   while h5 and h6 had none, so listing them would have listed
+                   entries that led nowhere. */
+                max: 6,
                 step: 1,
                 disabled: properties.tocPosition === 'off'
               }),
