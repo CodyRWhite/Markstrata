@@ -8,6 +8,62 @@ is normally zero. `scripts/set-version.js` stamps it when a release is cut.
 
 Entries below 0.0.10.0 were written before the switch and are three-part.
 
+## 0.0.21.0
+
+- The toolbar can be kept in view while the document scrolls under it, which
+  suits a long document somebody reads a section at a time. Off by default: a
+  short document scrolls past the toolbar once and does not want it back.
+  - It comes to rest below whatever the page keeps stuck across the top of the
+    window rather than behind it. On a SharePoint page that is the suite bar
+    and the command bar, and the web part measures them rather than guessing,
+    because a toolbar stuck at the top of the window is a toolbar nobody can
+    reach.
+  - A heading scrolled to lands below the toolbar as well. The offset a heading
+    lands at was written when nothing of this web part's own was ever stuck up
+    there, so it counted the page's bars and nothing else, and clicking a
+    contents entry would have put the heading neatly behind the new toolbar.
+    Sticky table headers read the same offset, so they come to rest under the
+    toolbar without being told about it, and the contents sidebar is brought
+    down to meet it.
+
+- A picture opened full size can be zoomed further and panned around. Full size
+  meant the size of the window, which is the whole of it for a diagram and not
+  enough for a screenshot: a screenshot of a settings page is legible at the
+  size it was taken and a blur at the size a column allows.
+  - Three ways in, because readers are not all holding the same thing. A wheel
+    or a pinch zooms toward the pointer, the way a map does; a double click
+    goes between fitting the window and twice that, which is the whole gesture
+    on a touchscreen; and buttons in the corner are what a keyboard reaches
+    for. Dragging moves a zoomed picture around, and it cannot be dragged so
+    far that none of it is left on screen.
+  - Zooming toward the pointer rather than the middle is the part worth having.
+    A reader points at the thing they want bigger, and a zoom that walks it off
+    the screen makes them chase it.
+  - The picture now sits in a panel that fills the overlay, so a zoomed picture
+    has somewhere to be panned to. The dark area beside it still puts the
+    picture away, the way clicking outside always has; the picture and its
+    buttons do not.
+
+- A link whose address has spaces in it is read as the link it plainly is.
+  SharePoint names pages and files after their titles, so the address somebody
+  copies out of the address bar usually has spaces, and markdown says a link
+  address may not: markdown-it read to the first space, failed to find the
+  closing bracket, and gave up, so the whole thing reached the page as brackets
+  with a stray half-link in the middle of them.
+  - The rule runs only where markdown has already given up, so nothing that
+    rendered before renders differently, and a sentence in brackets followed by
+    one in parentheses is still two sentences. Pictures too, since the same
+    paste breaks them one character away.
+  - Angle brackets around the address remain the form that is actually correct
+    and that works everywhere rather than only here, and the documentation
+    still teaches it.
+
+- The site has a page about MarkstrataSiteBuilder, the companion PowerShell
+  module that publishes a folder of markdown as a browsable SharePoint site:
+  one renderer page serving every document, generated category pages, and a
+  menu built from the folders. Separate repository, separate release cycle, and
+  either one works without the other.
+
 ## 0.0.20.2
 
 - The Teams tab is offered in a channel and not in a chat. The manifest asked
