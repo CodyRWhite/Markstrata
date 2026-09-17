@@ -8,7 +8,7 @@
  *
  *   const view: ViewModeRenderer = new ViewModeRenderer(processor, mermaid, enhancer, {
  *     onReload: () => load(), onShowVersions: () => versions(),
- *     onThemeOverride: (family, mode) => override(family, mode), onPrint: () => window.print()
+ *     onThemeOverride: (family, mode) => override(family, mode), onExport: () => exportPdf()
  *   });
  *   view.render(container, markdown, options);
  *
@@ -24,6 +24,7 @@ import { MarkdownProcessor } from './MarkdownProcessor';
 import { MermaidRenderer } from './MermaidRenderer';
 import { DiagramWidth } from './mermaidConfig';
 import { ContentEnhancer, ITocEntry } from './ContentEnhancer';
+import { landOnHeading } from './headingLanding';
 import {
   ThemeManager,
   IThemeSettings,
@@ -48,7 +49,7 @@ export interface IViewOptions {
   resolvedMode: ResolvedMode;
   showToolbar: boolean;
   showThemeSwitcher: boolean;
-  showPrintButton: boolean;
+  showExportButton: boolean;
   tocPosition: TocPosition;
   tocMaxLevel: number;
   showSourceInfo: boolean;
@@ -111,7 +112,8 @@ export interface IViewCallbacks {
   onReload: () => void;
   onShowVersions: () => void;
   onThemeOverride: (family: ThemeFamily, mode: 'light' | 'dark') => void;
-  onPrint: () => void;
+  /** Lay the document out as pages and hand it to the print dialog. */
+  onExport: () => void;
 }
 
 export class ViewModeRenderer {
@@ -197,7 +199,16 @@ export class ViewModeRenderer {
        view is decided by measuring them rather than by reading the markdown. */
     this.enhancer.attachCodeZoom(article, options.enableImageZoom !== false);
     this.enhancer.secureExternalLinks(article);
-    this.enhancer.followDocumentLinks(article, options.documentBase, options.openDocument);
+    this.enhancer.followDocumentLinks(
+      article,
+      options.documentBase,
+      options.openDocument,
+      /* An anchor into this document scrolls here rather than being handed to
+         the page's router, which would take the reader back to the configured
+         document with the fragment still on the address. Smoothly, so it
+         arrives the way the contents list already arrives. */
+      (heading: string) => { landOnHeading(article, heading, true); }
+    );
     this.enhancer.enhanceImages(article, options.enableImageZoom !== false);
     this.enhancer.enhanceTables(article, options.enableTableSort !== false);
 
@@ -228,14 +239,12 @@ export class ViewModeRenderer {
        now, so this is the moment it can be scrolled to. The offset above is
        what keeps it clear of the chrome, so it has to be set first. */
     if (options.landOnHeading) {
-      const landing: HTMLElement | null = article.querySelector(
-        `#${(window.CSS && window.CSS.escape
-          ? window.CSS.escape(options.landOnHeading)
-          : options.landOnHeading)}`
-      );
-      if (landing) {
-        landing.scrollIntoView();
-      }
+      /* By every spelling the name might have, not just the one written. A
+         wiki link arrives already slugged; a heading named on the page's own
+         address arrives as somebody typed it, so `#Rollback` was looked up as
+         `Rollback` and matched nothing, and the reader was left at the top of
+         the right document. */
+      landOnHeading(article, options.landOnHeading);
     }
 
     /* Left to settle in on its own: the document is readable while this is in
@@ -435,9 +444,14 @@ export class ViewModeRenderer {
       );
       actions.appendChild(share);
     }
-    if (options.showPrintButton) {
-      actions.appendChild(this.button('Print', 'Print or save as PDF',
-        () => this.callbacks.onPrint(), PRINT_ICON));
+    if (options.showExportButton) {
+      /* "Export" rather than "Print", because what it produces is a document
+         with a cover, a contents and page numbers rather than the page cut
+         into paper-sized pieces. The dialog that opens is still the browser's
+         print dialog, since that is the only way a page is allowed to make a
+         PDF, so the title says where to go in it. */
+      actions.appendChild(this.button('Export', 'Export as a PDF, with a contents page. Choose "Save as PDF" in the dialog',
+        () => this.callbacks.onExport(), PRINT_ICON));
     }
     /* Last in the group, at the far right of the bar. It belongs with the
        things you do to the page rather than with the theme list: choosing a

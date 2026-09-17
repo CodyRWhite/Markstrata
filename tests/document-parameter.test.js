@@ -26,7 +26,8 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const { documentParameter } = require('./helpers');
 
-const { documentFromAddress, addressForDocument, DOCUMENT_PARAMETER } = documentParameter;
+const { documentFromAddress, addressForDocument, DOCUMENT_PARAMETER,
+        guardedEncode, relativeToFolder } = documentParameter;
 const LIBRARY = '/sites/wiki/Shared Documents';
 
 test('an address written out in full is taken as it is', () => {
@@ -120,10 +121,21 @@ const { addressWithoutDocument } = documentParameter;
 const PAGE = 'https://contoso.sharepoint.com/sites/wiki/SitePages/Wiki.aspx';
 
 test('an address for a document is the page plus the document', () => {
+  /* Escaped only where it has to be. The slashes were %2F when the whole
+     value went through encodeURIComponent, which said nothing to anybody the
+     link was sent to. Told no folder to name it against, the path is written
+     out in full; the short form is the test below. */
   assert.equal(
     addressForDocument(PAGE, '/sites/wiki/Shared Documents/Runbooks/Deploy notes.md'),
-    `${PAGE}?strataDoc=`
-      + '%2Fsites%2Fwiki%2FShared%20Documents%2FRunbooks%2FDeploy%20notes.md'
+    `${PAGE}?strataDoc=/sites/wiki/Shared%20Documents/Runbooks/Deploy%20notes.md`
+  );
+});
+
+test('and the short form when it is told which folder the page reads from', () => {
+  assert.equal(
+    addressForDocument(PAGE, '/sites/wiki/Shared Documents/Runbooks/Deploy notes.md',
+      undefined, '/sites/wiki/Shared Documents'),
+    `${PAGE}?strataDoc=Runbooks/Deploy%20notes.md`
   );
 });
 
@@ -175,4 +187,116 @@ test('and a tenant own parameters are left exactly where they were', () => {
     addressWithoutDocument(`${PAGE}?strataDoc=%2Fa.md#section`),
     `${PAGE}#section`
   );
+});
+
+/*
+ * What a shared address looks like.
+ *
+ * The Share button ran the whole value through encodeURIComponent and wrote
+ * the full server-relative path, so a link to a document three folders down
+ * was a wall of escapes carrying the site and the library whether or not they
+ * said anything. It is the short form now, escaped only where it has to be.
+ */
+
+test('only the characters that would be misread are escaped', () => {
+  assert.equal(guardedEncode('Deploy&rollback.md'), 'Deploy%26rollback.md');
+  assert.equal(guardedEncode('What is #1.md'), 'What%20is%20%231.md');
+  assert.equal(guardedEncode('a+b.md'), 'a%2Bb.md');
+  assert.equal(guardedEncode('100% done.md'), '100%25%20done.md');
+});
+
+test('a slash, a bracket and an accent survive as written', () => {
+  assert.equal(guardedEncode('Runbooks/Déployer (v2)/notes.md'),
+    'Runbooks/D\u00e9ployer%20(v2)/notes.md');
+});
+
+test('the per cent sign is escaped before the escapes are written', () => {
+  /* Escaped last, it would escape the per cent signs of the escapes above it
+     and a reader would get %2526 where they wanted an ampersand. */
+  assert.equal(guardedEncode('%&'), '%25%26');
+  assert.doesNotMatch(guardedEncode('a&b'), /%2526/);
+});
+
+test('a space is escaped, because a raw one ends the link', () => {
+  /* Not one of the four that have to be, but Teams and Outlook stop
+     autolinking at a space and what arrives is half an address. */
+  assert.equal(guardedEncode('Deploy notes.md'), 'Deploy%20notes.md');
+});
+
+test('a document in the folder the page reads from is just its name', () => {
+  assert.equal(
+    relativeToFolder('/sites/wiki/Shared Documents', '/sites/wiki/Shared Documents/deploy.md'),
+    'deploy.md'
+  );
+});
+
+test('a document below it keeps the folders between', () => {
+  assert.equal(
+    relativeToFolder('/sites/wiki/Shared Documents', '/sites/wiki/Shared Documents/Runbooks/db.md'),
+    'Runbooks/db.md'
+  );
+});
+
+test('a document in the folder beside it climbs once', () => {
+  assert.equal(
+    relativeToFolder('/sites/wiki/Shared Documents', '/sites/wiki/Other Library/x.md'),
+    '../Other Library/x.md'
+  );
+});
+
+test('anything further up is left as the path it is', () => {
+  /* ../../other/Docs/page.md tells a reader less than the path it stands for. */
+  assert.equal(
+    relativeToFolder('/sites/wiki/Shared Documents', '/sites/other/Docs/page.md'),
+    '/sites/other/Docs/page.md'
+  );
+});
+
+test('a file whose name matches its folder is still a file', () => {
+  assert.equal(
+    relativeToFolder('/sites/wiki/Runbooks', '/sites/wiki/Runbooks/Runbooks'),
+    'Runbooks'
+  );
+});
+
+test('a document read from an address is shared as one', () => {
+  /* The folder is a URL, so there is no relative form to fall back to. */
+  assert.equal(
+    relativeToFolder('https://example.invalid/docs', 'https://example.invalid/docs/a.md'),
+    'https://example.invalid/docs/a.md'
+  );
+});
+
+test('a shared address reads back as the document it names', () => {
+  const folder = '/sites/wiki/Shared Documents';
+  const wanted = '/sites/wiki/Shared Documents/Runbooks/Deploy notes.md';
+
+  const address = addressForDocument('https://contoso.invalid/sites/wiki/SitePages/Wiki.aspx',
+    wanted, undefined, folder);
+
+  assert.match(address, /strataDoc=Runbooks\/Deploy%20notes\.md$/);
+  assert.doesNotMatch(address, /%2F/);
+
+  const search = address.slice(address.indexOf('?'));
+  assert.deepEqual(documentFromAddress(search, folder), { path: wanted, heading: '' });
+});
+
+test('a name full of guarded characters still reads back whole', () => {
+  const folder = '/sites/wiki/Shared Documents';
+  const wanted = '/sites/wiki/Shared Documents/What is #1 & why + how.md';
+
+  const address = addressForDocument('https://contoso.invalid/x.aspx', wanted, undefined, folder);
+  const search = address.slice(address.indexOf('?'));
+
+  assert.deepEqual(documentFromAddress(search, folder), { path: wanted, heading: '' });
+});
+
+test('a heading rides through the short form too', () => {
+  const folder = '/sites/wiki/Shared Documents';
+  const wanted = '/sites/wiki/Shared Documents/Runbooks/deploy.md';
+
+  const address = addressForDocument('https://contoso.invalid/x.aspx', wanted, 'rollback', folder);
+  const search = address.slice(address.indexOf('?'));
+
+  assert.deepEqual(documentFromAddress(search, folder), { path: wanted, heading: 'rollback' });
 });

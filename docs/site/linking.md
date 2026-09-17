@@ -154,7 +154,12 @@ document lives in, so a menu can name documents the short way instead of
 repeating the site and the library in every entry. One that starts with a slash
 is taken as it is, which is what somebody pasting a path out of SharePoint will
 have. A heading goes on the end after `%23`, which is how a `#` is written in an
-address.
+address, and it can be written the way the heading reads rather than as the id
+it was given: `%23Rules` and `%23rules` both find `## Rules`.
+
+The [share button](../reading/#share) writes exactly this, in the short form,
+for whichever document a reader has reached. Copying a link out of the toolbar
+and writing a menu entry by hand produce the same kind of address.
 
 The document opens the same way one a reader followed a link to does, with the
 same trail back to the configured document.

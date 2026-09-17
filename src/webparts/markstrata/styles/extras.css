@@ -211,15 +211,34 @@
 /*
  * Fixed rather than absolute: the overlay covers the window, not the web part,
  * which is a section of a page that may itself be scrolled.
+ *
+ * The top of that window is not the overlay's to use. The overlay is built
+ * inside the web part's root so that what it shows is painted from the
+ * reader's own theme, and a child of the web part cannot be raised above the
+ * bars a SharePoint page keeps stuck across the top of it: those are in a
+ * stacking context this one is not in, and no z-index here reaches them. They
+ * covered the close button and the filename of an expanded code block, which
+ * left the overlay openable and then neither readable nor dismissable except
+ * with Escape.
+ *
+ * So the overlay still covers the window and lays out below that strip. The
+ * close button and the panel are both measured from the same figure, because
+ * padding does not move an absolutely positioned button: its offsets are
+ * against the padding box, so padding alone would have pushed the content
+ * clear and left the button exactly where it was.
  */
 .strata-zoom {
+  /* What a SharePoint page keeps for its suite bar and command bar. */
+  --strata-zoom-chrome: 75px;
+  --strata-zoom-close-size: 36px;
   position: fixed;
   inset: 0;
   z-index: 1000;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 32px;
+  padding: calc(var(--strata-zoom-chrome) + var(--strata-zoom-close-size) + 16px)
+    32px 32px;
   background-color: rgba(0, 0, 0, 0.82);
   cursor: zoom-out;
 }
@@ -290,12 +309,14 @@
   max-height: none;
 }
 
+/* Under the chrome rather than behind it, in the room the padding above left
+   for it, with the panel starting 8px below. */
 .strata-zoom-close {
   position: absolute;
-  top: 16px;
+  top: calc(var(--strata-zoom-chrome) + 8px);
   right: 16px;
-  width: 36px;
-  height: 36px;
+  width: var(--strata-zoom-close-size);
+  height: var(--strata-zoom-close-size);
   display: flex;
   align-items: center;
   justify-content: center;

@@ -77,7 +77,14 @@ export interface IMarkstrataWebPartProps {
   tocWidthUnit: TocWidthUnit;
   tocWidthValue: number;
   toolbarVisibility: 'always' | 'editing' | 'never';
-  showPrintButton: boolean;
+  /** Was showPrintButton until the button began exporting rather than printing. */
+  showExportButton: boolean;
+  /** A title page in front of an export. */
+  exportCoverPage: boolean;
+  /** A contents page, with the page number each heading landed on. */
+  exportContentsPage: boolean;
+  /** Start each top level section of an export on a page of its own. */
+  exportSectionBreaks: boolean;
   showShareButton: boolean;
   showSourceInfo: boolean;
   pinMeta: boolean;

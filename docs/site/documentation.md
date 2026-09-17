@@ -20,7 +20,7 @@ Where the markdown comes from. Three sources, one of which is usually right.
 | Source | What it does |
 |---|---|
 | **Markdown** | Typed into the web part and stored with it. Good for a page-specific note, and versioned with the page rather than on its own. |
-| **Library file** | A `.md` file in a document library, chosen with **Document library**, **Folder** and **Markdown file**. |
+| **Library file** | A `.md` file in a document library, chosen with **Document library**, **Folder** and **Markdown file**. **Folder** lists the folders inside other folders too, as paths like `Runbooks/Database`, so a wiki kept more than one level deep can be pointed at. |
 | **File URL** | Any address that returns markdown. SharePoint addresses are requested with your sign-in; other sites have to allow cross-origin requests. |
 
 A library file is usually the right answer. The markdown stays in SharePoint
@@ -197,11 +197,36 @@ document in the library.
 ### Toolbar
 
 **Show toolbar** decides whether the strip above the document is drawn at all,
-and whether readers see it or only somebody editing the page does. **Show print
-button**, **Show reading time** and **Back to top button** decide what is in it
-and what floats above the page.
+and whether readers see it or only somebody editing the page does. **Show export
+button**, **Show share button**, **Show reading time** and **Back to top button**
+decide what is in it and what floats above the page.
 
 [What each control does](../reading/#the-toolbar).
+
+### Export
+
+**Show export button** puts the export control in the toolbar. It lays the
+document out as pages and hands them to the browser's print dialog, where
+**Save as PDF** writes the file.
+
+**Cover page** and **Contents page** decide what goes in front of the document.
+The contents carries the page number each heading landed on, which is the thing
+a printed document cannot otherwise have: nothing knows what page a heading is
+on until the pages exist.
+
+**Start each section on a new page** is off by default. It suits a reference
+read a section at a time and wastes paper on a short runbook.
+
+[What an export contains](../reading/#export).
+
+### Share
+
+**Show share button** copies a link to the document on screen, which is not the
+same as the page's own address once a reader has followed a link. It needs
+**Open a linked document here**, since that setting is what opens the link at
+the other end.
+
+[What the link looks like](../reading/#share).
 
 ### File information
 

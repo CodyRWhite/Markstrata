@@ -197,10 +197,10 @@ const LIBRARY_PATH = '/sites/demo/Documents';
     if (bar.order.join(' ') !== expected.join(' ')) {
       throw new Error('the bar holds ' + JSON.stringify(bar.order));
     }
-    /* Reload and History are about the file, Share and Print are about the
+    /* Reload and History are about the file, Share and Export are about the
        document on screen, and the mode switch is about the page. Share sits
-       with Print rather than beside Reload for that reason. */
-    if (bar.actions.join(' ') !== 'Reload History Share Print Dark mode') {
+       with Export rather than beside Reload for that reason. */
+    if (bar.actions.join(' ') !== 'Reload History Share Export Dark mode') {
       throw new Error('the actions are ' + JSON.stringify(bar.actions));
     }
     if (Math.abs(bar.top - bar.bottom) > 0.5) {
@@ -907,6 +907,81 @@ const LIBRARY_PATH = '/sites/demo/Documents';
     await page.waitForTimeout(200);
     if (await page.locator('.strata-zoom').count() !== 0) {
       throw new Error('Escape did not close it');
+    }
+  });
+
+  /*
+   * A SharePoint page keeps bars stuck across the top of the window, and the
+   * overlay is built inside the web part so that what it shows is painted from
+   * the reader's own theme. That is also why it cannot be raised above them:
+   * they are in a stacking context it is not in, and no z-index reaches them.
+   * It has to lay out below them instead.
+   *
+   * The report was a code block opened full size with its filename and its
+   * close button both under the menubar - openable, and then neither readable
+   * nor dismissable except with Escape.
+   *
+   * Geometry rather than a screenshot: the close button and the panel both
+   * start below the strip the page keeps, and the button is not sitting on the
+   * panel to manage it.
+   */
+  await step('an expanded block clears the bars across the top of the page', async () => {
+    /*
+     * What a SharePoint page keeps for its suite bar and its command bar,
+     * written here rather than read off the overlay: a figure the harness
+     * takes from the stylesheet is a figure that agrees with the stylesheet
+     * whatever the stylesheet says.
+     */
+    const CHROME = 75;
+
+    const block = page.locator('.strata-code--short').first();
+    await block.scrollIntoViewIfNeeded();
+    await block.locator('.strata-code-expand').click();
+    await page.waitForSelector('.strata-zoom .strata-zoom-code', { timeout: 3000 });
+
+    const laidOut = await page.evaluate(() => {
+      const box = (selector) => {
+        const found = document.querySelector(selector);
+        return found ? found.getBoundingClientRect() : undefined;
+      };
+      const close = box('.strata-zoom-close');
+      const panel = box('.strata-zoom-code');
+      const header = box('.strata-zoom-code .strata-code-header');
+      return {
+        closeTop: close ? close.top : undefined,
+        closeBottom: close ? close.bottom : undefined,
+        panelTop: panel ? panel.top : undefined,
+        headerTop: header ? header.top : undefined
+      };
+    });
+
+    /* Put away first, so a failure below leaves the page as the next step
+       expects to find it rather than with an overlay still over it. */
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(200);
+    if (await page.locator('.strata-zoom').count() !== 0) {
+      throw new Error('Escape did not close it');
+    }
+
+    if (!(laidOut.closeTop >= CHROME)) {
+      throw new Error('the close button is ' + laidOut.closeTop + 'px down, inside the '
+        + CHROME + 'px the page keeps for its own bars');
+    }
+    if (!(laidOut.panelTop >= CHROME)) {
+      throw new Error('the panel starts ' + laidOut.panelTop + 'px down, inside the '
+        + CHROME + 'px the page keeps for its own bars');
+    }
+    if (!(laidOut.panelTop >= laidOut.closeBottom)) {
+      throw new Error('the close button overlaps the panel it closes');
+    }
+    /* The title is the first thing in the panel, so it is the first thing a
+       bar across the top takes away. */
+    if (laidOut.headerTop === undefined) {
+      throw new Error('this block has no header, so nothing said its title is readable');
+    }
+    if (!(laidOut.headerTop >= CHROME)) {
+      throw new Error('the block title is ' + laidOut.headerTop + 'px down, inside the '
+        + CHROME + 'px the page keeps for its own bars');
     }
   });
 
@@ -3144,6 +3219,99 @@ const LIBRARY_PATH = '/sites/demo/Documents';
   });
 
   /*
+   * The same address, with the heading written the way a person writes one.
+   *
+   * The check above names it `#tables`, which is already lower case and is
+   * already the id the heading was given, so it matched whatever the lookup
+   * did with it. A menu entry is written by hand against a heading that reads
+   * "Tables", and that is the spelling that found nothing: the reader landed
+   * at the top of the right document and reported the anchor as ignored.
+   */
+  await step('and honours a heading named the way a person writes it', async () => {
+    const landed = await page.evaluate(async () => {
+      window.webPartHarness.addressDocument('/sites/demo/Documents/handbook.md#Tables');
+      await window.webPartHarness.start({
+        contentSource: 'library',
+        selectedLibrary: '/sites/demo/Documents',
+        selectedFile: '/sites/demo/Documents/handbook.md',
+        followDocumentLinks: true
+      });
+      await new Promise((resolve) => setTimeout(resolve, 1200));
+
+      const heading = document.getElementById('tables');
+      if (!heading) { return { failed: 'the document has no heading with that id' }; }
+      return { top: Math.round(heading.getBoundingClientRect().top) };
+    });
+
+    if (landed.failed) throw new Error(landed.failed);
+    if (landed.top > 200 || landed.top < -200) {
+      throw new Error('the named heading sits at ' + landed.top + ', so nothing landed on it');
+    }
+  });
+
+  /*
+   * And an anchor inside the document, which is the other half of the fault.
+   *
+   * Left to the browser this is not a scroll. A SharePoint page is a
+   * single-page application with a router listening for clicks, a fragment is
+   * a navigation as far as it is concerned, and what the reader got was
+   * wiki.aspx with the anchor on the address and the configured document back
+   * on the screen - a heading that document has not got. The click is taken
+   * before the router the same way a click on a document link already is.
+   */
+  await step('an anchor in the document scrolls instead of leaving it', async () => {
+    const moved = await page.evaluate(async () => {
+      window.webPartHarness.addressDocument('');
+      await window.webPartHarness.start({
+        contentSource: 'library',
+        selectedLibrary: '/sites/demo/Documents',
+        selectedFile: '/sites/demo/Documents/Runbooks/rollback.md',
+        enableWikiLinks: true,
+        followDocumentLinks: true
+      });
+      /* Long enough that the document has finished being drawn. Measured
+         earlier, the heading is wherever the half-built article left it. */
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+
+      /* By its href, not by being the first one: the permalink beside every
+         heading is an anchor into this document too, and is the first in the
+         article. It is taken by the same handler for the same reason, which is
+         why there is more than one of these to choose from. */
+      const link = Array.from(
+        document.querySelectorAll('#host article a.strata-anchor-link')
+      ).filter((a) => a.getAttribute('href') === '#when-to-roll-back')[0];
+      if (!link) { return { failed: 'the anchor did not render as one the web part takes' }; }
+
+      const before = window.location.href;
+      link.click();
+      /* A smooth scroll of a couple of thousand pixels is not instant. */
+      await new Promise((resolve) => setTimeout(resolve, 2500));
+
+      const heading = document.getElementById('when-to-roll-back');
+      if (!heading) { return { failed: 'the document has no heading with that id' }; }
+      const title = document.querySelector('#host article h1');
+      return {
+        top: Math.round(heading.getBoundingClientRect().top),
+        title: title ? title.textContent : '',
+        addressChanged: window.location.href !== before
+      };
+    });
+
+    if (moved.failed) throw new Error(moved.failed);
+    /* Still the document that carried the link, rather than the configured one
+       the router used to send the reader back to. */
+    if (moved.title.indexOf('Rolling back') === -1) {
+      throw new Error('the click left the document; it now shows ' + JSON.stringify(moved.title));
+    }
+    if (moved.addressChanged) {
+      throw new Error('the click put a fragment on the address, which is what the router follows');
+    }
+    if (moved.top > 200 || moved.top < -200) {
+      throw new Error('the named heading sits at ' + moved.top + ', so nothing scrolled to it');
+    }
+  });
+
+  /*
    * A document that is not in this tenant at all.
    *
    * The File URL source reads markdown from anywhere that will answer, and a
@@ -3561,9 +3729,292 @@ const LIBRARY_PATH = '/sites/demo/Documents';
     if (shared.atDocument.indexOf('Deploy%20notes.md') === -1) {
       throw new Error('it named ' + JSON.stringify(shared.atDocument));
     }
+
+    /* Named against the folder the page reads from, not from the server root.
+       The whole path was written out before, carrying the site and the library
+       whether or not they said anything. */
+    if (shared.atDocument.indexOf('strataDoc=Runbooks/Deploy%20notes.md') === -1) {
+      throw new Error('not the short form: ' + JSON.stringify(shared.atDocument));
+    }
+
+    /* And escaped only where it has to be. Every slash was %2F before, which
+       is most of what made the link unreadable. */
+    if (shared.atDocument.indexOf('%2F') !== -1) {
+      throw new Error('slashes came back encoded: ' + JSON.stringify(shared.atDocument));
+    }
+  });
+
+  /*
+   * Exporting, which is the whole reason Paged.js is in the bundle.
+   *
+   * A browser saving a page as a PDF saves the page: one column cut wherever
+   * the paper ran out, the contents dumped on the front as a list of headings
+   * with no page numbers, because nothing knows what page anything is on until
+   * the pages exist. This works them out first, and then the contents can say.
+   *
+   * The page numbers are checked against where the headings actually landed
+   * rather than against what the contents renders, because what it renders is
+   * generated content and there is no text node to read. Walking from the
+   * heading up to the page box it ended up in gives the number the contents is
+   * counting, which is the thing worth being sure of.
+   */
+  await step('exporting lays the document out as pages, with a contents', async () => {
+    const exported = await page.evaluate(async () => {
+      await window.webPartHarness.start({
+        contentSource: 'library',
+        selectedLibrary: '/sites/demo/Documents',
+        selectedFile: '/sites/demo/Documents/handbook.md',
+        showToolbar: 'always',
+        showExportButton: true,
+        exportCoverPage: true,
+        exportContentsPage: true,
+        tocMaxLevel: 3
+      });
+      await new Promise((resolve) => setTimeout(resolve, 800));
+
+      const button = Array.prototype.slice
+        .call(document.querySelectorAll('#host .strata-toolbar-actions .strata-btn'))
+        .filter((b) => (b.textContent || '').indexOf('Export') !== -1)[0];
+      if (!button) { return { failed: 'there is no export button' }; }
+
+      /* Nothing opens a print dialog in a headless browser. What is worth
+         knowing is that it was asked for, and what the page looked like when
+         it was. */
+      const asked = [];
+      const realPrint = window.print;
+      window.print = () => {
+        asked.push(document.documentElement.getAttribute('data-strata-export'));
+      };
+
+      button.click();
+
+      /* Paged.js is a chunk that has to load before it can lay anything out. */
+      const deadline = Date.now() + 40000;
+      while (Date.now() < deadline
+        && !document.querySelector('.strata-export-root .pagedjs_page')) {
+        await new Promise((resolve) => setTimeout(resolve, 200));
+      }
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+
+      const root = document.querySelector('.strata-export-root');
+      if (!root) { window.print = realPrint; return { failed: 'nothing was laid out' }; }
+
+      const pageOf = (element) => {
+        let node = element;
+        while (node && node !== root) {
+          if (node.classList && node.classList.contains('pagedjs_page')) {
+            return parseInt(node.dataset.pageNumber, 10);
+          }
+          node = node.parentElement;
+        }
+        return undefined;
+      };
+
+      /* Everything about the laid-out document is read here, before the print
+         is finished: tearing down destroys the pages, which is the point of
+         it, so anything read afterwards is read off nothing. */
+      const laidOut = {
+        pages: root.querySelectorAll('.pagedjs_page').length,
+        cover: !!root.querySelector('.strata-export-cover'),
+        entries: Array.prototype.slice
+          .call(root.querySelectorAll('.strata-export-contents a'))
+          .map((link) => {
+            const id = (link.getAttribute('href') || '').slice(1);
+            const target = id ? root.querySelector('[id="' + id + '"]') : null;
+            return {
+              label: (link.textContent || '').trim(),
+              landedOn: target ? pageOf(target) : undefined,
+              rendered: window.getComputedStyle(link, '::after').content
+            };
+          })
+      };
+
+      /*
+       * And what the laid-out document looks like, which is a separate
+       * question from whether it paginated.
+       *
+       * Every theme token is declared on the root under an attribute
+       * selector - .strata-root[data-strata-theme='github'] - so a copy that
+       * carries the class and not the attribute resolves none of them. CSS
+       * does not complain about that: font-size: var(--strata-h2-size) with
+       * nothing behind the variable is an invalid declaration, which is
+       * dropped, so the heading inherits body size, and border: var(...) solid
+       * with nothing behind it is dropped too, so the table has no rules. The
+       * pages all come out and the document reads as a wall of text.
+       *
+       * Measured against the live root rather than against fixed numbers: the
+       * claim is that an export looks like what it was exported from.
+       */
+      const styled = (() => {
+        const live = document.querySelector('#host .strata-root');
+        /* Across the whole export rather than inside the first fragment of
+           it. Paged.js gives every page its own copy of the ancestor chain,
+           so `.strata-export-content` on page three holds the top of the
+           document and nothing else: a table six pages in is in a different
+           one, and looking for it in the first found nothing and read as a
+           table with no rules. */
+        const find = (selector) => root.querySelector('.strata-export-content ' + selector);
+        const size = (element, property) => element
+          ? parseFloat(window.getComputedStyle(element)[property])
+          : undefined;
+        const cell = find('table td') || find('table th');
+        return {
+          liveTheme: live ? live.getAttribute('data-strata-theme') : undefined,
+          exportTheme: root.getAttribute('data-strata-theme'),
+          exportMode: root.getAttribute('data-strata-mode'),
+          headingSize: size(find('h2'), 'fontSize'),
+          bodySize: size(find('p'), 'fontSize'),
+          foundCell: !!cell,
+          cellBorder: size(cell, 'borderBottomWidth'),
+          cellPadding: size(cell, 'paddingLeft'),
+          /* A listing scrolls sideways on screen and a sheet of paper does
+             not, so a line wider than the block is a line whose end is not
+             printed. Counted rather than eyeballed, because the part that
+             goes missing is off the edge of the page. */
+          spilledLines: Array.prototype.slice
+            .call(root.querySelectorAll('.strata-export-content .strata-code-pre'))
+            .filter((pre) => pre.scrollWidth > pre.clientWidth + 2).length
+        };
+      })();
+
+      const before = {
+        article: !!document.querySelector('#host .strata-content'),
+        prefixed: document.querySelectorAll('#host .strata-content [id^="strata-export-id-"]').length
+      };
+
+      /* The dialog closing is what puts the page back. */
+      window.dispatchEvent(new Event('afterprint'));
+      await new Promise((resolve) => setTimeout(resolve, 400));
+
+      const after = {
+        root: !!document.querySelector('.strata-export-root'),
+        attribute: document.documentElement.getAttribute('data-strata-export'),
+        article: !!document.querySelector('#host .strata-content'),
+        pagedStyles: document.querySelectorAll('style[data-pagedjs-inserted-styles]').length
+      };
+
+      window.print = realPrint;
+      return {
+        pages: laidOut.pages,
+        cover: laidOut.cover,
+        entries: laidOut.entries,
+        styled: styled,
+        askedToPrint: asked,
+        before: before,
+        after: after
+      };
+    });
+
+    if (exported.failed) throw new Error(exported.failed);
+
+    if (exported.pages < 2) {
+      throw new Error('it laid out ' + exported.pages + ' pages, so nothing was paginated');
+    }
+    if (!exported.cover) throw new Error('the cover page is missing');
+    if (!exported.entries.length) throw new Error('the contents has no entries');
+
+    /* Every entry points at a heading that is on a page. An entry whose target
+       is nowhere is an entry whose page number would be blank. */
+    const lost = exported.entries.filter((entry) => !entry.landedOn);
+    if (lost.length) {
+      throw new Error(lost.length + ' contents entries point at nothing on a page, first: '
+        + JSON.stringify(lost[0].label));
+    }
+
+    /* And the document runs forwards. */
+    for (let i = 1; i < exported.entries.length; i++) {
+      if (exported.entries[i].landedOn < exported.entries[i - 1].landedOn) {
+        throw new Error('the contents runs backwards at ' + JSON.stringify(exported.entries[i].label));
+      }
+    }
+
+    /* The first heading is after the cover and the contents, which is what
+       says the front matter was laid out as pages of its own rather than
+       running into the document. */
+    if (exported.entries[0].landedOn < 3) {
+      throw new Error('the document starts on page ' + exported.entries[0].landedOn
+        + ', so the cover and contents did not take a page each');
+    }
+
+    /* target-counter is the rule a browser does not implement. Paged.js
+       rewrites it into a counter of its own, so seeing one there is what says
+       it was understood rather than dropped. */
+    if (exported.entries[0].rendered.indexOf('counter(') === -1) {
+      throw new Error('the page number was not resolved: ' + exported.entries[0].rendered);
+    }
+
+    /*
+     * The export is the document, not a plain-text rendering of it.
+     *
+     * The theme goes on the copy as attributes because that is what the theme
+     * tokens are declared against, and without them a heading is body size and
+     * a table has no rules: every page still comes out, and what comes out is
+     * a wall of text. So the three things a reader notices first are checked
+     * here, and each one is a variable that has to have resolved for it to
+     * hold.
+     */
+    const styled = exported.styled;
+    if (styled.exportTheme !== styled.liveTheme) {
+      throw new Error('the export is themed ' + JSON.stringify(styled.exportTheme)
+        + ' and the document it came from ' + JSON.stringify(styled.liveTheme));
+    }
+    /* Paper is white whatever the reader is looking at. */
+    if (styled.exportMode !== 'light') {
+      throw new Error('the export was laid out in ' + styled.exportMode + ' mode');
+    }
+    if (!(styled.headingSize > styled.bodySize * 1.2)) {
+      throw new Error('a heading in the export is ' + styled.headingSize
+        + 'px against body text at ' + styled.bodySize
+        + 'px, so --strata-h2-size resolved to nothing');
+    }
+    /* The check below says nothing at all if the document being exported has
+       no table in it, so say so rather than passing. */
+    if (!styled.foundCell) {
+      throw new Error('the exported document has no table in it, so the rules'
+        + ' on one were not checked');
+    }
+    if (!(styled.cellBorder > 0)) {
+      throw new Error('a table cell in the export has no rule under it, so'
+        + ' --strata-table-border resolved to nothing');
+    }
+    if (!(styled.cellPadding > 0)) {
+      throw new Error('a table cell in the export has no padding, so the'
+        + ' spacing tokens resolved to nothing');
+    }
+    if (styled.spilledLines) {
+      throw new Error(styled.spilledLines + ' listings run off the side of the'
+        + ' page rather than wrapping onto it');
+    }
+
+    if (exported.askedToPrint.length !== 1) {
+      throw new Error('it asked to print ' + exported.askedToPrint.length + ' times, expected one');
+    }
+    if (exported.askedToPrint[0] !== 'on') {
+      throw new Error('the page was not handed to the export before printing');
+    }
+
+    /* The document on screen is not the one that was laid out. */
+    if (!exported.before.article) throw new Error('the document on screen was taken away');
+    if (exported.before.prefixed !== 0) {
+      throw new Error('the copy\'s renamed ids reached the document on screen');
+    }
+
+    /* And the page is given back afterwards. */
+    if (exported.after.root) throw new Error('the export was left standing on the page');
+    if (exported.after.attribute) throw new Error('the page is still handed to the export');
+    if (!exported.after.article) throw new Error('the document did not come back');
+    /* Paged.js writes stylesheets of its own while it works. Left behind, a
+       second export would be laid out through the first one's. */
+    if (exported.after.pagedStyles !== 0) {
+      throw new Error(exported.after.pagedStyles + ' of Paged.js own stylesheets were left on the page');
+    }
   });
 
   await step('a library that will not answer is a message, not a broken page', async () => {
+    /* The web part reports what it could not fetch. Saying so is the
+       behaviour being checked, not a fault. */
+    expected.push(/could not be told what the site holds/);
+
     const shown = await page.evaluate(async () => {
       window.webPartHarness.refuse(true);
       await window.webPartHarness.start({
@@ -3589,7 +4040,65 @@ const LIBRARY_PATH = '/sites/demo/Documents';
     }
   });
 
-  console.log('\n' + (problems.length ? 'Problems:\n  ' + problems.join('\n  ') : 'No failures and no page errors.'));
+  /*
+   * And it refuses without leaving anything behind.
+   *
+   * The lists the property pane offers are fetched for their effect rather
+   * than their result, so the call was made and not waited on. `void` says the
+   * result is not wanted; it does not say a rejection is not wanted, and a
+   * library that will not answer rejected that lookup into nothing. What
+   * arrived was an unhandled error on the page, at whatever moment the promise
+   * happened to settle, credited to whichever check was running at the time.
+   *
+   * It failed three pull requests before it was caught, and only ever on CI,
+   * because the timing is what decides whether it lands during a check or
+   * after the last one. Deterministic here: refuse, start, wait, and nothing
+   * should have reached the page.
+   */
+  await step('and refuses without leaving an error on the page', async () => {
+    const before = problems.length;
+
+    await page.evaluate(async () => {
+      window.webPartHarness.refuse(true);
+      await window.webPartHarness.start({
+        contentSource: 'library',
+        selectedLibrary: '/sites/demo/Documents',
+        selectedFile: '/sites/demo/Documents/handbook.md'
+      });
+      window.webPartHarness.refuse(false);
+      /* Long enough for a rejection nobody is holding to surface. */
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+    });
+    await new Promise((resolve) => setTimeout(resolve, 500));
+
+    /* A pageerror, specifically. The web part reporting the failure on the
+       console is the fix working; an unhandled rejection reaching the page is
+       the fault, and only one of those is a pageerror. */
+    const leaked = problems.slice(before)
+      .filter((problem) => problem.indexOf('pageerror') === 0
+        && problem.indexOf('told to refuse') !== -1);
+    if (leaked.length) {
+      throw new Error('the refusal reached the page unhandled: ' + JSON.stringify(leaked[0]));
+    }
+  });
+
+  /*
+   * Closed before the tally is read, not after.
+   *
+   * `problems` is appended to by the page's own handlers - a page error, a
+   * failed request, a console error - and those go on arriving while the
+   * browser is being torn down. Printed first, the summary was written from a
+   * list that `process.exit` then read again one line later and disagreed
+   * with: the log ended "No failures and no page errors." and the job failed
+   * anyway, which is the least useful thing CI can say. It happened twice, and
+   * cost a round of investigation both times because the run was green
+   * everywhere a person would look.
+   *
+   * Nothing new counts as a problem. Whatever teardown turns up was already
+   * failing the build; it is in the list that gets printed now, so it can be
+   * read and fixed rather than guessed at.
+   */
   await browser.close();
+  console.log('\n' + (problems.length ? 'Problems:\n  ' + problems.join('\n  ') : 'No failures and no page errors.'));
   process.exit(problems.length ? 1 : 0);
 })();

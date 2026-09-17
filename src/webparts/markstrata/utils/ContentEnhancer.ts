@@ -105,13 +105,18 @@ export class ContentEnhancer {
   public followDocumentLinks(
     container: HTMLElement,
     base: string | undefined,
-    open?: (path: string, heading: string) => void
+    open?: (path: string, heading: string) => void,
+    onAnchor?: (heading: string) => void
   ): void {
     followDocumentLinks(container, base, open);
     /* Marking the links is per render; catching the click is not, and has to
-       be taken down again when the web part goes away. */
-    if (open) {
-      this.documentLinks.watch(open);
+       be taken down again when the web part goes away.
+
+       An anchor into this document is worth catching even where there is
+       nowhere to follow a link to, because the damage it does is done by the
+       page's own router rather than by anything this web part would do. */
+    if (open || onAnchor) {
+      this.documentLinks.watch(open || (() => undefined), onAnchor);
     } else {
       this.documentLinks.stop();
     }

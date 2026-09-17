@@ -22,8 +22,8 @@ are different ones:
 
 <div class="site-specimen" data-specimen="editor"></div>
 
-Reload, version history, print and the theme switcher are all about reading a
-document that is finished. Edit, Split and Preview, and the button that writes
+Reload, version history, share, export and the theme switcher are all about
+reading a document that is finished. Edit, Split and Preview, and the button that writes
 the file back, are about one that is not.
 
 ### What else changes underneath

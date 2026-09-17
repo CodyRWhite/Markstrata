@@ -88,6 +88,20 @@ more than one entry.
 
 **[How linking between documents works](linking/)**
 
+## Off the screen, as a document
+
+A reader can export what they are looking at as a paginated PDF: a cover, a
+contents page carrying the page number each heading landed on, running headers
+naming the document and the section, and breaks that keep a heading with its
+text and a table row off the fold.
+
+The page numbers are the part a browser cannot do on its own. Nothing knows what
+page a heading is on until the pages exist, which is why printing a web page
+gives you a list of headings and no numbers beside them. The pages are worked
+out first, and then the contents can say.
+
+**[What an export contains](reading/#export)**
+
 ## In Microsoft Teams
 
 A channel's Files tab is a folder in a SharePoint document library. That is the

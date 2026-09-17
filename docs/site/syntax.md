@@ -269,6 +269,14 @@ A pipe inside a cell is written `\|`, which is the only escape a cell has, and
 works inside a code span as well as outside one. A row with too few cells is
 padded out to the table and a row with too many is trimmed to it.
 
+The pipe in a wiki link is content rather than a cell boundary, so
+`[[Deploy runbook|how we ship]]` is a link inside a table without needing the
+escape. Obsidian documents the escaped form for exactly this case and it still
+works; the bare pipe is what a folder of notes arrives full of, because it is
+what Obsidian writes everywhere outside a table. Brackets that are not a wiki
+link do not protect anything: `[[1,2],[3,4]]` is an array, and the pipe after it
+ends the cell like any other.
+
 `^^` merges a cell with the one above it, and a doubled `||` mid-row runs a
 cell across the column to its right:
 

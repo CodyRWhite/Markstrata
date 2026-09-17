@@ -9,6 +9,9 @@
  *   secureExternalLinks(article);
  *   followDocumentLinks(article, documentFolder, (path, heading) => openDocument(path, heading));
  *
+ *   // and the clicks, including an anchor into the document on screen
+ *   watcher.watch(open, (heading) => landOnHeading(article, heading, true));
+ *
  * .NOTES
  * Since:     0.0.17.0
  * Ships in:  the web part bundle
@@ -68,7 +71,23 @@ export function followDocumentLinks(
 
   links.forEach((link: HTMLAnchorElement) => {
     const href: string = link.getAttribute('href') || '';
-    if (!href || href.charAt(0) === '#') {
+    if (!href) {
+      return;
+    }
+
+    /* An anchor into this document. Left to the browser this is not a scroll:
+       a SharePoint page's router treats a fragment as a navigation, takes the
+       reader back to the configured document and leaves the fragment on the
+       address, pointing at a heading that document has not got. So it is
+       marked here and the click is taken below, the same way a click on a
+       document link already is.
+
+       The contents list keeps its own handler and its own smooth scroll, so
+       its links are left alone. */
+    if (href.charAt(0) === '#') {
+      if (!(link.closest && link.closest('.strata-toc'))) {
+        link.classList.add('strata-anchor-link');
+      }
       return;
     }
     /* Somebody else's site, and none of this applies. Read from the element
@@ -121,7 +140,10 @@ export function followDocumentLinks(
 export class DocumentLinkWatcher {
   private onClick: ((event: MouseEvent) => void) | undefined;
 
-  public watch(open: (path: string, heading: string) => void): void {
+  public watch(
+    open: (path: string, heading: string) => void,
+    onAnchor?: (heading: string) => void
+  ): void {
     this.stop();
 
     this.onClick = (event: MouseEvent): void => {
@@ -134,9 +156,29 @@ export class DocumentLinkWatcher {
       }
 
       const target: Element | null = event.target as Element;
-      const link: HTMLAnchorElement | null = target && target.closest
-        ? (target.closest('a.strata-doc-link') as HTMLAnchorElement | null)
-        : null;
+      if (!target || !target.closest) {
+        return;
+      }
+
+      /* An anchor into the document on screen. Taken before the router for the
+         same reason a document link is, and stopped whether or not the heading
+         turns out to be there: a link to a heading this document has not got
+         should do nothing, which is a great deal better than it sending the
+         reader home. */
+      const anchor: HTMLAnchorElement | null =
+        target.closest('a.strata-anchor-link') as HTMLAnchorElement | null;
+      if (anchor) {
+        event.preventDefault();
+        event.stopPropagation();
+        const named: string = (anchor.getAttribute('href') || '').slice(1);
+        if (named && onAnchor) {
+          onAnchor(named);
+        }
+        return;
+      }
+
+      const link: HTMLAnchorElement | null =
+        target.closest('a.strata-doc-link') as HTMLAnchorElement | null;
       if (!link) {
         return;
       }

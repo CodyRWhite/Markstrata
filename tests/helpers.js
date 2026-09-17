@@ -67,5 +67,8 @@ module.exports = {
   officeEmbeds: lib('officeEmbeds'),
   remoteCode: lib('remoteCode'),
   codeZoom: lib('codeZoom'),
-  tables: lib('tables')
+  tables: lib('tables'),
+  folderTree: lib('folderTree'),
+  headingLanding: lib('headingLanding'),
+  exportNaming: lib('exportNaming')
 };

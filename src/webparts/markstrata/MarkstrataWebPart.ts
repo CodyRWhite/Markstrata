@@ -60,6 +60,9 @@ import './styles/print.css';
 
 import { MarkdownProcessor, IMarkdownProcessorOptions } from './utils/MarkdownProcessor';
 import { folderOf } from './utils/imagePaths';
+import { fileOf } from './utils/wikiLinks';
+import { PdfExport } from './utils/pdfExport';
+import { documentTitle, exportDate, sourceLabel } from './utils/exportNaming';
 import { DocumentNavigator, ILoadedDocument } from './utils/documentNavigator';
 import {
   documentFromAddress, addressForDocument, addressWithoutDocument,
@@ -132,6 +135,7 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
   private enhancer: ContentEnhancer;
   private viewRenderer: ViewModeRenderer;
   private editManager: EditModeManager;
+  private readonly pdfExport: PdfExport = new PdfExport();
   private versionPanel: VersionPanel;
   private sharePoint: SharePointService;
   private themeProvider: ThemeProvider;
@@ -261,12 +265,13 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
       onReload: () => void (this.navigator.path
         ? this.navigator.open(this.navigator.path, '', false)
         : this.loadContent(true)),
-      onShowVersions: () => void this.showVersions(),
+      onShowVersions: () => this.detached('The version history could not be shown.',
+        this.showVersions()),
       onThemeOverride: (family: ThemeFamily, mode: 'light' | 'dark') => {
         this.themeOverride.set(family, mode);
         this.render();
       },
-      onPrint: () => window.print()
+      onExport: () => this.detached('The document could not be exported.', this.exportPdf())
     });
 
     this.editManager = new EditModeManager(this.processor, this.mermaid, this.enhancer, {
@@ -289,7 +294,8 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
       onRestored: () => void this.loadContent(true)
     });
 
-    void this.paneSources.loadAll().then(() => this.context.propertyPane.refresh());
+    this.detached('The property pane could not be told what the site holds.',
+      this.paneSources.loadAll().then(() => this.context.propertyPane.refresh()));
     await this.loadContent(false);
     await this.openDocumentFromAddress();
   }
@@ -312,6 +318,7 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
     this.stopping(() => { if (this.navigator) { this.navigator.dispose(); } });
     this.stopping(() => { if (this.enhancer) { this.enhancer.dispose(); } });
     this.stopping(() => { if (this.editManager) { this.editManager.dispose(); } });
+    this.stopping(() => { if (this.pdfExport) { this.pdfExport.dispose(); } });
     super.onDispose();
   }
 
@@ -396,7 +403,10 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
       tocWidthUnit: 'em',
       tocWidthValue: 15,
       toolbarVisibility: 'always',
-      showPrintButton: true,
+      showExportButton: true,
+      exportCoverPage: true,
+      exportContentsPage: true,
+      exportSectionBreaks: false,
       showShareButton: true,
       showSourceInfo: true,
       pinMeta: false,
@@ -408,6 +418,16 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
 
     const properties: Record<string, unknown> = this.properties as unknown as Record<string, unknown>;
     const fallbacks: Record<string, unknown> = defaults as Record<string, unknown>;
+
+    /* This button printed the page before it exported a document, and the
+       setting was called showPrintButton. A page that turned it off meant it,
+       so the old answer is carried over rather than the default putting the
+       button back on a page somebody deliberately took it off. Read through
+       the record, because the old key is not on the interface any more: it
+       only exists in what a page saved before this release. */
+    if (properties.showExportButton === undefined && properties.showPrintButton !== undefined) {
+      properties.showExportButton = properties.showPrintButton;
+    }
 
     Object.keys(fallbacks).forEach((key: string) => {
       if (properties[key] === undefined || properties[key] === null) {
@@ -492,10 +512,73 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
    * sends them to the front page. The configured document is the exception and
    * needs no parameter, because the page address already is its address.
    */
+  /**
+   * The document on screen, laid out as pages and handed to the print dialog.
+   *
+   * Falls back to printing the page as it stands wherever the pages cannot be
+   * worked out. A reader who asked for a PDF should get one: a worse PDF is
+   * better than a button that did nothing and said nothing.
+   */
+  private async exportPdf(): Promise<void> {
+    const article: HTMLElement | null = this.domElement.querySelector('.strata-content');
+    if (!article) {
+      window.print();
+      return;
+    }
+
+    const path: string = this.navigator.path
+      || (this.properties.contentSource === 'url'
+        ? this.properties.fileUrl
+        : this.properties.selectedFile)
+      || '';
+
+    const exported: boolean = await this.pdfExport.run(
+      article,
+      this.domElement.querySelector<HTMLElement>('.strata-root') || undefined,
+      {
+        title: documentTitle(article, fileOf(path)),
+        source: sourceLabel(path),
+        taken: exportDate(new Date()),
+        cover: this.properties.exportCoverPage,
+        contents: this.properties.exportContentsPage,
+        /* The same depth the contents sidebar is set to, so the two agree
+           about how deep this document goes. */
+        contentsMaxLevel: this.properties.tocMaxLevel,
+        sectionBreaks: this.properties.exportSectionBreaks
+      }
+    );
+
+    if (!exported) {
+      window.print();
+    }
+  }
+
+  /**
+   * A promise nobody is waiting on, and somewhere for it to fail.
+   *
+   * These are the calls made for their effect rather than their result: the
+   * lists the property pane offers, the version panel, an export. Failing,
+   * none of them is worth taking the page down for, and none of them has
+   * anybody left to tell.
+   *
+   * What they must not do is fail silently into the page. `void` on a promise
+   * says the result is not wanted; it does not say a rejection is not wanted,
+   * and an unhandled one surfaces as an error on somebody's SharePoint page
+   * with nothing in it to say which web part it came from. The harness caught
+   * it: a stand-in library told to refuse rejected the property pane's own
+   * lookup, and the error arrived while a later check was running, attributed
+   * to that.
+   */
+  private detached(what: string, work: Promise<unknown>): void {
+    work.catch((error: unknown) => {
+      console.error(`[Markstrata] ${what}`, error);
+    });
+  }
+
   private addressToShare(): string {
     const here: string = window.location.href;
     return this.navigator.path
-      ? addressForDocument(here, this.navigator.path)
+      ? addressForDocument(here, this.navigator.path, undefined, this.configuredFolder())
       : addressWithoutDocument(here);
   }
 
@@ -676,7 +759,7 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
       resolvedMode: mode,
       showToolbar: this.isToolbarVisible(),
       showThemeSwitcher: this.properties.showThemeSwitcher,
-      showPrintButton: this.properties.showPrintButton,
+      showExportButton: this.properties.showExportButton,
       tocPosition: this.properties.tocPosition,
       tocMaxLevel: this.properties.tocMaxLevel,
       showSourceInfo: this.properties.showSourceInfo,
@@ -870,6 +953,20 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
     if (this.navigator.path) {
       return folderOf(this.navigator.path);
     }
+    return this.configuredFolder();
+  }
+
+  /**
+   * The folder the page itself reads from, whatever is open on top of it.
+   *
+   * Kept apart from imageBasePath because the two answer different questions.
+   * That one asks what the document on screen resolves against, which moves
+   * as a reader follows links. This one asks what the page resolves against
+   * when it is handed an address and has not opened anything yet, which is
+   * what a shared link is resolved against on the way back in, and so what a
+   * shared link has to be written against on the way out.
+   */
+  private configuredFolder(): string | undefined {
     if (this.properties.contentSource === 'library' && this.properties.selectedFile) {
       return folderOf(this.properties.selectedFile);
     }
@@ -1034,14 +1131,16 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
     if (propertyPath === 'selectedLibrary') {
       this.properties.selectedFolder = '';
       this.properties.selectedFile = '';
-      void this.paneSources.loadFolders()
-        .then(() => this.paneSources.loadFiles())
-        .then(() => this.context.propertyPane.refresh());
+      this.detached('The folders in that library could not be listed.',
+        this.paneSources.loadFolders()
+          .then(() => this.paneSources.loadFiles())
+          .then(() => this.context.propertyPane.refresh()));
     }
 
     if (propertyPath === 'selectedFolder') {
       this.properties.selectedFile = '';
-      void this.paneSources.loadFiles().then(() => this.context.propertyPane.refresh());
+      this.detached('The files in that folder could not be listed.',
+        this.paneSources.loadFiles().then(() => this.context.propertyPane.refresh()));
     }
 
     if (propertyPath === 'selectedFile' || propertyPath === 'fileUrl') {

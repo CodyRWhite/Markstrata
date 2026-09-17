@@ -92,7 +92,12 @@ declare interface IMarkstrataWebPartStrings {
   ToolbarGroupName: string;
   ToolbarVisibilityLabel: string;
   ToolbarHint: string;
-  PrintButtonLabel: string;
+  ExportButtonLabel: string;
+  ExportButtonHint: string;
+  ExportCoverLabel: string;
+  ExportContentsLabel: string;
+  ExportSectionBreaksLabel: string;
+  ExportSectionBreaksHint: string;
   ShareButtonLabel: string;
   ShareButtonHint: string;
   ReadingTimeLabel: string;
