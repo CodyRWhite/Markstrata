@@ -119,6 +119,14 @@ export interface IStateInline {
   pos: number;
   posMax: number;
   Token: TokenConstructor;
+  /**
+   * The parser itself, which a rule needs to parse the inside of something it
+   * has claimed: a link label can hold emphasis and code, and only markdown-it
+   * knows how to read those.
+   */
+  md: IMarkdownIt;
+  /** Handed back to the parser when a rule parses a run of its own. */
+  env: unknown;
   tokens: IToken[];
   /** Per token, whatever a rule hung on it; markers live here. */
   tokens_meta: ({ delimiters?: IDelimiter[] } | undefined)[];
@@ -172,7 +180,18 @@ export interface ILinkify {
 export interface IMarkdownIt {
   core: { ruler: IRuler<CoreRule> };
   block: { ruler: IRuler<BlockRule> };
-  inline: { ruler: IRuler<InlineRule>; ruler2: IRuler<PostRule> };
+  inline: {
+    ruler: IRuler<InlineRule>;
+    ruler2: IRuler<PostRule>;
+    /** Reads the run between state.pos and state.posMax into tokens. */
+    tokenize(state: IStateInline): void;
+    /**
+     * Reads a string of its own into `tokens`. What an image's alt text needs:
+     * the renderer builds alt by flattening a token's children, so a picture
+     * whose children are empty has no alt however its content reads.
+     */
+    parse(src: string, md: IMarkdownIt, env: unknown, tokens: IToken[]): void;
+  };
   renderer: IRenderer;
   linkify: ILinkify;
   utils: {
