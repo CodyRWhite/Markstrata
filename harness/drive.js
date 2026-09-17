@@ -441,8 +441,19 @@ const LIBRARY_PATH = '/sites/demo/Documents';
     if (atRest.controls !== 3) {
       throw new Error('there are ' + atRest.controls + ' zoom controls, expected three');
     }
-    if (!(wheeled.scale > atRest.scale)) {
-      throw new Error('the wheel left it at ' + wheeled.scale);
+    /*
+     * One notch, one step, exactly.
+     *
+     * Not "bigger than it was": the picture is wired up when it loads and also
+     * straight away if it is already complete, and when both happen it gets
+     * two sets of handlers. Two sets still zoom in, so a check for bigger
+     * passes while every gesture is doing twice what it says. A double click
+     * under two handlers zooms in and then reads itself as zoomed and goes
+     * back to fit, which is a gesture that does nothing at all.
+     */
+    if (Math.abs(wheeled.scale - 1.5) > 0.001) {
+      throw new Error('one wheel notch took it to ' + wheeled.scale
+        + ', and one step is 1.5: the picture is wired up more than once');
     }
     if (wheeled.zoomed !== 'in') {
       throw new Error('zoomed in, it still says data-strata-zoomed=' + wheeled.zoomed);

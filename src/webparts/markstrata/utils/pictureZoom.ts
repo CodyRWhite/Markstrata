@@ -104,6 +104,7 @@ export class PictureZoom {
   private dragging: boolean = false;
   private moved: boolean = false;
   private pinchGap: number = 0;
+  private attached: boolean = false;
   private listeners: { target: EventTarget; type: string; fn: EventListener }[] = [];
 
   public constructor(
@@ -112,6 +113,23 @@ export class PictureZoom {
   ) {}
 
   public attach(): void {
+    /*
+     * Once, however many times it is asked.
+     *
+     * The caller attaches when the picture loads and also straight away if it
+     * is already complete, because a cached picture may raise no load at all.
+     * Sometimes it is both: complete by the time it is asked, and load fires
+     * anyway. Two sets of handlers is not twice as responsive, it is wrong in
+     * a way that reads as random. A double click ran the handler twice, so it
+     * zoomed to 2x and then saw itself zoomed and went back to fit, and the
+     * gesture did nothing. Every wheel notch moved two steps for the same
+     * reason.
+     */
+    if (this.attached) {
+      return;
+    }
+    this.attached = true;
+
     this.on(this.picture, 'dblclick', (event: Event) => {
       event.preventDefault();
       const pointer: MouseEvent = event as MouseEvent;
@@ -143,6 +161,11 @@ export class PictureZoom {
         return;
       }
       this.dragging = true;
+      /* Cleared as a gesture begins rather than when the one before it is
+         tidied up. Left to a later click it survives a drag that was followed
+         by a button press instead, and then swallows the next click on the
+         picture: pan, press a control, double click, and the double click does
+         nothing at all. */
       this.moved = false;
       this.picture.setPointerCapture(pointer.pointerId);
     });
@@ -197,9 +220,13 @@ export class PictureZoom {
      */
     this.on(this.picture, 'click', (event: Event) => {
       if (this.moved) {
+        /*
+         * Stopped, not prevented. Stopping it is all this needs: the overlay
+         * is the only thing listening further up. Preventing it also cancels
+         * the double click Chromium would have raised next, so the gesture
+         * after a drag was being swallowed along with the drag.
+         */
         event.stopPropagation();
-        event.preventDefault();
-        this.moved = false;
       }
     }, undefined, true);
 
@@ -211,6 +238,7 @@ export class PictureZoom {
     this.listeners.forEach((entry) => entry.target.removeEventListener(entry.type, entry.fn));
     this.listeners = [];
     this.pointers.clear();
+    this.attached = false;
   }
 
   /** In one step, about the middle: what the buttons do. */
