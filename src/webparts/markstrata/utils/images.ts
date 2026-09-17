@@ -21,6 +21,7 @@
  */
 
 import { ZoomOverlay } from './zoomOverlay';
+import { PictureZoom } from './pictureZoom';
 
 export function enhanceImages(
   container: HTMLElement,
@@ -131,7 +132,7 @@ function makeZoomable(image: HTMLImageElement, zoom: ZoomOverlay): void {
     `${image.getAttribute('alt') || 'Image'}: select to see it full size`);
 
   const open: () => void = () =>
-    zoom.open(image, fullImage(image), image.getAttribute('alt') || 'Image');
+    zoom.open(image, zoomablePicture(image), image.getAttribute('alt') || 'Image');
   image.addEventListener('click', open);
   image.addEventListener('keydown', (event: KeyboardEvent) => {
     if (event.key === 'Enter' || event.key === ' ') {
@@ -141,10 +142,67 @@ function makeZoomable(image: HTMLImageElement, zoom: ZoomOverlay): void {
   });
 }
 
-/** The same picture again, at whatever size the window allows. */
-function fullImage(image: HTMLImageElement): HTMLImageElement {
+/**
+ * The same picture again, at whatever size the window allows, and able to be
+ * zoomed past that.
+ *
+ * A panel rather than the picture on its own, because a picture zoomed in has
+ * to be clipped by something and panned inside something, and because the
+ * controls have to sit somewhere that is not over the document.
+ *
+ * The panel carries `strata-zoom-backdrop`, which the overlay reads as "this
+ * part is background": the empty area beside the picture dismisses the way the
+ * dark surround always has, while the picture and the buttons do not.
+ *
+ * Nothing disposes of the controller. Every listener it adds is on the panel
+ * or the picture, and the overlay removes both when it closes, so they go with
+ * it; a dispose hook here would be a second thing to keep in step with the
+ * first for no gain.
+ */
+function zoomablePicture(image: HTMLImageElement): HTMLElement {
+  const panel: HTMLElement = document.createElement('div');
+  panel.className = 'strata-zoom-picture strata-zoom-backdrop';
+
   const full: HTMLImageElement = document.createElement('img');
   full.src = image.currentSrc || image.src;
   full.alt = image.getAttribute('alt') || '';
-  return full;
+  panel.appendChild(full);
+
+  const zoom: PictureZoom = new PictureZoom(panel, full);
+  panel.appendChild(zoomControls(zoom));
+
+  /* After the picture is in the page, so the first draw measures a picture
+     that has a size. */
+  full.addEventListener('load', () => zoom.attach());
+  if (full.complete) {
+    zoom.attach();
+  }
+
+  return panel;
+}
+
+/** The buttons, which are what a keyboard has instead of a wheel. */
+function zoomControls(zoom: PictureZoom): HTMLElement {
+  const controls: HTMLElement = document.createElement('div');
+  controls.className = 'strata-zoom-controls';
+
+  const button = (label: string, glyph: string, press: () => void): void => {
+    const control: HTMLButtonElement = document.createElement('button');
+    control.type = 'button';
+    control.className = 'strata-zoom-control';
+    control.setAttribute('aria-label', label);
+    control.textContent = glyph;
+    control.addEventListener('click', (event: Event) => {
+      /* Or the overlay reads the press as a click on the background. */
+      event.stopPropagation();
+      press();
+    });
+    controls.appendChild(control);
+  };
+
+  button('Zoom in', '+', () => zoom.zoomBy(1.5));
+  button('Zoom out', '\u2212', () => zoom.zoomBy(1 / 1.5));
+  button('Fit to the window', '\u21ba', () => zoom.reset());
+
+  return controls;
 }
