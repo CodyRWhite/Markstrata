@@ -242,18 +242,20 @@ test('the manifest carries what Teams needs to call SharePoint back', () => {
  * refused by Teams, because the check beside it listed the fields somebody
  * remembered rather than the ones the schema defines. The reasoning for not
  * doing this properly was that the schema is draft-04 and nothing to hand
- * read that draft. ajv does, given its draft-04 meta-schema, and it has been
- * installed the whole time.
+ * read that draft. ajv does, and it has been installed the whole time.
  *
- * ajv is added to devDependencies rather than left as somebody else's
- * transitive dependency: a check that silently stops running when an
- * unrelated package is upgraded is worse than no check.
+ * ajv is in devDependencies rather than left as somebody else's transitive
+ * dependency: a check that silently stops running when an unrelated package is
+ * upgraded is worse than no check. ajv-draft-04 and ajv-formats are there for
+ * the same reason, and manifestValidator below says what each one is for.
  */
 test('the manifest validates against the whole v1.17 schema', () => {
   const validate = manifestValidator();
   const valid = validate(manifest);
   assert.ok(valid, valid ? '' : (validate.errors || [])
-    .map((error) => `${error.dataPath || '(root)'} ${error.message}`).join('; '));
+    /* `instancePath` in ajv 8; it was `dataPath` in 6, and reading the old
+       name gave '(root)' for every error whatever it was about. */
+    .map((error) => `${error.instancePath || '(root)'} ${error.message}`).join('; '));
 });
 
 test('and the validator really would refuse a bad one', () => {
@@ -270,10 +272,26 @@ test('and the validator really would refuse a bad one', () => {
   assert.equal(validate(withoutRequired), false, 'a manifest with no id was accepted');
 });
 
+/*
+ * The validator, and why it is three packages rather than one.
+ *
+ * ajv 6 read draft-04 itself, given the meta-schema it shipped at
+ * ajv/lib/refs/json-schema-draft-04.json, and validated `format` out of the
+ * box. ajv 8 dropped both: that file is gone, the `schemaId` option with it,
+ * and formats moved into a package of their own. So draft-04 comes from
+ * ajv-draft-04, which is ajv 8 with the draft-04 dialect put back, and the one
+ * `format: uri` in this schema comes from ajv-formats.
+ *
+ * ajv-formats is not optional here. ajv 8 is strict by default, so compiling
+ * this schema without it does not quietly skip the key, it refuses outright:
+ *
+ *   unknown format "uri" ignored in schema at path "#/properties/%24schema"
+ */
 function manifestValidator() {
-  const Ajv = require('ajv');
-  const ajv = new Ajv({ schemaId: 'auto', allErrors: true });
-  ajv.addMetaSchema(require('ajv/lib/refs/json-schema-draft-04.json'));
+  const Ajv = require('ajv-draft-04');
+  const addFormats = require('ajv-formats');
+  const ajv = new Ajv({ allErrors: true });
+  addFormats(ajv);
   return ajv.compile(schema);
 }
 
