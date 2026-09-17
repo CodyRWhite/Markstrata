@@ -176,7 +176,23 @@ test('the tab points at the web part that is actually deployed', () => {
      configure it, which is the placeholder everybody saw. */
   assert.ok(url.indexOf('openPropertyPane=true') !== -1, 'the pane would not open');
 
-  assert.deepEqual(tabs[0].scopes, ['team', 'groupChat']);
+  /*
+   * A channel, and not a chat.
+   *
+   * groupChat was offered here and Teams took it at its word: the app could
+   * be added to a 1:1 or group chat, and configuring it there answered
+   * HTTP 500. The address above is why. It is anchored on {teamSiteDomain},
+   * which Teams fills in from the SharePoint site behind a team, and a chat
+   * has no team behind it and so no site: there is no host for the
+   * configuration page to be requested from. webApplicationInfo.resource is
+   * the same token and has the same nothing to resolve to.
+   *
+   * Removing the scope is right even where the address is not, because the
+   * tab reads a markdown file out of a channel's Files, which is that
+   * channel's document library. A chat has no library, so there would be
+   * nothing to point the tab at even if it opened.
+   */
+  assert.deepEqual(tabs[0].scopes, ['team']);
 });
 
 test('the domains the tab loads from are allowed', () => {
