@@ -68,6 +68,7 @@ module.exports = {
   remoteCode: lib('remoteCode'),
   codeZoom: lib('codeZoom'),
   chromeOffset: lib('chromeOffset'),
+  pictureZoom: lib('pictureZoom'),
   spacedLinks: lib('markdownItSpacedLinks'),
   tables: lib('tables'),
   folderTree: lib('folderTree'),

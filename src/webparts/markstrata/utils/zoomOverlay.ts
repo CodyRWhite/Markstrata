@@ -49,11 +49,24 @@ export class ZoomOverlay {
     close.textContent = '✕';
     overlay.appendChild(close);
 
-    /* Anywhere outside what was opened closes it, which is what people try
-       first. Measured by containment rather than by identity, because a
-       diagram is a panel with a drawing inside it. */
+    /*
+     * Anywhere outside what was opened closes it, which is what people try
+     * first. Measured by containment rather than by identity, because a
+     * diagram is a panel with a drawing inside it.
+     *
+     * A picture is the one that needs more than containment. It is shown in a
+     * panel that fills the overlay so there is room to pan a zoomed picture
+     * around, and a panel filling the overlay would leave nothing outside it
+     * to click. So a panel may mark itself as background, and the empty area
+     * beside the picture then dismisses the way the dark surround always has,
+     * while the picture and its buttons do not.
+     */
     overlay.addEventListener('click', (event: MouseEvent) => {
-      if (!content.contains(event.target as Node)) {
+      const target: HTMLElement = event.target as HTMLElement;
+      const outside: boolean = !content.contains(target);
+      const backdrop: boolean = !!target.classList
+        && target.classList.contains('strata-zoom-backdrop');
+      if (outside || backdrop) {
         this.close();
       }
     });

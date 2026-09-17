@@ -355,6 +355,167 @@ const LIBRARY_PATH = '/sites/demo/Documents';
     }
   });
 
+  /*
+   * Zooming a picture, which is the difference between "open it full size" and
+   * "open it at the size of the window". A screenshot of a settings page is
+   * legible at the size it was taken and a blur at the size a column allows.
+   *
+   * Driven for real: a wheel, a double click, the buttons and a drag. The
+   * arithmetic behind each is unit tested, so what this is for is the wiring -
+   * that the events reach the picture at all, that a drag pans rather than
+   * dismissing, and that the ways out still work.
+   *
+   * Everything is read while the overlay is open and asserted after it is
+   * closed, so a failure here leaves the page as the next step expects to find
+   * it rather than with an overlay over everything.
+   */
+  await step('a picture in the overlay zooms and pans', async () => {
+    await page.locator('.strata-content img.strata-zoomable').first().click();
+    await page.waitForSelector('.strata-zoom-picture img', { timeout: 3000 });
+
+    const read = () => page.evaluate(() => {
+      const panel = document.querySelector('.strata-zoom-picture');
+      const picture = panel.querySelector('img');
+      const matrix = new DOMMatrixReadOnly(window.getComputedStyle(picture).transform);
+      return {
+        scale: Math.round(matrix.a * 1000) / 1000,
+        x: Math.round(matrix.e),
+        y: Math.round(matrix.f),
+        zoomed: panel.getAttribute('data-strata-zoomed'),
+        controls: panel.querySelectorAll('.strata-zoom-control').length,
+        /* Whether there is anything to pan to at all: a small picture zoomed a
+           little over still fits its window, and then holding still is right. */
+        overflowing: picture.offsetWidth * matrix.a > panel.getBoundingClientRect().width
+      };
+    });
+
+    const atRest = await read();
+
+    /* The wheel, over the picture. */
+    const box = await page.locator('.strata-zoom-picture img').boundingBox();
+    const middle = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+    await page.mouse.move(middle.x, middle.y);
+    await page.mouse.wheel(0, -200);
+    await page.waitForTimeout(150);
+    const wheeled = await read();
+
+    /* In far enough that the picture is wider than its window, whatever size
+       the picture happened to be, because panning a picture that fits is
+       something this deliberately does not do. */
+    for (let press = 0; press < 6; press += 1) {
+      await page.locator('.strata-zoom-control').nth(0).click();
+    }
+    await page.waitForTimeout(150);
+    const deep = await read();
+
+    await page.mouse.move(middle.x, middle.y);
+    await page.mouse.down();
+    await page.mouse.move(middle.x - 120, middle.y, { steps: 10 });
+    await page.mouse.up();
+    await page.waitForTimeout(150);
+    const panned = await read();
+    const survivedTheDrag = await page.locator('.strata-zoom').count();
+
+    /* Back to fit. */
+    await page.locator('.strata-zoom-control').nth(2).click();
+    await page.waitForTimeout(150);
+    const reset = await read();
+    const survivedTheButton = await page.locator('.strata-zoom').count();
+
+    /* And a double click, which is the whole gesture on a touchscreen. */
+    await page.locator('.strata-zoom-picture img').dblclick();
+    await page.waitForTimeout(150);
+    const doubled = await read();
+    const survivedTheDoubleClick = await page.locator('.strata-zoom').count();
+
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(200);
+    const closed = await page.locator('.strata-zoom').count();
+
+    if (atRest.scale !== 1) {
+      throw new Error('it opened at ' + atRest.scale + ' rather than fitting the window');
+    }
+    if (atRest.zoomed !== 'fit') {
+      throw new Error('it opened saying data-strata-zoomed=' + atRest.zoomed);
+    }
+    if (atRest.controls !== 3) {
+      throw new Error('there are ' + atRest.controls + ' zoom controls, expected three');
+    }
+    if (!(wheeled.scale > atRest.scale)) {
+      throw new Error('the wheel left it at ' + wheeled.scale);
+    }
+    if (wheeled.zoomed !== 'in') {
+      throw new Error('zoomed in, it still says data-strata-zoomed=' + wheeled.zoomed);
+    }
+    if (!(deep.scale > wheeled.scale)) {
+      throw new Error('the zoom in button left it at ' + deep.scale);
+    }
+    if (!deep.overflowing) {
+      throw new Error('the picture still fits its window at ' + deep.scale
+        + 'x, so the drag below checked nothing');
+    }
+    if (!survivedTheDrag) {
+      throw new Error('dragging the picture put the overlay away');
+    }
+    if (!(panned.x < deep.x)) {
+      throw new Error('the picture did not move: x went ' + deep.x + ' to ' + panned.x);
+    }
+    if (!survivedTheButton) {
+      throw new Error('pressing a zoom control put the overlay away');
+    }
+    if (reset.scale !== 1 || reset.x !== 0 || reset.y !== 0) {
+      throw new Error('reset left it at ' + JSON.stringify(reset));
+    }
+    if (!survivedTheDoubleClick) {
+      throw new Error('double clicking the picture put the overlay away');
+    }
+    if (!(doubled.scale > 1)) {
+      throw new Error('a double click left it at ' + doubled.scale);
+    }
+    if (closed) {
+      throw new Error('Escape did not close it');
+    }
+  });
+
+  /*
+   * The panel fills the overlay so a zoomed picture has room to be panned
+   * around, which leaves nothing outside it to click. So the panel says it is
+   * background, and the overlay reads that: the dark area beside the picture
+   * still puts it away, the way it always has.
+   */
+  await step('and the dark area beside it still puts it away', async () => {
+    await page.locator('.strata-content img.strata-zoomable').first().click();
+    await page.waitForSelector('.strata-zoom-picture img', { timeout: 3000 });
+
+    /* Above the picture and inside the panel, which is background rather than
+       picture. */
+    const box = await page.locator('.strata-zoom-picture img').boundingBox();
+    await page.mouse.click(box.x + box.width / 2, box.y - 24);
+    await page.waitForTimeout(250);
+    const stillOpen = await page.locator('.strata-zoom').count();
+    if (stillOpen) {
+      await page.keyboard.press('Escape');
+      await page.waitForTimeout(200);
+      throw new Error('clicking beside the picture did not close it');
+    }
+  });
+
+  await step('but a click on the picture itself does not', async () => {
+    await page.locator('.strata-content img.strata-zoomable').first().click();
+    await page.waitForSelector('.strata-zoom-picture img', { timeout: 3000 });
+
+    await page.locator('.strata-zoom-picture img').click();
+    await page.waitForTimeout(250);
+    const survived = await page.locator('.strata-zoom').count();
+
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(200);
+
+    if (!survived) {
+      throw new Error('clicking the picture closed the overlay');
+    }
+  });
+
   await step('reading time counts prose, not code or diagram source', async () => {
     await page.setViewportSize({ width: 1200, height: 900 });
     await page.evaluate(() => window.scrollTo(0, 0));

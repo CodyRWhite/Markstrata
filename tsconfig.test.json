@@ -29,6 +29,7 @@
     "src/webparts/markstrata/utils/remoteCode.ts",
     "src/webparts/markstrata/utils/codeZoom.ts",
     "src/webparts/markstrata/utils/chromeOffset.ts",
+    "src/webparts/markstrata/utils/pictureZoom.ts",
     "src/webparts/markstrata/utils/markdownItSpacedLinks.ts",
     "src/webparts/markstrata/utils/tables.ts",
     "src/webparts/markstrata/utils/folderTree.ts",
