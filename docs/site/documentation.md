@@ -201,6 +201,10 @@ and whether readers see it or only somebody editing the page does. **Show export
 button**, **Show share button**, **Show reading time** and **Back to top button**
 decide what is in it and what floats above the page.
 
+**Keep the toolbar in view** sticks the toolbar to the top while the document
+scrolls under it. It rests below the page's own bars rather than behind them,
+and headings scrolled to land below it.
+
 [What each control does](../reading/#the-toolbar).
 
 ### Export

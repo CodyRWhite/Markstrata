@@ -29,6 +29,41 @@
 const HEADING_CLEARANCE: number = 16;
 
 /**
+ * How far down a heading has to land, given what is above it.
+ *
+ * Two things can be, and they are measured differently. The page's own bars
+ * are outside the web part and are found by walking the page. The toolbar is
+ * inside it, and is only in the way when the author has asked for it to be
+ * stuck there, which is why this takes them separately rather than measuring
+ * everything sticky in sight.
+ *
+ * Split out from the measuring so the arithmetic can be read and checked
+ * without a browser. jsdom has no layout, so an element-shaped test here would
+ * be adding zero to zero and reporting that it passed.
+ */
+export function landingOffset(chrome: number, stickyToolbar: number): number {
+  return chrome + stickyToolbar + HEADING_CLEARANCE;
+}
+
+/**
+ * The toolbar's height, when the toolbar is something a heading has to clear.
+ *
+ * Zero unless it is actually stuck: the attribute on the root says what the
+ * author asked for, and the computed position says what the stylesheet did
+ * with it, and the second is the one that can be in the way.
+ */
+export function stickyToolbarHeight(root: HTMLElement): number {
+  const toolbar: HTMLElement | null = root.querySelector('.strata-toolbar');
+  if (!toolbar) {
+    return 0;
+  }
+  if (window.getComputedStyle(toolbar).position !== 'sticky') {
+    return 0;
+  }
+  return Math.round(toolbar.getBoundingClientRect().height);
+}
+
+/**
  * Every element on the page except the ones inside `ours`.
  *
  * Whole subtrees are refused rather than each element in them being visited
@@ -113,11 +148,14 @@ export function chromeAbove(ours?: HTMLElement): number {
 }
 
 /**
- * Publishes that measurement as a custom property, so a heading scrolled to by
- * any route clears the chrome: the contents, a link from another page, or the
- * browser restoring a fragment on load. A value the stylesheet can read rather
- * than a scroll this code performs, because only one of those covers the cases
- * nobody wrote code for.
+ * Publishes those measurements as custom properties, so a heading scrolled to
+ * by any route clears what is above it: the contents, a link from another
+ * page, or the browser restoring a fragment on load. Values the stylesheet can
+ * read rather than a scroll this code performs, because only one of those
+ * covers the cases nobody wrote code for.
+ *
+ * Sticky table headers read the same offset, so they come to rest under a
+ * sticky toolbar rather than behind it without being told about it.
  */
 export class ScrollOffset {
   private onResize: (() => void) | undefined;
@@ -128,8 +166,17 @@ export class ScrollOffset {
 
     const apply = (): void => {
       this.pending = undefined;
+      const chrome: number = chromeAbove(root);
+      /*
+       * Two properties rather than one, because they answer different
+       * questions. The toolbar sticks directly under the page's own bars, so
+       * it wants the chrome on its own; a heading has to clear the toolbar as
+       * well, so it wants the sum. Publishing only the sum would put the
+       * toolbar a toolbar's height too far down, under nothing.
+       */
+      root.style.setProperty('--strata-chrome-offset', `${chrome}px`);
       root.style.setProperty('--strata-scroll-offset',
-        `${chromeAbove(root) + HEADING_CLEARANCE}px`);
+        `${landingOffset(chrome, stickyToolbarHeight(root))}px`);
     };
 
     /*

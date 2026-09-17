@@ -29,6 +29,40 @@
   color: var(--strata-text-muted);
 }
 
+/*
+ * Kept in view while the document scrolls under it, where the author asked
+ * for that.
+ *
+ * It sticks to --strata-chrome-offset rather than to zero, because on a
+ * SharePoint page the top of the window already belongs to the suite bar and
+ * the command bar: stuck at zero the toolbar comes to rest behind them, which
+ * is a toolbar nobody can reach rather than one always in reach.
+ * ScrollOffset measures that and publishes it.
+ *
+ * The background is not decoration. A sticky element with none is a strip of
+ * text with the document sliding through it.
+ */
+.strata-root[data-strata-toolbar='sticky'] .strata-toolbar {
+  position: sticky;
+  top: var(--strata-chrome-offset, 0px);
+  /* Above the sticky table headers, which are 1, and the pinned meta line,
+     which is 2 and sticks to the other end. */
+  z-index: 3;
+  background-color: var(--strata-bg);
+}
+
+/*
+ * And the contents sidebar comes down to meet it.
+ *
+ * The sidebar sticks 16px from the top of the window, which was right when
+ * nothing of ours was up there. Left alone it would scroll up behind a sticky
+ * toolbar. Scoped to this mode rather than fixed everywhere, so a web part
+ * that has not asked for a sticky toolbar keeps the layout it has.
+ */
+.strata-root[data-strata-toolbar='sticky'] .strata-toc-sidebar {
+  top: var(--strata-scroll-offset, 16px);
+}
+
 .strata-toolbar-spacer {
   flex: 1 1 auto;
 }
