@@ -403,6 +403,7 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
       tocWidthUnit: 'em',
       tocWidthValue: 15,
       toolbarVisibility: 'always',
+      stickyToolbar: false,
       showExportButton: true,
       exportCoverPage: true,
       exportContentsPage: true,
@@ -910,7 +911,14 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
       tocWidth: tocWidthCss(this.properties.tocWidthMode, this.properties.tocWidthUnit,
         this.properties.tocWidthValue),
       pinMeta: this.properties.pinMeta,
-      fillHeight: this.properties.fillHeight
+      fillHeight: this.properties.fillHeight,
+      /*
+       * A toolbar nobody can see cannot be stuck to anything, and a web part
+       * whose toolbar is off would otherwise carry an attribute promising a
+       * bar that is not there. Resolved here rather than in the stylesheet
+       * because the visibility answer depends on the display mode.
+       */
+      stickyToolbar: this.properties.stickyToolbar && this.isToolbarVisible()
     };
   }
 

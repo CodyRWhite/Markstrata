@@ -36,6 +36,8 @@ export interface IThemeSettings {
   tocWidth?: string;
   /** True to keep the file name and modified date in view while scrolling. */
   pinMeta?: boolean;
+  /** True to keep the toolbar in view while the document scrolls under it. */
+  stickyToolbar?: boolean;
   /**
    * True to give the web part at least the height of the room below it, so a
    * short document does not leave the page canvas showing under it.
@@ -242,6 +244,7 @@ export class ThemeManager {
       element.style.setProperty('--strata-toc-width', tocWidth);
     }
     element.setAttribute('data-strata-meta', settings.pinMeta ? 'pinned' : 'flow');
+    element.setAttribute('data-strata-toolbar', settings.stickyToolbar ? 'sticky' : 'flow');
     /*
      * Only the layout half of "fill the available height" lives in CSS. The
      * height itself cannot: it is the room below wherever the web part starts,

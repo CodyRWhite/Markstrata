@@ -28,6 +28,23 @@ then reload, version history, share, export, and the light and dark switch.
 Every one of those is a setting, and a web part with all of them off has no
 toolbar at all rather than an empty strip where one used to be.
 
+### Keeping it in view
+
+**Keep the toolbar in view** leaves the toolbar at the top while the document
+scrolls under it, which suits a long document somebody reads a section at a
+time. Off by default, because a short document scrolls past the toolbar once
+and never wants it again.
+
+It comes to rest below whatever the page keeps stuck across the top of the
+window, rather than behind it: on a SharePoint page that is the suite bar and
+the command bar, and the web part measures them rather than guessing. A heading
+scrolled to lands below the toolbar for the same reason, so clicking a contents
+entry still puts the heading where you can read it. Long tables keep their
+header rows below the toolbar as well.
+
+The contents sidebar comes down to meet it, so the two do not overlap. Nothing
+changes for a web part that has not turned this on.
+
 ### Letting readers switch theme
 
 **Let readers switch theme** adds the theme list on the left and the dark mode

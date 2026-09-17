@@ -92,6 +92,8 @@ declare interface IMarkstrataWebPartStrings {
   ToolbarGroupName: string;
   ToolbarVisibilityLabel: string;
   ToolbarHint: string;
+  StickyToolbarLabel: string;
+  StickyToolbarHint: string;
   ExportButtonLabel: string;
   ExportButtonHint: string;
   ExportCoverLabel: string;

@@ -489,6 +489,15 @@ export function paneConfiguration(
               // costs a line and saves someone turning the toggle on and
               // wondering why nothing changed.
               PropertyPaneLabel('toolbarHint', { text: strings.ToolbarHint }),
+              /* Nothing to stick when the toolbar is never drawn, and nothing
+                 worth sticking when only an author sees it. */
+              PropertyPaneToggle('stickyToolbar', {
+                label: strings.StickyToolbarLabel,
+                onText: 'On',
+                offText: 'Off',
+                disabled: properties.toolbarVisibility === 'never'
+              }),
+              PropertyPaneLabel('stickyToolbarHint', { text: strings.StickyToolbarHint }),
               PropertyPaneToggle('showExportButton', {
                 label: strings.ExportButtonLabel,
                 onText: 'On',

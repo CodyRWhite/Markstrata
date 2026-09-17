@@ -2599,6 +2599,145 @@ const LIBRARY_PATH = '/sites/demo/Documents';
   });
 
   /*
+   * A toolbar the author asked to keep in view.
+   *
+   * Three things have to hold together and only the first is obvious. It has
+   * to stay put while the document scrolls, it has to come to rest below the
+   * page's own bars rather than behind them, and a heading scrolled to has to
+   * land below the toolbar rather than behind it. The third is the one that
+   * would have been missed: the offset a heading lands at was written when
+   * nothing of ours was ever stuck up there.
+   */
+  await step('a sticky toolbar stays in view, below the page bars', async () => {
+    const measured = await page.evaluate(async () => {
+      const rows = [];
+      for (let index = 0; index < 120; index += 1) {
+        rows.push(`## Heading number ${index}\n\nSome text under it.\n`);
+      }
+      await window.webPartHarness.start({
+        contentSource: 'manual',
+        markdownContent: `# Long\n\n${rows.join('\n')}\n`,
+        showToolbar: 'always',
+        stickyToolbar: true
+      });
+
+      /* A bar across the top, the way a SharePoint page has one. */
+      const bar = document.createElement('div');
+      bar.id = 'wp-fake-chrome';
+      bar.style.cssText = 'position:fixed;top:0;left:0;right:0;height:48px;background:#333';
+      document.body.appendChild(bar);
+
+      const settle = () => new Promise((resolve) =>
+        requestAnimationFrame(() => requestAnimationFrame(resolve)));
+      window.dispatchEvent(new Event('resize'));
+      await settle();
+
+      const root = document.querySelector('.strata-root');
+      const toolbar = document.querySelector('.strata-toolbar');
+      const readRoot = (name) => parseFloat(root.style.getPropertyValue(name)) || 0;
+
+      const atRest = toolbar.getBoundingClientRect();
+      window.scrollTo(0, 1200);
+      await settle();
+      const scrolled = toolbar.getBoundingClientRect();
+
+      /* Where a heading lands, by the route a reader takes: the offset is what
+         scroll-margin-top is set from, so the browser does the arithmetic. */
+      const heading = document.querySelectorAll('.strata-content h2')[40];
+      heading.scrollIntoView();
+      await settle();
+      const landed = heading.getBoundingClientRect().top;
+      const toolbarThen = toolbar.getBoundingClientRect();
+
+      bar.remove();
+      window.scrollTo(0, 0);
+      await settle();
+
+      return {
+        attribute: root.getAttribute('data-strata-toolbar'),
+        position: window.getComputedStyle(toolbar).position,
+        chromeOffset: readRoot('--strata-chrome-offset'),
+        scrollOffset: readRoot('--strata-scroll-offset'),
+        toolbarHeight: Math.round(atRest.height),
+        stuckAt: Math.round(scrolled.top),
+        landedAt: Math.round(landed),
+        toolbarBottom: Math.round(toolbarThen.bottom)
+      };
+    });
+
+    if (measured.attribute !== 'sticky') {
+      throw new Error('the root says data-strata-toolbar=' + measured.attribute);
+    }
+    if (measured.position !== 'sticky') {
+      throw new Error('the toolbar is ' + measured.position + ', so it scrolls away');
+    }
+    /* Below the bar, not behind it. */
+    if (measured.stuckAt < 48) {
+      throw new Error('the toolbar came to rest at ' + measured.stuckAt
+        + 'px, inside the 48px bar across the top of the page');
+    }
+    if (measured.chromeOffset < 48) {
+      throw new Error('the chrome offset is ' + measured.chromeOffset
+        + ' with a 48px bar on the page');
+    }
+    /* And the heading clears the toolbar, which is the part that is easy to
+       get wrong: the offset has to carry the toolbar as well as the bar. */
+    if (measured.scrollOffset <= measured.chromeOffset) {
+      throw new Error('the landing offset is ' + measured.scrollOffset
+        + ' and the chrome alone is ' + measured.chromeOffset
+        + ', so the toolbar was not counted');
+    }
+    if (measured.toolbarHeight <= 0) {
+      throw new Error('the toolbar measured ' + measured.toolbarHeight + 'px tall');
+    }
+    if (measured.landedAt < measured.toolbarBottom) {
+      throw new Error('a heading landed at ' + measured.landedAt
+        + 'px with the toolbar reaching ' + measured.toolbarBottom
+        + 'px, so it is behind the toolbar');
+    }
+  });
+
+  await step('and it is an ordinary toolbar again with the setting off', async () => {
+    const measured = await page.evaluate(async () => {
+      await window.webPartHarness.start({
+        contentSource: 'manual',
+        markdownContent: '# Long\n\n' + '## Heading\n\ntext\n\n'.repeat(60),
+        showToolbar: 'always',
+        stickyToolbar: false
+      });
+      await new Promise((resolve) =>
+        requestAnimationFrame(() => requestAnimationFrame(resolve)));
+
+      const root = document.querySelector('.strata-root');
+      const toolbar = document.querySelector('.strata-toolbar');
+      const before = Math.round(toolbar.getBoundingClientRect().top);
+      window.scrollTo(0, 900);
+      await new Promise((resolve) =>
+        requestAnimationFrame(() => requestAnimationFrame(resolve)));
+      const after = Math.round(toolbar.getBoundingClientRect().top);
+      window.scrollTo(0, 0);
+
+      return {
+        attribute: root.getAttribute('data-strata-toolbar'),
+        position: window.getComputedStyle(toolbar).position,
+        before: before,
+        after: after
+      };
+    });
+
+    if (measured.attribute !== 'flow') {
+      throw new Error('the root says data-strata-toolbar=' + measured.attribute);
+    }
+    if (measured.position === 'sticky') {
+      throw new Error('the toolbar is sticky with the setting off');
+    }
+    /* It scrolled away with the document, which is what off means. */
+    if (measured.after >= measured.before) {
+      throw new Error('the toolbar did not move when the page scrolled');
+    }
+  });
+
+  /*
    * The same web part in a different frame. Nothing about a Teams tab can be
    * driven here - there is no Teams to stand in for - so what is checked is
    * the one thing that is this web part's own: that it reads which host it is

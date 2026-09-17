@@ -77,6 +77,8 @@ export interface IMarkstrataWebPartProps {
   tocWidthUnit: TocWidthUnit;
   tocWidthValue: number;
   toolbarVisibility: 'always' | 'editing' | 'never';
+  /** Keep the toolbar in view while the document scrolls under it. */
+  stickyToolbar: boolean;
   /** Was showPrintButton until the button began exporting rather than printing. */
   showExportButton: boolean;
   /** A title page in front of an export. */

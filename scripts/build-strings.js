@@ -103,6 +103,11 @@ const STRINGS = {
   ToolbarGroupName: 'Toolbar',
   ToolbarVisibilityLabel: 'Show toolbar',
   ToolbarHint: 'The reload, version history, theme and export controls all live in the toolbar. With "Only while editing the page", readers of the page never see them.',
+  StickyToolbarLabel: 'Keep the toolbar in view',
+  StickyToolbarHint: 'The toolbar stays at the top while the document scrolls '
+    + 'under it, which suits a long document somebody reads a section at a '
+    + "time. It comes to rest below the page's own bars rather than behind "
+    + 'them, and headings scrolled to land below it.',
   ExportButtonLabel: 'Show export button',
   ExportButtonHint: 'Exports the document as a paginated PDF: a cover, a '
     + 'contents page with the page number each heading landed on, and running '
