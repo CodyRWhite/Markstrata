@@ -161,6 +161,13 @@ const PAGES = [
     source: 'docs/site/editing.md',
     description: 'What changes when the SharePoint page goes into edit mode: the split editor, the live preview, and saving back to the library.'
   },
+  {
+    id: 'site-builder', folder: 'site-builder', label: 'Site builder',
+    title: 'Publishing a library as a site - Markstrata',
+    section: 'use',
+    source: 'docs/site/site-builder.md',
+    description: 'MarkstrataSiteBuilder, the companion PowerShell module that publishes a folder of markdown as a browsable SharePoint site: one renderer page, generated indexes and a menu built from the folders.'
+  },
   /*
    * Below the line: pages that exist because something has to point at them,
    * rather than because a reader is looking for them. The web part's package
