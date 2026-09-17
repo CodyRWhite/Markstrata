@@ -8,6 +8,50 @@ is normally zero. `scripts/set-version.js` stamps it when a release is cut.
 
 Entries below 0.0.10.0 were written before the switch and are three-part.
 
+## 0.0.20.1
+
+- An export is in the theme the document is read in. It came out as a flat wall
+  of text: headings at body size, tables with no rules, callouts with no accent
+  and code with no ground under it, correctly paginated and looking like a
+  different product. The copy the pages are laid into carried the web part's
+  root class and none of its attributes, and the class is not the theme. Every
+  token a theme declares is declared against an attribute on the root,
+  `.strata-root[data-strata-theme='github']` and, for the colours,
+  `[data-strata-mode='light']` with it, so a copy carrying `strata-root` and
+  nothing else resolved not one of them. CSS says nothing about that:
+  `font-size: var(--strata-h2-size)` with nothing behind the variable is an
+  invalid declaration and is dropped, so the heading inherits body size, and a
+  border built the same way goes the same way, so the table loses its rules.
+  - The attributes come across with the class now, and the four that answer to
+    a window rather than to a theme are set to what a sheet of paper needs: the
+    light half of whatever theme the reader chose, because a printer fills a
+    dark page edge to edge and a photocopier does worse; no filled height and
+    no pinned metadata, both of them lengths measured off a screen; and not
+    editing, because the page being edited is not something the export is part
+    of.
+  - A long line of code wraps onto the page rather than running off the side of
+    it. A listing scrolls sideways on screen and a sheet of paper does not, so
+    a line wider than the text block simply left the page and the half past the
+    margin was never printed.
+
+- A code block opened full size opens below the bars a SharePoint page keeps
+  stuck across the top of the window. The overlay is built inside the web part
+  so that what it shows is painted from the reader's own theme, and that is
+  also why it cannot be raised above them: they are in a stacking context it is
+  not in, and no z-index reaches them from a child of the web part. They
+  covered the close button and the block's filename, which left the overlay
+  openable and then neither readable nor dismissable except with Escape. The
+  close button is measured from the same figure as the panel, because padding
+  on its own would not have moved it: an absolutely positioned element takes
+  its offsets from the padding box.
+
+- The documentation and the site say what ships. Export replaces Print
+  throughout, Share says that it copies a relative address with only the
+  guarded characters escaped, and anchors say that a link to a heading scrolls
+  inside the document rather than being handed to SharePoint's router. Nested
+  folders in the library picker and wiki links inside table cells are written
+  up with the settings that go with them.
+
 ## 0.0.20.0
 
 - The Print button is an Export button, and what it produces is a document
