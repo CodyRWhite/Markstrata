@@ -243,6 +243,30 @@
   cursor: zoom-out;
 }
 
+/*
+ * A picture in the overlay: a window over it rather than the picture alone.
+ *
+ * The panel fills the room the overlay leaves, so a picture zoomed past the
+ * window has somewhere to be panned to, and clips what hangs over the edge.
+ * It is a dismiss target itself, which the overlay reads from the class rather
+ * than from containment: with the panel filling the overlay there would
+ * otherwise be nothing outside it left to click.
+ */
+.strata-zoom-picture {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  /* The dark area around the picture still puts it away. */
+  cursor: zoom-out;
+  /* A pinch is ours to read; without this the browser zooms the page under
+     the overlay instead. */
+  touch-action: none;
+}
+
 .strata-zoom img {
   max-width: 100%;
   max-height: 100%;
@@ -251,6 +275,75 @@
   cursor: default;
   border-radius: var(--strata-radius-sm);
   box-shadow: 0 8px 40px rgba(0, 0, 0, 0.5);
+}
+
+/*
+ * Scaled from the middle, so the maths that keeps the point under the pointer
+ * still under it has one origin to reason about rather than one per picture
+ * shape. No transition: a zoom that animates lags a wheel that is still
+ * turning, and a drag has to track the finger exactly or it feels broken.
+ */
+.strata-zoom-picture img {
+  transform-origin: center center;
+  will-change: transform;
+  /* The picture is what a drag grabs, so it is not the browser's to drag off
+     as an image. */
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.strata-zoom-picture[data-strata-zoomed='fit'] img {
+  cursor: zoom-in;
+}
+
+.strata-zoom-picture[data-strata-zoomed='in'] img {
+  cursor: grab;
+}
+
+.strata-zoom-picture[data-strata-zoomed='in'] img:active {
+  cursor: grabbing;
+}
+
+/*
+ * The buttons, bottom left, away from the close button in the opposite corner
+ * so that reaching for one is never nearly the other.
+ */
+.strata-zoom-controls {
+  position: absolute;
+  left: 16px;
+  bottom: 16px;
+  display: inline-flex;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: var(--strata-radius-sm);
+  background-color: rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+}
+
+.strata-zoom-control {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  background-color: transparent;
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.strata-zoom-control + .strata-zoom-control {
+  border-left: 1px solid rgba(255, 255, 255, 0.35);
+}
+
+.strata-zoom-control:hover {
+  background-color: rgba(0, 0, 0, 0.75);
+}
+
+.strata-zoom-control:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.9);
+  outline-offset: -2px;
 }
 
 /*

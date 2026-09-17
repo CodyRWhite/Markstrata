@@ -290,6 +290,27 @@ column is narrower than a screen. Escape closes it, or a click anywhere outside
 it. A picture that is already a link is left alone: it does something when
 clicked.
 
+### Closer than the window
+
+A screenshot is legible at the size it was taken and a blur at the size a
+column allows, so full size means the window and sometimes the window is not
+enough. Once a picture is open it can be zoomed further, three ways, because
+readers are not all holding the same thing:
+
+| | |
+| --- | --- |
+| Wheel or pinch | Zooms toward the pointer, the way a map does |
+| Double click | Between fitting the window and twice that |
+| The buttons, bottom left | Zoom in, zoom out, and back to fitting |
+
+Dragging moves a zoomed picture around. It cannot be dragged so far that none
+of it is left on screen, and a drag is never mistaken for the click that closes
+the overlay. The buttons are what a keyboard reaches for, since a wheel is not
+something every reader has.
+
+A diagram is drawn rather than photographed, so it is already as sharp as the
+screen allows at full width and opens without this.
+
 The same setting covers diagrams, which are the likeliest thing on a page to be
 too small to read. A diagram opens as a drawing rather than as a picture of one,
 so it is as sharp at full width as it was in the column, and it is given a
