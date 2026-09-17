@@ -88,6 +88,12 @@ more than one entry.
 
 **[How linking between documents works](linking/)**
 
+For a library big enough to need a menu, generated category pages and one
+address per document, there is a companion PowerShell module that builds that
+site around the web part rather than leaving it to be assembled by hand.
+
+**[Publishing a library as a site](site-builder/)**
+
 ## Off the screen, as a document
 
 A reader can export what they are looking at as a paginated PDF: a cover, a
