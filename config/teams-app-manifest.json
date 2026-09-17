@@ -29,8 +29,7 @@
       "configurationUrl": "https://{teamSiteDomain}/_layouts/15/TeamsLogon.aspx?SPFX=true&dest=/_layouts/15/teamshostedapp.aspx%3Fteams%26componentId=74aecd51-7619-4ca6-b81a-6c670d6098b3%26openPropertyPane=true%26forceLocale={locale}",
       "canUpdateConfiguration": true,
       "scopes": [
-        "team",
-        "groupChat"
+        "team"
       ]
     }
   ],
