@@ -8,6 +8,37 @@ is normally zero. `scripts/set-version.js` stamps it when a release is cut.
 
 Entries below 0.0.10.0 were written before the switch and are three-part.
 
+## 0.0.20.2
+
+- The Teams tab is offered in a channel and not in a chat. The manifest asked
+  for the groupChat scope as well as team, and Teams took it at its word: the
+  app could be added to a 1:1 or group chat, and configuring it there answered
+  HTTP 500. The configuration address is anchored on the `{teamSiteDomain}`
+  token, which Teams fills in from the SharePoint site behind a team, and a
+  chat has no team behind it and so no site: there is no host for the
+  configuration page to be requested from at all.
+  - Dropping the scope is right whatever the address says, because there is no
+    SPFx host for a chat tab to begin with. A web part names the hosts it can
+    be shown in, and the Teams ones are a channel tab and a personal app;
+    there is no chat tab among them. The 500 was SharePoint being asked for a
+    page by a name that resolved to nothing.
+  - The tab also reads its document out of a channel's Files, which is that
+    channel's document library, so there would have been nothing to point it
+    at even if the page had opened. Files shared in a chat do exist, in the
+    OneDrive of whoever shared them, but reaching those is Graph rather than
+    the SharePoint calls this reads a library with.
+
+- Draft-04 schemas are read with ajv 8 rather than ajv 6, which brings two
+  fixes worth having: prototype pollution through a `$data` reference on the
+  format keyword, and the ReDoS in the pattern keyword, CVE-2025-69873. ajv 8
+  dropped draft-04, so the Teams manifest check that validates against it now
+  reads the dialect from ajv-draft-04 and the one format in that schema from
+  ajv-formats. Neither is optional: without the first the require throws, and
+  without the second ajv refuses the schema rather than quietly stopping
+  checking the key, which is the failure that check exists to catch.
+
+- The Pages workflow configures itself with actions/configure-pages v6.
+
 ## 0.0.20.1
 
 - An export is in the theme the document is read in. It came out as a flat wall
