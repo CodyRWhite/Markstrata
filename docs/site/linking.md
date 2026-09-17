@@ -189,6 +189,32 @@ SitePages, and lands somewhere the document never meant. This applies to every
 relative link rather than only ones to markdown: a link to `notes/spec.pdf`
 finds the PDF beside the document.
 
+## Addresses with spaces in them
+
+SharePoint names pages and files after their titles, so the address you copy
+out of the address bar usually has spaces in it. Markdown says a link address
+may not, and left to itself the whole thing arrives on the page as brackets and
+a stray half-link:
+
+```markdown
+[ITP00024 - Access Control Plan](https://contoso.sharepoint.com/sites/ITPolicies/SitePages/ITP00024 - Access Control Plan.aspx)
+```
+
+Markstrata reads that as the link you meant. It only steps in where markdown
+has already given up, so nothing that renders today renders differently, and a
+sentence in brackets followed by one in parentheses is still a sentence.
+
+The form that is actually correct, and that works everywhere rather than only
+here, is angle brackets around the address. Worth teaching if you write a lot
+of these, because you can paste the address exactly as SharePoint gives it:
+
+```markdown
+[ITP00024 - Access Control Plan](<https://contoso.sharepoint.com/sites/ITPolicies/SitePages/ITP00024 - Access Control Plan.aspx>)
+```
+
+Both produce the same link. The same goes for a picture whose file name has
+spaces in it, `![A screenshot](screenshots/The first run.png)`.
+
 ## Settings this page is about
 
 | Setting | Where it is |

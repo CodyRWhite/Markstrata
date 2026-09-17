@@ -23,6 +23,7 @@
  *            markdownItTableCaptions.ts, markdownItAttributeGuard.ts,
  *            markdownItTableCells.ts, markdownItStrikethrough.ts,
  *            markdownItComments.ts, markdownItBlockIds.ts, markdownItSpanGuard.ts,
+ *            markdownItSpacedLinks.ts,
  *            markdownItTags.ts, markdownItTypes.ts, htmlSanitiser.ts
  */
 
@@ -37,6 +38,7 @@ import { attributeGuardPlugin } from './markdownItAttributeGuard';
 import { spanGuardPlugin } from './markdownItSpanGuard';
 import { tableCellPlugin } from './markdownItTableCells';
 import { strikethroughPlugin } from './markdownItStrikethrough';
+import { spacedLinkPlugin } from './markdownItSpacedLinks';
 import { commentPlugin } from './markdownItComments';
 import { headingSlug, legacyHeadingAnchor } from './wikiLinks';
 import { blockIdPlugin } from './markdownItBlockIds';
@@ -216,6 +218,11 @@ export class MarkdownProcessor {
     this.markdownIt.use(calloutPlugin);
     this.markdownIt.use(taskListPlugin);
     this.markdownIt.use(strikethroughPlugin);
+    /* Nothing gates this either. It only ever sees what markdown-it has
+       already refused to read as a link, and what it does with that is render
+       the link the author plainly meant rather than the raw brackets they
+       would otherwise get. There is no document that wants the brackets. */
+    this.markdownIt.use(spacedLinkPlugin);
     /* Nothing gates this: a comment is the author saying the words are not for
        the page, and rendering them anyway publishes what they wrote in
        private. */
