@@ -177,6 +177,11 @@ Two things it needs:
 > SharePoint decides what they may read. A renderer is not the place to point at
 > arbitrary files either.
 
+Writing that menu by hand is fine for a handful of documents and tedious for a
+library. [MarkstrataSiteBuilder](../site-builder/) generates it, along with the
+category pages the menu points at, from the folders the documents are already
+in.
+
 ## Relative links that are not wiki links
 
 A relative link resolves from the folder the document is in, not from the page
