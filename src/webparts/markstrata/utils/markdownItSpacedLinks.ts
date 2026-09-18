@@ -8,8 +8,8 @@
  * means the address a SharePoint page hands somebody cannot be pasted into a
  * link and left alone:
  *
- *   [ITP00024 - Access Control Plan](https://contoso.sharepoint.com/sites/
- *   ITPolicies/SitePages/ITP00024 - Access Control Plan.aspx)
+ *   [POL0042 - Starter Checklist](https://contoso.sharepoint.com/sites/
+ *   handbook/SitePages/POL0042 - Starter Checklist.aspx)
  *
  * markdown-it reads the destination up to the first space, looks for the
  * closing bracket where the space is, does not find it, and abandons the link.
