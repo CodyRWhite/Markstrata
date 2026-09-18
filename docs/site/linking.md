@@ -202,7 +202,7 @@ may not, and left to itself the whole thing arrives on the page as brackets and
 a stray half-link:
 
 ```markdown
-[ITP00024 - Access Control Plan](https://contoso.sharepoint.com/sites/ITPolicies/SitePages/ITP00024 - Access Control Plan.aspx)
+[POL0042 - Starter Checklist](https://contoso.sharepoint.com/sites/handbook/SitePages/POL0042 - Starter Checklist.aspx)
 ```
 
 Markstrata reads that as the link you meant. It only steps in where markdown
@@ -214,7 +214,7 @@ here, is angle brackets around the address. Worth teaching if you write a lot
 of these, because you can paste the address exactly as SharePoint gives it:
 
 ```markdown
-[ITP00024 - Access Control Plan](<https://contoso.sharepoint.com/sites/ITPolicies/SitePages/ITP00024 - Access Control Plan.aspx>)
+[POL0042 - Starter Checklist](<https://contoso.sharepoint.com/sites/handbook/SitePages/POL0042 - Starter Checklist.aspx>)
 ```
 
 Both produce the same link. The same goes for a picture whose file name has

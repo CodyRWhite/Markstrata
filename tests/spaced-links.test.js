@@ -34,18 +34,18 @@ const { looksLikeAddress, encodeSpaces } = spacedLinks;
 const render = (markdown) => new MarkdownProcessor({}).render(markdown).trim();
 
 const SHAREPOINT =
-  'https://contoso.sharepoint.com/sites/ITPolicies/SitePages/ITP00024 - Access Control Plan.aspx';
+  'https://contoso.sharepoint.com/sites/handbook/SitePages/POL0042 - Starter Checklist.aspx';
 const ENCODED =
-  'https://contoso.sharepoint.com/sites/ITPolicies/SitePages/ITP00024%20-%20Access%20Control%20Plan.aspx';
+  'https://contoso.sharepoint.com/sites/handbook/SitePages/POL0042%20-%20Starter%20Checklist.aspx';
 
 /* ------------------------------------------------- what it is meant to fix */
 
 test('the address a SharePoint page hands you is a link', () => {
-  const html = render(`[ITP00024 - Access Control Plan](${SHAREPOINT})`);
+  const html = render(`[POL0042 - Starter Checklist](${SHAREPOINT})`);
   assert.match(html, new RegExp(`href="${ENCODED.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}"`));
-  assert.match(html, />ITP00024 - Access Control Plan</);
+  assert.match(html, />POL0042 - Starter Checklist</);
   /* The failure it replaces: the brackets reaching the page as text. */
-  assert.ok(html.indexOf('[ITP00024') === -1, 'the raw brackets are still being rendered');
+  assert.ok(html.indexOf('[POL0042') === -1, 'the raw brackets are still being rendered');
 });
 
 test('inside a blockquote, which is where it was reported', () => {
@@ -55,8 +55,8 @@ test('inside a blockquote, which is where it was reported', () => {
 });
 
 test('a server relative address works the same way', () => {
-  assert.match(render('[Policy](/sites/ITPolicies/SitePages/Access Control Plan.aspx)'),
-    /href="\/sites\/ITPolicies\/SitePages\/Access%20Control%20Plan\.aspx"/);
+  assert.match(render('[Policy](/sites/handbook/SitePages/Starter Checklist.aspx)'),
+    /href="\/sites\/handbook\/SitePages\/Starter%20Checklist\.aspx"/);
 });
 
 test('so does a relative path to another document', () => {
@@ -67,8 +67,8 @@ test('so does a relative path to another document', () => {
 test('a label keeps its own markdown', () => {
   /* Parsed rather than pushed as text, so a label is not flattened by being
      rescued. */
-  assert.match(render(`[**ITP00024** the plan](${SHAREPOINT})`),
-    /<a [^>]*><strong>ITP00024<\/strong> the plan<\/a>/);
+  assert.match(render(`[**POL0042** the plan](${SHAREPOINT})`),
+    /<a [^>]*><strong>POL0042<\/strong> the plan<\/a>/);
 });
 
 test('a picture works too, and keeps its alt text', () => {
