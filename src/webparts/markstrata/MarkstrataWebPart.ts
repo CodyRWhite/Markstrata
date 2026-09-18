@@ -870,14 +870,55 @@ export default class MarkstrataWebPart extends BaseClientSideWebPart<IMarkstrata
   /**
    * Copies the rendered text into a searchable property. Read from the DOM so
    * markdown syntax, code fences and HTML never reach the index.
+   *
+   * On a SharePoint page only, and that is not a nicety.
+   *
+   * A page keeps a web part's properties in its own canvas, server side, where
+   * twenty thousand characters of document text is nothing. A Teams tab keeps
+   * them in the tab's configuration, which is small and is not a place to put
+   * a document. Written there it did not survive: what came back was truncated,
+   * and SPFx reads it with JSON.parse and then walks the result, so the tab
+   * died before any of this ran, with
+   *
+   *   Error initializing application.
+   *   TypeError: JSON.parse is not a function or its return value is not iterable
+   *
+   * and a reader saw "Sorry, something went wrong". Nothing about the tab
+   * looked wrong until it was reloaded: configuring one worked, the document
+   * rendered, and closing the pane is what saved the properties and broke it.
+   *
+   * There is nothing lost by leaving it out. The property exists so that
+   * SharePoint search can index a document rendered on a page; a Teams tab is
+   * not a page SharePoint indexes, so the text was being stored at some cost
+   * for no benefit at all.
    */
   private updateSearchText(): void {
+    if (!this.indexable()) {
+      /* Cleared rather than left alone: a tab configured by an older build has
+         the text in its settings already, and this is the one chance to take
+         it back out. */
+      if (this.properties.searchablePlainText) {
+        this.properties.searchablePlainText = '';
+      }
+      return;
+    }
+
     const article: HTMLElement | null = this.domElement.querySelector('.strata-content');
     if (!article) {
       return;
     }
     const text: string = (article.textContent || '').replace(/\s+/g, ' ').trim();
     this.properties.searchablePlainText = text.substring(0, MAX_SEARCH_TEXT);
+  }
+
+  /**
+   * Whether this web part's properties are somewhere a document's text can go.
+   *
+   * A SharePoint page, and nothing else. Read from the host rather than from a
+   * setting, because it is a fact about where the web part is running.
+   */
+  private indexable(): boolean {
+    return this.hostName() === 'sharepoint';
   }
 
   private showBanner(message: string, tone: string): void {
