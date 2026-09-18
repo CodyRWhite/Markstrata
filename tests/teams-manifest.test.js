@@ -172,6 +172,26 @@ test('the tab points at the web part that is actually deployed', () => {
   /* Teams substitutes this at load time; a tenant hostname written in here
      would work in one tenant and nowhere else. */
   assert.ok(url.indexOf('{teamSiteDomain}') !== -1, 'the address is not tenant-neutral');
+
+  /*
+   * And the site, which is a separate token and was missing.
+   *
+   * {teamSiteDomain} is only the tenant host. Without {teamSitePath} beside
+   * it the address is the root site collection rather than the site behind
+   * the team, so TeamsLogon was asked to sign the reader in to the wrong web
+   * and hand it a dest in that web's _layouts. It answered HTTP 500, and even
+   * had it loaded, the web part would have been looking at the root site's
+   * libraries rather than the channel's Files.
+   *
+   * Twice, because the address carries the path twice: once for the page
+   * being requested and once inside dest for the page it forwards to. The
+   * second is the one easily forgotten, so it is asserted separately rather
+   * than by counting.
+   */
+  assert.ok(url.indexOf('{teamSiteDomain}{teamSitePath}/_layouts/') !== -1,
+    'TeamsLogon is being asked for on the root site rather than the team site');
+  assert.ok(url.indexOf('dest={teamSitePath}/_layouts/') !== -1,
+    'dest points into the root site rather than the team site');
   /* Without this the configuration page renders the web part with no way to
      configure it, which is the placeholder everybody saw. */
   assert.ok(url.indexOf('openPropertyPane=true') !== -1, 'the pane would not open');
