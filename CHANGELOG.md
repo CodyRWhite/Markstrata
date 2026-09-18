@@ -8,6 +8,39 @@ is normally zero. `scripts/set-version.js` stamps it when a release is cut.
 
 Entries below 0.0.10.0 were written before the switch and are three-part.
 
+## 0.0.21.1
+
+Three fixes for Teams, where a tab could be added and configured and then
+would not survive being reloaded.
+
+- A tab in a channel now keeps working after its settings pane is closed. It
+  loaded, let an author pick a document, showed it, and then died on the reload
+  that closing the pane causes, with "Sorry, something went wrong" and
+  `TypeError: JSON.parse is not a function or its return value is not iterable`
+  behind it.
+  - The cause was a property this web part fills in for SharePoint search: up
+    to twenty thousand characters of the rendered document, copied in so a page
+    can be indexed. A page keeps its web parts' properties in its own canvas,
+    server side, where that is nothing. A Teams tab keeps them in the tab's
+    configuration, which is small. What came back was truncated, SPFx reads it
+    with `JSON.parse` and then walks the result, and the tab was dead before
+    any of this web part's own code ran, which is why nothing in the error
+    named it.
+  - The text is written on a SharePoint page and nowhere else now. Nothing is
+    lost: a Teams tab is not a page SharePoint indexes, so it was being stored
+    at a cost that bought nothing even when it fitted. A tab an older build
+    configured has it cleared on the next start, which is the one chance to
+    take it back out of settings that already carry it.
+
+- A tab's settings open against the site the team is behind rather than the
+  root of the tenant. The configuration address named the tenant host and left
+  the site path out, so the document picker offered the root site's libraries
+  and not the ones anybody in that channel would be looking for.
+
+- The example in the link documentation is an invented document rather than one
+  taken from a real library. Comments, examples and assertions only, and no
+  behaviour changed.
+
 ## 0.0.21.0
 
 - The toolbar can be kept in view while the document scrolls under it, which
