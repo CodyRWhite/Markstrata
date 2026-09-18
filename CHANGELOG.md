@@ -8,6 +8,27 @@ is normally zero. `scripts/set-version.js` stamps it when a release is cut.
 
 Entries below 0.0.10.0 were written before the switch and are three-part.
 
+## 0.0.21.2
+
+No change to the web part. The version exists so that Teams will accept the
+release, and that is worth writing down rather than leaving as an unexplained
+bump.
+
+The Teams manifest version is three parts where SharePoint's is four, so the
+build number is folded into the patch at a thousand: 0.0.21.1 reaches Teams as
+0.0.21001. A hand-patched manifest built while the channel tab fault was being
+diagnosed had already been installed under that exact number, and Teams refuses
+an app whose version it already holds, with nothing in the catalog to say why
+beyond a sync that fails again. So 0.0.21.1 could not be installed over the
+thing used to diagnose it.
+
+0.0.21.2 reaches Teams as 0.0.21002 and installs. The package it carries is the
+same one, byte for byte in everything but the stamped version.
+
+Worth knowing for next time: a version tried by hand is a version spent. The
+number cannot be reused, so a diagnostic build is better cut from a build
+number nobody intends to release from, well above the next real one.
+
 ## 0.0.21.1
 
 Three fixes for Teams, where a tab could be added and configured and then
