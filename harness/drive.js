@@ -2967,6 +2967,94 @@ const LIBRARY_PATH = '/sites/demo/Documents';
   });
 
   /*
+   * Where the document's text is allowed to be kept, which is not the same in
+   * the two hosts.
+   *
+   * A page holds a web part's properties in its own canvas, server side, and
+   * twenty thousand characters of document text there is nothing. A Teams tab
+   * holds them in the tab's configuration, which is small: written there the
+   * text came back truncated, SPFx read the truncation with JSON.parse, and the
+   * tab died before any of this code ran. Nothing looked wrong until the tab
+   * was reloaded, because closing the settings pane is what saved it.
+   *
+   * Both halves are checked, and the page half is the one that keeps this
+   * honest. An empty property in Teams alone would also be what giving up on
+   * the search index looks like, and this only holds if the page still indexes.
+   */
+  await step('the document text is indexed on a page and kept out of a Teams tab', async () => {
+    const kept = await page.evaluate(async () => {
+      const configured = {
+        contentSource: 'library',
+        selectedLibrary: '/sites/demo/Documents',
+        selectedFile: '/sites/demo/Documents/Runbooks/deploy.md'
+      };
+      const carried = {
+        contentSource: configured.contentSource,
+        selectedLibrary: configured.selectedLibrary,
+        selectedFile: configured.selectedFile,
+        searchablePlainText: 'Left in the tab by an older build.'
+      };
+      const read = () => {
+        const value = window.webPartHarness.settings().searchablePlainText;
+        return value === undefined ? '(the property is missing)' : value;
+      };
+
+      window.webPartHarness.inTeams(undefined);
+      await window.webPartHarness.start(configured);
+      const onPage = read();
+
+      window.webPartHarness.inTeams('desktop');
+      await window.webPartHarness.start(configured);
+      const inTeams = read();
+
+      /* A tab an older build configured is carrying the text already, and
+         starting is the one chance this has to take it back out. */
+      await window.webPartHarness.start(carried);
+      const carriedOver = read();
+      const heading = document.querySelector('#host h1');
+
+      window.webPartHarness.inTeams(undefined);
+
+      return {
+        onPage: onPage,
+        inTeams: inTeams,
+        carriedOver: carriedOver,
+        stillDrawn: heading ? (heading.textContent || '') : ''
+      };
+    });
+
+    /* The page half: the words a reader sees, and not the markdown that made
+       them. Reading it from the DOM is what keeps the syntax out, so a link's
+       destination is absent while the words of the link are there. */
+    if (kept.onPage.indexOf('Run the pipeline.') === -1) {
+      throw new Error('a page indexed ' + JSON.stringify(kept.onPage.slice(0, 120)));
+    }
+    if (kept.onPage.indexOf('rolling back') === -1) {
+      throw new Error('a link text is missing from the index: '
+        + JSON.stringify(kept.onPage.slice(0, 120)));
+    }
+    if (kept.onPage.indexOf('rollback.md') !== -1) {
+      throw new Error('a link destination reached the index: '
+        + JSON.stringify(kept.onPage.slice(0, 120)));
+    }
+
+    /* The Teams half, which is the fault this step exists for. */
+    if (kept.inTeams !== '') {
+      throw new Error('a Teams tab was given ' + kept.inTeams.length
+        + ' characters of the document: ' + JSON.stringify(kept.inTeams.slice(0, 120)));
+    }
+    if (kept.carriedOver !== '') {
+      throw new Error('a tab kept what an older build left in it: '
+        + JSON.stringify(kept.carriedOver));
+    }
+    /* It is the stored text that went, not the document. */
+    if (kept.stillDrawn.indexOf('Deploying') === -1) {
+      throw new Error('the tab stopped showing the document: '
+        + JSON.stringify(kept.stillDrawn));
+    }
+  });
+
+  /*
    * A web part nobody has set up.
    *
    * It used to answer that by rendering the sample document, which reads as a
