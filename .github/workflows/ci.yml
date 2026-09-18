@@ -1,13 +1,24 @@
 name: CI
 
 on:
+  # main only, and that is the whole saving. A branch push and the pull request
+  # opened from it are two events for one commit, so every commit on the way to
+  # a merge was linted, tested, packaged and driven through a browser twice: the
+  # runs were not merely similar, they were the same SHA. The pull_request
+  # trigger below is the one that gates a merge, so the branch push is the copy
+  # to drop. A branch with no pull request open is not covered until one is,
+  # which is the moment anybody else has to care about it.
+  #
+  # archive/** needed excluding when every branch was built. It no longer is.
   push:
-    # Everything except archive/**, which holds history rather than work in
-    # progress. archive/inkora-v1 is the project as it stood before the rename,
-    # built against a toolchain two years of dependencies ago; running CI over
-    # it tests nothing and reports a red mark on a branch nobody is going to
-    # fix. A negative pattern later in the list wins over the '**' before it.
-    branches: ['**', '!archive/**']
+    branches: [main]
+  # Deliberately unfiltered. A path filter here would skip the run, and a
+  # skipped run is not a passed one: where a check is required, the pull request
+  # waits for something that is never coming. The site's own documentation is
+  # also not free of code as far as these tests are concerned - tests/site,
+  # tests/brand and tests/sample-data all read docs/ and assets/, and the last
+  # of those is what keeps a real tenant's host out of the repository - so a
+  # docs-only change is a change these tests have an opinion about.
   pull_request:
   workflow_dispatch:
 

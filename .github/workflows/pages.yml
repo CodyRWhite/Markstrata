@@ -16,6 +16,24 @@ name: Docs site
 on:
   push:
     branches: [main]
+    # The site is not only prose. /demo/ and /themes/ are built by
+    # harness/build.js and demo/build-demo.js, which bundle the web part's real
+    # renderer classes out of src/ and pull in its stylesheets, so a code change
+    # changes the published site and src/ must not be listed here. What is
+    # listed is what the site build never reads, checked rather than assumed:
+    # the unit tests, the SPFx packaging config, and the Teams app package.
+    #
+    # An ignore list rather than an allow list, on purpose. If a new input to
+    # the site appears and nobody updates this file, an allow list silently
+    # stops publishing it and an ignore list merely rebuilds when it did not
+    # have to. Only one of those failures is quiet.
+    paths-ignore:
+      - 'tests/**'
+      - 'config/**'
+      - 'teams/**'
+      - '.github/workflows/ci.yml'
+      - '.github/workflows/release.yml'
+      - '.github/workflows/retire.yml'
   workflow_dispatch:
 
 permissions:
