@@ -70,6 +70,25 @@ top of it, so one document can vary without the rest of them moving. A
 stylesheet that will not load is a banner and never a failure to draw: the
 document is what somebody came to read, and it is readable unstyled.
 
+### Editing an HTML document
+
+The same split editor the markdown web part has: the source on one side, a live
+preview on the other, Edit / Split / Preview, the panes scrolling together,
+Ctrl+S, and one button that writes the document back to SharePoint.
+
+The stylesheet is a tab beside the HTML rather than a third column, so whichever
+an author is working on gets the whole width and the preview beside it is the
+same preview either way. That tab edits a stylesheet typed into the pane; one
+from a library or a URL belongs to that file, and other web parts are probably
+reading it, so it is shown read only with a line saying where it lives.
+
+The preview is the page's own rendering with the furniture switched off, not a
+second way of drawing a document. A preview that rendered differently would be
+worth less than no preview, because an author would tune a document against one
+renderer and ship it to another. The one thing it cannot show is a document
+whose scripts run, since those are paused for anybody editing the page, and the
+editor says so above the panes.
+
 ### Also in the HTML web part
 
 - **Full bleed** takes the reading measure off, for a document that is a
@@ -105,6 +124,43 @@ pane.
   is one theme control rather than two that drift. Each pane still lays out its
   own pages, because the pages are where the two genuinely differ.
   `propertyPane.ts` drops from about 600 lines to 282.
+
+### On the website, and in the toolbox
+
+`/html/` is the HTML web part running rather than a page about it: the real web
+part, the real property pane, the real editor, against a stand-in library
+holding a whole HTML file and a stylesheet several web parts could share. Open
+the properties there and the document is on the first page with the stylesheet
+on a page of its own, which answers what the separation is for in a way prose
+cannot.
+
+The HTML web part has a toolbox tile of its own as well. The markdown one has
+always carried a rendered tile, and shipping the second web part with only a
+Fluent glyph undid half the point of giving the two separate names. Same editor,
+same tilt, same palette; one shows markdown source and the other an HTML file
+with a `<style>` block in it.
+
+### Driven in a real browser
+
+Everything that matters about the HTML web part is a question only a browser can
+answer. Whether a shadow root really keeps an author's stylesheet off the page.
+Whether a sandboxed frame really is the opaque origin its sandbox claims. Whether
+the stylesheet narrowing survives Chromium's own parser rather than a test that
+reads strings. So there is a third harness page running the real web part, and
+eighteen driver steps against it.
+
+The first run earned it. Shadow mode threw and took the whole render with it:
+the contents list is inserted into the layout before the article, and in shadow
+mode the article is inside a shadow root, which the layout has never heard of.
+The harness page also never loaded the HTML web part's own stylesheet, so the
+frame, the shadow mount and full bleed had no styling at all on the page that
+exists to check them.
+
+And one check was worth nothing. The stylesheet leak check measured a paragraph
+the page had given an id and a background of its own, and it passed with the
+narrowing switched off: an id beats a bare element selector, so what it measured
+was CSS precedence. The probe is an unstyled paragraph now, and it was verified
+the other way round before being trusted.
 
 ### Two build fixes worth recording
 

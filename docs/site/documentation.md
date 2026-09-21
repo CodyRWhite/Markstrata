@@ -1,8 +1,11 @@
 # Settings
 
-Every field in the property pane, in the order the pane puts them. The pane has
-five pages and this page follows them: **Content**, **Appearance**, **Code**,
-**Contents** and **Chrome**.
+Every field in the property pane, in the order the pane puts them. Most of this
+page is about **Markstrata - Markdown**, whose pane has five pages, and follows
+them: **Content**, **Appearance**, **Code**, **Contents** and **Chrome**.
+
+**Markstrata - HTML** shares almost all of those, and
+[the HTML web part](#the-html-web-part) near the end covers what is its own.
 
 Three subjects have pages of their own here, because they are behaviours rather
 than settings and explaining them properly takes more than a table row:
@@ -242,6 +245,146 @@ end of the document.
 Both need a file from a document library, since that is the only source with any
 of those to show.
 
+## The HTML web part
+
+**Markstrata - HTML** draws an HTML document instead of a markdown one. It is a
+separate web part with a separate entry in the toolbox, and you can put one of
+each on a page.
+
+Everything around the document is the same: the theme, the toolbar, the contents
+list, the trail through linked documents, the file footer, the export options,
+reading time, the button back to the top. Every setting above that is not about
+markdown itself applies here too, in the same place in the pane.
+[See it running](../html/).
+
+What is different is on two pages of its own.
+
+### The stylesheet
+
+The stylesheet is chosen separately from the document, on its own page of the
+pane, with its own library, folder and file pickers. That is the point of it:
+one file in a library can dress every HTML web part in a site, and changing that
+one file changes all of them at once.
+
+| Source | What it does |
+|---|---|
+| None | The document styles itself, or takes the theme's |
+| Type it here | A stylesheet stored with this one web part |
+| File in a document library | The shared case. Several web parts, one file |
+| File at a URL | A stylesheet kept outside SharePoint |
+
+A document's own `<style>` block still applies on top of whatever the pane
+names, so one document can vary without the rest of them moving.
+
+A stylesheet that will not load is a message above the document, never a failure
+to draw it. The document is what somebody came to read and it is readable
+unstyled.
+
+### Render mode
+
+How much of the page the document is allowed to be part of. The three answers
+are different bargains rather than three ways of doing one thing.
+
+| Mode | What you get | What it costs |
+|---|---|---|
+| Inline | The document is part of the page. Markstrata's typography styles it, pictures zoom, tables sort, the contents sidebar works, links to neighbouring documents open in the web part | The page's own styling reaches the document |
+| Shadow DOM | The document is behind a boundary, so it looks exactly as written and nothing on the page can restyle it. Everything built from the rendered document still works | Markstrata's typography does not reach in either: the author owns the look |
+| Frame | A document of its own, in a sandbox. Nothing in the page can reach it and nothing in it can reach the page. The only mode where scripts can run | No zooming, no sorting, nothing to export, and the contents list is drawn inside the frame |
+
+In inline mode the stylesheet is rewritten so that it applies only inside the
+web part: an author's `body { background: black }` becomes a rule about their own
+document. In shadow mode no rewriting is needed, because the boundary is what
+contains it. The theme's custom properties do cross a boundary, so a document
+there can use `var(--strata-bg)` and follow the reader's light or dark choice on
+purpose.
+
+Headings are given ids in every mode, using the same rule markdown uses, so a
+contents list, a `#fragment` and a shared link all have something to land on.
+Hand-written HTML rarely carries any. An id the author wrote is never rewritten.
+
+### Scripts
+
+Off by default. Offered in frame mode only, because a sandboxed frame is the
+only place a script can run without being able to reach the page around it or
+your SharePoint sign-in.
+
+> [!IMPORTANT] Turning scripts on stops the document being cleaned up
+> Sanitising is what removes the scripts, so with the setting on, everything in
+> the file runs. The sandbox is what contains it. Only turn it on for a file you
+> trust, from a library you control.
+
+With scripts off, the frame is given `allow-same-origin`, which is safe because
+there is no script in it to use it, and useful because it is what lets the web
+part measure the document and fit the frame to it. Links to neighbouring
+documents replace the page, which is what following a link should do.
+
+With scripts on, the frame is an opaque origin instead: it cannot see the page
+and the page cannot see in. `allow-same-origin` and `allow-scripts` are never
+granted together, because together they are not a sandbox at all. Top navigation
+is withheld as well, since a script could rewrite a link's address, so links
+open in a new tab. And **Fit content** is not offered, because a frame that
+cannot be read cannot be measured.
+
+Scripts are also paused while the page is being edited. An author arranging a
+page is clicking on web parts to select them, not reading a document.
+
+### Height, full bleed and narrow screens
+
+| Setting | What it does |
+|---|---|
+| Fit content | As tall as the document is |
+| Fixed | A set number of pixels, and the rest scrolls |
+| Full window | At least the room left below it on the page |
+| Full bleed | Takes the reading measure off, so the document uses the whole width. Worth it for a dashboard, a wide table or a diagram; not for prose |
+| Show on narrow screens | Off hides the whole web part below 600px |
+
+**Show on narrow screens** is a width and not a device. SPFx does not say
+whether a web part is being drawn in the mobile app or in an email, so nothing
+here claims to know. Use it for a document laid out wide, which reads better
+hidden than squeezed.
+
+### Editing an HTML document
+
+The same split editor: the source on one side, a live preview on the other,
+Edit / Split / Preview, Ctrl+S, and one button that writes the document back to
+SharePoint.
+
+The stylesheet is a tab beside the HTML rather than a third column, so whichever
+you are working on gets the whole width and the preview beside it is the same
+preview either way. That tab edits a stylesheet typed into the pane. One from a
+library or a URL belongs to that file, and other web parts are probably reading
+it, so it is shown read only with a line saying where it lives.
+
+The preview is the page's own rendering with the furniture switched off, so the
+render mode, the sanitising and the stylesheet narrowing are all the real ones.
+The one thing it cannot show is a document whose scripts run, because those are
+paused for anybody editing the page; the editor says so above the panes.
+
+### What is not in the HTML web part
+
+Everything that is markdown syntax rather than a rendered document: syntax
+highlighting, the code block header and line numbers, Mermaid diagrams, KaTeX
+maths, wiki links, tags, heading anchors as a setting, and **Allow raw HTML**.
+The last one would be a switch allowing the web part to do its job.
+
+There is no **Fill the available height** toggle either. Height is one setting
+with three answers here, and two controls that can disagree about the same thing
+are worse than one.
+
+### Security in the HTML web part
+
+The document is sanitised every time, in every mode, with one exception: a frame
+with scripts turned on, where the sandbox is the safety and the pane says so.
+The same sanitiser, with the same list, as the markdown web part's raw HTML
+setting above.
+
+A `<style>` block is the one thing handled differently. The sanitiser removes
+one, and silently, so the styles are lifted out of the file before it is
+sanitised and put back where they belong: narrowed to the web part in inline
+mode, inside the boundary in shadow mode, and inside the document in a frame.
+Without that step an author's document would render with none of their styling
+and nothing anywhere to explain it.
+
 ## Frontmatter
 
 YAML frontmatter at the top of a file, the way Obsidian, Hugo and Jekyll write
@@ -299,6 +442,7 @@ has a known vulnerability.
 |---|---|
 | [Install](../install/) | The package, the App Catalog, upgrades |
 | [Microsoft Teams](../teams/) | The same web part as a channel tab |
+| [The HTML web part](../html/) | Markstrata - HTML, running in your browser |
 | [Syntax](../syntax/) | Every piece of markdown, with what it turns into |
 | [THEMES.md](https://github.com/CodyRWhite/Markstrata/blob/main/THEMES.md) | The token contract, and how to add a fourth theme |
 | [CONTRIBUTING.md](https://github.com/CodyRWhite/Markstrata/blob/main/CONTRIBUTING.md) | Branches, commits, releases |
