@@ -9,10 +9,11 @@
     "types": [
       "webpack-env"
     ],
-    "rootDir": "src/webparts/markstrata/utils"
+    "rootDir": "src/webparts"
   },
   "include": [
     "src/types/**/*.d.ts",
+    "src/webparts/shared/scopedCss.ts",
     "src/webparts/markstrata/utils/MarkdownProcessor.ts",
     "src/webparts/markstrata/utils/htmlSanitiser.ts",
     "src/webparts/markstrata/utils/ThemeManager.ts",

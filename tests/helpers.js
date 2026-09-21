@@ -24,17 +24,33 @@ const TEST_LIB = path.join(__dirname, '..', 'temp', 'test-lib');
  * test file that asks for a helper, which reads as the whole suite breaking
  * rather than as one line of configuration being out of date.
  */
+/*
+ * The test build spans more than one folder now, because the two web parts
+ * share a base class and the modules beneath it. rootDir moved up to
+ * src/webparts to take them all in, which put markstrata/utils/ in front of
+ * everything that used to compile flat - so the prefix lives here rather than
+ * in the twenty-odd callers.
+ */
 function lib(name) {
+  return fromBuild(path.join('markstrata', 'utils', name), name,
+    `src/webparts/markstrata/utils/${name}.ts`);
+}
+
+/** The same, for a module both web parts share. */
+function shared(name) {
+  return fromBuild(path.join('shared', name), name, `src/webparts/shared/${name}.ts`);
+}
+
+function fromBuild(where, name, source) {
   try {
-    return require(path.join(TEST_LIB, name));
+    return require(path.join(TEST_LIB, where));
   } catch (error) {
     if (error.code !== 'MODULE_NOT_FOUND') {
       throw error;
     }
     throw new Error(
-      `${name} is not in the test build. Add `
-      + `"src/webparts/markstrata/utils/${name}.ts" to the include list in `
-      + 'tsconfig.test.json, which is what scripts/run-tests.js compiles.'
+      `${name} is not in the test build. Add "${source}" to the include list `
+      + 'in tsconfig.test.json, which is what scripts/run-tests.js compiles.'
     );
   }
 }
@@ -73,5 +89,6 @@ module.exports = {
   tables: lib('tables'),
   folderTree: lib('folderTree'),
   headingLanding: lib('headingLanding'),
-  exportNaming: lib('exportNaming')
+  exportNaming: lib('exportNaming'),
+  scopedCss: shared('scopedCss')
 };
