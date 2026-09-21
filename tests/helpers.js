@@ -92,5 +92,8 @@ module.exports = {
   exportNaming: lib('exportNaming'),
   scopedCss: shared('scopedCss'),
   htmlDocument: shared('htmlDocument'),
-  documentNaming: shared('documentNaming')
+  documentNaming: shared('documentNaming'),
+  headingIds: shared('headingIds'),
+  htmlFrame: shared('htmlFrame'),
+  scrolling: lib('scrolling')
 };

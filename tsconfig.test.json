@@ -16,6 +16,8 @@
     "src/webparts/shared/scopedCss.ts",
     "src/webparts/shared/htmlDocument.ts",
     "src/webparts/shared/documentNaming.ts",
+    "src/webparts/shared/headingIds.ts",
+    "src/webparts/shared/htmlFrame.ts",
     "src/webparts/markstrata/utils/MarkdownProcessor.ts",
     "src/webparts/markstrata/utils/htmlSanitiser.ts",
     "src/webparts/markstrata/utils/ThemeManager.ts",
@@ -37,6 +39,7 @@
     "src/webparts/markstrata/utils/tables.ts",
     "src/webparts/markstrata/utils/folderTree.ts",
     "src/webparts/markstrata/utils/headingLanding.ts",
+    "src/webparts/markstrata/utils/scrolling.ts",
     "src/webparts/markstrata/utils/exportNaming.ts"
   ]
 }
