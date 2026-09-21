@@ -36,13 +36,13 @@
  * .NOTES
  * Since:     0.0.22.0
  * Ships in:  both web part bundles
- * Requires:  ThemeManager.ts, backToTop.ts, ViewModeRenderer.ts, tocWidth.ts,
+ * Requires:  ThemeManager.ts, backToTop.ts, documentChrome.ts, tocWidth.ts,
  *            SharePointService.ts
  */
 
 import { ThemeFamily, ColorMode } from '../markstrata/utils/ThemeManager';
 import { BackToTop } from '../markstrata/utils/backToTop';
-import { TocPosition } from '../markstrata/utils/ViewModeRenderer';
+import { TocPosition } from './documentChrome';
 import { TocWidthMode, TocWidthUnit } from '../markstrata/utils/tocWidth';
 import { IFileMetadata } from '../markstrata/utils/SharePointService';
 

@@ -15,6 +15,7 @@
     "src/types/**/*.d.ts",
     "src/webparts/shared/scopedCss.ts",
     "src/webparts/shared/htmlDocument.ts",
+    "src/webparts/shared/documentNaming.ts",
     "src/webparts/markstrata/utils/MarkdownProcessor.ts",
     "src/webparts/markstrata/utils/htmlSanitiser.ts",
     "src/webparts/markstrata/utils/ThemeManager.ts",

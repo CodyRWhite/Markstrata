@@ -91,5 +91,6 @@ module.exports = {
   headingLanding: lib('headingLanding'),
   exportNaming: lib('exportNaming'),
   scopedCss: shared('scopedCss'),
-  htmlDocument: shared('htmlDocument')
+  htmlDocument: shared('htmlDocument'),
+  documentNaming: shared('documentNaming')
 };
