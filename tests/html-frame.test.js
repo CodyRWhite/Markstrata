@@ -270,3 +270,39 @@ test('an author\'s script is kept, because that mode is what it is for', () => {
   });
   assert.ok(written.indexOf('window.ran=1') !== -1, written);
 });
+
+// ----------------------------------------------------- the theme, in a frame
+
+/*
+ * A frame is a document of its own, and a custom property inherits down a tree
+ * that a frame is not in. So an author's `var(--strata-bg)` resolved to
+ * nothing in here while working in both other render modes - the one format
+ * they are told to use, silently not working in one of the three.
+ */
+test('the theme\'s tokens are put in the frame, in front of the author\'s CSS', () => {
+  const html = parsed('<p>hi</p>', {
+    tokens: ':root { --strata-bg: #0d1117; }',
+    css: 'p { color: var(--strata-text); }'
+  });
+  const sheets = Array.prototype.slice.call(html.querySelectorAll('style'))
+    .map((style) => style.textContent);
+  assert.equal(sheets.length, 2, `expected tokens and the sheet: ${JSON.stringify(sheets)}`);
+  assert.match(sheets[0], /--strata-bg/, 'the tokens are not first');
+  assert.match(sheets[1], /var\(--strata-text\)/);
+});
+
+test('and the mode and theme go on the frame\'s own root', () => {
+  /* So that one format works in all three modes: a stylesheet written as
+     [data-strata-mode="dark"] .card selects on the same attribute whichever
+     mode drew the document. */
+  const html = parsed('<p>hi</p>', { mode: 'dark', theme: 'github' });
+  assert.equal(html.documentElement.getAttribute('data-strata-mode'), 'dark');
+  assert.equal(html.documentElement.getAttribute('data-strata-theme'), 'github');
+});
+
+test('a frame told neither carries neither', () => {
+  const html = parsed('<p>hi</p>');
+  assert.equal(html.documentElement.getAttribute('data-strata-mode'), null);
+  assert.equal(html.querySelectorAll('style').length, 0);
+});
+

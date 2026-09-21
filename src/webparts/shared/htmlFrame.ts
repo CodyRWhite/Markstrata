@@ -106,6 +106,19 @@ export interface IFrameOptions {
   base?: string;
   /** A stylesheet to put in front of the author's, usually the shared one. */
   css?: string;
+  /**
+   * The theme's custom properties, as a `:root` block. A frame is a document
+   * of its own and nothing inherits into it, so without these an author's
+   * `var(--strata-bg)` resolves to nothing in here while working in both other
+   * render modes.
+   */
+  tokens?: string;
+  /**
+   * The colour mode and the theme, so that a stylesheet can select on them the
+   * same way it does in the other two modes.
+   */
+  mode?: string;
+  theme?: string;
   /** Which extensions count as a neighbouring document worth opening here. */
   documentExtensions: RegExp;
   /**
@@ -138,7 +151,12 @@ export function frameDocument(raw: string, options: IFrameOptions): string {
   const parsed: Document = new DOMParser().parseFromString(raw || '', 'text/html');
 
   addBase(parsed, options.base);
-  addStyles(parsed, options.css);
+  addState(parsed, options.mode, options.theme);
+  /* Tokens first, then the shared sheet, then the author's own, which is
+     already in the markup: each may lean on the one before it. In one call
+     because the order is the point, and two calls each inserting at the head's
+     start put the second one in front of the first. */
+  addStyles(parsed, [options.tokens, options.css]);
   ensureHeadingIds(parsed.body);
   retargetLinks(parsed, options);
   addContents(parsed, options.contents);
@@ -163,20 +181,48 @@ function addBase(parsed: Document, base: string | undefined): void {
 }
 
 /**
- * The shared stylesheet, in front of whatever the author wrote.
+ * The stylesheets that come before the author's, in the order given.
  *
- * In front rather than after, so that an author's own rule wins where the two
- * say different things about the same element. The document is theirs.
+ * In front of the author's rather than after, so that their own rule wins
+ * where the two say different things about the same element. The document is
+ * theirs.
+ *
+ * In order, which is why they arrive together rather than one call each: each
+ * inserts after the one before it, and two calls that both inserted at the
+ * head's start would put the second in front of the first. The tokens have to
+ * come first, because the sheet after them reads them.
  */
-function addStyles(parsed: Document, css: string | undefined): void {
-  if (!css) {
-    return;
-  }
-  const style: HTMLStyleElement = parsed.createElement('style');
-  style.textContent = css;
-  /* After the base, before the author's own head content. */
+function addStyles(parsed: Document, sheets: (string | undefined)[]): void {
+  /* After the base, so a relative address in a sheet resolves, and before the
+     author's own head content. */
   const base: Element | null = parsed.head.querySelector('base');
-  parsed.head.insertBefore(style, base ? base.nextSibling : parsed.head.firstChild);
+  let after: Node | null = base;
+
+  sheets.forEach((css: string | undefined) => {
+    if (!css) {
+      return;
+    }
+    const style: HTMLStyleElement = parsed.createElement('style');
+    style.textContent = css;
+    parsed.head.insertBefore(style, after ? after.nextSibling : parsed.head.firstChild);
+    after = style;
+  });
+}
+
+/**
+ * The colour mode and the theme, on the frame's own root element.
+ *
+ * So that one format works in all three render modes: a stylesheet written as
+ * `[data-strata-mode="dark"] .card` selects on the element the web part puts
+ * those attributes on, whichever mode drew the document.
+ */
+function addState(parsed: Document, mode: string | undefined, theme: string | undefined): void {
+  if (mode) {
+    parsed.documentElement.setAttribute('data-strata-mode', mode);
+  }
+  if (theme) {
+    parsed.documentElement.setAttribute('data-strata-theme', theme);
+  }
 }
 
 /** The contents list, first thing in the body, where a reader looks for it. */

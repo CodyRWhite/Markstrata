@@ -213,6 +213,48 @@ enhancer never reached it before.
 Both faults are driven now, in the arrangement that showed them, and the
 diagnosis was checked against the old stylesheet rather than assumed.
 
+### One stylesheet format for light and dark
+
+An author asked what format a stylesheet should follow to support the mode
+switching, and the honest answer was that no format worked properly. Half of it
+worked in two of the three render modes and the other half worked in none.
+
+`var(--strata-bg)` and the rest of the token contract inherit, so they reached
+inline and shadow mode. A frame is a document of its own and nothing inherits
+into one, so there they resolved to nothing.
+
+A rule for the mode could not be written at all. The web part puts
+`data-strata-mode` on its root, and in inline mode a stylesheet is narrowed to
+the document inside that root - so `[data-strata-mode="dark"] .card` was
+rewritten into a search for that attribute somewhere inside the document, where
+it never is. The rule matched nothing in either mode, silently.
+
+Three changes, and one format now works everywhere.
+
+- A selector that starts with one of the web part's own `data-strata-`
+  attributes is a statement about the web part, so it is attached to the root
+  rather than made a descendant of it. The attribute is kept: dropping it would
+  have been worse than the fault, because a dark rule that applies in both
+  modes is a document that is wrong half the time rather than merely unstyled.
+- The theme and the mode are put on the element a stylesheet is narrowed to, so
+  there is something there for that selector to match. In shadow mode the same
+  two attributes do the same job for a stylesheet that is not scoped at all.
+- A frame is given the theme's tokens and the same two attributes. The tokens
+  are read off the web part as it stands rather than from a list kept in the
+  code, because a list would be a second copy of the token contract and the two
+  would part company the first time a theme gained a colour.
+
+`prefers-color-scheme` is not the answer and the documentation says so: it
+follows the operating system while the web part follows the pane and the
+reader's own choice in the toolbar, so on a dark laptop showing a page set to
+light the two disagree and the document comes out half in each.
+
+All six combinations - three render modes, two colour modes - are driven, with
+outline colours nothing else uses so that the right branch of the stylesheet is
+the only thing that could have painted them. Writing that check found an
+ordering fault as well: the tokens and the shared stylesheet were each inserted
+at the head's start, which put the second one in front of the first.
+
 ### A document named on the page's address
 
 `?strataDoc=folder/page.html` was refused. The value carries the heading inside

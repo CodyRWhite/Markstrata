@@ -264,6 +264,20 @@ function rewriteAtRule(rule: IAtRule, root: string): string {
  * Split at the top level only: `:is(a, b)` is one selector and the comma
  * inside its brackets is not a separator.
  */
+/*
+ * The web part's own state, as an author can select on it.
+ *
+ * One or more `[data-strata-*]` attributes at the very start of a selector,
+ * optionally after `:root` or `:host`, which an author may well write out of
+ * habit. Anything after them is left alone: `[data-strata-mode="dark"] .card`
+ * keeps its `.card`.
+ *
+ * Only the attributes this web part puts on its own root are recognised. An
+ * author's own `[data-something]` is theirs and stays a descendant.
+ */
+const LEADING_STATE: RegExp =
+  /^((?::root|:host)?((?:\[data-strata-[a-z-]+(?:[~|^$*]?=(?:"[^"]*"|'[^']*'|[^\]]*))?\])+))/i;
+
 export function scopeSelectorList(selectors: string, root: string): string {
   const parts: string[] = splitTopLevel(selectors, ',');
   return parts
@@ -286,6 +300,27 @@ export function scopeSelector(selector: string, root: string): string {
   if (WHOLE_DOCUMENT.indexOf(selector.toLowerCase()) !== -1) {
     return root;
   }
+
+  /*
+   * A selector that starts with one of the web part's own state attributes is
+   * a statement about the web part, not about something inside it, so it is
+   * attached to the root rather than made a descendant of it.
+   *
+   * This is what lets an author write a rule for dark mode. Prefixed the
+   * ordinary way, `[data-strata-mode="dark"] .card` becomes
+   * `.scope [data-strata-mode="dark"] .card` - and the attribute is on the
+   * scope element itself, so that asks for one inside it and matches nothing,
+   * ever. An author had no way to write a dark rule at all.
+   */
+  const state: RegExpExecArray | null = LEADING_STATE.exec(selector);
+  if (state) {
+    /* The attributes are kept and hung on the root; a `:root` or `:host` in
+       front of them is what the root already is, so it goes. Dropping the
+       attributes instead would be worse than the fault this fixes: a dark rule
+       would then apply in both modes rather than in neither. */
+    return `${root}${state[2]}${selector.slice(state[1].length)}`;
+  }
+
   /*
    * A selector that starts at the document and descends, like `body .note`.
    * The leading part is replaced rather than prefixed, or the result asks for

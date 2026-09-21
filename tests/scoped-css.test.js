@@ -201,3 +201,76 @@ test('scopeSelector is the whole judgement, and is testable on its own', () => {
   assert.equal(scopeSelector('body', ROOT), ROOT);
   assert.equal(scopeSelector('', ROOT), '');
 });
+
+/*
+ * Light and dark, which an author had no way to write at all.
+ *
+ * The web part puts data-strata-mode on the element the stylesheet is narrowed
+ * to. Prefixed the ordinary way, `[data-strata-mode="dark"] .card` becomes
+ * `.scope [data-strata-mode="dark"] .card` - and that asks for the attribute
+ * on something inside the scope, where it never is. The rule matched nothing
+ * in either mode.
+ *
+ * Attaching it to the root is the fix, and dropping it would be worse than the
+ * fault: a dark rule that applies in both modes is a document that is wrong
+ * half the time rather than merely unstyled.
+ */
+test('a rule for the colour mode attaches to the root, attribute and all', () => {
+  assert.equal(
+    scopeSelector('[data-strata-mode="dark"] .card', '.wp'),
+    '.wp[data-strata-mode="dark"] .card'
+  );
+});
+
+test('and the attribute is kept, not dropped', () => {
+  const scoped = scopeSelector('[data-strata-mode="dark"] .card', '.wp');
+  assert.match(scoped, /data-strata-mode="dark"/,
+    'the rule would apply in both modes');
+});
+
+test('several of the web part\'s attributes at once', () => {
+  assert.equal(
+    scopeSelector('[data-strata-mode="dark"][data-strata-theme="github"] .card', '.wp'),
+    '.wp[data-strata-mode="dark"][data-strata-theme="github"] .card'
+  );
+});
+
+test('a :root or :host an author wrote out of habit is absorbed', () => {
+  for (const written of [':root[data-strata-mode="dark"] .card',
+    ':host[data-strata-mode="dark"] .card']) {
+    assert.equal(scopeSelector(written, '.wp'), '.wp[data-strata-mode="dark"] .card',
+      `${written} was not absorbed`);
+  }
+});
+
+test('the state can be the whole selector', () => {
+  assert.equal(
+    scopeSelector('[data-strata-mode="dark"]', '.wp'),
+    '.wp[data-strata-mode="dark"]'
+  );
+});
+
+test('a combinator after it survives', () => {
+  assert.equal(
+    scopeSelector('[data-strata-mode="dark"] > .card', '.wp'),
+    '.wp[data-strata-mode="dark"] > .card'
+  );
+});
+
+test('an author\'s own data attribute is still theirs', () => {
+  /* Only the attributes this web part puts on its own root are absorbed.
+     Anything else describes something inside the document and stays a
+     descendant, or an author could not select on their own markup. */
+  assert.equal(
+    scopeSelector('[data-status="open"] .card', '.wp'),
+    '.wp [data-status="open"] .card'
+  );
+});
+
+test('and one in the middle of a selector is left where it is', () => {
+  assert.equal(
+    scopeSelector('.panel [data-strata-mode="dark"]', '.wp'),
+    '.wp .panel [data-strata-mode="dark"]'
+  );
+});
+

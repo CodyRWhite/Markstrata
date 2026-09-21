@@ -343,6 +343,47 @@ whether a web part is being drawn in the mobile app or in an email, so nothing
 here claims to know. Use it for a document laid out wide, which reads better
 hidden than squeezed.
 
+### Writing a stylesheet that follows light and dark
+
+There is one format, and it works in all three render modes. Two rules to it.
+
+**Take colours from the theme's own tokens** rather than writing them out. They
+are custom properties on the web part, the full list is in
+[THEMES.md](https://github.com/CodyRWhite/Markstrata/blob/main/THEMES.md), and
+they change with the theme and the mode on their own. A fallback after the comma
+is worth writing: it is what a reader sees if a token is ever renamed.
+
+```css
+.card {
+  background: var(--strata-bg-elevated, #f6f8fa);
+  color: var(--strata-text, #1f2328);
+  border: 1px solid var(--strata-border, #d1d9e0);
+}
+```
+
+**Select on `[data-strata-mode]`** for anything the tokens do not cover, a
+shadow or a picture swap being the usual reasons. The attribute is on the
+element your stylesheet applies to, so start the selector with it:
+
+```css
+[data-strata-mode="dark"] .card { box-shadow: none; }
+[data-strata-mode="light"] .card { box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08); }
+```
+
+`[data-strata-theme="github"]`, `"obsidian"` and `"vscode"` work the same way
+if a document needs to differ by theme as well.
+
+> [!IMPORTANT] Do not use `prefers-color-scheme`
+> It follows the operating system, and the web part follows the setting in the
+> pane and the reader's own choice in the toolbar. On a dark laptop showing a
+> page an author set to light, the two disagree and the document comes out half
+> in each. `[data-strata-mode]` is the same question asked of the right thing.
+
+Both rules work inline, behind a shadow boundary and in a frame. A frame is a
+document of its own and nothing inherits into one, so the web part copies the
+theme's tokens and the two attributes into it; there is nothing to write
+differently.
+
 ### Editing an HTML document
 
 The same split editor: the source on one side, a live preview on the other,

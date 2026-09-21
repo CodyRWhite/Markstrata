@@ -5028,6 +5028,80 @@ const LIBRARY_PATH = '/sites/demo/Documents';
     }
   });
 
+  await step('one stylesheet follows light and dark in all three modes', async () => {
+    /*
+     * The format an author is told to use, checked in every mode it has to
+     * work in, because it did not work in any of them.
+     *
+     * var(--strata-...) inherits, so it reached inline and shadow - but a
+     * frame is a document of its own and nothing inherits into one, so the
+     * tokens resolved to nothing there. And a rule for the mode could not be
+     * written at all: the web part puts data-strata-mode on the element the
+     * stylesheet is narrowed to, and scoping turned the selector into a search
+     * for that attribute somewhere inside, where it never is.
+     *
+     * Six combinations, and the outline colours are values nothing else uses,
+     * so the right branch of the stylesheet is the only thing that could have
+     * painted them.
+     */
+    const CSS = '.card { background: var(--strata-bg-elevated); }'
+      + '[data-strata-mode="dark"] .card { outline: 3px solid rgb(0, 200, 0); }'
+      + '[data-strata-mode="light"] .card { outline: 3px solid rgb(200, 0, 0); }';
+    const DOC = '<h1>Dashboard</h1><div class="card">A card</div>';
+    const problems = [];
+
+    for (const renderMode of ['inline', 'shadow', 'frame']) {
+      for (const colorMode of ['light', 'dark']) {
+        const seen = await page.evaluate(async (asked) => {
+          await window.htmlHarness.start({
+            contentSource: 'manual', selectedLibrary: '', selectedFile: '',
+            htmlContent: asked.doc, cssSource: 'manual', cssContent: asked.css,
+            renderMode: asked.renderMode, colorMode: asked.colorMode,
+            themeFamily: 'github'
+          });
+          await new Promise((resolve) => setTimeout(resolve, 1000));
+
+          let card = null;
+          if (asked.renderMode === 'inline') {
+            card = document.querySelector('#host .card');
+          } else if (asked.renderMode === 'shadow') {
+            const mount = document.querySelector('#host .strata-shadow');
+            card = mount && mount.shadowRoot ? mount.shadowRoot.querySelector('.card') : null;
+          } else {
+            const frame = document.querySelector('#host iframe.strata-frame');
+            card = frame && frame.contentDocument
+              ? frame.contentDocument.querySelector('.card') : null;
+          }
+          if (!card) { return { missing: true }; }
+
+          const view = card.ownerDocument.defaultView || window;
+          const style = view.getComputedStyle(card);
+          return {
+            outline: style.outlineColor,
+            /* A token that resolved to nothing leaves the background at the
+               initial transparent, so this is the token working. */
+            token: style.backgroundColor
+          };
+        }, { renderMode: renderMode, colorMode: colorMode, css: CSS, doc: DOC });
+
+        const where = `${renderMode}/${colorMode}`;
+        const wanted = colorMode === 'dark' ? 'rgb(0, 200, 0)' : 'rgb(200, 0, 0)';
+        if (seen.missing) {
+          problems.push(`${where}: nothing was drawn`);
+        } else if (seen.outline !== wanted) {
+          problems.push(`${where}: the mode rule did not apply, outline is ${seen.outline}`);
+        } else if (seen.token === 'rgba(0, 0, 0, 0)') {
+          problems.push(`${where}: var(--strata-bg-elevated) resolved to nothing`);
+        }
+      }
+    }
+
+    if (problems.length) {
+      throw new Error(problems.join('; '));
+    }
+  });
+
+
   await step('a document named on the page\u2019s address opens', async () => {
     /*
      * ?strataDoc=folder/page.html, which is how a SharePoint menu entry points

@@ -358,6 +358,11 @@ export class HtmlViewRenderer {
     frame.srcdoc = frameDocument(content, {
       scripts: scripts,
       base: options.documentBase,
+      /* The theme's own values in front of the author's stylesheet, because a
+         frame is a document of its own and nothing inherits into it. */
+      tokens: themeTokens(host),
+      mode: options.resolvedMode,
+      theme: options.settings.themeFamily,
       css: options.sharedCss,
       contents: contents,
       documentExtensions: HTML_DOCUMENTS,
@@ -447,6 +452,23 @@ export class HtmlViewRenderer {
     const article: HTMLElement = document.createElement('article');
     article.className = 'strata-content';
 
+    /*
+     * The theme and the mode, on the element the author's stylesheet is
+     * narrowed to.
+     *
+     * They are already on the web part's root, which is an ancestor - and an
+     * ancestor is no use to a scoped selector. An author writing
+     * `[data-strata-mode="dark"] .card` has it rewritten to a rule about this
+     * element, so this element is where the attribute has to be, or the rule
+     * matches nothing whichever mode the reader is in. See scopeSelector.
+     *
+     * In shadow mode the same two attributes do the same job for a stylesheet
+     * that is not scoped at all: inside the root, the article is the only
+     * ancestor the author's rules have.
+     */
+    article.setAttribute('data-strata-mode', options.resolvedMode);
+    article.setAttribute('data-strata-theme', options.settings.themeFamily);
+
     if (!body || body.trim().length === 0) {
       const empty: HTMLElement = document.createElement('div');
       empty.className = 'strata-empty';
@@ -534,6 +556,34 @@ export class HtmlViewRenderer {
     }
     return `<style>\n${parts.css}\n</style>\n${parts.body}`;
   }
+}
+
+/**
+ * The theme's custom properties, as CSS, read from the web part as it stands.
+ *
+ * For the frame, which is a document of its own: a custom property inherits
+ * down a tree and a frame is not in that tree, so `var(--strata-bg)` in an
+ * author's stylesheet resolves to nothing in there. Without this, the one
+ * format that works in the other two modes would silently not work in the
+ * third, which is worse than it not being offered.
+ *
+ * Read from the element rather than from a list kept here. A list would be a
+ * second copy of the token contract, and the two would part company the first
+ * time a theme gained a colour. Every `--strata-` property in effect is
+ * enumerable on the computed style, so the frame gets whatever the page has.
+ */
+function themeTokens(host: HTMLElement): string {
+  const style: CSSStyleDeclaration = window.getComputedStyle(host);
+  const lines: string[] = [];
+
+  for (let index: number = 0; index < style.length; index += 1) {
+    const name: string = style.item(index);
+    if (name.indexOf('--strata-') === 0) {
+      lines.push(`  ${name}: ${style.getPropertyValue(name).trim()};`);
+    }
+  }
+
+  return lines.length ? `:root {\n${lines.join('\n')}\n}` : '';
 }
 
 /** A frame needs a name a screen reader can announce it by. */
