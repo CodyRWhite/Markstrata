@@ -106,9 +106,10 @@ export class ContentEnhancer {
     container: HTMLElement,
     base: string | undefined,
     open?: (path: string, heading: string) => void,
-    onAnchor?: (heading: string) => void
+    onAnchor?: (heading: string) => void,
+    extensions?: RegExp
   ): void {
-    followDocumentLinks(container, base, open);
+    followDocumentLinks(container, base, open, extensions);
     /* Marking the links is per render; catching the click is not, and has to
        be taken down again when the web part goes away.
 
