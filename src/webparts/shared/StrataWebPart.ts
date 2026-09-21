@@ -63,7 +63,7 @@ import { IStrataWebPartProps } from './strataWebPartProps';
 import { SharePointService } from '../markstrata/utils/SharePointService';
 import { DocumentNavigator, ILoadedDocument } from '../markstrata/utils/documentNavigator';
 import {
-  documentFromAddress, addressForDocument, addressWithoutDocument,
+  documentFromAddress, addressForDocument, addressWithoutDocument, DOCUMENT_EXTENSIONS,
   DOCUMENT_PARAMETER, IWantedDocument
 } from '../markstrata/utils/documentParameter';
 import { isRemote, fetchableUrl, remoteFailure } from '../markstrata/utils/remoteDocuments';
@@ -174,6 +174,20 @@ export abstract class StrataWebPart<TProps extends IStrataWebPartProps>
   protected abstract rebuildsRenderer(): string[];
 
   /** Settings that change what else the pane shows, beyond the shared ones. */
+  /**
+   * Which extensions this web part's own documents carry.
+   *
+   * Read when a document is named on the page's address, because that value
+   * has to be split into a path and a heading and a # can be in either: the
+   * split is made at the extension instead, so this says which ones count.
+   *
+   * It used to be md and markdown, written into the pattern. That refused
+   * every HTML document a menu entry could name.
+   */
+  protected documentExtensions(): string[] {
+    return DOCUMENT_EXTENSIONS;
+  }
+
   /**
    * The file picker's source of libraries, folders and files.
    *
@@ -886,7 +900,7 @@ export abstract class StrataWebPart<TProps extends IStrataWebPartProps>
     }
 
     const wanted: IWantedDocument | undefined = documentFromAddress(
-      window.location.search, this.documentBasePath()
+      window.location.search, this.documentBasePath(), this.documentExtensions()
     );
     if (!wanted) {
       this.noticeAboutAddress(asked ? strings.AddressNotUnderstood : undefined);

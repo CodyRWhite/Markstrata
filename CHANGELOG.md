@@ -213,6 +213,51 @@ enhancer never reached it before.
 Both faults are driven now, in the arrangement that showed them, and the
 diagnosis was checked against the old stylesheet rather than assumed.
 
+### A document named on the page's address
+
+`?strataDoc=folder/page.html` was refused. The value carries the heading inside
+it rather than as the page's own fragment, and once it is decoded a `#` in a
+file name looks exactly like the one that starts the heading - so the split is
+made at the extension instead, and the extensions were `md` and `markdown`
+written into the pattern. Every HTML document a menu entry could name came back
+as an address the web part could not understand.
+
+Which extensions count is the caller's to say now, and the split is a walk
+rather than a pattern, because a pattern assembled from a list of extensions is
+the kind of thing that works until one of them has a dot in it. The awkward
+cases the old pattern was built for are kept and now checked for both kinds of
+document: a `#` inside a file name stays part of the name, `notes.md#see-a.md`
+is one document and a heading, and a folder that ends in an extension is still
+a folder.
+
+Each web part refuses the other's documents, which is not pedantry: opening the
+wrong kind would draw a document of tag names or a page of escaped angle
+brackets.
+
+### A table's bottom edge
+
+Reported after the first fix: the bottom of a table read as longer than its
+data, like a row that was there and could not be seen.
+
+`overflow-x: auto` was declared on the box and `overflow-y` was not, and CSS
+computes an undeclared `visible` to `auto` when the other axis scrolls - so the
+box could scroll vertically as well. On any device that draws classic
+scrollbars rather than overlay ones, the horizontal bar comes out of the box's
+own height, the table is then taller than what is left, and a vertical bar
+appears beside it: the bottom of the table ends up behind the one and reachable
+only through the other. The fix before this had also made every box a scroll
+container, so a table that fits its column was getting all of that for nothing.
+
+The box is sideways-only now, said rather than left to be worked out, and a
+table that fits is out of the box altogether: no scrollbars, nothing clipped,
+no gutter taken. Its header is simply not sticky, which costs nothing, there
+being nothing to scroll it.
+
+This one could not be reproduced here. The headless browser the harness drives
+uses overlay scrollbars, which take no space, so the fault is invisible to it -
+worth knowing rather than glossing, because it means the check that would have
+caught it cannot be written in this harness.
+
 ### Two build fixes worth recording
 
 The scroll walk that finds what is actually scrolling on a page was written

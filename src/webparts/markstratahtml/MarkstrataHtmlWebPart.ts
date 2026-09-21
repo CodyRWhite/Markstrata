@@ -170,6 +170,17 @@ export default class MarkstrataHtmlWebPart extends StrataWebPart<IMarkstrataHtml
     return strings.HtmlSampleContent;
   }
 
+  /**
+   * What a document named on the page's address is allowed to be.
+   *
+   * The same two extensions the file picker offers, which is the point: a menu
+   * entry pointing at ?strataDoc=folder/page.html has to open the same files
+   * an author could have chosen in the pane.
+   */
+  protected documentExtensions(): string[] {
+    return HTML_EXTENSIONS;
+  }
+
   protected unconfiguredGuidance(): IUnconfiguredGuidance {
     return {
       inPane: strings.UnconfiguredInPaneHtml,

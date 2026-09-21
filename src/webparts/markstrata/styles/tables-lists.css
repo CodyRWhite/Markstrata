@@ -18,6 +18,21 @@
 .strata-table-scroll {
   margin: 0 0 var(--strata-block-gap);
   overflow-x: auto;
+  /*
+   * Sideways only, and said rather than left to be worked out.
+   *
+   * Undeclared, overflow-y is visible - and CSS computes visible to auto when
+   * the other axis is auto, so the box could scroll vertically too. It takes
+   * only a device that draws classic scrollbars for that to happen: the
+   * horizontal bar comes out of the box's own height, the table is then taller
+   * than what is left, and a vertical bar appears beside it. The bottom of the
+   * table ends up behind the one and reachable only through the other, which
+   * reads as a row that is there and cannot be seen.
+   *
+   * Nothing in this box is ever meant to scroll vertically. A table is as tall
+   * as its rows and the box is as tall as the table.
+   */
+  overflow-y: hidden;
 }
 
 /*
@@ -32,12 +47,17 @@
  */
 .strata-table-scroll--fits {
   /*
-   * Hidden rather than visible, and the difference is the whole of the fault
-   * below: hidden is still a scroll container, so a sticky header inside it
-   * stays confined to its own table. Nothing is clipped by it, because a table
-   * that fits is a table with nothing to overflow.
+   * Out of the box altogether, which means not a scroll container at all: no
+   * scrollbars, nothing clipped, and no gutter taken out of the box's height.
+   *
+   * It was briefly hidden rather than visible, to keep the box a scroll
+   * container so that it could confine the sticky header. That bought the
+   * containment and cost more than it was worth - a scroll container clips,
+   * takes a gutter on some devices, and is a scrollbar waiting to appear on a
+   * table that has no reason to scroll. The header is simply not sticky here
+   * instead, which it has no work to do anyway: nothing scrolls it.
    */
-  overflow: hidden;
+  overflow: visible;
 }
 
 /*
@@ -66,13 +86,17 @@
  * came out as a blank band where the header should be, the header third, and a
  * row invisible underneath it.
  *
- * So the box is always a scroll container and top is zero: the header holds at
- * the top of its own table and can never be pushed anywhere else. What that
- * gives up is a header that follows the reader down a long table. What it buys
- * is that a header can never hide a row, and hiding a row is not a matter of
- * taste.
+ * So it sticks only where there is a box that scrolls, and to that box, at top
+ * zero: the header holds at the top of its own table and can never be pushed
+ * anywhere else. A table that fits its column is let out of the box just
+ * above, and its header is not sticky at all - which costs nothing, there
+ * being nothing to scroll it.
+ *
+ * What this gives up is a header that follows the reader down a long table.
+ * What it buys is that a header can never hide a row, and hiding a row is not
+ * a matter of taste.
  */
-.strata-table-scroll thead th {
+.strata-table-scroll:not(.strata-table-scroll--fits) thead th {
   position: sticky;
   top: 0;
   z-index: 1;
@@ -81,7 +105,7 @@
 
 /* On paper nothing scrolls, and a stuck header prints over the rows. */
 @media print {
-  .strata-table-scroll thead th {
+  .strata-table-scroll:not(.strata-table-scroll--fits) thead th {
     position: static;
   }
 }

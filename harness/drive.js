@@ -5028,6 +5028,48 @@ const LIBRARY_PATH = '/sites/demo/Documents';
     }
   });
 
+  await step('a document named on the page\u2019s address opens', async () => {
+    /*
+     * ?strataDoc=folder/page.html, which is how a SharePoint menu entry points
+     * at one document among many without a page each.
+     *
+     * It was refused. The value has to be split into a path and a heading, and
+     * once it is decoded a # in a file name looks exactly like the one that
+     * starts the heading - so the split is made at the extension instead, and
+     * the extensions were md and markdown written into the pattern. Every HTML
+     * document a menu could name came back as an address the web part could
+     * not understand.
+     */
+    const opened = await page.evaluate(async () => {
+      window.htmlHarness.addressDocument('Runbooks/rollback.html');
+      await window.htmlHarness.start({
+        contentSource: 'library',
+        selectedLibrary: '/sites/demo/Documents',
+        selectedFile: '/sites/demo/Documents/notes.html',
+        followDocumentLinks: true
+      });
+      await new Promise((resolve) => setTimeout(resolve, 1200));
+      window.htmlHarness.addressDocument(undefined);
+      return {
+        heading: ((document.querySelector('#host h1') || {}).textContent || '').trim(),
+        trail: [...document.querySelectorAll('#host .strata-crumb')]
+          .map((crumb) => (crumb.textContent || '').trim()),
+        notice: (document.querySelector('#host .strata-status[data-tone="warning"]')
+          || {}).textContent || ''
+      };
+    });
+
+    if (opened.heading.indexOf('Rolling back') === -1) {
+      throw new Error('the addressed document did not open: the heading reads '
+        + JSON.stringify(opened.heading) + (opened.notice ? ' | ' + opened.notice : ''));
+    }
+    if (opened.trail.length < 2) {
+      throw new Error('no trail back to the configured document: '
+        + JSON.stringify(opened.trail));
+    }
+  });
+
+
   await step('an author\u2019s table is boxed, sortable, and keeps its header put', async () => {
     /*
      * Reported from a tenant: a table came out with a blank band where its

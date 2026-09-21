@@ -284,6 +284,10 @@ const SHARED_CSS: string = [
 
 put(`${LIBRARY}/notes.html`, NOTES_HTML);
 put(`${LIBRARY}/rollback.html`, ROLLBACK_HTML);
+/* And the same document one folder down, because a menu entry names a document
+   the short way - ?strataDoc=Runbooks/rollback.html - and that path has to be
+   resolved against the configured document's folder rather than refused. */
+put(`${LIBRARY}/Runbooks/rollback.html`, ROLLBACK_HTML);
 put(`${LIBRARY}/fragment.htm`, FRAGMENT_HTML);
 put(`${LIBRARY}/shared.css`, SHARED_CSS);
 

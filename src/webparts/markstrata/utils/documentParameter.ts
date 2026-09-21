@@ -17,7 +17,8 @@
  *
  * The value is read from the address bar, which means it is written by
  * whoever wrote the link, so it is checked rather than trusted. Only a
- * markdown file is accepted: the path is handed to SharePoint and fetched with
+ * document of the kind the web part draws is accepted: the path is handed to
+ * SharePoint and fetched with
  * the reader's own session, so SharePoint decides what they may read, but a
  * renderer is not the place to point at arbitrary files either.
  *
@@ -62,9 +63,64 @@ export interface IWantedDocument {
  * library in every entry. An address that starts with a slash is taken as it
  * is, which is what somebody pasting a path from SharePoint will have.
  */
+/** What the markdown web part opens, and the default when nobody says. */
+export const DOCUMENT_EXTENSIONS: string[] = ['.md', '.markdown'];
+
+interface ISplitAddress {
+  path: string;
+  heading: string;
+}
+
+/**
+ * Splits `folder/page.html#a-heading` into the document and the heading.
+ *
+ * Done by walking rather than by a pattern, because the pattern has to be
+ * built from whichever extensions the caller owns and a spliced-together
+ * regular expression is the kind of thing that works until an extension has a
+ * dot or a plus in it.
+ *
+ * The first extension that ends the value, or is followed by the #, wins.
+ * That is what the non-greedy pattern used to do and each half of it earns its
+ * place:
+ *
+ *   notes.md#see-a.md        notes.md, heading "see-a.md" - the first one
+ *   What is #1 + why.md      the whole name, no heading - the # is in the name
+ *   archive.md/page.md       page.md - the first is a folder, not the end
+ *
+ * Case is ignored, because an address is typed by a person.
+ */
+function splitAtExtension(asked: string, extensions: string[]): ISplitAddress | undefined {
+  const lower: string = asked.toLowerCase();
+  let best: ISplitAddress | undefined;
+  let bestAt: number = asked.length + 1;
+
+  extensions.forEach((extension: string) => {
+    const wanted: string = extension.toLowerCase();
+    let at: number = lower.indexOf(wanted);
+
+    while (at !== -1) {
+      const ends: number = at + wanted.length;
+      const next: string = asked.charAt(ends);
+      /* The end of the value, or the # that starts the heading. Anything else
+         means this was a folder that happens to end in the extension. */
+      if ((next === '' || next === '#') && ends < bestAt) {
+        bestAt = ends;
+        best = {
+          path: asked.slice(0, ends),
+          heading: next === '#' ? asked.slice(ends + 1) : ''
+        };
+      }
+      at = lower.indexOf(wanted, at + 1);
+    }
+  });
+
+  return best;
+}
+
 export function documentFromAddress(
   search: string,
-  base: string | undefined
+  base: string | undefined,
+  extensions?: string[]
 ): IWantedDocument | undefined {
   if (!search) {
     return undefined;
@@ -88,24 +144,20 @@ export function documentFromAddress(
    * the difficulty: once decoded, a # that is part of a file name looks exactly
    * like the one separating the heading.
    *
-   * So the split is made at the extension rather than at the first #. The
-   * document part has to end in .md or .markdown, because that is the only
-   * thing this can open, and everything after that is the heading. Splitting on
-   * the first # instead meant a file called "What is #1 + why.md" was read as a
-   * document called "What is " and refused for not being markdown, which is a
-   * refusal with nothing in it a reader could act on.
-   *
-   * Non-greedy, so "notes.md#see-a.md" is notes.md and a heading rather than
-   * one long file name. A folder that ends in .md still works, because the
-   * match has to reach the end of the value and backtracks until it does.
+   * So the split is made at the extension rather than at the first #, and
+   * which extensions count is the caller's to say: the markdown web part opens
+   * .md and .markdown, the HTML one opens .html and .htm. It used to be a
+   * pattern with md and markdown written into it, which refused every HTML
+   * document a menu could name - ?strataDoc=folder/page.html matched nothing
+   * and came back as "not a document this can open".
    */
-  const split: RegExpExecArray | null =
-    /^(.*?\.(?:md|markdown))(?:#(.*))?$/i.exec(asked);
+  const split: ISplitAddress | undefined =
+    splitAtExtension(asked, extensions || DOCUMENT_EXTENSIONS);
   if (!split) {
     return undefined;
   }
-  const wanted: string = split[1];
-  const heading: string = split[2] || '';
+  const wanted: string = split.path;
+  const heading: string = split.heading;
 
   /* A whole address, which a menu entry can only usefully carry when the page
      is already reading from one: the base it would otherwise be resolved
