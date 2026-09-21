@@ -20,7 +20,7 @@
         "default": "Content"
       },
       "title": {
-        "default": "Markstrata"
+        "default": "Markstrata - Markdown"
       },
       "description": {
         "default": "Markdown with GitHub, Obsidian and VS Code themes - readable code blocks, callouts, diagrams and math."
