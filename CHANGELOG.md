@@ -105,10 +105,27 @@ editor says so above the panes.
 
 ### Teams
 
-Teams allows an app one configurable tab, so the channel tab stays the markdown
-one. The app description now says so and names the route that works for the
-other: add Markstrata - HTML to a SharePoint page, which a channel can carry as
-a tab.
+Teams allows an app one configurable tab. The manifest schema says so in as many
+words, and a second entry in that list is not a second tab; it is a manifest
+Teams refuses, which from the App Catalog reads as Sync to Teams failing again
+for no stated reason.
+
+So there are two app packages now. `TeamsSPFxApp.zip` is the markdown one and
+keeps that name, because it is the exact name SharePoint looks for inside the
+`.sppkg` when somebody presses Sync to Teams. `MarkstrataHtmlTeamsApp.zip` is
+the HTML web part's, with its own app id and its own name in the store, and
+SharePoint will not deploy it because it only knows the one name: it is uploaded
+by hand in the Teams admin centre. Both ride inside the `.sppkg`, so an
+administrator has both to hand without a second download.
+
+A team that would rather not approve a second app does not have to. Markstrata -
+HTML works as a web part on a SharePoint page, and a channel can carry that page
+as a tab.
+
+The second manifest was written by copying the first, which is why it is
+validated rather than trusted: against the whole v1.17 schema, and for the two
+mistakes a copy makes first - a tab still pointing at the other web part's
+component, and two apps sharing an id or a name.
 
 ### Under both web parts
 

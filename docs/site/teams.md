@@ -50,18 +50,49 @@ can be allowed, blocked or given an app policy like any other.
 > app**, if sideloading is allowed in your tenant. That reaches one team without
 > publishing anything to everybody.
 
+## Two apps, because Teams allows one tab each
+
+Teams permits an app a single configurable tab. The manifest schema says so in
+as many words, and a second entry in that list is not a second tab; it is a
+manifest Teams refuses, which from the App Catalog reads as Sync to Teams
+failing again for no stated reason.
+
+So there are two app packages, and only one of them is the one **Sync to Teams**
+deploys.
+
+| App | Package | How it gets there |
+|---|---|---|
+| **Markstrata** | `TeamsSPFxApp.zip` | Sync to Teams, as above |
+| **Markstrata HTML** | `MarkstrataHtmlTeamsApp.zip` | Uploaded by hand in the Teams admin centre |
+
+Both ride inside the `.sppkg`, so an administrator has both to hand without a
+second download. SharePoint only knows the first name, so the second is
+published the same way any other app package is: **Manage apps**, **Upload new
+app**, and choose the zip. Extract it from the `.sppkg`, or build it with
+`npm run teams`.
+
+> [!TIP] You may not need the second app at all
+> Markstrata - HTML works as a web part on a SharePoint page, and a channel can
+> carry a SharePoint page as a tab. That reaches the same document with no
+> second app to approve. The separate app is worth it when you want a channel
+> tab pointed straight at an HTML file, with nothing in between.
+
 ## Adding a tab to a channel
 
-1. In the channel, add a tab and pick **Markstrata**.
+1. In the channel, add a tab and pick **Markstrata** for a markdown document, or
+   **Markstrata HTML** for an HTML one.
 2. The configure step is the web part's property pane, with the library, folder
    and file pickers in it.
-3. Choose a markdown file. The pickers are over the site behind this team, so
-   the channel's own Files are where they start.
+3. Choose a file. The pickers are over the site behind this team, so the
+   channel's own Files are where they start, and each app offers only the kind
+   of file it draws: `.md` and `.markdown` in one, `.html` and `.htm` in the
+   other.
 4. Save. The document renders in the tab, with its toolbar and contents.
 
 A tab saved with nothing chosen shows a panel saying so, worded for Teams: it
 points at the tab's own settings, which is the arrow beside the tab name, rather
-than at a property pane that is not there.
+than at a property pane that is not there. Each app words it for the kind of
+document it wants.
 
 ## Settings that read differently in a tab
 

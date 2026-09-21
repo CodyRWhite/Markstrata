@@ -1,0 +1,46 @@
+{
+  "$schema": "https://developer.microsoft.com/en-us/json-schemas/teams/v1.17/MicrosoftTeams.schema.json",
+  "manifestVersion": "1.17",
+  "version": "0.0.0",
+  "id": "36ac307a-2d6b-439b-8ce0-82640db75ecb",
+  "developer": {
+    "name": "Cody White",
+    "websiteUrl": "https://markstrata.com/",
+    "privacyUrl": "https://markstrata.com/privacy/",
+    "termsOfUseUrl": "https://markstrata.com/terms/",
+    "mpnId": ""
+  },
+  "publisherDocsUrl": "https://markstrata.com/docs/",
+  "icons": {
+    "color": "color.png",
+    "outline": "outline.png"
+  },
+  "name": {
+    "short": "Markstrata HTML",
+    "full": "Markstrata - HTML for SharePoint and Teams"
+  },
+  "description": {
+    "short": "Read HTML documents from this team's files, themed and rendered properly.",
+    "full": "Markstrata - HTML renders the HTML documents in this team's Files. Point a tab at an .html file and it is drawn with a table of contents, a theme modelled on GitHub, Obsidian or VS Code in light or dark, and the document's own styles kept where the author put them.\n\nThree ways to draw it, because they are different bargains. Inline makes the document part of the tab, so pictures zoom, tables sort and links to neighbouring documents open in place. Shadow DOM puts it behind a style boundary, so it looks exactly as written. A sandboxed frame makes it a document of its own, which is the only place the author's own scripts can run, and only when somebody turns that on.\n\nA channel's Files are a SharePoint document library, so the documents are the ones already there. Nothing is copied anywhere and nothing leaves your tenant: the tab reads the file with your own signed-in session. A stylesheet can be shared from one file across every page and tab that uses it.\n\nThis is a separate app from Markstrata because Teams allows an app one configurable tab, and the markdown web part has that one. Installing both gives a channel a tab for either kind of document."
+  },
+  "accentColor": "#0E7C86",
+  "configurableTabs": [
+    {
+      "configurationUrl": "https://{teamSiteDomain}{teamSitePath}/_layouts/15/TeamsLogon.aspx?SPFX=true&dest={teamSitePath}/_layouts/15/teamshostedapp.aspx%3Fteams%26componentId=36ac307a-2d6b-439b-8ce0-82640db75ecb%26openPropertyPane=true%26forceLocale={locale}",
+      "canUpdateConfiguration": true,
+      "scopes": [
+        "team"
+      ]
+    }
+  ],
+  "validDomains": [
+    "*.sharepoint.com",
+    "*.sharepoint-df.com",
+    "*.login.microsoftonline.com"
+  ],
+  "showLoadingIndicator": false,
+  "webApplicationInfo": {
+    "resource": "https://{teamSiteDomain}",
+    "id": "00000003-0000-0ff1-ce00-000000000000"
+  }
+}
