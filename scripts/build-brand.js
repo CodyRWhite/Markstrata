@@ -93,12 +93,14 @@ const TILES = [
   {
     lines: 'MARKDOWN',
     file: 'webpart-tile.jpg',
+    preview: 'webpart-preview.jpg',
     manifest: path.join(root, 'src', 'webparts', 'markstrata',
       'MarkstrataWebPart.manifest.json')
   },
   {
     lines: 'HTML',
     file: 'webpart-tile-html.jpg',
+    preview: 'webpart-preview-html.jpg',
     manifest: path.join(root, 'src', 'webparts', 'markstratahtml',
       'MarkstrataHtmlWebPart.manifest.json')
   }
@@ -116,21 +118,34 @@ function copyDelivered() {
   console.log(`copied ${COPIES.length + 1} files out of the brand package`);
 }
 
-/* Writes a manifest's icon from the data URI its tile render produced. */
-function stampManifestIcon(manifest, dataUri) {
+/*
+ * Writes a manifest's two images from the data URIs its renders produced.
+ *
+ * Two, because SharePoint shows the web part in two places that want different
+ * shapes. iconImageUrl is the toolbox tile, 4:3. fullPageAppIconImageUrl is the
+ * full-page app picker's preview, which is landscape, and the schema is explicit
+ * that without one the toolbox tile is used instead - which in that picker's
+ * own preview panel is a 4:3 image in a landscape frame.
+ */
+function stampManifestIcon(manifest, images) {
   const json = JSON.parse(fs.readFileSync(manifest, 'utf8'));
   let changed = false;
   json.preconfiguredEntries.forEach((entry) => {
-    if (entry.iconImageUrl !== dataUri) {
-      entry.iconImageUrl = dataUri;
+    if (entry.iconImageUrl !== images.tile) {
+      entry.iconImageUrl = images.tile;
+      changed = true;
+    }
+    if (entry.fullPageAppIconImageUrl !== images.preview) {
+      entry.fullPageAppIconImageUrl = images.preview;
       changed = true;
     }
   });
   if (changed) {
     fs.writeFileSync(manifest, JSON.stringify(json, null, 2) + '\n');
   }
-  console.log(`${path.basename(manifest, '.json')} icon`.padEnd(30),
-    String(dataUri.length).padStart(6), 'chars', changed ? '(updated)' : '(unchanged)');
+  console.log(`${path.basename(manifest, '.json')} icons`.padEnd(30),
+    String(images.tile.length + images.preview.length).padStart(6), 'chars',
+    changed ? '(updated)' : '(unchanged)');
 }
 
 function dataUri(file) {
@@ -144,10 +159,10 @@ function dataUri(file) {
  * perspective transform resamples the text and the extra pixels are what keep
  * the receding edge tight. JPEG, because it is photographic.
  */
-async function renderTile(browser, which) {
+async function renderTile(browser, which, size, file) {
   const page = await browser.newPage({ deviceScaleFactor: tile.SUPERSAMPLE });
-  const dest = path.join(assets, which.file);
-  await page.setViewportSize({ width: tile.WIDTH, height: tile.HEIGHT });
+  const dest = path.join(assets, file);
+  await page.setViewportSize(size);
   await page.setContent('<body>'
     + tile.tileHtml(dataUri(path.join(assets, 'mark-mono-light.svg')), tile[which.lines])
     + '</body>');
@@ -158,8 +173,18 @@ async function renderTile(browser, which) {
     type: 'jpeg', quality: MANIFEST_TILE_QUALITY, scale: 'css'
   });
   await page.close();
-  console.log(which.file.padEnd(30), String(fs.statSync(dest).size).padStart(6), 'bytes');
+  console.log(file.padEnd(30), String(fs.statSync(dest).size).padStart(6), 'bytes');
   return 'data:image/jpeg;base64,' + inline.toString('base64');
+}
+
+/* Both images for one web part: the toolbox tile and the full-page preview. */
+async function renderImages(browser, which) {
+  return {
+    tile: await renderTile(browser, which,
+      { width: tile.WIDTH, height: tile.HEIGHT }, which.file),
+    preview: await renderTile(browser, which,
+      { width: tile.PREVIEW_WIDTH, height: tile.PREVIEW_HEIGHT }, which.preview)
+  };
 }
 
 /*
@@ -223,7 +248,7 @@ async function build() {
     await renderSocialCard(browser);
     await renderTeamsIcons(browser);
     for (const which of TILES) {
-      stampManifestIcon(which.manifest, await renderTile(browser, which));
+      stampManifestIcon(which.manifest, await renderImages(browser, which));
     }
   } finally {
     await browser.close();

@@ -34,6 +34,7 @@ const GENERATED = [
   'lockup.svg', 'lockup-tagline.svg',
   'lockup-horizontal.svg', 'lockup-horizontal-dark.svg',
   'social-card.png', 'webpart-tile.jpg', 'webpart-tile-html.jpg',
+  'webpart-preview.jpg', 'webpart-preview-html.jpg',
   'icons/favicon-16.png', 'icons/favicon-32.png', 'icons/favicon-48.png',
   'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png'
 ];
@@ -176,11 +177,39 @@ test('the icon PNGs are the sizes their names claim', () => {
  * larger and rides along in every page that loads the web part.
  */
 test('each web part tile is a JPEG within its budget', () => {
-  for (const name of ['webpart-tile.jpg', 'webpart-tile-html.jpg']) {
+  for (const name of ['webpart-tile.jpg', 'webpart-tile-html.jpg',
+    'webpart-preview.jpg', 'webpart-preview-html.jpg']) {
     const bytes = fs.readFileSync(path.join(ASSETS, name));
     assert.equal(bytes.readUInt16BE(0), 0xffd8, `${name}: expected a JPEG`);
     assert.ok(bytes.length < 40 * 1024,
       `${name} is ${bytes.length} bytes; it is inlined into a manifest`);
+  }
+});
+
+/*
+ * SharePoint shows a web part in two places that want different shapes. The
+ * toolbox puts the tile beside the name; the full-page app picker has a
+ * landscape preview panel, and the manifest schema is explicit that without a
+ * fullPageAppIconImageUrl the toolbox tile is used instead - which in that
+ * panel is a 4:3 image in a landscape frame, or nothing at all. Neither
+ * manifest had one, and the panel was empty for both web parts.
+ */
+test('both manifests carry a full-page preview as well as a tile', () => {
+  for (const [folder, file] of [
+    ['markstrata', 'MarkstrataWebPart.manifest.json'],
+    ['markstratahtml', 'MarkstrataHtmlWebPart.manifest.json']
+  ]) {
+    const manifest = JSON.parse(fs.readFileSync(
+      path.join(__dirname, '..', 'src', 'webparts', folder, file), 'utf8'));
+    for (const entry of manifest.preconfiguredEntries) {
+      assert.ok(entry.fullPageAppIconImageUrl
+        && entry.fullPageAppIconImageUrl.startsWith('data:image/jpeg;base64,'),
+        `${file}: no full-page preview; run \`npm run brand\``);
+      /* A different render from the tile, not the same bytes under a second
+         name: the whole point is that it is the landscape shape. */
+      assert.notEqual(entry.fullPageAppIconImageUrl, entry.iconImageUrl,
+        `${file}: the full-page preview is just the toolbox tile again`);
+    }
   }
 });
 
@@ -189,9 +218,13 @@ test('and the two tiles are two pictures', () => {
      which of the two entries they want, which is the whole reason the web
      parts were given separate names. Compared by bytes, because that is the
      only way the same render slipping into both would show. */
-  const markdown = fs.readFileSync(path.join(ASSETS, 'webpart-tile.jpg'));
-  const html = fs.readFileSync(path.join(ASSETS, 'webpart-tile-html.jpg'));
-  assert.ok(!markdown.equals(html), 'both web parts are showing the same tile');
+  for (const [a, b] of [
+    ['webpart-tile.jpg', 'webpart-tile-html.jpg'],
+    ['webpart-preview.jpg', 'webpart-preview-html.jpg']
+  ]) {
+    assert.ok(!fs.readFileSync(path.join(ASSETS, a)).equals(fs.readFileSync(path.join(ASSETS, b))),
+      `both web parts are showing the same picture: ${a} and ${b}`);
+  }
 });
 
 /*

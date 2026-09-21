@@ -151,7 +151,12 @@ function tileHtml(markUri, lines) {
             background: radial-gradient(ellipse 66% 58% at 70% 46%, ${DARK_PLUS.glow}, transparent 72%); }
     .vig { position: absolute; inset: 0; pointer-events: none;
            box-shadow: inset 0 0 58px 8px rgba(0, 0, 0, .42); }
-    .mark { position: absolute; right: 13px; bottom: 11px; height: 30px;
+    /* Sized as a share of the frame rather than in pixels, because the same
+       scene is rendered twice: at 400x300 for the toolbox tile and at 195x110
+       for the full-page app preview. Ten per cent is the 30px it has always
+       been at the larger size, and stays in proportion at the smaller one,
+       where a fixed 30px glyph took up a quarter of the height. */
+    .mark { position: absolute; right: 3.25%; bottom: 3.7%; height: 10%;
             filter: drop-shadow(0 2px 8px rgba(0, 0, 0, .8)); }
   </style>
   <div class="tile">
@@ -161,4 +166,19 @@ function tileHtml(markUri, lines) {
   </div>`;
 }
 
-module.exports = { tileHtml, MARKDOWN, HTML, WIDTH: 400, HEIGHT: 300, SUPERSAMPLE: 3 };
+/*
+ * Two sizes of the same scene.
+ *
+ * WIDTH/HEIGHT is the toolbox tile, which SharePoint shows beside the web part
+ * name. PREVIEW is the full-page app picker's, which is a different surface
+ * with a different shape: the manifest schema asks for about 195x110 for
+ * fullPageAppIconImageUrl, and says that without one the toolbox tile is used
+ * instead - which in that picker's own panel is a 4:3 image in a landscape
+ * frame, or nothing at all.
+ */
+module.exports = {
+  tileHtml, MARKDOWN, HTML,
+  WIDTH: 400, HEIGHT: 300,
+  PREVIEW_WIDTH: 195, PREVIEW_HEIGHT: 110,
+  SUPERSAMPLE: 3
+};
