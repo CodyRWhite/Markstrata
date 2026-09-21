@@ -373,6 +373,13 @@ element your stylesheet applies to, so start the selector with it:
 `[data-strata-theme="github"]`, `"obsidian"` and `"vscode"` work the same way
 if a document needs to differ by theme as well.
 
+> [!TIP] Writing the stylesheet with a language model
+> [css-for-an-llm.md](../css-for-an-llm.md) is one file written to be handed to
+> one: the two rules above, what each render mode changes, what the scoping does
+> to a selector, what the sanitiser removes, and the complete token list. Paste
+> it or point the model at it. The token list is generated from the stylesheets,
+> so it cannot go stale behind you.
+
 > [!IMPORTANT] Do not use `prefers-color-scheme`
 > It follows the operating system, and the web part follows the setting in the
 > pane and the reader's own choice in the toolbar. On a dark laptop showing a
@@ -484,6 +491,7 @@ has a known vulnerability.
 | [Install](../install/) | The package, the App Catalog, upgrades |
 | [Microsoft Teams](../teams/) | The same web part as a channel tab |
 | [The HTML web part](../html/) | Markstrata - HTML, running in your browser |
+| [css-for-an-llm.md](../css-for-an-llm.md) | The CSS authoring rules, in one file to give a language model |
 | [Syntax](../syntax/) | Every piece of markdown, with what it turns into |
 | [THEMES.md](https://github.com/CodyRWhite/Markstrata/blob/main/THEMES.md) | The token contract, and how to add a fourth theme |
 | [CONTRIBUTING.md](https://github.com/CodyRWhite/Markstrata/blob/main/CONTRIBUTING.md) | Branches, commits, releases |

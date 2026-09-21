@@ -255,6 +255,39 @@ the only thing that could have painted them. Writing that check found an
 ordering fault as well: the tokens and the shared stylesheet were each inserted
 at the head's start, which put the second one in front of the first.
 
+### A file to hand a language model that is writing the CSS
+
+The question after the last one was what to give a model so it writes a
+stylesheet that works here. `docs/css-for-an-llm.md` is that: one file, meant
+to be pasted whole or pointed at, and served from the site root as well so a
+model that can read a URL can be given one.
+
+It says the two rules - colour from a token, everything else from the mode
+attribute - then what each of the three render modes changes, what the scoping
+does to a selector in inline mode, which at-rules survive it, what the
+sanitiser removes before the document is drawn, and what not to reach for. The
+`prefers-color-scheme` warning is in it, because a model asked for a dark mode
+writes that unless it is told why not.
+
+The token list is generated out of the stylesheets that declare it, and
+grouped by where the names come from, which says more than the names do. One
+declared by all three themes follows the theme and the colour mode, so it is
+safe for anything that has to follow the reader. One declared outside the
+themes is the same everywhere and will not follow anybody. And one declared by
+some themes and not others is a gap: the generator names those instead of
+hiding them, which is how `--strata-callout-rgb` turned out to be Obsidian's
+alone.
+
+Generated rather than written because the list is the half that goes stale, and
+a stale list is worse than none - a model given a name that no longer exists
+writes `var(--gone)` and the document comes out unstyled with nothing on the
+page to explain it. A test compares the file to the stylesheets in both
+directions, so a token added to a theme and not regenerated fails the build
+rather than reaching somebody's model as a missing name. That test was checked
+by breaking it three ways first: a token added to one theme, the same token
+added to all three, and a name left in the file after being taken out of the
+CSS.
+
 ### A document named on the page's address
 
 `?strataDoc=folder/page.html` was refused. The value carries the heading inside
