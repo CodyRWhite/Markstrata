@@ -40,7 +40,8 @@ web part.
 | File | What it is |
 |---|---|
 | `social-card.png` | 1200×630, the tagline lockup on Chalk. The ratio GitHub, Slack and Teams all crop to |
-| `webpart-tile.jpg` | The web part's tile: markdown source at an angle, with the mono-light glyph. Content and styling live in `scripts/webpart-tile.js` |
+| `webpart-tile.jpg` | The markdown web part's tile: markdown source at an angle, with the mono-light glyph. Content and styling live in `scripts/webpart-tile.js` |
+| `webpart-tile-html.jpg` | The HTML web part's tile: the same editor and the same palette, showing HTML source instead, so the two entries in the toolbox are told apart at a glance |
 
-`webpart-tile.jpg` is a JPEG because it is photographic; the same image as a
+Both tiles are JPEGs because they are photographic; the same image as a
 PNG is six times the size.

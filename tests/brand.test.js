@@ -33,7 +33,7 @@ const GENERATED = [
   'mark.svg', 'mark-mono-light.svg', 'mark-mono-dark.svg', 'mark-small.svg',
   'lockup.svg', 'lockup-tagline.svg',
   'lockup-horizontal.svg', 'lockup-horizontal-dark.svg',
-  'social-card.png', 'webpart-tile.jpg',
+  'social-card.png', 'webpart-tile.jpg', 'webpart-tile-html.jpg',
   'icons/favicon-16.png', 'icons/favicon-32.png', 'icons/favicon-48.png',
   'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png'
 ];
@@ -175,11 +175,23 @@ test('the icon PNGs are the sizes their names claim', () => {
  * concern rather than only a visual one: a PNG of the same image is six times
  * larger and rides along in every page that loads the web part.
  */
-test('the web part tile is a JPEG at its intended size', () => {
-  const file = path.join(ASSETS, 'webpart-tile.jpg');
-  const bytes = fs.readFileSync(file);
-  assert.equal(bytes.readUInt16BE(0), 0xffd8, 'expected a JPEG');
-  assert.ok(bytes.length < 40 * 1024, `tile is ${bytes.length} bytes; it is inlined into the manifest`);
+test('each web part tile is a JPEG within its budget', () => {
+  for (const name of ['webpart-tile.jpg', 'webpart-tile-html.jpg']) {
+    const bytes = fs.readFileSync(path.join(ASSETS, name));
+    assert.equal(bytes.readUInt16BE(0), 0xffd8, `${name}: expected a JPEG`);
+    assert.ok(bytes.length < 40 * 1024,
+      `${name} is ${bytes.length} bytes; it is inlined into a manifest`);
+  }
+});
+
+test('and the two tiles are two pictures', () => {
+  /* A toolbox showing the same picture twice tells an author nothing about
+     which of the two entries they want, which is the whole reason the web
+     parts were given separate names. Compared by bytes, because that is the
+     only way the same render slipping into both would show. */
+  const markdown = fs.readFileSync(path.join(ASSETS, 'webpart-tile.jpg'));
+  const html = fs.readFileSync(path.join(ASSETS, 'webpart-tile-html.jpg'));
+  assert.ok(!markdown.equals(html), 'both web parts are showing the same tile');
 });
 
 /*
@@ -189,16 +201,30 @@ test('the web part tile is a JPEG at its intended size', () => {
  * into the manifest, which loads with the web part on every page, so the cap
  * is a real budget and not a formality.
  */
-test('the manifest carries the web part tile, with a glyph still there as a fallback', () => {
-  const manifest = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'src', 'webparts',
-    'markstrata', 'MarkstrataWebPart.manifest.json'), 'utf8'));
-  for (const entry of manifest.preconfiguredEntries) {
-    assert.ok(entry.iconImageUrl.startsWith('data:image/jpeg;base64,'),
-      'the manifest icon should be the rendered tile; run `npm run brand`');
-    assert.ok(entry.iconImageUrl.length < 20 * 1024,
-      `manifest icon is ${entry.iconImageUrl.length} chars; it loads with every page`);
-    assert.ok(entry.officeFabricIconFontName, 'keep a glyph for surfaces that ignore the image');
+test('both manifests carry a tile, with a glyph still there as a fallback', () => {
+  const manifests = [
+    ['markstrata', 'MarkstrataWebPart.manifest.json'],
+    ['markstratahtml', 'MarkstrataHtmlWebPart.manifest.json']
+  ];
+  const seen = [];
+
+  for (const [folder, file] of manifests) {
+    const manifest = JSON.parse(fs.readFileSync(
+      path.join(__dirname, '..', 'src', 'webparts', folder, file), 'utf8'));
+    for (const entry of manifest.preconfiguredEntries) {
+      assert.ok(entry.iconImageUrl && entry.iconImageUrl.startsWith('data:image/jpeg;base64,'),
+        `${file}: the manifest icon should be the rendered tile; run \`npm run brand\``);
+      assert.ok(entry.iconImageUrl.length < 20 * 1024,
+        `${file}: manifest icon is ${entry.iconImageUrl.length} chars; it loads with every page`);
+      assert.ok(entry.officeFabricIconFontName,
+        `${file}: keep a glyph for surfaces that ignore the image`);
+      seen.push(entry.iconImageUrl);
+    }
   }
+
+  /* And they are not the same picture. A parameterised render is one edit away
+     from handing both web parts the same lines. */
+  assert.equal(new Set(seen).size, seen.length, 'two manifests carry the same tile');
 });
 
 /*
