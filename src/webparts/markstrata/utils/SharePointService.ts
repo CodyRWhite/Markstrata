@@ -84,6 +84,21 @@ interface ISpVersion {
 }
 
 const MARKDOWN_EXTENSIONS: string[] = ['.md', '.markdown', '.mdx', '.txt'];
+
+/**
+ * Whether a file name ends in one of a set of extensions.
+ *
+ * Exported and taking the set, rather than asking "is this markdown", because
+ * two web parts ask the same question about different answers: the file picker
+ * for the markdown part offers .md, the one for the HTML part offers .html.
+ * A lastIndexOf rather than endsWith, which the SPFx target does not have.
+ */
+export function hasExtension(name: string, extensions: string[]): boolean {
+  const lower: string = (name || '').toLowerCase();
+  return extensions.some(
+    (extension: string) => lower.lastIndexOf(extension) === lower.length - extension.length
+  );
+}
 const POLL_INTERVAL_MS: number = 30000;
 
 export class SharePointService {
@@ -157,7 +172,11 @@ export class SharePointService {
     }
   }
 
-  public async getMarkdownFiles(libraryUrl: string, folderPath?: string): Promise<IFileMetadata[]> {
+  public async getMarkdownFiles(
+    libraryUrl: string,
+    folderPath?: string,
+    extensions?: string[]
+  ): Promise<IFileMetadata[]> {
     const target: string = folderPath && folderPath.trim() ? `${libraryUrl}/${folderPath}` : libraryUrl;
 
     try {
@@ -167,7 +186,7 @@ export class SharePointService {
         .expand('Author')();
 
       return files
-        .filter((file: ISpFile) => this.isMarkdown(file.Name))
+        .filter((file: ISpFile) => hasExtension(file.Name, extensions || MARKDOWN_EXTENSIONS))
         .map((file: ISpFile) => this.toMetadata(file));
     } catch (error) {
       console.error('[Markstrata] Could not list markdown files', error);
@@ -357,11 +376,6 @@ export class SharePointService {
       throw new Error(`Could not load ${url} (HTTP ${response.status})`);
     }
     return response.text();
-  }
-
-  private isMarkdown(name: string): boolean {
-    const lower: string = (name || '').toLowerCase();
-    return MARKDOWN_EXTENSIONS.some((extension: string) => lower.lastIndexOf(extension) === lower.length - extension.length);
   }
 
   private toMetadata(file: ISpFile): IFileMetadata {

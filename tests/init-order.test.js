@@ -36,10 +36,22 @@ const path = require('node:path');
 
 const { analyse, blankCommentsAndStrings, lateFields, methodsOf } = require('./initOrder');
 
+/*
+ * The lifecycle moved. startUp, onDispose and every collaborator they build
+ * live on StrataWebPart, which both web parts extend, so that is the file whose
+ * ordering decides whether a web part can start. The subclass builds its own
+ * renderers in buildRenderers, and that ordering is read separately below: one
+ * file cannot answer for both, and checking only one would leave the other
+ * free to reintroduce exactly the bug this exists for.
+ */
+const BASE = path.join(
+  __dirname, '..', 'src', 'webparts', 'shared', 'StrataWebPart.ts'
+);
 const WEB_PART = path.join(
   __dirname, '..', 'src', 'webparts', 'markstrata', 'MarkstrataWebPart.ts'
 );
-const source = fs.readFileSync(WEB_PART, 'utf8');
+const source = fs.readFileSync(BASE, 'utf8');
+const webPartSource = fs.readFileSync(WEB_PART, 'utf8');
 
 /*
  * startUp rather than onInit: onInit's whole body is now a try/catch around
@@ -65,10 +77,14 @@ test('the reading is actually reading something', () => {
   const fields = lateFields(code);
   const methods = methodsOf(code);
 
-  assert.ok(fields.size > 8, `only found ${fields.size} fields`);
+  /* Seven is what StrataWebPart actually has: lateFields excludes anything
+     typed "| undefined", which is most of the state, and the five renderers
+     now belong to the subclass and are counted by its own test below. The
+     named checks that follow are the stronger half of this guard. */
+  assert.ok(fields.size > 5, `only found ${fields.size} fields`);
   assert.ok(methods.has('onInit'), 'onInit was not found');
   assert.ok(methods.has(BUILDS_IT), `${BUILDS_IT} was not found`);
-  assert.ok(methods.has('processorOptions'), 'processorOptions was not found');
+  assert.ok(methods.has('loadContent'), 'loadContent was not found');
 
   /* And onInit still reaches it, or the method read above is not the one that
      runs when SharePoint starts the web part. */
@@ -76,9 +92,75 @@ test('the reading is actually reading something', () => {
     methods.get('onInit').immediate.indexOf(`this.${BUILDS_IT}(`) !== -1,
     `onInit does not call ${BUILDS_IT}`
   );
-  ['navigator', 'sharePoint', 'processor', 'enhancer'].forEach((field) => {
+  ['navigator', 'sharePoint', 'paneSources', 'versionPanel'].forEach((field) => {
     assert.ok(fields.has(field), `${field} was not recognised as a field`);
   });
+});
+
+/*
+ * The subclass half of the same rule.
+ *
+ * startUp calls buildRenderers, so a renderer that reads another one before it
+ * is built fails on exactly the path the shipped bug failed on - the base would
+ * be innocent and the web part would still not start. Read here rather than
+ * folded into the analysis above because the two are different methods in
+ * different files and a single pass over either would miss it.
+ */
+test('the web part builds every renderer before it uses one', () => {
+  const problems = analyse(webPartSource, 'buildRenderers');
+  const described = problems.map((problem) =>
+    `${problem.field} is used on line ${problem.usedOnLine} (by ${problem.usedBy})` +
+    ` but is not built until line ${problem.builtOnLine}`
+  );
+  assert.deepEqual(described, []);
+});
+
+test('the renderer reading is actually reading something', () => {
+  const code = blankCommentsAndStrings(webPartSource);
+  const fields = lateFields(code);
+  const methods = methodsOf(code);
+
+  assert.ok(methods.has('buildRenderers'), 'buildRenderers was not found');
+  assert.ok(methods.has('processorOptions'), 'processorOptions was not found');
+  ['processor', 'enhancer', 'viewRenderer', 'editManager'].forEach((field) => {
+    assert.ok(fields.has(field), `${field} was not recognised as a field`);
+  });
+});
+
+test('disposeRenderers stops nothing without checking it is there', () => {
+  /* The other half of onDispose. The base stops what it built; the subclass
+     stops its renderers, and does it in a method of its own - so the same rule
+     has to be read there. A disposal that throws takes the page down and hides
+     whatever really went wrong, whichever class it happened in. */
+  const code = blankCommentsAndStrings(webPartSource);
+  const fields = lateFields(code);
+  const dispose = methodsOf(code).get('disposeRenderers');
+
+  assert.ok(dispose, 'disposeRenderers was not found');
+
+  const body = dispose.body;
+  const unguarded = [];
+  const inspected = [];
+  const use = /this\.([A-Za-z_$][\w$]*)\s*\./g;
+  let match = use.exec(body);
+
+  while (match) {
+    const field = match[1];
+    const before = body.slice(0, match.index);
+    const guarded = new RegExp(`if\\s*\\(\\s*(?:[^)]*&&\\s*)?this\\.${field}\\b`).test(before);
+
+    if (fields.has(field)) {
+      inspected.push(field);
+      if (!guarded) { unguarded.push(field); }
+    }
+    match = use.exec(body);
+  }
+
+  assert.ok(
+    inspected.length >= 2,
+    `only ${inspected.length} renderers were found in disposeRenderers to check`
+  );
+  assert.deepEqual(unguarded, [], 'these are stopped without checking they exist');
 });
 
 test('a class that uses a field before building it is caught', () => {
@@ -153,7 +235,7 @@ test('onDispose shuts nothing down without checking it is there', () => {
   }
 
   assert.ok(
-    inspected.length >= 4,
+    inspected.length >= 3,
     `only ${inspected.length} collaborators were found in onDispose to check`
   );
   assert.deepEqual(

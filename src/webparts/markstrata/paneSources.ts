@@ -27,12 +27,12 @@
  * .NOTES
  * Since:     0.0.17.0
  * Ships in:  the web part bundle
- * Requires:  SharePointService.ts, webPartProps.ts
+ * Requires:  SharePointService.ts, strataWebPartProps.ts
  */
 
 import { IPropertyPaneDropdownOption } from '@microsoft/sp-property-pane';
 
-import { IMarkstrataWebPartProps } from './webPartProps';
+import { IStrataWebPartProps } from '../shared/strataWebPartProps';
 import { SharePointService, IFileMetadata, ILibraryInfo } from './utils/SharePointService';
 
 export class PaneSources {
@@ -41,11 +41,18 @@ export class PaneSources {
   public files: IPropertyPaneDropdownOption[] = [];
 
   private readonly sharePoint: SharePointService;
-  private readonly properties: IMarkstrataWebPartProps;
+  private readonly properties: IStrataWebPartProps;
+  /** Which files the picker offers. Markdown unless a web part says otherwise. */
+  private readonly extensions: string[] | undefined;
 
-  public constructor(sharePoint: SharePointService, properties: IMarkstrataWebPartProps) {
+  public constructor(
+    sharePoint: SharePointService,
+    properties: IStrataWebPartProps,
+    extensions?: string[]
+  ) {
     this.sharePoint = sharePoint;
     this.properties = properties;
+    this.extensions = extensions;
   }
 
   /**
@@ -75,7 +82,8 @@ export class PaneSources {
   public async loadFiles(): Promise<void> {
     const files: IFileMetadata[] = await this.sharePoint.getMarkdownFiles(
       this.properties.selectedLibrary,
-      this.properties.selectedFolder
+      this.properties.selectedFolder,
+      this.extensions
     );
     this.files = files.map((file: IFileMetadata) => ({
       key: file.serverRelativeUrl,

@@ -1,55 +1,47 @@
 /**
  * .SYNOPSIS
- * What an author has configured, as one shape.
+ * What an author has configured on the markdown web part, as one shape.
  *
  * .DESCRIPTION
  * Apart on its own because two files need it and neither should have to import
  * the other for it: the web part, which owns the values, and the property
- * pane, which draws them. It is also the one place to read to see everything
- * the web part can be told to do.
+ * pane, which draws them.
+ *
+ * Most of what an author sets is not about markdown at all - where the file
+ * comes from, the theme, the toolbar, how an export is laid out - and that
+ * half lives in IStrataWebPartProps, which the HTML web part shares. What is
+ * left here is what only means something to markdown: its code fences, its
+ * diagrams, its maths, its wiki links, and whether the raw HTML an author
+ * wrote inside it is allowed through.
+ *
+ * So the two files read together are still the one place to look to see
+ * everything this web part can be told to do. The shared half first.
  *
  * .USAGE
  *   import { IMarkstrataWebPartProps } from './webPartProps';
  *
- *   // The web part owns the values; the property pane draws them.
  *   export default class MarkstrataWebPart
- *     extends BaseClientSideWebPart<IMarkstrataWebPartProps> { }
+ *     extends StrataWebPart<IMarkstrataWebPartProps> { }
  *
  * .NOTES
  * Since:     0.0.17.0
  * Ships in:  the web part bundle
- * Requires:  ThemeManager.ts, mermaidConfig.ts, backToTop.ts, codeBlocks.ts,
- *            ViewModeRenderer.ts, tocWidth.ts, SharePointService.ts
+ * Requires:  strataWebPartProps.ts, mermaidConfig.ts, codeBlocks.ts
  */
 
-import { ThemeFamily, ColorMode } from './utils/ThemeManager';
+import { IStrataWebPartProps } from '../shared/strataWebPartProps';
 import { DiagramWidth } from './utils/mermaidConfig';
-import { BackToTop } from './utils/backToTop';
 import { CodeHeight } from './utils/codeBlocks';
-import { TocPosition } from './utils/ViewModeRenderer';
-import { TocWidthMode, TocWidthUnit } from './utils/tocWidth';
-import { IFileMetadata } from './utils/SharePointService';
 
-export interface IMarkstrataWebPartProps {
-  // Content
-  contentSource: 'manual' | 'library' | 'url';
+export interface IMarkstrataWebPartProps extends IStrataWebPartProps {
+  /**
+   * The markdown itself.
+   *
+   * Named for what it holds rather than called "content", because the
+   * property pane shows the name to an author and the search index carries it.
+   * StrataWebPart reaches it through its documentText accessor.
+   */
   markdownContent: string;
-  fileUrl: string;
-  selectedLibrary: string;
-  selectedFolder: string;
-  selectedFile: string;
-  enableAutoRefresh: boolean;
-
-  // Appearance
-  themeFamily: ThemeFamily;
-  colorMode: ColorMode;
-  contentWidth: string;
-  density: string;
-  textSize: string;
-  codeSize: string;
-  imageAlign: string;
-  showThemeSwitcher: boolean;
-  fillHeight: boolean;
 
   // Code blocks
   enableSyntaxHighlighting: boolean;
@@ -58,48 +50,25 @@ export interface IMarkstrataWebPartProps {
   wrapCodeLines: boolean;
   codeHeight: CodeHeight;
 
-  // Features
+  // Diagrams and maths, both of which are fenced markdown constructs
   enableMermaid: boolean;
   diagramWidth: DiagramWidth;
-  enableImageZoom: boolean;
-  enableTableSort: boolean;
-  followDocumentLinks: boolean;
+  enableMath: boolean;
+
+  /** Heading anchors, which markdown-it generates from the heading text. */
+  enableAnchors: boolean;
+
+  // Wiki links and tags: markdown syntax with no HTML equivalent
   enableWikiLinks: boolean;
   checkWikiLinks: boolean;
   enableTags: boolean;
-  showReadingTime: boolean;
-  backToTop: BackToTop;
-  enableMath: boolean;
-  enableAnchors: boolean;
-  tocPosition: TocPosition;
-  tocMaxLevel: number;
-  tocWidthMode: TocWidthMode;
-  tocWidthUnit: TocWidthUnit;
-  tocWidthValue: number;
-  toolbarVisibility: 'always' | 'editing' | 'never';
-  /** Keep the toolbar in view while the document scrolls under it. */
-  stickyToolbar: boolean;
-  /** Was showPrintButton until the button began exporting rather than printing. */
-  showExportButton: boolean;
-  /** A title page in front of an export. */
-  exportCoverPage: boolean;
-  /** A contents page, with the page number each heading landed on. */
-  exportContentsPage: boolean;
-  /** Start each top level section of an export on a page of its own. */
-  exportSectionBreaks: boolean;
-  showShareButton: boolean;
-  showSourceInfo: boolean;
-  pinMeta: boolean;
-  enableVersionHistory: boolean;
-  allowHtml: boolean;
 
-  // Runtime state kept with the web part
-  fileMetadata?: IFileMetadata;
   /**
-   * Plain text of the rendered document. Declared searchable below, which is
-   * what puts the content into the Microsoft Search index - a client-side web
-   * part renders after the crawler has seen the page, so the text has to be
-   * stored with the part to be findable.
+   * Whether raw HTML an author wrote inside the markdown is rendered.
+   *
+   * Off by default, and markdown-only by nature: in the HTML web part the
+   * whole document is HTML, so there is nothing for a switch to allow. What
+   * that web part does instead is sanitise always.
    */
-  searchablePlainText: string;
+  allowHtml: boolean;
 }
