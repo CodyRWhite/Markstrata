@@ -23,6 +23,13 @@
 
 import { ColumnKind, ISortableRow, columnKind, sortedOrder } from './tables';
 
+/**
+ * The box a table sits in. Named once here because the stylesheet, the
+ * measurement and the wrapping all have to agree on it, and because
+ * MarkdownProcessor writes the same class into its rendered output.
+ */
+const SCROLL_BOX: string = 'strata-table-scroll';
+
 export class TableTools {
   /** Watches each table's box, because whether it fits decides how it behaves. */
   private fitObserver: ResizeObserver | undefined;
@@ -36,11 +43,22 @@ export class TableTools {
    * when the table is actually wider than the column, so each is measured and
    * the ones that fit are let out of it. That is a measurement, so it is
    * redone when the column changes width.
+   *
+   * WHY THE BOX IS PUT ON HERE RATHER THAN ASSUMED
+   * It used to be assumed, because markdown-it puts it on every table it
+   * renders, and for as long as markdown was the only document that was the
+   * same thing. An author's HTML arrives as the author wrote it, so no table
+   * in it had a box: this method found none, returned, and left those tables
+   * with no fit measurement, no sorting, and a sticky header with nothing to
+   * stick to but the page - which slid it down onto the last row and hid it.
+   *
+   * The stylesheet's precondition is that a table lives inside one of these
+   * boxes, so the code that the stylesheet depends on is the right place to
+   * guarantee it rather than hope for it. A markdown table already has one and
+   * is left exactly as it was.
    */
   public enhance(container: HTMLElement, allowSort: boolean): void {
-    const wraps: HTMLElement[] = Array.prototype.slice.call(
-      container.querySelectorAll('.strata-table-scroll')
-    );
+    const wraps: HTMLElement[] = boxEveryTable(container);
     if (wraps.length === 0) {
       return;
     }
@@ -54,7 +72,7 @@ export class TableTools {
       /* A pixel of slack: a table that fits exactly can measure a hair wider
          than its box through rounding, and would then be caged for nothing. */
       const fits: boolean = table.scrollWidth <= wrap.clientWidth + 1;
-      wrap.classList.toggle('strata-table-scroll--fits', fits);
+      wrap.classList.toggle(`${SCROLL_BOX}--fits`, fits);
     };
 
     wraps.forEach(letOutIfItFits);
@@ -92,6 +110,53 @@ export class TableTools {
  * neighbours, and moving it away from them turns a table into a mess. So a
  * table holding one is left exactly as the document wrote it.
  */
+/**
+ * Puts every table in the container inside the box the stylesheet expects.
+ *
+ * Idempotent, and it has to be: a markdown table is already inside one, and
+ * this runs again on every render. A table that already has a box keeps it,
+ * and its box is returned rather than a second one wrapped around it.
+ *
+ * A table inside another table's cell is left to the outer table's box. One
+ * box is what scrolls, and nesting a second inside it would give the inner
+ * table a scrollbar of its own inside a cell.
+ */
+function boxEveryTable(container: HTMLElement): HTMLElement[] {
+  /* Static, from querySelectorAll, which matters because the loop below moves
+     the very nodes it is walking. */
+  const tables: HTMLTableElement[] = Array.prototype.slice.call(
+    container.querySelectorAll('table')
+  );
+  const boxes: HTMLElement[] = [];
+
+  tables.forEach((table: HTMLTableElement) => {
+    const parent: HTMLElement | null = table.parentElement;
+    if (!parent) {
+      return;
+    }
+
+    if (parent.classList.contains(SCROLL_BOX)) {
+      if (boxes.indexOf(parent) === -1) {
+        boxes.push(parent);
+      }
+      return;
+    }
+
+    /* Already inside one, through a cell of a table that has its own box. */
+    if (table.closest && table.closest(`.${SCROLL_BOX}`)) {
+      return;
+    }
+
+    const box: HTMLElement = document.createElement('div');
+    box.className = SCROLL_BOX;
+    parent.insertBefore(box, table);
+    box.appendChild(table);
+    boxes.push(box);
+  });
+
+  return boxes;
+}
+
 function makeSortable(table: HTMLTableElement): void {
   const head: HTMLTableRowElement | null = table.querySelector(':scope > thead > tr');
   const body: HTMLTableSectionElement | null = table.querySelector(':scope > tbody');

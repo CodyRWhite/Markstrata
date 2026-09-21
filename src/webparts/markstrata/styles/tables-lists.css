@@ -31,7 +31,13 @@
  * and taken off again when the column changes width.
  */
 .strata-table-scroll--fits {
-  overflow: visible;
+  /*
+   * Hidden rather than visible, and the difference is the whole of the fault
+   * below: hidden is still a scroll container, so a sticky header inside it
+   * stays confined to its own table. Nothing is clipped by it, because a table
+   * that fits is a table with nothing to overflow.
+   */
+  overflow: hidden;
 }
 
 /*
@@ -43,17 +49,39 @@
  * to the table rather than to the cell, so a cell that moves leaves its bottom
  * border behind, and the rows then slide under a header with nothing beneath
  * it. Painted inside the cell, it travels.
+ *
+ * IT STICKS TO ITS OWN BOX, AND top IS ZERO, AND BOTH OF THOSE ARE THE FIX
+ * A sticky cell sticks to the nearest scrolling ancestor and is confined to
+ * its own containing block, which for a header cell is the table. Both halves
+ * matter, because getting either wrong parks the header at the bottom of its
+ * own table, on top of the last row, which z-index then hides.
+ *
+ * It used to stick to the page, with top set to the offset that clears
+ * SharePoint's suite header and command bar. That reads as a header that
+ * follows the reader down a long table, and it is - until the sticky line
+ * falls outside the table's rows, at which point the header is pushed as far
+ * down as its containing block allows and sits over the last row. That needs
+ * no scrolling to happen: a table whose top is above the offset line, which is
+ * any table near the top of a SharePoint page, renders that way on load. It
+ * came out as a blank band where the header should be, the header third, and a
+ * row invisible underneath it.
+ *
+ * So the box is always a scroll container and top is zero: the header holds at
+ * the top of its own table and can never be pushed anywhere else. What that
+ * gives up is a header that follows the reader down a long table. What it buys
+ * is that a header can never hide a row, and hiding a row is not a matter of
+ * taste.
  */
-.strata-content thead th {
+.strata-table-scroll thead th {
   position: sticky;
-  top: var(--strata-scroll-offset, 0px);
+  top: 0;
   z-index: 1;
   box-shadow: inset 0 -1px 0 var(--strata-table-border, var(--strata-border));
 }
 
 /* On paper nothing scrolls, and a stuck header prints over the rows. */
 @media print {
-  .strata-content thead th {
+  .strata-table-scroll thead th {
     position: static;
   }
 }
@@ -82,7 +110,10 @@
 
 .strata-th-sort:focus-visible {
   outline: 2px solid var(--strata-link);
-  outline-offset: 2px;
+  /* Inside the cell, not outside it. The box a table sits in is a scroll
+     container, which is what confines the sticky header, and a ring drawn
+     outside the first or last header cell would be clipped by it. */
+  outline-offset: -2px;
 }
 
 /*

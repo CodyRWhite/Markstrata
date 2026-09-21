@@ -179,6 +179,40 @@ narrowing switched off: an id beats a bare element selector, so what it measured
 was CSS precedence. The probe is an unstyled paragraph now, and it was verified
 the other way round before being trusted.
 
+### A table header that hid a row
+
+Reported from a tenant against the first test build: a table came out with a
+blank band where its header should be, the header partway down, and a row
+invisible underneath it.
+
+Two faults, one cause. markdown-it wraps every table it renders in a box that
+scrolls sideways, so for as long as markdown was the only kind of document, "a
+table is inside a box" was true by accident and the stylesheet could rely on it.
+An author's HTML arrives as the author wrote it, so no table in it had one. The
+table enhancer looked for boxes, found none and returned, which left those
+tables with no fit measurement, no sorting, and a sticky header with nothing to
+stick to but the web part itself.
+
+A sticky cell cannot leave its containing block, which for a header cell is the
+table. Stuck to the page - or to a fixed-height web part, which is its own
+scroll container - the header was pushed the chrome offset's worth down and
+parked on the last row, which z-index then hid. It needed no scrolling at all
+to happen.
+
+So the enhancer puts the box on every table now rather than hoping one is
+there, and the header sticks to that box at the top, where it cannot be pushed
+anywhere else. What that gives up is a header that follows the reader down a
+long table. What it buys is that a header can never hide a row, and hiding a
+row is not a matter of taste. If following is wanted back, the way to have both
+is a scrolling box with a height of its own, which is a change to how a
+document is laid out rather than a fix.
+
+Sorting an author's table works for the first time as a result, since the
+enhancer never reached it before.
+
+Both faults are driven now, in the arrangement that showed them, and the
+diagnosis was checked against the old stylesheet rather than assumed.
+
 ### Two build fixes worth recording
 
 The scroll walk that finds what is actually scrolling on a page was written

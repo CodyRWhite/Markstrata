@@ -1356,18 +1356,25 @@ const LIBRARY_PATH = '/sites/demo/Documents';
   });
 
   /*
-   * A sticky header has a condition nothing in the stylesheet can see: the box
-   * a wide table scrolls in is also a scroll container, and a sticky cell
-   * sticks to that rather than to the page - so inside it the header never
-   * moves. Tables that fit are let out of the box by measurement, and this is
-   * that measurement.
+   * Whether a table is wider than its column is a measurement, not something a
+   * stylesheet can see, so the enhancer takes it and marks the box. What the
+   * mark decides is whether the box gets a scrollbar: a wide table scrolls
+   * sideways instead of stretching the page, and a table that fits must not be
+   * given a scrollbar for nothing.
+   *
+   * It is not, any more, whether the box is a scroll container. Both kinds are,
+   * because that is what confines the sticky header to its own table - see the
+   * step below, and the comment in tables-lists.css. A fitting box is hidden
+   * rather than auto, which scrolls nothing and clips nothing, there being
+   * nothing to overflow it.
    */
-  await step('a table that fits its column is let out of the scroll box', async () => {
+  await step('a table that fits its column is not given a scrollbar', async () => {
     const seen = await page.evaluate(() => {
       const wraps = [...document.querySelectorAll('.strata-table-scroll')];
       return wraps.map((wrap) => ({
         fits: wrap.classList.contains('strata-table-scroll--fits'),
         overflow: getComputedStyle(wrap).overflowX,
+        scrolls: wrap.scrollWidth > wrap.clientWidth + 1,
         wider: wrap.querySelector('table').scrollWidth > wrap.clientWidth + 1
       }));
     });
@@ -1376,46 +1383,75 @@ const LIBRARY_PATH = '/sites/demo/Documents';
       if (wrap.fits === wrap.wider) {
         throw new Error('table ' + index + ' is ' + JSON.stringify(wrap));
       }
-      if (wrap.fits && wrap.overflow !== 'visible') {
-        throw new Error('table ' + index + ' fits but still scrolls: ' + wrap.overflow);
+      if (wrap.fits && wrap.overflow === 'auto') {
+        throw new Error('table ' + index + ' fits but was given a scrollbar');
+      }
+      if (wrap.fits && wrap.scrolls) {
+        throw new Error('table ' + index + ' fits but its box scrolls: '
+          + JSON.stringify(wrap));
+      }
+      if (!wrap.fits && wrap.overflow !== 'auto') {
+        throw new Error('table ' + index + ' is wider than its column but cannot scroll: '
+          + wrap.overflow);
       }
     });
   });
 
-  await step('a table header stays in view while its rows go past', async () => {
+  await step('a table header holds at the top of its own table', async () => {
+    /*
+     * It used to hold at the line that clears SharePoint's own chrome, and
+     * follow the reader down the page. That reads well and hides a row: a
+     * sticky cell cannot leave its containing block, so once that line falls
+     * outside the table's rows the header is pushed as far down as the table
+     * allows and sits on top of the last one, which z-index then hides.
+     *
+     * It needs no scrolling to happen. A fixed-height web part is itself a
+     * scroll container, so the header was pushed the offset's worth down
+     * inside it on load: blank band where the header should be, header partway
+     * down, a row invisible underneath. Reported from a tenant, reproduced
+     * here, and checked against the old stylesheet to be sure it was this.
+     *
+     * So it holds at the top of its own table and can never be pushed
+     * anywhere else. What that gives up is following the reader; what it buys
+     * is that a header can never hide a row.
+     */
     const stuck = await page.evaluate(async () => {
-      const wrap = document.querySelector('.strata-table-scroll--fits');
-      if (!wrap) { return { error: 'no table is out of its box' }; }
+      const wrap = document.querySelector('.strata-table-scroll');
+      if (!wrap) { return { error: 'no table is in a scroll box' }; }
       const table = wrap.querySelector('table');
       const header = table.querySelector('thead th');
-      const root = document.querySelector('.strata-root');
-      const offset = parseFloat(getComputedStyle(root).getPropertyValue('--strata-scroll-offset')) || 0;
-
-      /* Far enough that the table's own top has gone past the line the header
-         should hold, while its last row is still below it. */
       const head = header.getBoundingClientRect().height;
-      window.scrollBy(0, table.getBoundingClientRect().top - offset + head);
+
+      /* Far enough that the table's own top has gone past where the header
+         used to hold, which is where the old rule started moving it. */
+      window.scrollBy(0, table.getBoundingClientRect().top + head);
       await new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done)));
 
-      const bounds = table.getBoundingClientRect();
+      const box = (el) => {
+        const r = el.getBoundingClientRect();
+        return { top: r.top, bottom: r.bottom };
+      };
+      const seen = box(header);
       return {
-        offset: offset,
-        header: header.getBoundingClientRect().top,
-        tableTop: bounds.top,
-        tableBottom: bounds.bottom,
-        position: getComputedStyle(header).position
+        position: getComputedStyle(header).position,
+        header: seen,
+        table: box(table),
+        covered: [...table.querySelectorAll('tbody tr')]
+          .filter((row) => seen.top < box(row).bottom && seen.bottom > box(row).top)
+          .map((row) => (row.children[0].textContent || '').trim())
       };
     });
-    if (stuck.error) throw new Error(stuck.error);
-    if (stuck.position !== 'sticky') throw new Error('the header is ' + stuck.position);
-    if (stuck.tableTop >= stuck.offset || stuck.tableBottom <= stuck.offset) {
-      throw new Error('the table did not straddle the line: ' + JSON.stringify(stuck));
-    }
-    if (Math.abs(stuck.header - stuck.offset) > 2) {
-      throw new Error('the header rode up to ' + Math.round(stuck.header)
-        + ' with the line at ' + Math.round(stuck.offset));
-    }
     await page.evaluate(() => window.scrollTo(0, 0));
+
+    if (stuck.error) throw new Error(stuck.error);
+    /* What position it is given is incidental now, and deliberately not
+       asserted: what matters is where it ends up and what it hides. */
+    if (Math.abs(stuck.header.top - stuck.table.top) > 2) {
+      throw new Error('the header left the top of its table: ' + JSON.stringify(stuck));
+    }
+    if (stuck.covered.length) {
+      throw new Error('the header is sitting on top of ' + stuck.covered.join(', '));
+    }
   });
 
   await step('clicking a column sorts by it, and a third click puts it back', async () => {
@@ -4991,6 +5027,110 @@ const LIBRARY_PATH = '/sites/demo/Documents';
       throw new Error('still shown at 500px wide: display is ' + narrow);
     }
   });
+
+  await step('an author\u2019s table is boxed, sortable, and keeps its header put', async () => {
+    /*
+     * Reported from a tenant: a table came out with a blank band where its
+     * header should be, the header partway down, and a row invisible
+     * underneath it.
+     *
+     * The cause was a precondition the stylesheet had and nothing guaranteed.
+     * markdown-it wraps every table it renders in a scroll box, so for as long
+     * as markdown was the only document, "a table is inside a box" was true by
+     * accident. An author\u2019s HTML arrives as the author wrote it, so no table
+     * in it had one: the table enhancer found no boxes and returned, which left
+     * those tables with no fit measurement, no sorting, and a sticky header
+     * with nothing to stick to but the page or the web part itself.
+     *
+     * Both halves are checked here, and the height is set to a fixed one on
+     * purpose: that makes the web part its own scroll container, which is the
+     * arrangement that showed the fault with no scrolling at all.
+     */
+    const table = await page.evaluate(async () => {
+      await window.htmlHarness.start({
+        contentSource: 'manual',
+        selectedLibrary: '',
+        selectedFile: '',
+        heightMode: 'fixed',
+        fixedHeight: 420,
+        htmlContent: '<h2>By priority</h2>'
+          + '<table><thead><tr><th>Priority</th><th>Tickets</th></tr></thead>'
+          + '<tbody><tr><td>P3</td><td>16</td></tr><tr><td>P4</td><td>119</td></tr></tbody></table>'
+      });
+      await new Promise((resolve) => setTimeout(resolve, 900));
+
+      const found = document.querySelector('#host table');
+      if (!found) { return { missing: true }; }
+      const header = found.querySelector('thead th');
+      const box = (el) => {
+        const r = el.getBoundingClientRect();
+        return { top: r.top, bottom: r.bottom };
+      };
+      const seen = box(header);
+
+      return {
+        boxed: !!found.closest('.strata-table-scroll'),
+        /* Every row still there and in the order the author wrote them: the
+           enhancer moves rows when it sorts, and nothing has asked it to. */
+        rows: [...found.querySelectorAll('tbody tr')]
+          .map((row) => (row.children[0].textContent || '').trim()),
+        headerFirst: found.querySelector('tr') === header.parentElement,
+        headerAtTop: Math.abs(seen.top - box(found).top) <= 2,
+        covered: [...found.querySelectorAll('tbody tr')]
+          .filter((row) => seen.top < box(row).bottom && seen.bottom > box(row).top)
+          .map((row) => (row.children[0].textContent || '').trim()),
+        /* Sorting was unreachable before, because the enhancer returned before
+           it got there. */
+        sortable: !!found.querySelector('.strata-th-sort')
+      };
+    });
+
+    if (table.missing) throw new Error('no table was drawn');
+    if (!table.boxed) {
+      throw new Error('the table is not in the box the stylesheet expects');
+    }
+    if (!table.headerFirst) throw new Error('the header row is not the first row');
+    if (!table.headerAtTop) {
+      throw new Error('the header is not at the top of its own table');
+    }
+    if (table.covered.length) {
+      throw new Error('the header is sitting on top of ' + table.covered.join(', '));
+    }
+    /* The row that went missing in the report. */
+    if (table.rows.join(',') !== 'P3,P4') {
+      throw new Error('the rows are ' + JSON.stringify(table.rows) + ', expected P3 then P4');
+    }
+    if (!table.sortable) {
+      throw new Error('the table did not become sortable, so the enhancer never reached it');
+    }
+  });
+
+  await step('and a markdown table is left in the one box it already had', async () => {
+    /* The boxing has to be idempotent: a markdown table arrives with a box and
+       this runs on every render, so a second box around the first would give
+       the table a scrollbar inside a scrollbar. */
+    const nested = await page.evaluate(async () => {
+      await window.htmlHarness.start({
+        contentSource: 'manual',
+        selectedLibrary: '',
+        selectedFile: '',
+        htmlContent: '<div class="strata-table-scroll"><table><thead><tr><th>A</th></tr></thead>'
+          + '<tbody><tr><td>1</td></tr></tbody></table></div>'
+      });
+      await new Promise((resolve) => setTimeout(resolve, 700));
+      return {
+        boxes: document.querySelectorAll('#host .strata-table-scroll').length,
+        direct: !!document.querySelector('#host .strata-table-scroll > table')
+      };
+    });
+    if (nested.boxes !== 1) {
+      throw new Error(nested.boxes + ' boxes around one table');
+    }
+    if (!nested.direct) {
+      throw new Error('the table is no longer a direct child of its box');
+    }
+  });
+
 
   /*
    * Closed before the tally is read, not after.
