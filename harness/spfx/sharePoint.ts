@@ -202,6 +202,91 @@ const FILE_IDS: { [path: string]: string } = {
  */
 Object.keys(REMOTE_CODE).forEach((url: string) => put(url, REMOTE_CODE[url]));
 
+/*
+ * HTML documents, for the HTML web part. Three of them, and each earns its
+ * place.
+ *
+ * notes.html is a whole file rather than a fragment - a doctype, a head with a
+ * title and a <style> block, a body - because that is what somebody points the
+ * web part at, and because the <style> block is the thing the sanitiser
+ * silently removes if it is not lifted out first.
+ *
+ * It also carries the three kinds of link whose handling differs: a relative
+ * one to a neighbouring HTML document, which opens in the web part; a relative
+ * one to something that is not a document, which does not; and one naming
+ * another server, which is somebody else's. And a <script>, so that what
+ * survives sanitising can be checked rather than assumed.
+ */
+const NOTES_HTML: string = [
+  '<!doctype html>',
+  '<html lang="en">',
+  '<head>',
+  '  <meta charset="utf-8">',
+  '  <title>Deploy notes</title>',
+  '  <style>',
+  '    /* Three rules, and each is here to be looked for. The body rule and',
+  '       the bare element rule are what a stylesheet that escaped the web',
+  '       part would change out in the page; the class rule is what has to',
+  '       keep working inside it. */',
+  '    body { background: rgb(255, 248, 225); }',
+  '    p { color: rgb(200, 0, 0); }',
+  '    .note { border-left: 4px solid #b8860b; padding-left: 12px; }',
+  '  </style>',
+  '</head>',
+  '<body>',
+  '  <h1>Deploy notes</h1>',
+  '  <p class="note">Watch the queue length for ten minutes after.</p>',
+  '  <h2>When it goes wrong</h2>',
+  '  <p>Read <a href="rollback.html">rolling back</a>, which is this backwards.</p>',
+  '  <p>The signed-off plan is <a href="plan.pdf">a PDF</a>.</p>',
+  '  <p>And <a href="https://example.com/elsewhere">somebody else\u2019s page</a>.</p>',
+  '  <table>',
+  '    <thead><tr><th>Step</th><th>Minutes</th></tr></thead>',
+  '    <tbody><tr><td>Drain</td><td>4</td></tr><tr><td>Swap</td><td>2</td></tr></tbody>',
+  '  </table>',
+  '  <script>window.strataScriptRan = true;</script>',
+  '</body>',
+  '</html>',
+  ''
+].join('\n');
+
+/* The document the first one links to, so following a link has somewhere to
+   land. A fragment as well, so landing on a heading can be checked. */
+const ROLLBACK_HTML: string = [
+  '<h1>Rolling back</h1>',
+  '<p>The deploy notes, backwards.</p>',
+  '<h2>Undo the swap</h2>',
+  '<p>Put the old one back first, then drain again.</p>',
+  ''
+].join('\n');
+
+/* A fragment rather than a document: no doctype, no head, no styles. The web
+   part has to draw one of these as readily as a whole file, because plenty of
+   what people keep in a library is a fragment somebody exported. */
+const FRAGMENT_HTML: string = [
+  '<h1>A fragment</h1>',
+  '<p>No doctype, no head, no styles of its own.</p>',
+  ''
+].join('\n');
+
+/*
+ * A stylesheet in the library, which is how several HTML web parts are given
+ * one look from one file. It names body and html on purpose: those are the
+ * selectors that have to be narrowed to the web part in inline mode, and a
+ * stylesheet that did not use them would not test the narrowing.
+ */
+const SHARED_CSS: string = [
+  'html, body { background: rgb(238, 245, 255); }',
+  'h1 { color: rgb(20, 83, 45); }',
+  '.note { font-style: italic; }',
+  ''
+].join('\n');
+
+put(`${LIBRARY}/notes.html`, NOTES_HTML);
+put(`${LIBRARY}/rollback.html`, ROLLBACK_HTML);
+put(`${LIBRARY}/fragment.htm`, FRAGMENT_HTML);
+put(`${LIBRARY}/shared.css`, SHARED_CSS);
+
 put(`${LIBRARY}/handbook.md`, typeof SAMPLE === 'string' ? SAMPLE : '# Handbook\n');
 put(`${LIBRARY}/index.md`, INDEX);
 put(`${LIBRARY}/Runbooks/Deploy notes.md`, DEPLOY);
@@ -210,6 +295,17 @@ put(`${LIBRARY}/Runbooks/rollback.md`, ROLLBACK);
 
 function fileName(path: string): string {
   return path.slice(path.lastIndexOf('/') + 1);
+}
+
+/* The real service exports this; the stand-in keeps its own copy rather than
+   importing it, because the whole point of a stand-in is that it does not
+   depend on the thing it stands in for. tests/stand-ins.test.js is what keeps
+   the two honest. */
+function hasExtension(name: string, extensions: string[]): boolean {
+  const lower: string = (name || '').toLowerCase();
+  return extensions.some(
+    (extension: string) => lower.lastIndexOf(extension) === lower.length - extension.length
+  );
 }
 
 function folderOf(path: string): string {
@@ -283,10 +379,22 @@ export class SharePointService {
     return SharePointService.answer(Array.from(new Set(inside)).sort());
   }
 
-  public async getMarkdownFiles(libraryUrl: string, folderPath?: string): Promise<IFileMetadata[]> {
+  /**
+   * The files in a folder, of the kinds the caller asked for.
+   *
+   * The extensions are honoured rather than ignored, and that matters here
+   * more than it looks: the two web parts pick from the same library and offer
+   * different kinds of file. A stand-in that handed every file to both would
+   * let a check on the HTML web part's file picker pass while the picker was
+   * offering markdown.
+   */
+  public async getMarkdownFiles(libraryUrl: string, folderPath?: string,
+    extensions?: string[]): Promise<IFileMetadata[]> {
     const folder: string = folderPath ? `${libraryUrl}/${folderPath}` : libraryUrl;
+    const wanted: string[] = extensions || ['.md', '.markdown'];
     const inside: IFileMetadata[] = Object.keys(files)
       .filter((path: string) => folderOf(path) === folder)
+      .filter((path: string) => hasExtension(fileName(path), wanted))
       .sort()
       .map(describe);
     return SharePointService.answer(inside);

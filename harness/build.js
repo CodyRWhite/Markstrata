@@ -212,6 +212,21 @@ const links = [katexHref]
   .map((href) => `<link rel="stylesheet" href="${href}">`)
   .join('\n');
 
+/*
+ * The HTML web part's own stylesheet, on top of all of those.
+ *
+ * It is not in CSS_FILES because CSS_FILES is what the markdown pages load,
+ * and this is the only page that draws a frame, a shadow mount or a document
+ * at full bleed. Left out, those three had no styling at all on the page that
+ * exists to check them, and the narrow-screen rule - which is entirely a
+ * media query in this file - simply was not there. The bundle loads it through
+ * an import the harness replaces with nothing, so the page has to link it.
+ */
+const htmlPartStyles = standalone
+  ? 'styles/html.css'
+  : '../../src/webparts/markstratahtml/styles/html.css';
+const htmlLinks = `${links}\n<link rel="stylesheet" href="${htmlPartStyles}">`;
+
 fs.writeFileSync(
   path.join(outDir, 'index.html'),
   `<!DOCTYPE html>
@@ -270,7 +285,7 @@ const SHAREPOINT_SERVICE = /(^|\/)SharePointService$/;
 
 /* Asynchronous because esbuild only takes plugins that way, and the whole
    point here is a plugin. */
-async function buildWebPartPage() {
+async function bundleWebPart(entry, outfile) {
   const esbuild = require('esbuild');
 
   const standIns = {
@@ -290,10 +305,10 @@ async function buildWebPartPage() {
   };
 
   await esbuild.build({
-    entryPoints: [path.join(__dirname, 'webPart.ts')],
+    entryPoints: [path.join(__dirname, entry)],
     bundle: true,
     format: 'iife',
-    outfile: path.join(outDir, 'webpart.js'),
+    outfile: path.join(outDir, outfile),
     sourcemap: true,
     /* The page links the real stylesheets, as index.html does; the web part's
        own imports of them would otherwise bundle a second copy. */
@@ -302,6 +317,10 @@ async function buildWebPartPage() {
     plugins: [standIns],
     logLevel: 'warning'
   });
+}
+
+async function buildWebPartPage() {
+  await bundleWebPart('webPart.ts', 'webpart.js');
 
   fs.writeFileSync(
     path.join(outDir, 'webpart.html'),
@@ -349,9 +368,89 @@ ${site.MODE_BOOTSTRAP}
   console.log(`Wrote ${path.relative(root, path.join(outDir, 'webpart.html'))}`);
 }
 
+/*
+ * The third page: the HTML web part itself.
+ *
+ * It exists because the HTML web part is the only part of either web part that
+ * cannot be checked without a browser. Whether a shadow root really keeps an
+ * author's stylesheet off the page; whether a sandboxed frame really refuses
+ * what its sandbox says it refuses; whether the CSS narrowing survives
+ * Chromium's own parser rather than a test that reads strings. Those are the
+ * browser's answers, not ours.
+ *
+ * The page carries one thing that is not the web part: a paragraph and a link
+ * outside it, styled by the page. A driver checks those are untouched, which
+ * is how an author's `body { background: ... }` escaping the web part is
+ * caught.
+ */
+async function buildHtmlWebPartPage() {
+  await bundleWebPart('htmlWebPart.ts', 'htmlwebpart.js');
+
+  fs.writeFileSync(
+    path.join(outDir, 'htmlwebpart.html'),
+    `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Markstrata - the HTML web part itself</title>
+${htmlLinks}
+${pageStyles(null)}
+<style>
+  .wp-intro { max-width: 1100px; margin: 0 auto; padding: 18px 22px 0;
+              color: var(--site-intro); font: 15px/1.6 system-ui, sans-serif; }
+  #wp-status { max-width: 1100px; margin: 12px auto 0; padding: 10px 14px;
+               border-radius: 6px; font: 600 14px/1.5 system-ui, sans-serif;
+               border: 1px solid; }
+  #wp-status[data-state="started"] { background: #edf7ed; border-color: #9ad29a; color: #1f5c1f; }
+  #wp-status[data-state="failed"] { background: #fdecea; border-color: #e2a6a0; color: #7a231b; }
+  #wp-status[data-state="away"], #wp-status[data-state="starting"] {
+               background: #f3f2f1; border-color: #d6d4d2; color: #424242; }
+  .pp-text { width: 100%; padding: 6px 8px; border: 1px solid #605e5c;
+             border-radius: 2px; font: inherit; background: #fff; color: #323130; }
+  /*
+   * What a driver measures to find out whether the document's stylesheet
+   * stayed where it was put.
+   *
+   * Deliberately unstyled. The first version of this carried an id selector
+   * and its own background, and the check passed with the scoping switched
+   * off: an id beats a bare element selector on specificity, so what was
+   * measured was CSS precedence rather than anything the web part does. This
+   * paragraph has no rule of its own at all, so the only thing that can
+   * colour it is a rule that escaped.
+   */
+  #wp-probe { margin: 0 auto; max-width: 1100px; padding: 0 22px 12px;
+              font: 15px/1.6 system-ui, sans-serif; }
+</style>
+${site.MODE_BOOTSTRAP}
+</head>
+<body>
+<p class="wp-intro">This is <strong>MarkstrataHtmlWebPart</strong> itself, started the way a SharePoint page starts it. SharePoint around it is stood in for; the web part is the real one. The library holds <code>notes.html</code>, which is a whole HTML file with a <code>&lt;style&gt;</code> block, a <code>&lt;script&gt;</code> and three kinds of link in it, plus <code>rollback.html</code> to follow a link to, <code>fragment.htm</code>, and <code>shared.css</code> to dress them with.</p>
+<p id="wp-probe">This paragraph is outside the web part and has no styling of its own, so anything that colours it is a rule that escaped the document. <a id="wp-outside-link" href="https://example.com/outside">A link outside the web part</a>, for the same reason.</p>
+<div id="wp-status" data-state="starting">Starting…</div>
+<div class="demo-actions">
+  <button type="button" id="demo-configure" aria-expanded="false" aria-controls="demo-panel">Edit web part properties</button>
+  <button type="button" class="demo-secondary" id="demo-edit" aria-pressed="false">Edit the HTML</button>
+  <button type="button" class="demo-secondary" id="demo-away">Put the web part away</button>
+</div>
+<div class="page"><div class="canvas"><div id="host"></div></div></div>
+<aside id="demo-panel" hidden aria-label="Markstrata HTML web part properties"></aside>
+<div id="log"></div>
+<script src="sample.js"></script>
+<script src="htmlwebpart.js"></script>
+</body>
+</html>
+`
+  );
+
+  console.log(`Wrote ${path.relative(root, path.join(outDir, 'htmlwebpart.html'))}`);
+}
+
 if (!standalone) {
-  buildWebPartPage().catch((error) => {
-    console.error(error);
-    process.exit(1);
-  });
+  buildWebPartPage()
+    .then(() => buildHtmlWebPartPage())
+    .catch((error) => {
+      console.error(error);
+      process.exit(1);
+    });
 }

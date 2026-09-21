@@ -54,6 +54,12 @@ const demoUrl = 'file://' + path.join(__dirname, '..', 'site', 'demo', 'index.ht
  * lifecycle, against the SharePoint stand-ins in harness/spfx.
  */
 const webPartUrl = 'file://' + path.join(HARNESS_DIST, 'webpart.html');
+/*
+ * And a fourth: the HTML web part, whose whole subject is what a browser does
+ * rather than what the code says. A shadow boundary, a sandboxed frame and a
+ * narrowed stylesheet are three things no unit test can be asked about.
+ */
+const htmlWebPartUrl = 'file://' + path.join(HARNESS_DIST, 'htmlwebpart.html');
 /* The library harness/spfx/sharePoint.ts stands up, as a path. */
 const LIBRARY_PATH = '/sites/demo/Documents';
 
@@ -4478,6 +4484,470 @@ const LIBRARY_PATH = '/sites/demo/Documents';
         && problem.indexOf('told to refuse') !== -1);
     if (leaked.length) {
       throw new Error('the refusal reached the page unhandled: ' + JSON.stringify(leaked[0]));
+    }
+  });
+
+  /*
+   * The HTML web part, on a page of its own.
+   *
+   * Everything here is a question only a browser can answer. Whether a shadow
+   * root really keeps an author's stylesheet off the page; whether a sandboxed
+   * frame really is the opaque origin its sandbox attribute says it is;
+   * whether the CSS narrowing survives Chromium's own parser rather than a
+   * test that reads strings. The unit tests cover what can be reasoned about
+   * from the source, and stop exactly where these begin.
+   *
+   * The page carries a paragraph outside the web part, styled in values
+   * nothing else uses, so a leak out of the document is a measurable thing
+   * rather than an inspection.
+   */
+  console.log('\nDriving the HTML web part:');
+
+  /* The values the fixtures use, so a match below is a match and not a
+     coincidence. notes.html says `body { background: #fff8e1 }`, shared.css
+     says `html, body { background: #eef5ff }` and `h1 { color: #14532d }`,
+     and the page says the paragraph outside is rgb(240, 240, 240). */
+  /*
+   * The values the fixtures use, so a match below is a match and not a
+   * coincidence.
+   *
+   * The two leak probes are bare element selectors on purpose. The first
+   * version of this measured a paragraph the page had given an id and a
+   * background of its own, and it passed with the CSS narrowing switched off:
+   * an id beats a bare element selector, so what was being measured was
+   * specificity rather than anything the web part does. Checked the other way
+   * round before being trusted - with the narrowing removed, the probe
+   * paragraph goes red and the page body takes the document's colour, and both
+   * checks below fail.
+   */
+  const LEAKED_TEXT = 'rgb(200, 0, 0)';           // notes.html: p { color }
+  const LEAKED_BACKGROUND = 'rgb(255, 248, 225)'; // notes.html: body { background }
+  const SHARED_BACKGROUND = 'rgb(238, 245, 255)'; // shared.css: html, body
+  const SHARED_HEADING = 'rgb(20, 83, 45)';       // shared.css: h1 { color }
+
+  /** Everything in the page that a rule escaping the document would change. */
+  const outsideTheWebPart = () => page.evaluate(() => ({
+    text: window.getComputedStyle(document.getElementById('wp-probe')).color,
+    background: window.getComputedStyle(document.body).backgroundColor
+  }));
+
+  await step('the HTML web part starts and draws a document', async () => {
+    await page.goto(htmlWebPartUrl, { waitUntil: 'load' });
+    await page.waitForTimeout(1500);
+
+    const state = await page.evaluate(() => {
+      const strip = document.getElementById('wp-status');
+      const failure = document.querySelector('#host .strata-status[data-tone="error"]');
+      return {
+        state: strip.dataset.state,
+        text: (strip.textContent || '').trim(),
+        failure: failure ? (failure.textContent || '').trim() : '',
+        heading: (document.querySelector('#host h1') || {}).textContent || '',
+        toolbar: !!document.querySelector('#host .strata-toolbar')
+      };
+    });
+    if (state.state !== 'started') {
+      throw new Error(state.text || ('the status strip reads ' + state.state));
+    }
+    if (state.failure) { throw new Error(state.failure); }
+    if (state.heading.indexOf('Deploy notes') === -1) {
+      throw new Error('the document is not on the page: heading reads ' + JSON.stringify(state.heading));
+    }
+    if (!state.toolbar) { throw new Error('no toolbar'); }
+  });
+
+  await step('the document’s own stylesheet reaches the document', async () => {
+    /* The whole reason the styles are lifted out of the file before it is
+       sanitised: the sanitiser deletes a <style> block and says nothing, so
+       without that step an author's document renders with none of their
+       styling and nothing to explain it. */
+    const border = await page.evaluate(() => {
+      const note = document.querySelector('#host .note');
+      return note ? window.getComputedStyle(note).borderLeftWidth : 'no .note element';
+    });
+    if (border !== '4px') {
+      throw new Error('the document’s own rule did not apply: border-left-width is ' + border);
+    }
+  });
+
+  await step('and does not reach the page around it', async () => {
+    /* The document says `body { background }` and `p { color }`. Inline mode
+       narrows both to rules about the document, so the page keeps its own.
+       This is the assertion the whole scoping module exists for. */
+    const outside = await outsideTheWebPart();
+    if (outside.text === LEAKED_TEXT) {
+      throw new Error('the document\u2019s p rule escaped and coloured the page');
+    }
+    if (outside.background === LEAKED_BACKGROUND) {
+      throw new Error('the document\u2019s body rule escaped and recoloured the page');
+    }
+  });
+
+  await step('the script in the document did not run', async () => {
+    /* Scripts are off, so the document is sanitised and the script is gone.
+       Checked by what it would have done rather than by looking for the tag:
+       a script that is still in the markup and inert is a different fault
+       from one that ran. */
+    const ran = await page.evaluate(() => ({
+      flag: window.strataScriptRan,
+      tags: document.querySelectorAll('#host script').length
+    }));
+    if (ran.flag) { throw new Error('the document’s script ran in the page'); }
+    if (ran.tags) { throw new Error(ran.tags + ' script tags survived into the page'); }
+  });
+
+  await step('a stylesheet from the library dresses the document', async () => {
+    const colour = await page.evaluate(async () => {
+      await window.htmlHarness.start({
+        contentSource: 'library',
+        selectedLibrary: '/sites/demo/Documents',
+        selectedFile: '/sites/demo/Documents/notes.html',
+        cssSource: 'library',
+        selectedStyleLibrary: '/sites/demo/Documents',
+        selectedStyleFile: '/sites/demo/Documents/shared.css'
+      });
+      await new Promise((resolve) => setTimeout(resolve, 600));
+      const heading = document.querySelector('#host h1');
+      return heading ? window.getComputedStyle(heading).color : 'no heading';
+    });
+    if (colour !== SHARED_HEADING) {
+      throw new Error('the shared stylesheet did not apply: the heading is ' + colour);
+    }
+  });
+
+  await step('and that one does not reach the page either', async () => {
+    /* shared.css names `html, body`, which are exactly the selectors that
+       have to be narrowed. A stylesheet meant to dress every HTML web part in
+       a site is the one most worth containing. */
+    const outside = await outsideTheWebPart();
+    if (outside.background === SHARED_BACKGROUND) {
+      throw new Error('the shared stylesheet escaped and recoloured the page');
+    }
+  });
+
+  await step('the contents list has entries, from a file with no heading ids', async () => {
+    /* notes.html has no id on any heading, because hand-written HTML rarely
+       does. collectHeadings only takes a heading that has one, so without the
+       ids being put on here the sidebar would be empty. */
+    const toc = await page.evaluate(async () => {
+      window.htmlHarness.change('tocPosition', 'left');
+      await new Promise((resolve) => setTimeout(resolve, 400));
+      const entries = Array.prototype.slice
+        .call(document.querySelectorAll('#host .strata-toc a'))
+        .map((link) => link.getAttribute('href'));
+      return {
+        sidebar: !!document.querySelector('#host .strata-toc-sidebar'),
+        entries: entries,
+        ids: Array.prototype.slice.call(document.querySelectorAll('#host .strata-content h2'))
+          .map((heading) => heading.id)
+      };
+    });
+    if (!toc.sidebar) { throw new Error('no contents sidebar'); }
+    if (!toc.entries.length) { throw new Error('the contents list is empty'); }
+    if (toc.ids.indexOf('when-it-goes-wrong') === -1) {
+      throw new Error('the heading was not given the slug markdown would give it: '
+        + JSON.stringify(toc.ids));
+    }
+    if (toc.entries.indexOf('#when-it-goes-wrong') === -1) {
+      throw new Error('the contents entry does not point at it: ' + JSON.stringify(toc.entries));
+    }
+  });
+
+  await step('shadow mode puts the document behind a boundary', async () => {
+    const shadow = await page.evaluate(async () => {
+      window.htmlHarness.change('renderMode', 'shadow');
+      await new Promise((resolve) => setTimeout(resolve, 600));
+      const mount = document.querySelector('#host .strata-shadow');
+      return {
+        mount: !!mount,
+        root: !!(mount && mount.shadowRoot),
+        /* The page's own query cannot see through a boundary, which is the
+           whole of what a boundary is. */
+        fromThePage: !!document.querySelector('#host .strata-content'),
+        inside: !!(mount && mount.shadowRoot
+          && mount.shadowRoot.querySelector('.strata-content h1'))
+      };
+    });
+    if (!shadow.mount) { throw new Error('no shadow mount'); }
+    if (!shadow.root) { throw new Error('the mount has no shadow root'); }
+    if (!shadow.inside) { throw new Error('the document is not inside the root'); }
+    if (shadow.fromThePage) {
+      throw new Error('the document is still in the page’s own DOM, so there is no boundary');
+    }
+  });
+
+  await step('and the page still keeps its own colour', async () => {
+    /* A boundary makes the narrowing unnecessary rather than redundant: the
+       author's stylesheet goes into the root as written, so a boundary that
+       leaked would show here and nowhere else. */
+    const outside = await outsideTheWebPart();
+    if (outside.text === LEAKED_TEXT || outside.background === LEAKED_BACKGROUND
+      || outside.background === SHARED_BACKGROUND) {
+      throw new Error('a rule escaped the shadow root: ' + JSON.stringify(outside));
+    }
+  });
+
+  await step('a frame is a document of its own, readable with scripts off', async () => {
+    const frame = await page.evaluate(async () => {
+      window.htmlHarness.change('renderMode', 'frame');
+      await new Promise((resolve) => setTimeout(resolve, 900));
+      const element = document.querySelector('#host iframe.strata-frame');
+      if (!element) { return { missing: true }; }
+      const inside = element.contentDocument;
+      return {
+        sandbox: element.getAttribute('sandbox') || '',
+        /* Readable, because with scripts off the frame shares the page's
+           origin and there is no script in it to use that. */
+        readable: !!inside,
+        heading: inside ? ((inside.querySelector('h1') || {}).textContent || '') : '',
+        contents: inside ? !!inside.querySelector('nav.strata-toc') : false,
+        ran: window.strataScriptRan === true
+      };
+    });
+    if (frame.missing) { throw new Error('no frame was drawn'); }
+    if (frame.sandbox.indexOf('allow-same-origin') === -1) {
+      throw new Error('scripts are off, so the frame should be readable: ' + frame.sandbox);
+    }
+    if (frame.sandbox.indexOf('allow-scripts') !== -1) {
+      throw new Error('scripts are off but allow-scripts was granted: ' + frame.sandbox);
+    }
+    if (!frame.readable) { throw new Error('the frame could not be read'); }
+    if (frame.heading.indexOf('Deploy notes') === -1) {
+      throw new Error('the frame does not hold the document: heading reads '
+        + JSON.stringify(frame.heading));
+    }
+    if (!frame.contents) {
+      throw new Error('the contents list was not put inside the frame, where it can reach a heading');
+    }
+    if (frame.ran) { throw new Error('the document’s script ran'); }
+  });
+
+  await step('a link to a neighbouring document leaves the frame', async () => {
+    /* Nothing in a frame can call back out to a handler, so the link has to
+       carry a complete address before the reader ever sees it, and open in the
+       window rather than replacing the frame. */
+    const links = await page.evaluate(() => {
+      const inside = document.querySelector('#host iframe.strata-frame').contentDocument;
+      const read = (part) => {
+        const found = Array.prototype.slice.call(inside.querySelectorAll('a'))
+          .filter((link) => (link.textContent || '').indexOf(part) !== -1)[0];
+        return found
+          ? { href: found.getAttribute('href'), target: found.getAttribute('target'),
+              rel: found.getAttribute('rel') }
+          : undefined;
+      };
+      return {
+        document: read('rolling back'),
+        file: read('a PDF'),
+        elsewhere: read('page'),
+        base: (inside.querySelector('base') || {}).getAttribute
+          ? inside.querySelector('base').getAttribute('href') : ''
+      };
+    });
+
+    if (!links.document) { throw new Error('the link to the other document is gone'); }
+    if (links.document.target !== '_parent') {
+      throw new Error('it would open in the frame: target is ' + links.document.target);
+    }
+    if (links.document.href.indexOf('strataDoc=') === -1) {
+      throw new Error('it carries no address the page would honour: ' + links.document.href);
+    }
+    if (!links.file || links.file.target !== '_blank') {
+      throw new Error('a link to a file should open a tab, not strand the reader in the frame');
+    }
+    if (!links.base || links.base.indexOf('/sites/demo/Documents') === -1) {
+      throw new Error('no base, so the document’s relative addresses resolve against the page: '
+        + JSON.stringify(links.base));
+    }
+  });
+
+  await step('with scripts on the frame is an opaque origin', async () => {
+    /* The assertion nothing but a browser can make. allow-scripts without
+       allow-same-origin means the frame has an origin of its own, and the
+       proof of that is that the page cannot read it at all. */
+    const frame = await page.evaluate(async () => {
+      window.htmlHarness.change('runScripts', true);
+      await new Promise((resolve) => setTimeout(resolve, 900));
+      const element = document.querySelector('#host iframe.strata-frame');
+      if (!element) { return { missing: true }; }
+      let readable = false;
+      try {
+        readable = !!element.contentDocument;
+      } catch {
+        readable = false;
+      }
+      return { sandbox: element.getAttribute('sandbox') || '', readable: readable };
+    });
+    if (frame.missing) { throw new Error('no frame was drawn'); }
+    if (frame.sandbox.indexOf('allow-scripts') === -1) {
+      throw new Error('scripts are on but allow-scripts was not granted: ' + frame.sandbox);
+    }
+    if (frame.sandbox.indexOf('allow-same-origin') !== -1) {
+      throw new Error('allow-same-origin was granted alongside allow-scripts, which is not a sandbox: '
+        + frame.sandbox);
+    }
+    if (frame.sandbox.indexOf('allow-top-navigation-by-user-activation') !== -1) {
+      throw new Error('top navigation was granted to a frame running scripts: ' + frame.sandbox);
+    }
+    if (frame.readable) {
+      throw new Error('the page can read into a frame that is running scripts');
+    }
+  });
+
+  await step('and the author’s script runs in there, reaching nothing out here', async () => {
+    /* It sets a global. If the sandbox is what it claims to be, the global it
+       sets is the frame's and this page never sees it. */
+    const leaked = await page.evaluate(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 600));
+      return window.strataScriptRan === true;
+    });
+    if (leaked) {
+      throw new Error('a script in the sandboxed frame set a global on the page');
+    }
+  });
+
+  await step('the editor draws both sources over one preview', async () => {
+    const editor = await page.evaluate(async () => {
+      window.htmlHarness.change('runScripts', false);
+      window.htmlHarness.change('renderMode', 'inline');
+      window.htmlHarness.editing(true);
+      await new Promise((resolve) => setTimeout(resolve, 700));
+      const html = document.querySelector('#host textarea[data-strata-source="html"]');
+      const css = document.querySelector('#host textarea[data-strata-source="css"]');
+      const box = document.querySelector('#host .strata-preview-box');
+      return {
+        html: !!html,
+        css: !!css,
+        tabs: document.querySelectorAll('#host .strata-pane-tab').length,
+        preview: box ? !!box.querySelector('h1') : false,
+        readOnly: css ? css.readOnly : undefined,
+        source: html ? html.value.indexOf('<h1>Deploy notes</h1>') !== -1 : false
+      };
+    });
+    if (!editor.html) { throw new Error('no HTML textarea'); }
+    if (!editor.css) { throw new Error('no CSS textarea'); }
+    if (editor.tabs !== 2) { throw new Error(editor.tabs + ' source tabs, expected 2'); }
+    if (!editor.source) { throw new Error('the HTML textarea does not hold the document'); }
+    if (!editor.preview) { throw new Error('the preview drew nothing'); }
+    /* The stylesheet is a library file here, which several web parts may be
+       reading, so this editor shows it and does not offer to change it. */
+    if (editor.readOnly !== true) {
+      throw new Error('a library stylesheet should be read only in the editor');
+    }
+  });
+
+  await step('typing in it redraws the preview', async () => {
+    const changed = await page.evaluate(async () => {
+      const html = document.querySelector('#host textarea[data-strata-source="html"]');
+      html.value = '<h1>Typed just now</h1><p>And a paragraph.</p>';
+      html.dispatchEvent(new Event('input', { bubbles: true }));
+      /* Longer than the editor's debounce, and long enough for the render
+         after it. */
+      await new Promise((resolve) => setTimeout(resolve, 900));
+      const box = document.querySelector('#host .strata-preview-box');
+      return {
+        heading: box ? ((box.querySelector('h1') || {}).textContent || '') : 'no preview',
+        kept: (window.htmlHarness.settings().htmlContent || '').indexOf('Typed just now') !== -1
+      };
+    });
+    if (changed.heading !== 'Typed just now') {
+      throw new Error('the preview still reads ' + JSON.stringify(changed.heading));
+    }
+    if (!changed.kept) {
+      throw new Error('what was typed was not kept on the web part');
+    }
+  });
+
+  await step('the pickers offer HTML files and stylesheets, not markdown', async () => {
+    /* End to end: the extensions the web part declares, through the pane
+       sources, to the list an author is shown. The library holds both kinds,
+       so a picker offering the wrong one would look like it was working. */
+    const offered = await page.evaluate(async () => {
+      window.htmlHarness.editing(false);
+      await window.htmlHarness.start({
+        contentSource: 'library',
+        selectedLibrary: '/sites/demo/Documents',
+        selectedFile: '/sites/demo/Documents/notes.html',
+        cssSource: 'library',
+        selectedStyleLibrary: '/sites/demo/Documents'
+      });
+      await new Promise((resolve) => setTimeout(resolve, 900));
+      window.htmlHarness.openPane();
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      /* The pane shows one page at a time, as SharePoint's does. Content is
+         first and the stylesheet is second, so the second list has to be read
+         from its own page - read from the first one it came back empty, which
+         is a check that would have passed for a pane with nothing in it. */
+      const documents = window.htmlHarness.paneOptions('selectedFile');
+      window.htmlHarness.panePage(1);
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      return {
+        documents: documents,
+        styles: window.htmlHarness.paneOptions('selectedStyleFile')
+      };
+    });
+
+    if (offered.documents.indexOf('notes.html') === -1) {
+      throw new Error('the document picker does not offer notes.html: '
+        + JSON.stringify(offered.documents));
+    }
+    if (offered.documents.indexOf('handbook.md') !== -1) {
+      throw new Error('the document picker is offering markdown: '
+        + JSON.stringify(offered.documents));
+    }
+    if (offered.styles.indexOf('shared.css') === -1) {
+      throw new Error('the stylesheet picker does not offer shared.css: '
+        + JSON.stringify(offered.styles));
+    }
+    if (offered.styles.indexOf('notes.html') !== -1) {
+      throw new Error('the stylesheet picker is offering documents: '
+        + JSON.stringify(offered.styles));
+    }
+  });
+
+  await step('the document is indexed as its text, not as its markup', async () => {
+    /* The markdown web part declares its source searchable as well as its
+       rendered text. This one must not: the source here is markup, and the
+       index would fill with tag names. */
+    const indexed = await page.evaluate(async () => {
+      window.htmlHarness.panePage(0);
+      window.htmlHarness.closePane();
+      await new Promise((resolve) => setTimeout(resolve, 400));
+      return window.htmlHarness.settings().searchablePlainText || '';
+    });
+    if (indexed.indexOf('Watch the queue length') === -1) {
+      throw new Error('the document’s words are not in the index: '
+        + JSON.stringify(indexed.slice(0, 80)));
+    }
+    if (/<[a-z]/i.test(indexed) || indexed.indexOf('class=') !== -1) {
+      throw new Error('markup reached the search index: ' + JSON.stringify(indexed.slice(0, 120)));
+    }
+  });
+
+  await step('a narrow screen hides the web part when an author asks it to', async () => {
+    const hidden = await page.evaluate(async () => {
+      window.htmlHarness.change('showOnNarrowScreens', false);
+      await new Promise((resolve) => setTimeout(resolve, 400));
+      const root = document.querySelector('#host .strata-root');
+      return root ? window.getComputedStyle(root).display : 'no root';
+    });
+    /* Wide, so the setting applies and the rule does not: the width is what
+       decides, and here there is plenty. */
+    if (hidden !== 'block') {
+      throw new Error('hidden on a wide screen, where it should be shown: display is ' + hidden);
+    }
+
+    await page.setViewportSize({ width: 500, height: 900 });
+    await page.waitForTimeout(300);
+    const narrow = await page.evaluate(() => {
+      const root = document.querySelector('#host .strata-root');
+      return root ? window.getComputedStyle(root).display : 'no root';
+    });
+    await page.setViewportSize({ width: 1200, height: 900 });
+    await page.waitForTimeout(200);
+
+    if (narrow !== 'none') {
+      throw new Error('still shown at 500px wide: display is ' + narrow);
     }
   });
 

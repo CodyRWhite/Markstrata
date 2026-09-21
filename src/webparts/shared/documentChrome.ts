@@ -172,9 +172,22 @@ export class DocumentChrome {
    * Adds the table of contents as a column of the layout or as a block above
    * the text. It is never positioned over the content: an overlay sidebar is
    * exactly what makes a page awkward to edit.
+   *
+   * WHY THE ARTICLE IS NOT ALWAYS WHAT THE LAYOUT HOLDS
+   * `article` is the element the headings are read from, and `standIn` is the
+   * element in the layout that represents it. In both web parts' inline
+   * rendering those are the same element. In the HTML web part's shadow mode
+   * the article is inside a shadow root, and what the layout holds is the
+   * element that root hangs from - so inserting the contents before the
+   * article would be inserting it before a node the layout has never heard of,
+   * which throws and takes the whole render with it.
+   *
+   * The list itself stays out here either way. Its entries scroll the heading
+   * by holding the article, which works across a boundary, and out here it is
+   * styled by the page's own stylesheet - which does not reach inside one.
    */
   public addToc(layout: HTMLElement, article: HTMLElement, host: HTMLElement,
-    options: IChromeOptions): void {
+    options: IChromeOptions, standIn?: HTMLElement): void {
     if (options.tocPosition === 'off') {
       return;
     }
@@ -205,10 +218,17 @@ export class DocumentChrome {
     panel.appendChild(summary);
     panel.appendChild(nav);
 
-    if (options.tocPosition === 'inline') {
+    const inTheLayout: HTMLElement = standIn || article;
+
+    /* "Above the content" is inside the article when the article is what the
+       layout holds, because that is what puts it inside the reading measure.
+       Behind a boundary it cannot be: a list inside the root would be styled
+       by the author's stylesheet rather than the page's, and by nothing at all
+       if they have none. Above the boundary is the same place to a reader. */
+    if (options.tocPosition === 'inline' && inTheLayout === article) {
       article.insertBefore(panel, article.firstChild);
     } else {
-      layout.insertBefore(panel, article);
+      layout.insertBefore(panel, inTheLayout);
     }
 
     this.enhancer.trackActiveHeading(article, nav);

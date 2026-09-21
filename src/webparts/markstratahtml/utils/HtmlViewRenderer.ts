@@ -308,8 +308,13 @@ export class HtmlViewRenderer {
 
     /* The enhancements are given the element inside the root rather than the
        page, so every one of them works: they all take a container and ask it
-       for its own children. */
-    this.finishInThePage(host, layout, article, toolbar, options);
+       for its own children.
+
+       The mount is handed over as well, because the contents list goes in the
+       layout and the layout holds the mount, not the article. Without it the
+       list is inserted before a node the layout has never heard of, which
+       throws and takes the render with it. */
+    this.finishInThePage(host, layout, article, toolbar, options, mount);
   }
 
   // -------------------------------------------------------------------- frame
@@ -464,9 +469,10 @@ export class HtmlViewRenderer {
    * footer, and the enhancements that read the rendered document.
    */
   private finishInThePage(host: HTMLElement, layout: HTMLElement, article: HTMLElement,
-    toolbar: HTMLElement | undefined, options: IHtmlViewOptions): void {
+    toolbar: HTMLElement | undefined, options: IHtmlViewOptions,
+    standIn?: HTMLElement): void {
     this.indexed = article;
-    this.chrome.addToc(layout, article, host, options);
+    this.chrome.addToc(layout, article, host, options, standIn);
 
     if (options.showSourceInfo && options.fileMetadata) {
       host.appendChild(this.chrome.buildSourceInfo(options.fileMetadata, {}));
