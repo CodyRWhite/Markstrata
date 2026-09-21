@@ -33,6 +33,9 @@
       ]
     }
   ],
+  "supportedChannelTypes": [
+    "privateChannels"
+  ],
   "validDomains": [
     "*.sharepoint.com",
     "*.sharepoint-df.com",

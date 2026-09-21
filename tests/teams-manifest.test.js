@@ -232,6 +232,40 @@ test('the tab points at the web part that is actually deployed', () => {
   assert.deepEqual(tabs[0].scopes, ['team']);
 });
 
+/*
+ * A private channel keeps its own SharePoint site collection rather than
+ * sharing the parent team's, which is the whole reason it is private. Teams
+ * treats such a channel as a non-standard type and hides an app from it unless
+ * the app says otherwise: without this, adding either app to one is refused
+ * with "App isn't supported in private channels."
+ *
+ * Saying otherwise is safe here for a reason worth writing down. The tab is
+ * addressed with {teamSiteDomain}{teamSitePath}, which Teams fills in from
+ * whichever site is behind the channel it is being added to, so a private
+ * channel's own site is what the tab is pointed at and its own Files is what
+ * the picker reads. The web part has to be available on that site for the page
+ * to load, and it is, because the solution sets skipFeatureDeployment - it is
+ * available tenant wide rather than installed site by site, so a channel's new
+ * site collection needs nothing done to it.
+ *
+ * sharedChannels is the other value this property takes and is deliberately
+ * not asked for. A shared channel can be shared with another tenant, and the
+ * webApplicationInfo resource is anchored on {teamSiteDomain}; Microsoft's own
+ * guidance is that it "will not work cross-tenant/cross-domain", so offering
+ * the app there would mean external members being shown a tab that cannot
+ * load for them. Declining is better than that.
+ */
+[
+  ['the markdown app', manifest],
+  ['the HTML app', htmlManifest]
+].forEach(([which, subject]) => {
+  test(`${which} can be added to a private channel`, () => {
+    assert.deepEqual(subject.supportedChannelTypes, ['privateChannels'],
+      'a private channel has its own site and Teams hides the app from one '
+      + 'unless the manifest names the channel type');
+  });
+});
+
 test('the domains the tab loads from are allowed', () => {
   assert.ok(
     manifest.validDomains.some((domain) => domain.indexOf('sharepoint.com') !== -1),

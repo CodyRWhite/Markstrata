@@ -127,6 +127,41 @@ validated rather than trusted: against the whole v1.17 schema, and for the two
 mistakes a copy makes first - a tab still pointing at the other web part's
 component, and two apps sharing an id or a name.
 
+### Tabs in private channels
+
+Reported during testing: adding either app to a private channel was refused
+with "App isn't supported in private channels."
+
+Teams counts a private channel as a non-standard channel type and hides an app
+from one unless the manifest names the type. Neither manifest did, so both apps
+were offered in standard channels only. Both now declare
+`supportedChannelTypes: ["privateChannels"]`, which is a top-level property and
+has been in the manifest schema since 1.14, so the 1.17 both manifests already
+declare covers it.
+
+Nothing else had to change, for a reason worth writing down. A private channel
+keeps a SharePoint site collection of its own rather than sharing the parent
+team's - that is what makes it private - and the tab is addressed with
+`{teamSiteDomain}{teamSitePath}`, which Teams fills in from whichever site is
+behind the channel the tab is being added to. So the tab is pointed at the
+private channel's own site and the picker reads that channel's own Files. The
+web part has to be available on that site for the page to load at all, and it
+is: the solution sets `skipFeatureDeployment`, so it is available tenant wide
+rather than installed site by site and a channel's new site collection needs
+nothing done to it.
+
+Shared channels are the other value the property takes and are deliberately not
+asked for. A shared channel can be shared with another tenant, and
+`webApplicationInfo.resource` is anchored on `{teamSiteDomain}`, which
+Microsoft's own guidance says "will not work cross-tenant/cross-domain".
+Offering the app there would mean external members being shown a tab that
+cannot load for them, which is worse than not offering it.
+
+Both manifests were validated against Microsoft's published 1.17 schema rather
+than against a reading of the documentation, with a wrong channel type checked
+too so that passing means the schema is enforcing the value rather than
+ignoring the property.
+
 ### Under both web parts
 
 The lifecycle was already shared. What moved this time is the furniture and the

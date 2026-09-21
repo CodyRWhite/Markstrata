@@ -124,6 +124,18 @@ behind the team, and everybody in the team can read them. A private channel has
 a site of its own, and its Files are in that site's library instead, visible to
 the members of that channel.
 
+Both apps can be added to a private channel, and a tab there reads that
+channel's own Files rather than the parent team's. Teams counts a private
+channel as a non-standard type and hides an app from one unless the app asks
+for it, so an app that does not ask is refused with "App isn't supported in
+private channels" - both Markstrata apps ask.
+
+Shared channels are deliberately not offered. A shared channel can be shared
+with another tenant, and the tab is addressed from the SharePoint tenant the
+Teams client is signed in to, which does not resolve across tenants. Offering
+the app there would mean external members being shown a tab that cannot load
+for them.
+
 Markstrata does not change any of this. It reads the file with the signed-in
 reader's own session, so a tab shows a document to exactly the people SharePoint
 would show it to, and a reader without access to a file gets nothing rather than
