@@ -136,7 +136,17 @@ const BANNED = new Set([
      the one route this list did not watch: a fault reported against a real
      document, reproduced verbatim as the test case for it. */
   'd257dab657b413a5',
-  'a45284a09f173c6e'
+  'a45284a09f173c6e',
+  /* A real document's identifier, from that same reproduction. Everything
+     above is a host or a database, so an identifier was a class of name this
+     list did not cover: it was taken off main by rewriting the history and
+     nothing here would have failed if it came back.
+
+     The identifier only. The title beside it was three ordinary words, and
+     banning those would fail on prose that has every right to use them, so
+     the words are not covered and this is the part that is. A title that
+     reads as ordinary English is the gap left, and it is left knowingly. */
+  '11c4074b5129fa92'
 ]);
 
 /* The names are one token each under this split, which is the widest thing
