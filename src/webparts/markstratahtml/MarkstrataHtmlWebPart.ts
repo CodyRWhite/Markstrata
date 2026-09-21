@@ -41,7 +41,8 @@
  * Since:     0.0.22.0
  * Ships in:  the HTML web part bundle
  * Requires:  StrataWebPart.ts, HtmlViewRenderer.ts, ContentEnhancer.ts,
- *            htmlPropertyPane.ts, paneSources.ts, SharePointService.ts
+ *            HtmlEditModeManager.ts, htmlPropertyPane.ts, paneSources.ts,
+ *            SharePointService.ts
  * Runs in:   a SharePoint page or a Teams tab, through @microsoft/sp-webpart-base
  */
 
@@ -73,12 +74,14 @@ import './styles/html.css';
 import { StrataWebPart, IUnconfiguredGuidance } from '../shared/StrataWebPart';
 import { ContentEnhancer } from '../markstrata/utils/ContentEnhancer';
 import { SharePointService } from '../markstrata/utils/SharePointService';
-import { ThemeFamily, IThemeSettings, ResolvedMode } from '../markstrata/utils/ThemeManager';
+import { ThemeFamily } from '../markstrata/utils/ThemeManager';
 import { PaneSources, IPickedFile } from '../markstrata/paneSources';
 import { addressForDocument } from '../markstrata/utils/documentParameter';
 import { resolveAgainst } from '../markstrata/utils/imagePaths';
+import { fileOf } from '../markstrata/utils/wikiLinks';
 import { IMarkstrataHtmlWebPartProps } from './htmlWebPartProps';
 import { HtmlViewRenderer, IHtmlViewOptions } from './utils/HtmlViewRenderer';
+import { HtmlEditModeManager } from './utils/HtmlEditModeManager';
 import { htmlPaneConfiguration } from './htmlPropertyPane';
 
 /** Which files the document picker offers. */
@@ -129,6 +132,7 @@ const MOVES_THE_DOCUMENT: string[] = [
 export default class MarkstrataHtmlWebPart extends StrataWebPart<IMarkstrataHtmlWebPartProps> {
   private enhancer: ContentEnhancer;
   private viewRenderer: HtmlViewRenderer;
+  private editManager: HtmlEditModeManager;
   /** The stylesheet's own cascade of pickers, which is not the document's. */
   private styleSources: PaneSources;
   /** The stylesheet as fetched, empty when there is none or it would not load. */
@@ -245,6 +249,23 @@ export default class MarkstrataHtmlWebPart extends StrataWebPart<IMarkstrataHtml
       },
       onExport: () => this.detached('The document could not be exported.', this.exportPdf())
     });
+
+    this.editManager = new HtmlEditModeManager(this.viewRenderer, this.enhancer, {
+      onChange: (html: string) => {
+        this.properties.htmlContent = html;
+      },
+      /* Kept on the web part rather than saved anywhere: a stylesheet typed
+         into the pane is stored with the part, and SharePoint writes it when
+         the page is written. */
+      onStyleChange: (css: string) => {
+        this.properties.cssContent = css;
+      },
+      onSave: async (html: string) => {
+        const saved: boolean = await this.saveToSharePoint(html);
+        this.updateSearchText();
+        return saved;
+      }
+    });
   }
 
   /**
@@ -261,18 +282,11 @@ export default class MarkstrataHtmlWebPart extends StrataWebPart<IMarkstrataHtml
 
   protected disposeRenderers(): void {
     this.stopping(() => { if (this.enhancer) { this.enhancer.dispose(); } });
+    this.stopping(() => { if (this.editManager) { this.editManager.dispose(); } });
   }
 
-  /**
-   * Nothing to lose yet.
-   *
-   * There is no editor in this web part, so there is never text an author has
-   * typed and not saved. When there is one this answers from it, and until
-   * then answering "yes" would stop the file being reloaded when it changes
-   * for no reason at all.
-   */
   protected hasUnsavedEdits(): boolean {
-    return false;
+    return !!this.editManager && this.editManager.hasUnsavedChanges;
   }
 
   // -------------------------------------------------------------- stylesheet
@@ -327,15 +341,64 @@ export default class MarkstrataHtmlWebPart extends StrataWebPart<IMarkstrataHtml
   // ------------------------------------------------------------------ drawing
 
   protected drawDocument(): void {
-    const settings: IThemeSettings = this.themeSettings();
-    const mode: ResolvedMode = this.resolvedMode();
     const html: string = this.textToDraw();
-    const landOn: string | undefined = this.navigator.takeHeading();
     const editing: boolean = this.displayMode === DisplayMode.Edit;
+    const options: IHtmlViewOptions = this.viewOptions(editing);
 
-    this.viewRenderer.render(this.domElement, html, {
-      settings: settings,
-      resolvedMode: mode,
+    /*
+     * Not while another document is open.
+     *
+     * The editor would have shown the followed document's text and saved it
+     * over the configured file, because that is the only file this web part is
+     * configured to write to. Closing the document, which the bar above it
+     * does, gives the editor back. The markdown web part withholds it here for
+     * the same reason.
+     */
+    if (editing && this.previewContent === undefined && !this.followingAnother()) {
+      this.editManager.render(this.domElement, html, {
+        view: options,
+        canSave: this.canSaveToSharePoint(),
+        saveTargetName: this.properties.fileMetadata ? this.properties.fileMetadata.name : '',
+        css: this.stylesheet(),
+        /* Only a stylesheet typed into the pane belongs to this web part.
+           One in a library or at an address belongs to that file, and several
+           web parts are probably reading it. */
+        canEditCss: this.properties.cssSource === 'manual',
+        cssOrigin: this.cssOrigin(),
+        scriptsPaused: this.properties.runScripts && this.properties.renderMode === 'frame'
+      });
+      /* The editor draws a live preview, which is the same rendered text the
+         search index wants - and edit mode is when the page gets saved. */
+      this.updateSearchText();
+      /* This is the only banner that is for an author rather than a reader,
+         which is exactly why it would otherwise never be seen. */
+      this.showAddressNotice();
+      this.sayStylesheetTrouble();
+      return;
+    }
+
+    /* Taken here rather than in viewOptions, because taking it consumes it. */
+    options.landOnHeading = this.navigator.takeHeading();
+
+    this.viewRenderer.render(this.domElement, html, options);
+
+    this.updateSearchText();
+    this.drawBanners();
+    this.sayStylesheetTrouble();
+  }
+
+  /**
+   * Everything the document is drawn from, whether it is drawn in the page or
+   * in the editor's preview.
+   *
+   * One object rather than two, so the preview cannot be drawn from settings
+   * the page is not using. The editor overrides the stylesheet, because in
+   * there the stylesheet is whatever the author has just typed.
+   */
+  private viewOptions(editing: boolean): IHtmlViewOptions {
+    return {
+      settings: this.themeSettings(),
+      resolvedMode: this.resolvedMode(),
       showToolbar: this.isToolbarVisible(),
       showThemeSwitcher: this.properties.showThemeSwitcher,
       /* An export is laid out from the rendered document, and there is no
@@ -379,7 +442,10 @@ export default class MarkstrataHtmlWebPart extends StrataWebPart<IMarkstrataHtml
           .concat(this.navigator.trailNames, [this.navigator.name])
         : undefined,
       onGoToCrumb: (index: number) => { void this.navigator.goTo(index - 1, true); },
-      landOnHeading: landOn,
+      /* Taken by the read path, never here: takeHeading consumes it, and an
+         author in edit mode has no document on screen to land on. Consumed
+         here it would be gone by the time they left edit mode. */
+      landOnHeading: undefined,
       shareAddress: this.properties.showShareButton
         && this.properties.followDocumentLinks
         && this.properties.contentSource !== 'manual'
@@ -399,11 +465,22 @@ export default class MarkstrataHtmlWebPart extends StrataWebPart<IMarkstrataHtml
         && this.properties.enableVersionHistory && this.canSaveToSharePoint(),
       isPageEditing: editing,
       fileMetadata: this.navigator.metadata || this.properties.fileMetadata
-    } as IHtmlViewOptions);
+    };
+  }
 
-    this.updateSearchText();
-    this.drawBanners();
-    this.sayWhatIsPaused();
+  /**
+   * Where the stylesheet comes from, in a sentence, for the editor's read-only
+   * tab. Empty when the author typed it in the pane, which is when it can be
+   * edited here.
+   */
+  private cssOrigin(): string {
+    if (this.properties.cssSource === 'library' && this.properties.selectedStyleFile) {
+      return `the file ${fileOf(this.properties.selectedStyleFile)} in a document library`;
+    }
+    if (this.properties.cssSource === 'url' && this.properties.cssFileUrl) {
+      return 'a file at the address set in the property pane';
+    }
+    return '';
   }
 
   /**
@@ -444,20 +521,18 @@ export default class MarkstrataHtmlWebPart extends StrataWebPart<IMarkstrataHtml
   }
 
   /**
-   * The two things an author has turned on that are not happening.
+   * A stylesheet that should have been there and is not.
    *
-   * Both only ever reach an author: one is about editing the page, and the
-   * other is about a setting only an author can see. A reader is never shown
-   * either, because neither is anything they can act on.
+   * A warning rather than a failure, and shown to a reader as well as to an
+   * author: the document is readable unstyled, and a reader who can see it
+   * looks wrong is better told why than left to think the document is broken.
+   *
+   * The scripts-paused notice is not here. It belongs to the editor, which is
+   * the only place it applies and which draws it above the panes.
    */
-  private sayWhatIsPaused(): void {
+  private sayStylesheetTrouble(): void {
     if (this.cssError) {
       this.showBanner(this.cssError, 'warning');
-    }
-
-    if (this.displayMode === DisplayMode.Edit && this.properties.runScripts
-      && this.properties.renderMode === 'frame') {
-      this.showBanner(strings.ScriptsPausedWhileEditing, 'info');
     }
   }
 

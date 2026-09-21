@@ -151,6 +151,53 @@ export class HtmlViewRenderer {
     return this.indexed;
   }
 
+  /**
+   * The document on its own, for the editor's live preview.
+   *
+   * The same three modes as the page, and the page's own code path rather than
+   * a second way of drawing a document: a preview that rendered differently
+   * would be worth less than no preview, because an author would tune a
+   * document against one renderer and ship it to another.
+   *
+   * What is switched off is everything that is about a page rather than about
+   * the document: the toolbar, the contents list, the source footer, the
+   * button back to the top, and following a link - which in a preview would
+   * carry the author away from the text they are writing.
+   *
+   * ONE THING THE PREVIEW CANNOT SHOW
+   * A document whose scripts run. They are paused for anybody editing the
+   * page, so the caller hands this runScripts off, and with them off the
+   * document is sanitised - which is the right way round, but it does mean an
+   * author who has turned scripts on is previewing the cleaned-up document and
+   * has to leave edit mode to see the real one. The banner above the editor
+   * says so.
+   */
+  public preview(container: HTMLElement, raw: string, options: IHtmlViewOptions): void {
+    this.render(container, raw, {
+      ...options,
+      showToolbar: false,
+      tocPosition: 'off',
+      showSourceInfo: false,
+      backToTop: 'off',
+      openDocumentName: undefined,
+      onGoToCrumb: undefined,
+      openDocument: undefined,
+      documentAddress: undefined,
+      shareAddress: undefined,
+      landOnHeading: undefined,
+      /* As tall as it is, inside a box the editor has already sized. A height
+         set here would fight the pane. */
+      heightMode: 'fit',
+      /* The preview is in a column, never at the edges of the page. */
+      fullBleed: false,
+      /* Drawn for somebody who is editing the page, which is what pauses the
+         scripts: an author's document is not running while they are writing
+         it. */
+      isPageEditing: true,
+      showOnNarrowScreens: true
+    });
+  }
+
   public render(container: HTMLElement, raw: string, options: IHtmlViewOptions): void {
     this.enhancer.stopTracking();
     this.indexed = undefined;

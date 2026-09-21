@@ -43,7 +43,7 @@ table td {
 }
 
 table thead th {
-  background: var(--strata-surface-2, #f6f8fa);
+  background: var(--strata-bg-elevated, #f6f8fa);
 }
 
 a {

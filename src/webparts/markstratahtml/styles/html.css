@@ -117,3 +117,70 @@
     display: none;
   }
 }
+
+/* --------------------------------------------------- the editor's two tabs */
+
+/*
+ * The source pane carries the document and its stylesheet, one at a time.
+ *
+ * It sits where the markdown editor's pane label sits and does the same job -
+ * saying what the box below it holds - so it is sized and spaced to match one,
+ * and the row is not a border of its own: two boxes one under another read as
+ * two boxes, and there is one box here.
+ */
+.strata-source-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 6px;
+}
+
+.strata-pane-tab {
+  padding: 2px 8px;
+  border: 1px solid transparent;
+  border-radius: var(--strata-radius-sm, 4px);
+  background: transparent;
+  color: var(--strata-text-faint);
+  font: inherit;
+  font-size: 0.75em;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.strata-pane-tab:hover {
+  color: var(--strata-text);
+}
+
+/*
+ * The selected tab is the one whose box is showing, so it is marked the way a
+ * pressed control is marked rather than by colour alone: a tab strip that only
+ * changes colour is a tab strip nobody can read in high contrast.
+ */
+.strata-pane-tab[aria-selected='true'] {
+  border-color: var(--strata-border);
+  background: var(--strata-bg-elevated);
+  color: var(--strata-text);
+  font-weight: 600;
+}
+
+.strata-pane-tab:focus-visible {
+  outline: 2px solid var(--strata-link);
+  outline-offset: 1px;
+}
+
+/*
+ * Whichever tab is not in front is hidden rather than removed, so a half-typed
+ * stylesheet keeps its text, its scroll position and its undo history while an
+ * author is in the other one.
+ */
+.strata-editor-pane[data-strata-tab='html'] .strata-editor-input[data-strata-source='css'],
+.strata-editor-pane[data-strata-tab='css'] .strata-editor-input[data-strata-source='html'] {
+  display: none;
+}
+
+/* A line of explanation under a pane, not a banner over the whole web part. */
+.strata-editor-notice {
+  display: block;
+  margin-top: 8px;
+  font-size: 0.85em;
+}

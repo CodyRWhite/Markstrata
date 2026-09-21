@@ -201,7 +201,7 @@ const STRINGS = {
   RenderModeHint: 'Inline puts the document in the page, so it is themed like the rest of Markstrata and pictures, tables and links all work. Shadow DOM puts it behind a boundary, so it looks exactly as written and nothing on the page can restyle it. A frame makes it a document of its own, which is the strongest separation and the only place scripts can run.',
   RunScriptsLabel: 'Run scripts in the document',
   RunScriptsHint: 'Frame mode only. The frame gets no access to this page or to your SharePoint sign-in, and links in it open in a new tab rather than replacing the page. Turning this on also stops the document being cleaned up first, because cleaning it up is what removes the scripts: everything in the file runs, so only turn it on for a file you trust.',
-  ScriptsPausedWhileEditing: 'Scripts in this document are paused while the page is being edited. Save and leave edit mode to see it run.',
+  ScriptsPausedWhileEditing: 'Scripts in this document are paused while the page is being edited, so the preview shows it cleaned up. Save and leave edit mode to see it run.',
   ScriptsNotAllowedHere: 'This site does not allow custom script, so the scripts in this document will not run. The document is shown cleaned up instead.',
   FullBleedLabel: 'Full bleed',
   FullBleedHint: 'Takes the reading measure off, so the document uses the whole width of the web part. Worth it for a dashboard, a wide table or a diagram; not for prose, where a long line is harder to read.',
