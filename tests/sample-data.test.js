@@ -59,6 +59,14 @@ const ROOT = path.join(__dirname, '..');
 const CONTENT = [
   'samples/kitchen-sink.md',
   'samples/welcome.md',
+  /* The HTML web part's sample document and the stylesheet it shares. Both are
+     read by a person and both are the kind of file a real path gets pasted
+     into while a fault is being chased, which is what this list is for. */
+  'samples/welcome.html',
+  'samples/shared.css',
+  /* Handed to a language model whole, so anything in it travels further than
+     anything else here. */
+  'docs/css-for-an-llm.md',
   'README.md',
   'CONTRIBUTING.md',
   'THEMES.md',
@@ -95,7 +103,12 @@ const PUBLIC_HOSTS = [
      says "use a server that allows cross-origin reads" and does not name one
      is a check nobody can carry out. It belongs to GitHub, not to any tenant,
      which is the distinction this list is for. */
-  'raw.githubusercontent.com'
+  'raw.githubusercontent.com',
+  /* Microsoft's own domain, with no tenant in front of it. The sanitiser's
+     iframe allowlist is described to authors as "any *.sharepoint.com", which
+     is the rule rather than an address. A real tenant is matched whole, as
+     `tenant.sharepoint.com`, so it still fails this check. */
+  'sharepoint.com'
 ];
 
 /* Reserved for documentation, so safe by construction. */
@@ -157,6 +170,11 @@ const EVERYTHING = CONTENT
   .concat(walk('harness').filter((file) => file.indexOf('harness/dist') !== 0))
   .concat(walk('scripts'))
   .concat(walk('config'))
+  /* Written prose and shipped samples. docs/ holds pages the site publishes
+     and the CSS contract, which is copied out rather than listed as a page, so
+     walking the folder covers it without a second list to keep in step. */
+  .concat(walk('docs'))
+  .concat(walk('samples'))
   .filter((file, index, all) => all.indexOf(file) === index)
   .filter((file) => fs.existsSync(path.join(ROOT, file)));
 
@@ -166,7 +184,7 @@ function walk(from) {
   return fs.readdirSync(here, { withFileTypes: true }).reduce((found, entry) => {
     const next = `${from}/${entry.name}`;
     if (entry.isDirectory()) { return found.concat(walk(next)); }
-    return /\.(ts|js|json|md|css)$/.test(entry.name) ? found.concat([next]) : found;
+    return /\.(ts|js|json|md|css|html)$/.test(entry.name) ? found.concat([next]) : found;
   }, []);
 }
 
