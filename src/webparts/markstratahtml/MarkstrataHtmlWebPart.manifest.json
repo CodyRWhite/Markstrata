@@ -1,0 +1,59 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/spfx/client-side-web-part-manifest.schema.json",
+  "id": "36ac307a-2d6b-439b-8ce0-82640db75ecb",
+  "alias": "MarkstrataHtmlWebPart",
+  "componentType": "WebPart",
+  "version": "*",
+  "manifestVersion": 2,
+  "requiresCustomScript": false,
+  "supportsFullBleed": true,
+  "supportedHosts": [
+    "SharePointWebPart",
+    "TeamsTab",
+    "SharePointFullPage"
+  ],
+  "supportsThemeVariants": true,
+  "preconfiguredEntries": [
+    {
+      "groupId": "5c03119e-3074-46fd-976b-c60198311f70",
+      "group": {
+        "default": "Content"
+      },
+      "title": {
+        "default": "Markstrata - HTML"
+      },
+      "description": {
+        "default": "An HTML document from a library, drawn in the page, behind a style boundary or in a sandboxed frame - with a stylesheet several pages can share."
+      },
+      "officeFabricIconFontName": "FileHTML",
+      "properties": {
+        "contentSource": "manual",
+        "cssSource": "none",
+        "renderMode": "inline",
+        "runScripts": false,
+        "fullBleed": false,
+        "heightMode": "fit",
+        "fixedHeight": 600,
+        "showOnNarrowScreens": true,
+        "themeFamily": "github",
+        "colorMode": "light",
+        "contentWidth": "comfortable",
+        "density": "normal",
+        "textSize": "normal",
+        "codeSize": "normal",
+        "showThemeSwitcher": false,
+        "fillHeight": false,
+        "tocPosition": "off",
+        "tocMaxLevel": 3,
+        "showSourceInfo": true,
+        "enableVersionHistory": true,
+        "enableAutoRefresh": false,
+        "toolbarVisibility": "always",
+        "showExportButton": true,
+        "exportCoverPage": true,
+        "exportContentsPage": true,
+        "exportSectionBreaks": false
+      }
+    }
+  ]
+}

@@ -3,11 +3,11 @@
  * The property pane: what an author sees when they edit the web part.
  *
  * .DESCRIPTION
- * It lives here rather than in the web part because it is 380 lines of literal
- * that describes settings, while the web part is the thing that renders a
- * document - and because it has no need of anything else in there. Given the
- * properties and the libraries, folders and files SharePoint has reported, the
- * pane is the same every time.
+ * It lives here rather than in the web part because it is a literal that
+ * describes settings, while the web part is the thing that renders a document -
+ * and because it has no need of anything else in there. Given the properties
+ * and the libraries, folders and files SharePoint has reported, the pane is the
+ * same every time.
  *
  * The pages are laid out by what somebody came to change rather than by what
  * the code calls things. Appearance holds the theme, the measure, the pictures
@@ -16,6 +16,15 @@
  * Contents keeps the table of contents and the links between documents,
  * because finding your way inside a document and finding your way between them
  * are the same errand; and what is left is what is drawn around the document.
+ *
+ * WHAT IS HERE AND WHAT IS IN paneFields
+ * The pages and the groups are here, because that layout is this web part's
+ * own and the HTML web part's pages are not the same pages. The controls
+ * inside a group that both parts show - the theme, the measure, the pictures,
+ * the contents list, the toolbar, the file footer - come from paneFields, so
+ * there is one of each rather than two that drift. What is left written out
+ * below is what only markdown has: its code fences, its diagrams, its maths,
+ * its wiki links and its tags.
  *
  * .USAGE
  *   import { paneConfiguration } from './propertyPane';
@@ -29,97 +38,34 @@
  * .NOTES
  * Since:     0.0.17.0
  * Ships in:  the web part bundle
- * Requires:  webPartProps.ts, tocWidth.ts, ThemeManager.ts
+ * Requires:  webPartProps.ts, paneFields.ts, mermaidConfig.ts, codeBlocks.ts
  */
 
 import {
   IPropertyPaneConfiguration,
-  IPropertyPaneDropdownOption,
-  IPropertyPaneField,
   PropertyPaneDropdown,
-  PropertyPaneSlider,
-  PropertyPaneTextField,
   PropertyPaneToggle,
   PropertyPaneLabel
 } from '@microsoft/sp-property-pane';
 import * as strings from 'MarkstrataWebPartStrings';
 
 import { IMarkstrataWebPartProps } from './webPartProps';
-import { ITocWidthRange, TOC_WIDTH_RANGES } from './utils/tocWidth';
 import {
-  THEME_FAMILIES,
-  COLOR_MODES,
-  CONTENT_WIDTHS,
-  DENSITIES,
-  TEXT_SIZES,
-  CODE_SIZES,
-  IThemeChoice
-} from './utils/ThemeManager';
+  IPaneSources,
+  toDropdown,
+  documentSourceFields,
+  themeFields,
+  readingFields,
+  pictureFields,
+  pageFields,
+  contentsFields,
+  tableFields,
+  toolbarFields,
+  fileInfoFields
+} from '../shared/paneFields';
+import { CODE_SIZES } from './utils/ThemeManager';
 
-/** What the pane knows about the site it is being shown in. */
-export interface IPaneSources {
-  libraries: IPropertyPaneDropdownOption[];
-  folders: IPropertyPaneDropdownOption[];
-  files: IPropertyPaneDropdownOption[];
-}
-
-function toDropdown(choices: IThemeChoice[]): IPropertyPaneDropdownOption[] {
-  return choices.map((choice: IThemeChoice) => ({ key: choice.key, text: choice.text }));
-}
-
-/** The contents are only a sidebar on two of the four placements. */
-function isTocSidebar(properties: IMarkstrataWebPartProps): boolean {
-  return properties.tocPosition === 'left' || properties.tocPosition === 'right';
-}
-
-/*
- * Slider and box are the same property. The slider is for finding a width by
- * eye, the box for typing one already known; the pane re-reads the property
- * when either changes, so the two stay in step.
- */
-function tocWidthFields(properties: IMarkstrataWebPartProps): IPropertyPaneField<unknown>[] {
-  const range: ITocWidthRange = tocWidthRange(properties);
-  return [
-    PropertyPaneDropdown('tocWidthUnit', {
-      label: strings.TocWidthUnitsLabel,
-      options: [
-        { key: 'em', text: 'em, follows the text size' },
-        { key: '%', text: '%, share of the web part' },
-        { key: 'px', text: 'px, a fixed number of pixels' },
-        { key: 'vw', text: 'vw, share of the browser window' }
-      ],
-      selectedKey: properties.tocWidthUnit
-    }),
-    PropertyPaneSlider('tocWidthValue', {
-      label: strings.TocWidthValueLabel,
-      min: range.min,
-      max: range.max,
-      step: range.step,
-      showValue: true
-    }),
-    PropertyPaneTextField('tocWidthValue', {
-      label: `${strings.TocWidthValueLabel} (${properties.tocWidthUnit})`,
-      onGetErrorMessage: (typed: string): string => checkTocWidth(properties, typed)
-    })
-  ] as IPropertyPaneField<unknown>[];
-}
-
-function tocWidthRange(properties: IMarkstrataWebPartProps): ITocWidthRange {
-  return TOC_WIDTH_RANGES[properties.tocWidthUnit] || TOC_WIDTH_RANGES.em;
-}
-
-/** Keeps a typed width inside the range its unit makes sense in. */
-function checkTocWidth(properties: IMarkstrataWebPartProps, typed: string): string {
-  const range: ITocWidthRange = tocWidthRange(properties);
-  const value: number = Number(typed);
-  if (typed.trim().length === 0 || isNaN(value)) {
-    return 'Enter a number.';
-  }
-  if (value < range.min || value > range.max) {
-    return `Between ${range.min} and ${range.max}${properties.tocWidthUnit}.`;
-  }
-  return '';
-}
+export { IPaneSources };
 
 /**
  * The five pages of the property pane.
@@ -127,16 +73,13 @@ function checkTocWidth(properties: IMarkstrataWebPartProps, typed: string): stri
  * A pure function of the properties and of what SharePoint has told us is in
  * the site: the same settings in, the same pane out. It is a function rather
  * than a method because nothing about laying a pane out needs the web part -
- * and because 380 lines of literal inside a class is where a class stops
+ * and because a pane's worth of literal inside a class is where a class stops
  * being readable.
  */
 export function paneConfiguration(
   properties: IMarkstrataWebPartProps,
   sources: IPaneSources
 ): IPropertyPaneConfiguration {
-  const isLibrary: boolean = properties.contentSource === 'library';
-  const isUrl: boolean = properties.contentSource === 'url';
-
   return {
     pages: [
       {
@@ -144,67 +87,14 @@ export function paneConfiguration(
         groups: [
           {
             groupName: strings.ContentGroupName,
-            groupFields: [
-              PropertyPaneDropdown('contentSource', {
-                label: strings.ContentSourceLabel,
-                options: [
-                  { key: 'manual', text: 'Type it here' },
-                  { key: 'library', text: 'File in a document library' },
-                  { key: 'url', text: 'File at a URL' }
-                ],
-                selectedKey: properties.contentSource
-              }),
-              ...(properties.contentSource === 'manual'
-                ? [
-                    PropertyPaneTextField('markdownContent', {
-                      label: strings.MarkdownContentLabel,
-                      multiline: true,
-                      rows: 14,
-                      description: strings.MarkdownContentDescription
-                    })
-                  ]
-                : []),
-              ...(isUrl
-                ? [
-                    PropertyPaneTextField('fileUrl', {
-                      label: strings.FileUrlLabel,
-                      description: strings.FileUrlDescription,
-                      placeholder: 'https://contoso.sharepoint.com/sites/team/Shared%20Documents/readme.md'
-                    })
-                  ]
-                : []),
-              ...(isLibrary
-                ? [
-                    PropertyPaneDropdown('selectedLibrary', {
-                      label: strings.LibraryLabel,
-                      options: sources.libraries,
-                      selectedKey: properties.selectedLibrary
-                    }),
-                    PropertyPaneDropdown('selectedFolder', {
-                      label: strings.FolderLabel,
-                      options: sources.folders,
-                      selectedKey: properties.selectedFolder,
-                      disabled: !properties.selectedLibrary
-                    }),
-                    PropertyPaneDropdown('selectedFile', {
-                      label: strings.FileLabel,
-                      options: sources.files,
-                      selectedKey: properties.selectedFile,
-                      disabled: !properties.selectedLibrary
-                    }),
-                    PropertyPaneToggle('enableAutoRefresh', {
-                      label: strings.AutoRefreshLabel,
-                      onText: 'On',
-                      offText: 'Off'
-                    }),
-                    PropertyPaneToggle('enableVersionHistory', {
-                      label: strings.VersionHistoryLabel,
-                      onText: 'On',
-                      offText: 'Off'
-                    })
-                  ]
-                : [])
-            ]
+            groupFields: documentSourceFields(properties, sources, {
+              textProperty: 'markdownContent',
+              textLabel: strings.MarkdownContentLabel,
+              textDescription: strings.MarkdownContentDescription,
+              fileLabel: strings.FileLabel,
+              urlDescription: strings.FileUrlDescription,
+              urlPlaceholder: 'https://contoso.sharepoint.com/sites/team/Shared%20Documents/readme.md'
+            })
           }
         ]
       },
@@ -213,77 +103,20 @@ export function paneConfiguration(
         groups: [
           {
             groupName: strings.ThemeGroupName,
-            groupFields: [
-              PropertyPaneDropdown('themeFamily', {
-                label: strings.ThemeFamilyLabel,
-                options: toDropdown(THEME_FAMILIES),
-                selectedKey: properties.themeFamily
-              }),
-              PropertyPaneDropdown('colorMode', {
-                label: strings.ColorModeLabel,
-                options: toDropdown(COLOR_MODES),
-                selectedKey: properties.colorMode
-              }),
-              PropertyPaneToggle('showThemeSwitcher', {
-                label: strings.ThemeSwitcherLabel,
-                onText: 'On',
-                offText: 'Off'
-              }),
-              PropertyPaneLabel('themeHint', { text: strings.ThemeHint })
-            ]
+            groupFields: themeFields(properties)
           },
           {
             groupName: strings.ReadingGroupName,
-            groupFields: [
-              PropertyPaneDropdown('contentWidth', {
-                label: strings.ContentWidthLabel,
-                options: toDropdown(CONTENT_WIDTHS),
-                selectedKey: properties.contentWidth
-              }),
-              PropertyPaneDropdown('density', {
-                label: strings.DensityLabel,
-                options: toDropdown(DENSITIES),
-                selectedKey: properties.density
-              }),
-              PropertyPaneDropdown('textSize', {
-                label: strings.TextSizeLabel,
-                options: toDropdown(TEXT_SIZES),
-                selectedKey: properties.textSize
-              })
-            ]
+            groupFields: readingFields(properties)
           },
           {
             groupName: strings.PicturesGroupName,
-            groupFields: [
-              PropertyPaneDropdown('imageAlign', {
-                label: strings.ImageAlignLabel,
-                options: [
-                  { key: 'left', text: 'Left' },
-                  { key: 'center', text: 'Centred' },
-                  { key: 'right', text: 'Right' }
-                ],
-                selectedKey: properties.imageAlign
-              }),
-              PropertyPaneToggle('enableImageZoom', {
-                label: strings.ImageZoomLabel,
-                onText: 'On',
-                offText: 'Off'
-              }),
-              PropertyPaneLabel('imageZoomHint', { text: strings.ImageZoomHint }),
-              PropertyPaneLabel('imageAlignHint', { text: strings.ImageAlignHint })
-            ]
+            groupFields: pictureFields(properties)
           },
           {
             groupName: strings.PageGroupName,
-            groupFields: [
-              PropertyPaneToggle('fillHeight', {
-                label: strings.FillHeightLabel,
-                onText: 'On',
-                offText: 'Off'
-              }),
-              PropertyPaneLabel('fillHeightHint', { text: strings.FillHeightHint })
-            ]
-          },
+            groupFields: pageFields()
+          }
         ]
       },
       {
@@ -368,14 +201,7 @@ export function paneConfiguration(
           },
           {
             groupName: strings.TablesGroupName,
-            groupFields: [
-              PropertyPaneToggle('enableTableSort', {
-                label: strings.TableSortLabel,
-                onText: 'On',
-                offText: 'Off'
-              }),
-              PropertyPaneLabel('tableSortHint', { text: strings.TableSortHint })
-            ]
+            groupFields: tableFields()
           }
         ]
       },
@@ -385,42 +211,12 @@ export function paneConfiguration(
           {
             groupName: strings.ContentsGroupName,
             groupFields: [
-              PropertyPaneDropdown('tocPosition', {
-                label: strings.TocPositionLabel,
-                options: [
-                  { key: 'off', text: 'No contents' },
-                  { key: 'left', text: 'Sidebar on the left' },
-                  { key: 'right', text: 'Sidebar on the right' },
-                  { key: 'inline', text: 'Above the content' }
-                ],
-                selectedKey: properties.tocPosition
-              }),
-              PropertyPaneSlider('tocMaxLevel', {
-                label: strings.TocLevelLabel,
-                min: 1,
-                /* Six, because every heading has an id now. It stopped at four
-                   while h5 and h6 had none, so listing them would have listed
-                   entries that led nowhere. */
-                max: 6,
-                step: 1,
-                disabled: properties.tocPosition === 'off'
-              }),
-              PropertyPaneDropdown('tocWidthMode', {
-                label: strings.TocWidthUnitLabel,
-                options: [
-                  { key: 'auto', text: 'Auto, fits the longest entry' },
-                  { key: 'fixed', text: 'Fixed width' }
-                ],
-                selectedKey: properties.tocWidthMode,
-                disabled: !isTocSidebar(properties)
-              }),
-              /* The unit and the number only exist once a fixed width is
-                 asked for. Greyed-out controls read as broken; absent ones
-                 read as not applicable, which is what they are. */
-              ...(isTocSidebar(properties) && properties.tocWidthMode === 'fixed'
-                ? tocWidthFields(properties)
-                : []),
-              PropertyPaneLabel('tocWidthHint', { text: strings.TocWidthHint }),
+              ...contentsFields(properties),
+              /* Last, and markdown's alone: these anchors are put on by
+                 markdown-it as it renders. An HTML document's headings are
+                 given ids too, but by walking the rendered document rather
+                 than by a setting, because without them nothing at all could
+                 link to a section. */
               PropertyPaneToggle('enableAnchors', {
                 label: strings.AnchorsLabel,
                 onText: 'On',
@@ -474,105 +270,11 @@ export function paneConfiguration(
         groups: [
           {
             groupName: strings.ToolbarGroupName,
-            groupFields: [
-              PropertyPaneDropdown('toolbarVisibility', {
-                label: strings.ToolbarVisibilityLabel,
-                options: [
-                  { key: 'always', text: 'Always' },
-                  { key: 'editing', text: 'Only while editing the page' },
-                  { key: 'never', text: 'Never' }
-                ],
-                selectedKey: properties.toolbarVisibility
-              }),
-              // The toolbar carries the print button, so a reader who never
-              // sees the toolbar never sees printing either. Saying so here
-              // costs a line and saves someone turning the toggle on and
-              // wondering why nothing changed.
-              PropertyPaneLabel('toolbarHint', { text: strings.ToolbarHint }),
-              /* Nothing to stick when the toolbar is never drawn, and nothing
-                 worth sticking when only an author sees it. */
-              PropertyPaneToggle('stickyToolbar', {
-                label: strings.StickyToolbarLabel,
-                onText: 'On',
-                offText: 'Off',
-                disabled: properties.toolbarVisibility === 'never'
-              }),
-              PropertyPaneLabel('stickyToolbarHint', { text: strings.StickyToolbarHint }),
-              PropertyPaneToggle('showExportButton', {
-                label: strings.ExportButtonLabel,
-                onText: 'On',
-                offText: 'Off',
-                disabled: properties.toolbarVisibility !== 'always'
-              }),
-              PropertyPaneLabel('exportHint', { text: strings.ExportButtonHint }),
-              /* The three below decide what an export contains, so they are
-                 nothing to anybody whose toolbar has no export button in it. */
-              PropertyPaneToggle('exportCoverPage', {
-                label: strings.ExportCoverLabel,
-                onText: 'On',
-                offText: 'Off',
-                disabled: !properties.showExportButton
-                  || properties.toolbarVisibility !== 'always'
-              }),
-              PropertyPaneToggle('exportContentsPage', {
-                label: strings.ExportContentsLabel,
-                onText: 'On',
-                offText: 'Off',
-                disabled: !properties.showExportButton
-                  || properties.toolbarVisibility !== 'always'
-              }),
-              PropertyPaneToggle('exportSectionBreaks', {
-                label: strings.ExportSectionBreaksLabel,
-                onText: 'On',
-                offText: 'Off',
-                disabled: !properties.showExportButton
-                  || properties.toolbarVisibility !== 'always'
-              }),
-              PropertyPaneLabel('exportSectionBreaksHint', { text: strings.ExportSectionBreaksHint }),
-              PropertyPaneToggle('showShareButton', {
-                label: strings.ShareButtonLabel,
-                /* Off with following off, because the link it copies is the
-                   one that setting reads: a button offering a link nobody can
-                   follow back is worse than no button. */
-                disabled: !properties.followDocumentLinks
-              }),
-              PropertyPaneLabel('shareButtonHint', { text: strings.ShareButtonHint }),
-              PropertyPaneToggle('showReadingTime', {
-                label: strings.ReadingTimeLabel,
-                onText: 'On',
-                offText: 'Off',
-                disabled: properties.toolbarVisibility === 'never'
-              }),
-              PropertyPaneDropdown('backToTop', {
-                label: strings.BackToTopLabel,
-                options: [
-                  { key: 'off', text: 'No button' },
-                  { key: 'left', text: 'Bottom left' },
-                  { key: 'right', text: 'Bottom right' }
-                ],
-                selectedKey: properties.backToTop
-              })
-            ]
+            groupFields: toolbarFields(properties)
           },
           {
             groupName: strings.FileInfoGroupName,
-            groupFields: [
-              PropertyPaneToggle('showSourceInfo', {
-                label: strings.ShowSourceInfoLabel,
-                onText: 'On',
-                offText: 'Off',
-                // The footer is built from the file's metadata, and only a
-                // library file has any.
-                disabled: !isLibrary
-              }),
-              PropertyPaneToggle('pinMeta', {
-                label: strings.PinMetaLabel,
-                onText: 'On',
-                offText: 'Off',
-                disabled: !isLibrary || !properties.showSourceInfo
-              }),
-              PropertyPaneLabel('sourceInfoHint', { text: strings.SourceInfoHint })
-            ]
+            groupFields: fileInfoFields(properties)
           }
         ]
       }

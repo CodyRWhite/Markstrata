@@ -3,10 +3,11 @@
  * Regenerates loc/en-us.js.
  *
  * .DESCRIPTION
- * The welcome text a new web part shows is kept in samples/welcome.md so it can
- * be edited as markdown (and previewed by the demo) instead of as an escaped
- * one-line JavaScript string. Run `node scripts/build-strings.js` after editing
- * either that file or the STRINGS table below.
+ * The welcome text a new web part shows is kept in samples/welcome.md, and the
+ * HTML web part's in samples/welcome.html, so each can be edited in its own
+ * language (and previewed by the demo) instead of as an escaped one-line
+ * JavaScript string. Run `node scripts/build-strings.js` after editing either
+ * of those files or the STRINGS table below.
  *
  * .USAGE
  *   node scripts/build-strings.js
@@ -26,6 +27,9 @@ const path = require('path');
 
 const root = path.join(__dirname, '..');
 const sample = fs.readFileSync(path.join(root, 'samples', 'welcome.md'), 'utf8');
+/* The HTML web part's own, for the same reason: an HTML document is worse to
+   read as an escaped one-line JavaScript string than markdown is. */
+const htmlSample = fs.readFileSync(path.join(root, 'samples', 'welcome.html'), 'utf8');
 
 const STRINGS = {
   ContentPageDescription: 'Choose where the markdown comes from.',
@@ -170,7 +174,49 @@ const STRINGS = {
     + 'In a channel that is the arrow beside the tab name, then Settings.',
   UnconfiguredSampleButton: 'Start with the sample document',
 
-  SampleContent: sample
+
+  /*
+   * The HTML web part. It shares this strings file with the markdown one
+   * because the two panes are mostly the same pane, and a second copy of
+   * "Document library" in a second file is a second place for it to drift.
+   */
+  HtmlContentPageDescription: 'Choose where the HTML comes from.',
+  HtmlContentLabel: 'HTML',
+  HtmlContentDescription: 'Typed here and stored with the web part. Good for a small fragment; use a library file for a whole document you want to version.',
+  HtmlFileLabel: 'HTML file',
+  HtmlFileUrlDescription: 'Any URL that returns HTML. SharePoint URLs are requested with your sign-in; other sites must allow cross-origin requests.',
+  StyleGroupName: 'Stylesheet',
+  CssSourceLabel: 'Stylesheet',
+  CssContentLabel: 'CSS',
+  CssContentDescription: 'Applies to this web part only. A style block inside the document itself still applies on top of this, so a document can vary from the shared look without changing it.',
+  StyleLibraryLabel: 'Stylesheet library',
+  StyleFolderLabel: 'Stylesheet folder',
+  CssFileLabel: 'CSS file',
+  CssFileUrlLabel: 'Stylesheet URL',
+  CssFileUrlDescription: 'Any URL that returns CSS. SharePoint URLs are requested with your sign-in; other sites must allow cross-origin requests.',
+  StyleHint: 'One stylesheet in a library can dress every HTML web part in the site, and changing that one file changes all of them. Inline render mode rewrites the rules so they apply only inside the web part, so a rule about body or html becomes a rule about this document.',
+  RenderPageDescription: 'How much of the page the document is part of.',
+  RenderGroupName: 'Rendering',
+  RenderModeLabel: 'Render mode',
+  RenderModeHint: 'Inline puts the document in the page, so it is themed like the rest of Markstrata and pictures, tables and links all work. Shadow DOM puts it behind a boundary, so it looks exactly as written and nothing on the page can restyle it. A frame makes it a document of its own, which is the strongest separation and the only place scripts can run.',
+  RunScriptsLabel: 'Run scripts in the document',
+  RunScriptsHint: 'Frame mode only. The frame gets no access to this page or to your SharePoint sign-in, and links in it open in a new tab rather than replacing the page. Turning this on also stops the document being cleaned up first, because cleaning it up is what removes the scripts: everything in the file runs, so only turn it on for a file you trust.',
+  ScriptsPausedWhileEditing: 'Scripts in this document are paused while the page is being edited. Save and leave edit mode to see it run.',
+  ScriptsNotAllowedHere: 'This site does not allow custom script, so the scripts in this document will not run. The document is shown cleaned up instead.',
+  FullBleedLabel: 'Full bleed',
+  FullBleedHint: 'Takes the reading measure off, so the document uses the whole width of the web part. Worth it for a dashboard, a wide table or a diagram; not for prose, where a long line is harder to read.',
+  HeightModeLabel: 'Height',
+  FixedHeightLabel: 'Height in pixels',
+  HeightHint: 'Fit content is as tall as the document. Fixed gives it a set height and scrolls the rest. Full window gives it at least the room below it on the page. Fit content is not available in frame mode with scripts on, because a frame running scripts cannot be measured from outside.',
+  NarrowScreensLabel: 'Show on narrow screens',
+  NarrowScreensHint: 'Off hides the whole web part below 600px. This is a width, not a device: SPFx does not say whether it is being drawn in the mobile app or in an email, so nothing here can claim to know. Use it for a document laid out wide, which reads better hidden than squeezed.',
+  UnconfiguredInPaneHtml: 'Open the property pane and choose where the HTML comes from: a file in a document library, a file at a URL, or HTML typed straight into the web part.',
+  UnconfiguredInTeamsHtml: 'Open this tab\'s settings and choose an HTML file. In a channel that is the arrow beside the tab name, then Settings.',
+  StylePageDescription: 'The stylesheet the document is dressed with.',
+  FollowLinksHintHtml: 'A relative link to another .html or .htm file in the same library opens that document in the web part instead of handing the reader the file, which SharePoint offers as raw text or as a download. A bar above the document says which one is open and goes back, and so does the browser\'s Back button. Opening a link in a new tab still goes to the file itself. A link that names a server is left alone, because it is somebody else\'s document. Needs a document library, since that is what the other documents are in.',
+  FrameLimitsHint: 'In frame mode the document is separate from the page, so the page cannot reach into it: pictures do not zoom, tables do not sort, exporting has nothing to lay out, and the contents list is drawn inside the frame rather than beside it. Choose inline or shadow DOM if you want those.',
+  SampleContent: sample,
+  HtmlSampleContent: htmlSample
 };
 
 /*

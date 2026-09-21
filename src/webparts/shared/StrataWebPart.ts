@@ -93,6 +93,14 @@ const SHARED_REDRAWS_THE_PANE: string[] = [
   'showSourceInfo'
 ];
 
+/** The two sentences that name the kind of document a web part wants. */
+export interface IUnconfiguredGuidance {
+  /** An author with the property pane open in front of them. */
+  inPane: string;
+  /** A Teams tab, where there is no page to edit and no pane to open. */
+  inTeams: string;
+}
+
 export abstract class StrataWebPart<TProps extends IStrataWebPartProps>
   extends BaseClientSideWebPart<TProps> {
 
@@ -166,6 +174,41 @@ export abstract class StrataWebPart<TProps extends IStrataWebPartProps>
   protected abstract rebuildsRenderer(): string[];
 
   /** Settings that change what else the pane shows, beyond the shared ones. */
+  /**
+   * The file picker's source of libraries, folders and files.
+   *
+   * Overridden by a web part whose documents are not markdown, because the
+   * picker offers files by extension and offering an author a list of markdown
+   * files to render as HTML is offering them nothing.
+   */
+  protected buildPaneSources(): PaneSources {
+    return new PaneSources(this.sharePoint, this.properties);
+  }
+
+  /**
+   * Anything a web part needs fetched before it can draw a document.
+   *
+   * Awaited inside the same try as the rest of starting up, so a failure here
+   * is reported as a web part that could not start rather than thrown into the
+   * page. Nothing by default: only the HTML web part has a second file to
+   * fetch, its stylesheet.
+   */
+  protected async startedUp(): Promise<void> {
+    /* Nothing by default. */
+  }
+
+  /**
+   * The element the search index should read the document's text from.
+   *
+   * The document is inside `.strata-content` in both web parts, except where
+   * the HTML one has put it behind a shadow boundary or in a frame - neither
+   * of which this query can see into. That web part says where to look
+   * instead; see HtmlViewRenderer.indexedContent.
+   */
+  protected indexedArticle(): HTMLElement | undefined {
+    return (this.domElement.querySelector('.strata-content') as HTMLElement) || undefined;
+  }
+
   protected redrawsPane(): string[] {
     return [];
   }
@@ -229,7 +272,7 @@ export abstract class StrataWebPart<TProps extends IStrataWebPartProps>
     /* After the service exists, not before: PaneSources keeps the one it is
        given, so building it any earlier hands it undefined for good and leaves
        every dropdown on the property pane empty. */
-    this.paneSources = new PaneSources(this.sharePoint, this.properties);
+    this.paneSources = this.buildPaneSources();
 
     /*
      * Reading another document is not configuring the page, so none of what it
@@ -284,6 +327,9 @@ export abstract class StrataWebPart<TProps extends IStrataWebPartProps>
 
     this.detached('The property pane could not be told what the site holds.',
       this.paneSources.loadAll().then(() => this.context.propertyPane.refresh()));
+    /* Before the document, so that anything a web part needs in order to draw
+       one is there for the first draw rather than arriving as a second. */
+    await this.startedUp();
     await this.loadContent(false);
     await this.openDocumentFromAddress();
   }
@@ -539,11 +585,12 @@ export abstract class StrataWebPart<TProps extends IStrataWebPartProps>
     heading.textContent = strings.UnconfiguredHeading;
     panel.appendChild(heading);
 
+    const said: IUnconfiguredGuidance = this.unconfiguredGuidance();
     const guidance: HTMLElement = document.createElement('p');
     guidance.className = 'strata-unconfigured-body';
     guidance.textContent = inTeams
-      ? strings.UnconfiguredInTeams
-      : (editing ? strings.UnconfiguredInPane : strings.UnconfiguredOnPage);
+      ? said.inTeams
+      : (editing ? said.inPane : strings.UnconfiguredOnPage);
     panel.appendChild(guidance);
 
     /* Only where somebody can act on it. Offering the sample to a reader who
@@ -564,6 +611,18 @@ export abstract class StrataWebPart<TProps extends IStrataWebPartProps>
     }
 
     this.domElement.appendChild(panel);
+  }
+
+  /**
+   * What to tell somebody who has not chosen a document yet.
+   *
+   * Only the two that name the kind of document are asked for. "No document
+   * chosen yet" and "somebody who can edit this page needs to choose one" say
+   * nothing about markdown or HTML and are the same either way, and a string
+   * kept in one place cannot drift from its twin.
+   */
+  protected unconfiguredGuidance(): IUnconfiguredGuidance {
+    return { inPane: strings.UnconfiguredInPane, inTeams: strings.UnconfiguredInTeams };
   }
 
   protected showBanner(message: string, tone: string): void {
@@ -956,7 +1015,7 @@ export abstract class StrataWebPart<TProps extends IStrataWebPartProps>
       return;
     }
 
-    const article: HTMLElement | null = this.domElement.querySelector('.strata-content');
+    const article: HTMLElement | undefined = this.indexedArticle();
     if (!article) {
       return;
     }

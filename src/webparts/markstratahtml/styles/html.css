@@ -1,0 +1,119 @@
+/*
+ * .SYNOPSIS
+ * html.css - the four things the HTML web part draws that the markdown one
+ * does not: the frame, the shadow mount, the full bleed setting and the
+ * narrow screen setting.
+ *
+ * .DESCRIPTION
+ * Everything else the HTML web part shows is chrome the two parts share, so it
+ * is styled by the markdown stylesheets, which this web part loads as well.
+ * Only what is particular to an HTML document is here, and it is loaded last
+ * so that these rules win where they overlap.
+ *
+ * .USAGE
+ *   Loaded in this order by MarkstrataHtmlWebPart.ts, because later rules
+ *   override earlier ones:
+ *
+ *     base, typography, tables-lists, extras, chrome, the three themes,
+ *     modifiers, print, html
+ *
+ * .NOTES
+ * Since:     0.0.22.0
+ * Ships in:  the HTML web part bundle
+ * Requires:  base.css, for the custom properties it reads
+ */
+
+/* ------------------------------------------------------------------ the frame */
+
+/*
+ * A frame with a border reads as an embedded thing rather than as the
+ * document, and the default width of an iframe is 300px whatever it holds.
+ */
+.strata-frame {
+  display: block;
+  flex: 1 1 auto;
+  min-width: 0;
+  width: 100%;
+  max-width: var(--strata-content-max-width);
+  border: 0;
+  background: transparent;
+  color-scheme: normal;
+}
+
+/*
+ * A height to stand in until the document is measured, and to keep when it
+ * cannot be. Without one the frame collapses and the document is a sliver.
+ * Not a max-height: a long document in "fit content" is meant to be long.
+ */
+.strata-frame[data-strata-height='fit'] {
+  min-height: 24rem;
+}
+
+/* The window's worth of room, less what the toolbar above it takes. */
+.strata-frame[data-strata-height='window'] {
+  min-height: 60vh;
+}
+
+/* ------------------------------------------------------------ a fixed height */
+
+/*
+ * A fixed height is an instruction to scroll, not to clip: the height is set
+ * as an inline style by the renderer, and this is what stops the rest of the
+ * document being simply cut off.
+ */
+.strata-content[data-strata-height='fixed'] {
+  overflow: auto;
+}
+
+/* --------------------------------------------------------- the shadow mount */
+
+/*
+ * The element the shadow root hangs from. It is the content column, so it
+ * takes the column's width: the document inside the root cannot be given it,
+ * because a rule out here does not reach in.
+ */
+.strata-shadow {
+  display: block;
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: var(--strata-content-max-width);
+}
+
+/* ------------------------------------------------------------- full bleed */
+
+/*
+ * The reading measure exists so that a line of prose is a comfortable length.
+ * A document that is a dashboard, a diagram or a table of everything is not
+ * prose, and the measure strands it in the middle of the page. Full bleed is
+ * for those, so it takes the measure off the content, the frame and the
+ * shadow mount alike, and stops the layout centring what is left over.
+ */
+.strata-root[data-strata-bleed='true'] > .strata-layout {
+  justify-content: stretch;
+}
+
+.strata-root[data-strata-bleed='true'] .strata-content,
+.strata-root[data-strata-bleed='true'] .strata-frame,
+.strata-root[data-strata-bleed='true'] .strata-shadow {
+  max-width: none;
+  width: 100%;
+}
+
+/* ------------------------------------------------------- narrow screens */
+
+/*
+ * Not the same thing as SharePoint's mobile app or Outlook's email view. There
+ * is no API in SPFx that says which of those a web part is being drawn in, so
+ * nothing here can claim to know. What this does is real and is what an author
+ * usually means: a document laid out for a wide screen - a dashboard, a wide
+ * table, a floor plan - is hidden below the width where it stops being
+ * readable, rather than shown squeezed.
+ *
+ * The chrome goes with it. Hiding the document and leaving a toolbar over an
+ * empty space would read as something broken.
+ */
+@media (max-width: 600px) {
+  .strata-root[data-strata-narrow='hide'] {
+    display: none;
+  }
+}

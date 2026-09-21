@@ -9,6 +9,14 @@
           "manifest": "./src/webparts/markstrata/MarkstrataWebPart.manifest.json"
         }
       ]
+    },
+    "markstrata-html-web-part": {
+      "components": [
+        {
+          "entrypoint": "./lib/webparts/markstratahtml/MarkstrataHtmlWebPart.js",
+          "manifest": "./src/webparts/markstratahtml/MarkstrataHtmlWebPart.manifest.json"
+        }
+      ]
     }
   },
   "localizedResources": {
