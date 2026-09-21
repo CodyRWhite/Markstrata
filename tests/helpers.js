@@ -90,5 +90,6 @@ module.exports = {
   folderTree: lib('folderTree'),
   headingLanding: lib('headingLanding'),
   exportNaming: lib('exportNaming'),
-  scopedCss: shared('scopedCss')
+  scopedCss: shared('scopedCss'),
+  htmlDocument: shared('htmlDocument')
 };
