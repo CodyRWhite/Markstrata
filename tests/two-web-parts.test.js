@@ -181,3 +181,46 @@ test('both web parts read the same strings file', () => {
     assert.match(read(part.webPart), /from 'MarkstrataWebPartStrings'/);
   }
 });
+
+test('the App Catalog title names both web parts, not one of them', () => {
+  /*
+   * The exact drift brand.test.js warns about, one layer up. Its check is
+   * that the title says Teams, because a title naming only SharePoint sat
+   * there for a dozen releases after the Teams tab shipped. This is the same
+   * failure with a second web part: "Markstrata - Markdown for SharePoint and
+   * Teams" was true the day before this one existed.
+   */
+  const solution = JSON.parse(read('config', 'package-solution.json')).solution;
+  const said = [
+    solution.name,
+    solution.metadata.shortDescription.default,
+    solution.metadata.longDescription.default
+  ];
+
+  for (const text of said) {
+    assert.match(text, /markdown/i, `does not mention markdown: ${text.substring(0, 80)}`);
+    assert.match(text, /\bHTML\b/, `does not mention HTML: ${text.substring(0, 80)}`);
+  }
+});
+
+test('and so does what Teams is told about the app', () => {
+  const teams = JSON.parse(read('config', 'teams-app-manifest.json'));
+  for (const text of [teams.name.full, teams.description.short, teams.description.full]) {
+    assert.match(text, /markdown/i, `does not mention markdown: ${text.substring(0, 80)}`);
+    assert.match(text, /\bHTML\b/, `does not mention HTML: ${text.substring(0, 80)}`);
+  }
+});
+
+test('Teams is told about one configurable tab, which is all it allows', () => {
+  /*
+   * The schema caps this at one per app: "Currently only one configurable tab
+   * per app is supported." A second entry here is not a second tab, it is a
+   * manifest Teams rejects, and the rejection reads from the app catalog as
+   * Sync to Teams failing for no reason. The description says which route the
+   * other web part takes instead, so this also checks it still says it.
+   */
+  const teams = JSON.parse(read('config', 'teams-app-manifest.json'));
+  assert.equal(teams.configurableTabs.length, 1);
+  assert.match(teams.description.full, /one configurable tab/i,
+    'the description should still explain how the other web part reaches Teams');
+});

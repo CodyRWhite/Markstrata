@@ -17,11 +17,11 @@
   },
   "name": {
     "short": "Markstrata",
-    "full": "Markstrata - markdown for SharePoint and Teams"
+    "full": "Markstrata - markdown and HTML for SharePoint and Teams"
   },
   "description": {
-    "short": "Read markdown from this team's files, themed and rendered properly.",
-    "full": "Markstrata renders markdown files the way you wrote them. Point a tab at a .md file in this team's Files and it is rendered with a table of contents, working code blocks with syntax highlighting, GitHub alerts and Obsidian callouts, Mermaid diagrams, KaTeX maths and sortable tables, in a theme modelled on GitHub, Obsidian or VS Code, in light or dark.\n\nA channel's Files are a SharePoint document library, so the documents are the ones already there. Nothing is copied anywhere and nothing leaves your tenant: the tab reads the file with your own signed-in session. Links between markdown documents open in the tab rather than downloading the file, so a folder of documentation reads as a set rather than as files."
+    "short": "Read markdown and HTML from this team's files, themed and rendered properly.",
+    "full": "Markstrata renders the documents in this team's Files the way you wrote them. Point a tab at a markdown file and it is rendered with a table of contents, working code blocks with syntax highlighting, GitHub alerts and Obsidian callouts, Mermaid diagrams, KaTeX maths and sortable tables, in a theme modelled on GitHub, Obsidian or VS Code, in light or dark.\n\nA channel's Files are a SharePoint document library, so the documents are the ones already there. Nothing is copied anywhere and nothing leaves your tenant: the tab reads the file with your own signed-in session. Links between documents open in the tab rather than downloading the file, so a folder of documentation reads as a set rather than as files.\n\nThe solution also installs Markstrata - HTML, which does the same for .html documents and can draw one in the page, behind a style boundary, or in a sandboxed frame. Teams allows an app only one configurable tab, so that web part is added to a SharePoint page, which a channel can then carry as a tab."
   },
   "accentColor": "#0E7C86",
   "configurableTabs": [

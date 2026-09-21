@@ -22,6 +22,7 @@
  */
 
 const { execFileSync } = require('child_process');
+const fs = require('fs');
 const path = require('path');
 
 const root = path.join(__dirname, '..');
@@ -31,7 +32,17 @@ function run(command, args) {
   execFileSync(command, args, { stdio: 'inherit', cwd: root });
 }
 
+/*
+ * Emptied before compiling, and that is not tidiness.
+ *
+ * The tests load these classes with require, which finds whatever is on disk.
+ * The build spans two folders now, so its layout moves whenever an import
+ * crosses one - and a previous build left behind a copy at the old path, which
+ * every require went on finding. A check that passes against code that is no
+ * longer the source is worse than one that fails.
+ */
 console.log('Compiling test build...');
+fs.rmSync(path.join(root, 'temp', 'test-lib'), { recursive: true, force: true });
 run(executable('tsc'), ['-p', 'tsconfig.test.json']);
 
 console.log('Running tests...');

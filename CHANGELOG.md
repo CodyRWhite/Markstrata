@@ -8,6 +8,119 @@ is normally zero. `scripts/set-version.js` stamps it when a release is cut.
 
 Entries below 0.0.10.0 were written before the switch and are three-part.
 
+## 0.0.22.0
+
+A second web part: **Markstrata - HTML**. The markdown one is renamed
+**Markstrata - Markdown**, so the two can be told apart in the toolbox, and the
+solution is now "Markstrata - Markdown and HTML for SharePoint and Teams".
+
+### The HTML web part
+
+It draws an author's HTML document with the same chrome the markdown one has:
+the same toolbar, theme controls, contents list, trail through linked documents
+and source footer. A page can carry one of each and read as one thing.
+
+Three render modes, which are three different bargains rather than three ways
+of doing the same thing.
+
+- **Inline** puts the document in the page. Markstrata's typography styles it,
+  pictures zoom, tables sort, the contents sidebar works, and links to
+  neighbouring documents open in the web part. The author's stylesheet is
+  rewritten so it applies only inside this web part: their
+  `body { background: black }` becomes a rule about their own document.
+- **Shadow DOM** puts it behind a boundary. The stylesheet needs no rewriting
+  because the boundary is what contains it, the page's CSS cannot reach in
+  either, and the document looks exactly as written. Inherited properties do
+  cross a boundary, so the theme's colours and text size still arrive, and an
+  author can use `var(--strata-...)` to match the page deliberately.
+- **Frame** makes it a document of its own, in a sandbox, and is the only mode
+  where the author's own scripts can run.
+
+### What the sandbox allows, and why
+
+`allow-same-origin` and `allow-scripts` are never granted together. Together
+they are not a sandbox: a script with both can read the reader's SharePoint
+session and remove its own sandbox attribute.
+
+With scripts off the frame is granted same-origin, which is safe because there
+is no script in it to use it, and useful because it is what lets the web part
+measure the document and fit the frame to it. It is also granted top navigation
+by user activation, which is what lets a link to a neighbouring document
+replace the page rather than open a tab.
+
+With scripts on the frame is an opaque origin instead: nothing in it can see
+the page and the page cannot see in. Top navigation is withheld, because a
+script could rewrite a link's address and the reader's own click would carry
+them off to it, so links open in a new tab. "Fit content" is not offered at all
+in that mode rather than quietly behaving as something else, because a frame
+that cannot be read cannot be measured.
+
+Scripts are off by default, off in the preconfigured entry, and paused while
+the page is being edited. Turning them on also means the document is no longer
+sanitised, because sanitising is what removes the scripts. The property pane
+says that in those words.
+
+### A stylesheet several pages can share
+
+The stylesheet is chosen separately from the document, with its own library,
+folder and file pickers, because one file in a library is meant to dress every
+HTML web part in a site and an author editing one document should not be able to
+restyle the other nineteen. A document's own `<style>` block still applies on
+top of it, so one document can vary without the rest of them moving. A
+stylesheet that will not load is a banner and never a failure to draw: the
+document is what somebody came to read, and it is readable unstyled.
+
+### Also in the HTML web part
+
+- **Full bleed** takes the reading measure off, for a document that is a
+  dashboard or a wide table rather than prose.
+- **Height**: fit content, a fixed number of pixels that scrolls, or the room
+  left on the page.
+- **Show on narrow screens**, off, hides the web part below 600px. It is a
+  width and not a device: SPFx does not say whether it is being drawn in the
+  mobile app or in an email, so nothing here claims to know.
+- Headings are given ids by walking the rendered document, using the same slug
+  rule markdown uses. Hand-written HTML rarely has any, and without them the
+  contents list comes out empty and no link can reach a section. An id the
+  author wrote is never rewritten, only counted.
+
+### Teams
+
+Teams allows an app one configurable tab, so the channel tab stays the markdown
+one. The app description now says so and names the route that works for the
+other: add Markstrata - HTML to a SharePoint page, which a channel can carry as
+a tab.
+
+### Under both web parts
+
+The lifecycle was already shared. What moved this time is the furniture and the
+pane.
+
+- `documentChrome` holds the toolbar, the theme controls, the document trail,
+  the contents list and the source footer. All of it is built from the rendered
+  document rather than from markdown, so none of it belonged to the markdown
+  renderer. `ViewModeRenderer` drops from 620 lines to 229 and keeps only what
+  is markdown.
+- `paneFields` holds every property pane control both web parts show, so there
+  is one theme control rather than two that drift. Each pane still lays out its
+  own pages, because the pages are where the two genuinely differ.
+  `propertyPane.ts` drops from about 600 lines to 282.
+
+### Two build fixes worth recording
+
+The scroll walk that finds what is actually scrolling on a page was written
+with `parentElement`, and the topmost element in a shadow root has none. It
+stopped at the boundary, found no scrolling container, and answered as though
+the window scrolled, which is the wrong answer on every real SharePoint page.
+It steps out through the shadow host now.
+
+The demo and test builds compiled into a flat folder and loaded the result with
+`require`. Once the renderer's imports crossed into a second source folder the
+output stopped being flat, and every `require` went on finding the copy a
+previous build had left at the old path. A site build passed that way against
+code that was no longer the source. Both builds now name their root explicitly
+and empty the output folder first, so that cannot happen again quietly.
+
 ## 0.0.21.2
 
 No change to the web part. The version exists so that Teams will accept the

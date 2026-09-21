@@ -77,7 +77,7 @@ const PAGES = [
     id: 'home', folder: '', label: 'Overview', title: 'Markstrata',
     section: 'evaluate',
     source: 'docs/site/home.md', toc: 'off',
-    description: 'Markdown for SharePoint and Teams, themed like the editors you write it in: GitHub, Obsidian and VS Code, light and dark.'
+    description: 'Markdown and HTML for SharePoint and Teams, themed like the editors you write it in: GitHub, Obsidian and VS Code, light and dark.'
   },
   {
     id: 'demo', folder: 'demo', label: 'Demo', title: 'Demo - Markstrata',
