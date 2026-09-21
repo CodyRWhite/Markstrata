@@ -63,7 +63,8 @@ export function secureExternalLinks(container: HTMLElement): void {
 export function followDocumentLinks(
   container: HTMLElement,
   base: string | undefined,
-  open?: (path: string, heading: string) => void
+  open?: (path: string, heading: string) => void,
+  extensions?: RegExp
 ): void {
   const links: HTMLAnchorElement[] = Array.prototype.slice.call(
     container.querySelectorAll('a[href]')
@@ -110,7 +111,7 @@ export function followDocumentLinks(
     }
 
     const target: string = resolved || href;
-    if (!open || !isDocument(target)) {
+    if (!open || !isDocument(target, extensions)) {
       return;
     }
 
@@ -239,9 +240,27 @@ function asPath(href: string): string {
 }
 
 /* A markdown file, whatever else the link carries. */
-function isDocument(href: string): boolean {
+/** What this web part renders, so a link to one opens here. */
+export const MARKDOWN_DOCUMENTS: RegExp = /\.(md|markdown)$/i;
+
+/** The same for the HTML web part, which follows links to HTML files. */
+export const HTML_DOCUMENTS: RegExp = /\.(html?)$/i;
+
+/**
+ * Whether a link points at a document this web part would render.
+ *
+ * The test is a parameter because two web parts ask it about different
+ * answers, and getting it wrong in either direction is worse than it sounds: a
+ * pattern too narrow hands the reader the raw file, which is the download this
+ * exists to replace, and one too broad swallows a click on a link to a PDF and
+ * tries to render it as a document.
+ *
+ * The fragment and the query are cut off first. A link to `page.html#section`
+ * is a link to a document, and testing the whole href would miss it.
+ */
+function isDocument(href: string, extensions?: RegExp): boolean {
   const path: string = href.split('#')[0].split('?')[0];
-  return /\.(md|markdown)$/i.test(path);
+  return (extensions || MARKDOWN_DOCUMENTS).test(path);
 }
 
 

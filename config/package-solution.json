@@ -1,9 +1,9 @@
 {
   "$schema": "https://developer.microsoft.com/json-schemas/spfx-build/package-solution.schema.json",
   "solution": {
-    "name": "Markstrata - Markdown for SharePoint and Teams",
+    "name": "Markstrata - Markdown and HTML for SharePoint and Teams",
     "id": "7160b942-6869-49d0-b3e9-db7b50ca5fdc",
-    "version": "0.0.21.2",
+    "version": "0.0.22.0",
     "includeClientSideAssets": true,
     "supportedLocales": [
       "en-us"
@@ -20,10 +20,10 @@
     },
     "metadata": {
       "shortDescription": {
-        "default": "Markdown from your document libraries, on SharePoint pages and as a Teams tab, themed like GitHub, Obsidian or VS Code."
+        "default": "Markdown and HTML from your document libraries, on SharePoint pages and as a Teams tab, themed like GitHub, Obsidian or VS Code."
       },
       "longDescription": {
-        "default": "Renders markdown files from a SharePoint document library, from a URL, or typed straight into the web part. A Teams channel’s Files are a document library, so the same web part shows the same documents as a tab.\n\nThemes are modelled on GitHub, Obsidian and VS Code, in light and dark, and are data rather than code: typography, code block contrast, callout shape and syntax colours all follow the editor the documentation was written in.\n\nDocuments link to each other. A wiki link, an ordinary relative link, or an address on the page all open the next document in place, with a trail back through the ones before it and a button that copies a link to whichever is on screen. Word, Excel and PowerPoint files embed as a card with SharePoint’s own preview inside it.\n\nAlso renders GitHub alerts and Obsidian callouts, Mermaid diagrams, KaTeX maths, sortable tables, footnotes, task lists, and code blocks that can show a file from a URL, cap their own height, or open full size."
+        "default": "Two web parts. Markstrata - Markdown renders markdown files from a SharePoint document library, from a URL, or typed straight into the web part. Markstrata - HTML does the same for HTML documents, and can draw one in the page, behind a style boundary, or in a sandboxed frame. A Teams channel’s Files are a document library, so the same web part shows the same documents as a tab.\n\nThemes are modelled on GitHub, Obsidian and VS Code, in light and dark, and are data rather than code: typography, code block contrast, callout shape and syntax colours all follow the editor the documentation was written in. Both web parts share them, and share the toolbar, the contents list and the trail through linked documents, so a page can carry one of each and read as one thing.\n\nDocuments link to each other. A wiki link, an ordinary relative link, or an address on the page all open the next document in place, with a trail back through the ones before it and a button that copies a link to whichever is on screen. Word, Excel and PowerPoint files embed as a card with SharePoint’s own preview inside it.\n\nMarkdown also renders GitHub alerts and Obsidian callouts, Mermaid diagrams, KaTeX maths, sortable tables, footnotes, task lists, and code blocks that can show a file from a URL, cap their own height, or open full size. HTML is sanitised before it is drawn, its stylesheet can be shared from one file across a whole site, and an author’s own scripts run only in a sandboxed frame and only when somebody turns them on."
       },
       "screenshotPaths": [
         "screenshots/github-light.png",
@@ -40,9 +40,9 @@
     "features": [
       {
         "title": "Markstrata",
-        "description": "Activates the Markstrata markdown web part.",
+        "description": "Activates the Markstrata markdown and HTML web parts.",
         "id": "d4f340af-99c8-4167-88ef-53b89003b7bc",
-        "version": "0.0.21.2"
+        "version": "0.0.22.0"
       }
     ]
   },

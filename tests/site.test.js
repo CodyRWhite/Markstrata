@@ -22,10 +22,20 @@ const { MarkdownProcessor } = require('./helpers');
 
 const root = path.join(__dirname, '..');
 
-test('every page declares a source that exists, or is the demo', () => {
+test('every page declares a source that exists, or names a builder', () => {
+  /* Two pages have no markdown behind them: the markdown demo and the HTML
+     web part, each of which is a web part running rather than a document. Both
+     are built by the harness, and the second names which entry point - so a
+     third page added without either a source or a builder fails here rather
+     than silently coming out as a copy of the markdown demo. */
+  const BUILT_BY_THE_HARNESS = { demo: undefined, html: 'html' };
+
   for (const entry of PAGES) {
     if (!entry.source) {
-      assert.equal(entry.id, 'demo', `${entry.id} has no source but is not the demo`);
+      assert.ok(entry.id in BUILT_BY_THE_HARNESS,
+        `${entry.id} has no source and is not built by the harness`);
+      assert.equal(entry.builder, BUILT_BY_THE_HARNESS[entry.id],
+        `${entry.id} names the wrong builder`);
       continue;
     }
     assert.ok(fs.existsSync(path.join(root, entry.source)),

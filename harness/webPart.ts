@@ -265,6 +265,9 @@ const harness = {
     if (webPart) { webPart.hostChangeProperty(path, value); }
   },
   openPane: (): void => { if (pane) { pane.show(); } },
+  /* The pane shows one page at a time, so a control that is not on the first
+     one has to be turned to. Zero based, in the order the pane declares. */
+  panePage: (index: number): void => { if (pane) { pane.goToPage(index); } },
   closePane: (): void => { if (pane) { pane.hide(); } },
   /** The choices a dropdown is offering, which is where an empty pane shows. */
   paneOptions: (propertyPath: string): string[] => {

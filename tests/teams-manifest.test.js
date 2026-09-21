@@ -43,6 +43,23 @@ const webPart = JSON.parse(fs.readFileSync(
 ));
 
 /*
+ * The second app, for the HTML web part.
+ *
+ * It exists because the schema caps configurableTabs at one item per app, so a
+ * second tab cannot go in the first package. It was written by copying the
+ * first, which is exactly why it is validated here rather than trusted: a copy
+ * is one careless edit from carrying the other web part's component id, the
+ * other app's identity, or a key the schema does not define.
+ */
+const htmlManifest = JSON.parse(
+  fs.readFileSync(path.join(ROOT, 'config', 'teams-html-app-manifest.json'), 'utf8')
+);
+const htmlWebPart = JSON.parse(fs.readFileSync(
+  path.join(ROOT, 'src', 'webparts', 'markstratahtml', 'MarkstrataHtmlWebPart.manifest.json'),
+  'utf8'
+));
+
+/*
  * The schema itself, vendored beside the manifest.
  *
  * The limits used to be copied into this file by hand, which is how a key
@@ -215,6 +232,40 @@ test('the tab points at the web part that is actually deployed', () => {
   assert.deepEqual(tabs[0].scopes, ['team']);
 });
 
+/*
+ * A private channel keeps its own SharePoint site collection rather than
+ * sharing the parent team's, which is the whole reason it is private. Teams
+ * treats such a channel as a non-standard type and hides an app from it unless
+ * the app says otherwise: without this, adding either app to one is refused
+ * with "App isn't supported in private channels."
+ *
+ * Saying otherwise is safe here for a reason worth writing down. The tab is
+ * addressed with {teamSiteDomain}{teamSitePath}, which Teams fills in from
+ * whichever site is behind the channel it is being added to, so a private
+ * channel's own site is what the tab is pointed at and its own Files is what
+ * the picker reads. The web part has to be available on that site for the page
+ * to load, and it is, because the solution sets skipFeatureDeployment - it is
+ * available tenant wide rather than installed site by site, so a channel's new
+ * site collection needs nothing done to it.
+ *
+ * sharedChannels is the other value this property takes and is deliberately
+ * not asked for. A shared channel can be shared with another tenant, and the
+ * webApplicationInfo resource is anchored on {teamSiteDomain}; Microsoft's own
+ * guidance is that it "will not work cross-tenant/cross-domain", so offering
+ * the app there would mean external members being shown a tab that cannot
+ * load for them. Declining is better than that.
+ */
+[
+  ['the markdown app', manifest],
+  ['the HTML app', htmlManifest]
+].forEach(([which, subject]) => {
+  test(`${which} can be added to a private channel`, () => {
+    assert.deepEqual(subject.supportedChannelTypes, ['privateChannels'],
+      'a private channel has its own site and Teams hides the app from one '
+      + 'unless the manifest names the channel type');
+  });
+});
+
 test('the domains the tab loads from are allowed', () => {
   assert.ok(
     manifest.validDomains.some((domain) => domain.indexOf('sharepoint.com') !== -1),
@@ -241,17 +292,23 @@ test('teams/ holds what SharePoint looks for and nothing else', () => {
    * SharePoint looks inside the package for ./teams/TeamsSPFxApp.zip and
    * deploys that instead of generating a manifest of its own.
    *
-   * So three things belong here and nothing else. The two icons, named by
-   * component id, for the generated path if anybody ever falls back to it; and
-   * the built package, which is not committed, so it is allowed rather than
-   * required. Anything else is shipped inside the .sppkg for no reason - an
-   * earlier cut of this left the manifest loose in the folder, where it became
-   * a generic ClientSideAssets/manifest.json beside SPFx's own assets.
+   * So four things belong here and nothing else. The two icons, named by the
+   * markdown component's id, which is the name Sync to Teams looks for and
+   * which both apps' packages copy from; TeamsSPFxApp.zip, the one SharePoint
+   * deploys; and the HTML web part's package, which SharePoint will not deploy
+   * because it only knows the one name, and which rides inside the .sppkg so
+   * that an administrator has it to hand without a second download. Neither
+   * zip is committed, so both are allowed rather than required.
+   *
+   * Anything else is shipped inside the .sppkg for no reason - an earlier cut
+   * of this left the manifest loose in the folder, where it became a generic
+   * ClientSideAssets/manifest.json beside SPFx's own assets.
    */
   const allowed = [
     `${webPart.id}_color.png`,
     `${webPart.id}_outline.png`,
-    'TeamsSPFxApp.zip'
+    'TeamsSPFxApp.zip',
+    'MarkstrataHtmlTeamsApp.zip'
   ];
 
   const unexpected = fs.readdirSync(path.join(ROOT, 'teams'))
@@ -306,6 +363,57 @@ test('and the validator really would refuse a bad one', () => {
   const withoutRequired = Object.assign({}, manifest);
   delete withoutRequired.id;
   assert.equal(validate(withoutRequired), false, 'a manifest with no id was accepted');
+});
+
+// ----------------------------------------------------- the HTML web part's app
+
+test('the HTML app validates against the whole v1.17 schema as well', () => {
+  const validate = manifestValidator();
+  const valid = validate(htmlManifest);
+  assert.ok(valid, valid ? '' : (validate.errors || [])
+    .map((error) => `${error.instancePath || '(root)'} ${error.message}`).join('; '));
+});
+
+test('its tab points at the HTML web part, not the markdown one', () => {
+  /* The failure a copied manifest makes first, and the one nothing else would
+     catch: two apps in a tenant's store, both opening the same web part. */
+  const url = htmlManifest.configurableTabs[0].configurationUrl;
+  assert.ok(url.indexOf(`componentId=${htmlWebPart.id}`) !== -1,
+    `the tab does not name the HTML component: ${url}`);
+  assert.ok(url.indexOf(webPart.id) === -1,
+    'the tab still carries the markdown component id');
+});
+
+test('it is a different app from the first, by id and by name', () => {
+  /* Teams identifies an app by its id, and a tenant's store shows people the
+     name. Two apps sharing either is a store nobody can navigate. */
+  assert.notEqual(htmlManifest.id, manifest.id);
+  assert.notEqual(htmlManifest.name.short, manifest.name.short);
+  assert.notEqual(htmlManifest.name.full, manifest.name.full);
+  /* And the id is the component's, which is the convention the first app set. */
+  assert.equal(htmlManifest.id, htmlWebPart.id);
+});
+
+test('and it claims one configurable tab, which is all Teams allows', () => {
+  assert.equal(htmlManifest.configurableTabs.length, 1);
+  assert.equal(manifest.configurableTabs.length, 1);
+});
+
+test('both apps say what kind of document they draw', () => {
+  /* Somebody in the Teams store is choosing between two entries from the same
+     publisher. A description that does not say which is which leaves them
+     installing both to find out. */
+  assert.match(manifest.description.short, /markdown/i);
+  assert.match(htmlManifest.description.short, /\bHTML\b/);
+  assert.ok(htmlManifest.description.short.toLowerCase().indexOf('markdown') === -1,
+    'the HTML app describes itself as the markdown one');
+});
+
+test('the HTML app names the same icons the package carries', () => {
+  /* Both apps ship the same two rendered files, renamed by each manifest on
+     the way into its own zip. A name here that the build does not write is a
+     package Teams refuses for a missing icon. */
+  assert.deepEqual(htmlManifest.icons, manifest.icons);
 });
 
 /*

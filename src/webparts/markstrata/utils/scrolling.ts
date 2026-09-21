@@ -10,6 +10,16 @@
  * instead. The sidebar, the fill-height setting and the reading position all
  * ask the same question, which is why they ask it in one place.
  *
+ * WHY THE WALK IS NOT parentElement
+ * The HTML web part can render a document inside a shadow root, and the
+ * topmost element in one has no parentElement at all: its parent is the
+ * ShadowRoot, which is not an Element. A walk written with parentElement stops
+ * dead at that boundary, finds no scrolling container, and quietly answers as
+ * though the window were the scroller - which is the wrong answer on every
+ * real SharePoint page. `enclosing` steps out through the shadow host instead,
+ * so the same measurement works whether the document is in the page's own DOM
+ * or behind a boundary.
+ *
  * .USAGE
  *   import { roomBelow, scroller } from './scrolling';
  *
@@ -18,9 +28,27 @@
  *
  * .NOTES
  * Since:     0.0.17.0
- * Ships in:  the web part bundle
+ * Ships in:  both web part bundles
  * Requires:  nothing else in this project
  */
+
+/**
+ * The element one step out from this one, crossing a shadow boundary.
+ *
+ * Inside a shadow root the topmost element's parentElement is null even though
+ * something plainly encloses it, so the root's host is taken instead. Anywhere
+ * else this is parentElement and nothing more.
+ */
+export function enclosing(element: HTMLElement): HTMLElement | undefined {
+  if (element.parentElement) {
+    return element.parentElement;
+  }
+
+  /* A Document has no host, so this is undefined outside a shadow tree, which
+     ends the walk exactly where parentElement would have ended it. */
+  const root: Node = element.getRootNode();
+  return ((root as ShadowRoot).host as HTMLElement) || undefined;
+}
 
 /**
  * Where the visible area ends, in viewport coordinates.
@@ -31,13 +59,13 @@
  */
 export function visibleBottom(element: HTMLElement): number {
   let bottom: number = window.innerHeight;
-  let parent: HTMLElement | null = element.parentElement;
+  let parent: HTMLElement | undefined = enclosing(element);
 
   while (parent && parent !== document.body) {
     if (scrolls(parent)) {
       bottom = Math.min(bottom, parent.getBoundingClientRect().bottom);
     }
-    parent = parent.parentElement;
+    parent = enclosing(parent);
   }
 
   return bottom;
@@ -52,13 +80,13 @@ export function scrolls(element: HTMLElement): boolean {
 
 /** The nearest ancestor that scrolls, or undefined when the window does. */
 export function scroller(element: HTMLElement): HTMLElement | undefined {
-  let parent: HTMLElement | null = element.parentElement;
+  let parent: HTMLElement | undefined = enclosing(element);
 
   while (parent && parent !== document.body) {
     if (scrolls(parent)) {
       return parent;
     }
-    parent = parent.parentElement;
+    parent = enclosing(parent);
   }
 
   return undefined;

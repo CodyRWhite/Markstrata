@@ -8,6 +8,381 @@ is normally zero. `scripts/set-version.js` stamps it when a release is cut.
 
 Entries below 0.0.10.0 were written before the switch and are three-part.
 
+## 0.0.22.0
+
+A second web part: **Markstrata - HTML**. The markdown one is renamed
+**Markstrata - Markdown**, so the two can be told apart in the toolbox, and the
+solution is now "Markstrata - Markdown and HTML for SharePoint and Teams".
+
+### The HTML web part
+
+It draws an author's HTML document with the same chrome the markdown one has:
+the same toolbar, theme controls, contents list, trail through linked documents
+and source footer. A page can carry one of each and read as one thing.
+
+Three render modes, which are three different bargains rather than three ways
+of doing the same thing.
+
+- **Inline** puts the document in the page. Markstrata's typography styles it,
+  pictures zoom, tables sort, the contents sidebar works, and links to
+  neighbouring documents open in the web part. The author's stylesheet is
+  rewritten so it applies only inside this web part: their
+  `body { background: black }` becomes a rule about their own document.
+- **Shadow DOM** puts it behind a boundary. The stylesheet needs no rewriting
+  because the boundary is what contains it, the page's CSS cannot reach in
+  either, and the document looks exactly as written. Inherited properties do
+  cross a boundary, so the theme's colours and text size still arrive, and an
+  author can use `var(--strata-...)` to match the page deliberately.
+- **Frame** makes it a document of its own, in a sandbox, and is the only mode
+  where the author's own scripts can run.
+
+### What the sandbox allows, and why
+
+`allow-same-origin` and `allow-scripts` are never granted together. Together
+they are not a sandbox: a script with both can read the reader's SharePoint
+session and remove its own sandbox attribute.
+
+With scripts off the frame is granted same-origin, which is safe because there
+is no script in it to use it, and useful because it is what lets the web part
+measure the document and fit the frame to it. It is also granted top navigation
+by user activation, which is what lets a link to a neighbouring document
+replace the page rather than open a tab.
+
+With scripts on the frame is an opaque origin instead: nothing in it can see
+the page and the page cannot see in. Top navigation is withheld, because a
+script could rewrite a link's address and the reader's own click would carry
+them off to it, so links open in a new tab. "Fit content" is not offered at all
+in that mode rather than quietly behaving as something else, because a frame
+that cannot be read cannot be measured.
+
+Scripts are off by default, off in the preconfigured entry, and paused while
+the page is being edited. Turning them on also means the document is no longer
+sanitised, because sanitising is what removes the scripts. The property pane
+says that in those words.
+
+### A stylesheet several pages can share
+
+The stylesheet is chosen separately from the document, with its own library,
+folder and file pickers, because one file in a library is meant to dress every
+HTML web part in a site and an author editing one document should not be able to
+restyle the other nineteen. A document's own `<style>` block still applies on
+top of it, so one document can vary without the rest of them moving. A
+stylesheet that will not load is a banner and never a failure to draw: the
+document is what somebody came to read, and it is readable unstyled.
+
+### Editing an HTML document
+
+The same split editor the markdown web part has: the source on one side, a live
+preview on the other, Edit / Split / Preview, the panes scrolling together,
+Ctrl+S, and one button that writes the document back to SharePoint.
+
+The stylesheet is a tab beside the HTML rather than a third column, so whichever
+an author is working on gets the whole width and the preview beside it is the
+same preview either way. That tab edits a stylesheet typed into the pane; one
+from a library or a URL belongs to that file, and other web parts are probably
+reading it, so it is shown read only with a line saying where it lives.
+
+The preview is the page's own rendering with the furniture switched off, not a
+second way of drawing a document. A preview that rendered differently would be
+worth less than no preview, because an author would tune a document against one
+renderer and ship it to another. The one thing it cannot show is a document
+whose scripts run, since those are paused for anybody editing the page, and the
+editor says so above the panes.
+
+### Also in the HTML web part
+
+- **Full bleed** takes the reading measure off, for a document that is a
+  dashboard or a wide table rather than prose.
+- **Height**: fit content, a fixed number of pixels that scrolls, or the room
+  left on the page.
+- **Show on narrow screens**, off, hides the web part below 600px. It is a
+  width and not a device: SPFx does not say whether it is being drawn in the
+  mobile app or in an email, so nothing here claims to know.
+- Headings are given ids by walking the rendered document, using the same slug
+  rule markdown uses. Hand-written HTML rarely has any, and without them the
+  contents list comes out empty and no link can reach a section. An id the
+  author wrote is never rewritten, only counted.
+
+### Teams
+
+Teams allows an app one configurable tab. The manifest schema says so in as many
+words, and a second entry in that list is not a second tab; it is a manifest
+Teams refuses, which from the App Catalog reads as Sync to Teams failing again
+for no stated reason.
+
+So there are two app packages now. `TeamsSPFxApp.zip` is the markdown one and
+keeps that name, because it is the exact name SharePoint looks for inside the
+`.sppkg` when somebody presses Sync to Teams. `MarkstrataHtmlTeamsApp.zip` is
+the HTML web part's, with its own app id and its own name in the store, and
+SharePoint will not deploy it because it only knows the one name: it is uploaded
+by hand in the Teams admin centre. Both ride inside the `.sppkg`, so an
+administrator has both to hand without a second download.
+
+A team that would rather not approve a second app does not have to. Markstrata -
+HTML works as a web part on a SharePoint page, and a channel can carry that page
+as a tab.
+
+The second manifest was written by copying the first, which is why it is
+validated rather than trusted: against the whole v1.17 schema, and for the two
+mistakes a copy makes first - a tab still pointing at the other web part's
+component, and two apps sharing an id or a name.
+
+### Tabs in private channels
+
+Reported during testing: adding either app to a private channel was refused
+with "App isn't supported in private channels."
+
+Teams counts a private channel as a non-standard channel type and hides an app
+from one unless the manifest names the type. Neither manifest did, so both apps
+were offered in standard channels only. Both now declare
+`supportedChannelTypes: ["privateChannels"]`, which is a top-level property and
+has been in the manifest schema since 1.14, so the 1.17 both manifests already
+declare covers it.
+
+Nothing else had to change, for a reason worth writing down. A private channel
+keeps a SharePoint site collection of its own rather than sharing the parent
+team's - that is what makes it private - and the tab is addressed with
+`{teamSiteDomain}{teamSitePath}`, which Teams fills in from whichever site is
+behind the channel the tab is being added to. So the tab is pointed at the
+private channel's own site and the picker reads that channel's own Files. The
+web part has to be available on that site for the page to load at all, and it
+is: the solution sets `skipFeatureDeployment`, so it is available tenant wide
+rather than installed site by site and a channel's new site collection needs
+nothing done to it.
+
+Shared channels are the other value the property takes and are deliberately not
+asked for. A shared channel can be shared with another tenant, and
+`webApplicationInfo.resource` is anchored on `{teamSiteDomain}`, which
+Microsoft's own guidance says "will not work cross-tenant/cross-domain".
+Offering the app there would mean external members being shown a tab that
+cannot load for them, which is worse than not offering it.
+
+Both manifests were validated against Microsoft's published 1.17 schema rather
+than against a reading of the documentation, with a wrong channel type checked
+too so that passing means the schema is enforcing the value rather than
+ignoring the property.
+
+### Under both web parts
+
+The lifecycle was already shared. What moved this time is the furniture and the
+pane.
+
+- `documentChrome` holds the toolbar, the theme controls, the document trail,
+  the contents list and the source footer. All of it is built from the rendered
+  document rather than from markdown, so none of it belonged to the markdown
+  renderer. `ViewModeRenderer` drops from 620 lines to 229 and keeps only what
+  is markdown.
+- `paneFields` holds every property pane control both web parts show, so there
+  is one theme control rather than two that drift. Each pane still lays out its
+  own pages, because the pages are where the two genuinely differ.
+  `propertyPane.ts` drops from about 600 lines to 282.
+
+### On the website, and in the toolbox
+
+`/html/` is the HTML web part running rather than a page about it: the real web
+part, the real property pane, the real editor, against a stand-in library
+holding a whole HTML file and a stylesheet several web parts could share. Open
+the properties there and the document is on the first page with the stylesheet
+on a page of its own, which answers what the separation is for in a way prose
+cannot.
+
+The HTML web part has a toolbox tile of its own as well. The markdown one has
+always carried a rendered tile, and shipping the second web part with only a
+Fluent glyph undid half the point of giving the two separate names. Same editor,
+same tilt, same palette; one shows markdown source and the other an HTML file
+with a `<style>` block in it.
+
+### Driven in a real browser
+
+Everything that matters about the HTML web part is a question only a browser can
+answer. Whether a shadow root really keeps an author's stylesheet off the page.
+Whether a sandboxed frame really is the opaque origin its sandbox claims. Whether
+the stylesheet narrowing survives Chromium's own parser rather than a test that
+reads strings. So there is a third harness page running the real web part, and
+eighteen driver steps against it.
+
+The first run earned it. Shadow mode threw and took the whole render with it:
+the contents list is inserted into the layout before the article, and in shadow
+mode the article is inside a shadow root, which the layout has never heard of.
+The harness page also never loaded the HTML web part's own stylesheet, so the
+frame, the shadow mount and full bleed had no styling at all on the page that
+exists to check them.
+
+And one check was worth nothing. The stylesheet leak check measured a paragraph
+the page had given an id and a background of its own, and it passed with the
+narrowing switched off: an id beats a bare element selector, so what it measured
+was CSS precedence. The probe is an unstyled paragraph now, and it was verified
+the other way round before being trusted.
+
+### A table header that hid a row
+
+Reported from a tenant against the first test build: a table came out with a
+blank band where its header should be, the header partway down, and a row
+invisible underneath it.
+
+Two faults, one cause. markdown-it wraps every table it renders in a box that
+scrolls sideways, so for as long as markdown was the only kind of document, "a
+table is inside a box" was true by accident and the stylesheet could rely on it.
+An author's HTML arrives as the author wrote it, so no table in it had one. The
+table enhancer looked for boxes, found none and returned, which left those
+tables with no fit measurement, no sorting, and a sticky header with nothing to
+stick to but the web part itself.
+
+A sticky cell cannot leave its containing block, which for a header cell is the
+table. Stuck to the page - or to a fixed-height web part, which is its own
+scroll container - the header was pushed the chrome offset's worth down and
+parked on the last row, which z-index then hid. It needed no scrolling at all
+to happen.
+
+So the enhancer puts the box on every table now rather than hoping one is
+there, and the header sticks to that box at the top, where it cannot be pushed
+anywhere else. What that gives up is a header that follows the reader down a
+long table. What it buys is that a header can never hide a row, and hiding a
+row is not a matter of taste. If following is wanted back, the way to have both
+is a scrolling box with a height of its own, which is a change to how a
+document is laid out rather than a fix.
+
+Sorting an author's table works for the first time as a result, since the
+enhancer never reached it before.
+
+Both faults are driven now, in the arrangement that showed them, and the
+diagnosis was checked against the old stylesheet rather than assumed.
+
+### One stylesheet format for light and dark
+
+An author asked what format a stylesheet should follow to support the mode
+switching, and the honest answer was that no format worked properly. Half of it
+worked in two of the three render modes and the other half worked in none.
+
+`var(--strata-bg)` and the rest of the token contract inherit, so they reached
+inline and shadow mode. A frame is a document of its own and nothing inherits
+into one, so there they resolved to nothing.
+
+A rule for the mode could not be written at all. The web part puts
+`data-strata-mode` on its root, and in inline mode a stylesheet is narrowed to
+the document inside that root - so `[data-strata-mode="dark"] .card` was
+rewritten into a search for that attribute somewhere inside the document, where
+it never is. The rule matched nothing in either mode, silently.
+
+Three changes, and one format now works everywhere.
+
+- A selector that starts with one of the web part's own `data-strata-`
+  attributes is a statement about the web part, so it is attached to the root
+  rather than made a descendant of it. The attribute is kept: dropping it would
+  have been worse than the fault, because a dark rule that applies in both
+  modes is a document that is wrong half the time rather than merely unstyled.
+- The theme and the mode are put on the element a stylesheet is narrowed to, so
+  there is something there for that selector to match. In shadow mode the same
+  two attributes do the same job for a stylesheet that is not scoped at all.
+- A frame is given the theme's tokens and the same two attributes. The tokens
+  are read off the web part as it stands rather than from a list kept in the
+  code, because a list would be a second copy of the token contract and the two
+  would part company the first time a theme gained a colour.
+
+`prefers-color-scheme` is not the answer and the documentation says so: it
+follows the operating system while the web part follows the pane and the
+reader's own choice in the toolbar, so on a dark laptop showing a page set to
+light the two disagree and the document comes out half in each.
+
+All six combinations - three render modes, two colour modes - are driven, with
+outline colours nothing else uses so that the right branch of the stylesheet is
+the only thing that could have painted them. Writing that check found an
+ordering fault as well: the tokens and the shared stylesheet were each inserted
+at the head's start, which put the second one in front of the first.
+
+### A file to hand a language model that is writing the CSS
+
+The question after the last one was what to give a model so it writes a
+stylesheet that works here. `docs/css-for-an-llm.md` is that: one file, meant
+to be pasted whole or pointed at, and served from the site root as well so a
+model that can read a URL can be given one.
+
+It says the two rules - colour from a token, everything else from the mode
+attribute - then what each of the three render modes changes, what the scoping
+does to a selector in inline mode, which at-rules survive it, what the
+sanitiser removes before the document is drawn, and what not to reach for. The
+`prefers-color-scheme` warning is in it, because a model asked for a dark mode
+writes that unless it is told why not.
+
+The token list is generated out of the stylesheets that declare it, and
+grouped by where the names come from, which says more than the names do. One
+declared by all three themes follows the theme and the colour mode, so it is
+safe for anything that has to follow the reader. One declared outside the
+themes is the same everywhere and will not follow anybody. And one declared by
+some themes and not others is a gap: the generator names those instead of
+hiding them, which is how `--strata-callout-rgb` turned out to be Obsidian's
+alone.
+
+Generated rather than written because the list is the half that goes stale, and
+a stale list is worse than none - a model given a name that no longer exists
+writes `var(--gone)` and the document comes out unstyled with nothing on the
+page to explain it. A test compares the file to the stylesheets in both
+directions, so a token added to a theme and not regenerated fails the build
+rather than reaching somebody's model as a missing name. That test was checked
+by breaking it three ways first: a token added to one theme, the same token
+added to all three, and a name left in the file after being taken out of the
+CSS.
+
+### A document named on the page's address
+
+`?strataDoc=folder/page.html` was refused. The value carries the heading inside
+it rather than as the page's own fragment, and once it is decoded a `#` in a
+file name looks exactly like the one that starts the heading - so the split is
+made at the extension instead, and the extensions were `md` and `markdown`
+written into the pattern. Every HTML document a menu entry could name came back
+as an address the web part could not understand.
+
+Which extensions count is the caller's to say now, and the split is a walk
+rather than a pattern, because a pattern assembled from a list of extensions is
+the kind of thing that works until one of them has a dot in it. The awkward
+cases the old pattern was built for are kept and now checked for both kinds of
+document: a `#` inside a file name stays part of the name, `notes.md#see-a.md`
+is one document and a heading, and a folder that ends in an extension is still
+a folder.
+
+Each web part refuses the other's documents, which is not pedantry: opening the
+wrong kind would draw a document of tag names or a page of escaped angle
+brackets.
+
+### A table's bottom edge
+
+Reported after the first fix: the bottom of a table read as longer than its
+data, like a row that was there and could not be seen.
+
+`overflow-x: auto` was declared on the box and `overflow-y` was not, and CSS
+computes an undeclared `visible` to `auto` when the other axis scrolls - so the
+box could scroll vertically as well. On any device that draws classic
+scrollbars rather than overlay ones, the horizontal bar comes out of the box's
+own height, the table is then taller than what is left, and a vertical bar
+appears beside it: the bottom of the table ends up behind the one and reachable
+only through the other. The fix before this had also made every box a scroll
+container, so a table that fits its column was getting all of that for nothing.
+
+The box is sideways-only now, said rather than left to be worked out, and a
+table that fits is out of the box altogether: no scrollbars, nothing clipped,
+no gutter taken. Its header is simply not sticky, which costs nothing, there
+being nothing to scroll it.
+
+This one could not be reproduced here. The headless browser the harness drives
+uses overlay scrollbars, which take no space, so the fault is invisible to it -
+worth knowing rather than glossing, because it means the check that would have
+caught it cannot be written in this harness.
+
+### Two build fixes worth recording
+
+The scroll walk that finds what is actually scrolling on a page was written
+with `parentElement`, and the topmost element in a shadow root has none. It
+stopped at the boundary, found no scrolling container, and answered as though
+the window scrolled, which is the wrong answer on every real SharePoint page.
+It steps out through the shadow host now.
+
+The demo and test builds compiled into a flat folder and loaded the result with
+`require`. Once the renderer's imports crossed into a second source folder the
+output stopped being flat, and every `require` went on finding the copy a
+previous build had left at the old path. A site build passed that way against
+code that was no longer the source. Both builds now name their root explicitly
+and empty the output folder first, so that cannot happen again quietly.
+
 ## 0.0.21.2
 
 No change to the web part. The version exists so that Teams will accept the

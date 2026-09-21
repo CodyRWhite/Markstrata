@@ -6,6 +6,7 @@ release/
 solution/
 sharepoint/solution/
 teams/TeamsSPFxApp.zip
+teams/MarkstrataHtmlTeamsApp.zip
 *.sppkg
 
 # Dependencies

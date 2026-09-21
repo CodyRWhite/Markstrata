@@ -1,6 +1,6 @@
 {
   "name": "markstrata",
-  "version": "0.0.21.2",
+  "version": "0.0.22.0",
   "private": true,
   "main": "lib/index.js",
   "engines": {
@@ -10,6 +10,7 @@
     "brand": "node scripts/build-brand.js",
     "build": "gulp bundle",
     "clean": "gulp clean",
+    "css-contract": "node scripts/build-css-contract.js",
     "demo": "node demo/build-demo.js",
     "harness": "node harness/build.js",
     "harness:drive": "node harness/build.js && npm run site && node harness/drive.js",

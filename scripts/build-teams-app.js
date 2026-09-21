@@ -1,6 +1,6 @@
 /**
  * .SYNOPSIS
- * Builds the Teams app package: the manifest, the two icons, zipped.
+ * Builds the Teams app packages: a manifest and two icons each, zipped.
  *
  * .DESCRIPTION
  * SharePoint's Sync to Teams can build a Teams app out of the solution, and
@@ -24,15 +24,26 @@
  * .USAGE
  *   npm run teams
  *
- *   Writes teams/TeamsSPFxApp.zip, which the .sppkg then carries. An
- *   administrator presses Sync to Teams in the app catalog and SharePoint
- *   deploys this package rather than one of its own. The same zip can be
- *   uploaded by hand in the Teams admin centre, or sideloaded to try it.
+ *   Writes two packages into teams/, which the .sppkg then carries.
+ *
+ *   TeamsSPFxApp.zip is the markdown web part's, and the name is what
+ *   SharePoint looks for: an administrator presses Sync to Teams in the app
+ *   catalog and SharePoint deploys this rather than one of its own.
+ *
+ *   MarkstrataHtmlTeamsApp.zip is the HTML web part's. Teams allows an app one
+ *   configurable tab, so it cannot be a second tab in the first package, and
+ *   SharePoint will not sync it because it only knows the one name. It is
+ *   uploaded by hand in the Teams admin centre, or sideloaded to try it. A team
+ *   that would rather not can put Markstrata - HTML on a SharePoint page and
+ *   carry that page as a tab, which needs no app at all.
+ *
+ *   Either zip can be uploaded by hand.
  *
  * .NOTES
  * Since:     0.0.18.2
  * Ships in:  nothing - it builds the Teams package beside the .sppkg
- * Requires:  config/teams-app-manifest.json, the icons built by build-brand.js
+ * Requires:  config/teams-app-manifest.json, config/teams-html-app-manifest.json,
+ *            the icons built by build-brand.js
  */
 
 const fs = require('fs');
@@ -57,11 +68,49 @@ const root = path.join(__dirname, '..');
  * is the zip, and a second copy of the manifest loose in the package is a
  * generic manifest.json sitting beside SPFx's own assets.
  */
-const manifestPath = path.join(root, 'config', 'teams-app-manifest.json');
 const teams = path.join(root, 'teams');
 const out = teams;
-const PACKAGE_NAME = 'TeamsSPFxApp.zip';
 
+/*
+ * Two apps, because Teams allows an app one configurable tab.
+ *
+ * The manifest schema says so in as many words - configurableTabs is capped at
+ * one item, "Currently only one configurable tab per app is supported" - so a
+ * second tab for the HTML web part cannot go in the same package however much
+ * one would prefer it there. A second entry in that array is not a second tab;
+ * it is a manifest Teams rejects, and the rejection reads from the app catalog
+ * as Sync to Teams failing again for no stated reason.
+ *
+ * So the markdown app keeps TeamsSPFxApp.zip, which is the exact name
+ * SharePoint looks for inside the .sppkg when somebody presses Sync to Teams.
+ * The HTML app is built beside it under a name of its own, which SharePoint
+ * will not deploy - it only knows the one - so it is uploaded by hand in the
+ * Teams admin centre, or sideloaded to try it. That extra step is the price of
+ * a dedicated channel tab for the second web part; a team that does not want it
+ * can add Markstrata - HTML to a SharePoint page and carry that page as a tab
+ * instead, which needs no app at all.
+ *
+ * Both are the same package layout, the same version rule and the same icons.
+ * The icons are the Markstrata mark, and both apps are Markstrata.
+ */
+const APPS = [
+  {
+    manifest: path.join(root, 'config', 'teams-app-manifest.json'),
+    package: 'TeamsSPFxApp.zip',
+    syncedBySharePoint: true
+  },
+  {
+    manifest: path.join(root, 'config', 'teams-html-app-manifest.json'),
+    package: 'MarkstrataHtmlTeamsApp.zip',
+    syncedBySharePoint: false
+  }
+];
+
+/*
+ * The icons are built from the brand package under the markdown component's id,
+ * because that is the name Sync to Teams looks for. Both apps carry the same
+ * two files, renamed by each manifest on the way into its own zip.
+ */
 const COMPONENT_ID = '74aecd51-7619-4ca6-b81a-6c670d6098b3';
 
 /*
@@ -108,17 +157,12 @@ function teamsVersion(fourPart) {
   return [major, minor, Number(patch) * BUILD_SCALE + build].join('.');
 }
 
-function build() {
-  const packageVersion = JSON.parse(
-    fs.readFileSync(path.join(root, 'package.json'), 'utf8')
-  ).version;
-
-  const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+function buildOne(app, packageVersion) {
+  const manifest = JSON.parse(fs.readFileSync(app.manifest, 'utf8'));
   manifest.version = teamsVersion(packageVersion);
 
-  /* The icons are built from the brand package under the component id, because
-     that is the name Sync to Teams looks for. Inside this package they are
-     named by the manifest instead. */
+  /* Inside the package the icons are named by the manifest rather than by the
+     component, which is what lets both apps share the two rendered files. */
   const icons = [
     [`${COMPONENT_ID}_color.png`, manifest.icons.color],
     [`${COMPONENT_ID}_outline.png`, manifest.icons.outline]
@@ -139,12 +183,27 @@ function build() {
     .generateAsync({ type: 'nodebuffer', compression: 'DEFLATE' })
     .then((buffer) => {
       fs.mkdirSync(out, { recursive: true });
-      const target = path.join(out, PACKAGE_NAME);
+      const target = path.join(out, app.package);
       fs.writeFileSync(target, buffer);
       console.log(`Wrote ${path.relative(root, target)}`
-        + ` (Teams version ${manifest.version}, from ${packageVersion})`);
+        + ` (Teams version ${manifest.version}, from ${packageVersion})`
+        + (app.syncedBySharePoint ? '' : ' - upload this one by hand'));
       return target;
     });
+}
+
+function build() {
+  const packageVersion = JSON.parse(
+    fs.readFileSync(path.join(root, 'package.json'), 'utf8')
+  ).version;
+
+  /* One after another rather than together: they write into the same folder
+     and read the same icons, and there is nothing to gain from racing. */
+  return APPS.reduce(
+    (done, app) => done.then((built) =>
+      buildOne(app, packageVersion).then((target) => built.concat([target]))),
+    Promise.resolve([])
+  );
 }
 
 /* Exported so the version rule can be checked without building a package.

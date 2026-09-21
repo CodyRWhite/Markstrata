@@ -85,6 +85,19 @@ export class WebPartPane {
   }
 
   /** Draws the pane again from the description as it now stands. */
+  /**
+   * Which page the pane is showing, for a driver that needs one of the others.
+   *
+   * The pane shows one page at a time, as SharePoint's does, so a check on a
+   * control that is not on page one has to turn to its page first - and a
+   * check that silently read an empty list instead would pass for a web part
+   * whose pane was broken.
+   */
+  public goToPage(index: number): void {
+    this.pageIndex = Math.max(0, index);
+    this.refresh();
+  }
+
   public refresh(): void {
     if (this.host.hidden) { return; }
 

@@ -54,6 +54,12 @@ const demoUrl = 'file://' + path.join(__dirname, '..', 'site', 'demo', 'index.ht
  * lifecycle, against the SharePoint stand-ins in harness/spfx.
  */
 const webPartUrl = 'file://' + path.join(HARNESS_DIST, 'webpart.html');
+/*
+ * And a fourth: the HTML web part, whose whole subject is what a browser does
+ * rather than what the code says. A shadow boundary, a sandboxed frame and a
+ * narrowed stylesheet are three things no unit test can be asked about.
+ */
+const htmlWebPartUrl = 'file://' + path.join(HARNESS_DIST, 'htmlwebpart.html');
 /* The library harness/spfx/sharePoint.ts stands up, as a path. */
 const LIBRARY_PATH = '/sites/demo/Documents';
 
@@ -1350,18 +1356,25 @@ const LIBRARY_PATH = '/sites/demo/Documents';
   });
 
   /*
-   * A sticky header has a condition nothing in the stylesheet can see: the box
-   * a wide table scrolls in is also a scroll container, and a sticky cell
-   * sticks to that rather than to the page - so inside it the header never
-   * moves. Tables that fit are let out of the box by measurement, and this is
-   * that measurement.
+   * Whether a table is wider than its column is a measurement, not something a
+   * stylesheet can see, so the enhancer takes it and marks the box. What the
+   * mark decides is whether the box gets a scrollbar: a wide table scrolls
+   * sideways instead of stretching the page, and a table that fits must not be
+   * given a scrollbar for nothing.
+   *
+   * It is not, any more, whether the box is a scroll container. Both kinds are,
+   * because that is what confines the sticky header to its own table - see the
+   * step below, and the comment in tables-lists.css. A fitting box is hidden
+   * rather than auto, which scrolls nothing and clips nothing, there being
+   * nothing to overflow it.
    */
-  await step('a table that fits its column is let out of the scroll box', async () => {
+  await step('a table that fits its column is not given a scrollbar', async () => {
     const seen = await page.evaluate(() => {
       const wraps = [...document.querySelectorAll('.strata-table-scroll')];
       return wraps.map((wrap) => ({
         fits: wrap.classList.contains('strata-table-scroll--fits'),
         overflow: getComputedStyle(wrap).overflowX,
+        scrolls: wrap.scrollWidth > wrap.clientWidth + 1,
         wider: wrap.querySelector('table').scrollWidth > wrap.clientWidth + 1
       }));
     });
@@ -1370,46 +1383,75 @@ const LIBRARY_PATH = '/sites/demo/Documents';
       if (wrap.fits === wrap.wider) {
         throw new Error('table ' + index + ' is ' + JSON.stringify(wrap));
       }
-      if (wrap.fits && wrap.overflow !== 'visible') {
-        throw new Error('table ' + index + ' fits but still scrolls: ' + wrap.overflow);
+      if (wrap.fits && wrap.overflow === 'auto') {
+        throw new Error('table ' + index + ' fits but was given a scrollbar');
+      }
+      if (wrap.fits && wrap.scrolls) {
+        throw new Error('table ' + index + ' fits but its box scrolls: '
+          + JSON.stringify(wrap));
+      }
+      if (!wrap.fits && wrap.overflow !== 'auto') {
+        throw new Error('table ' + index + ' is wider than its column but cannot scroll: '
+          + wrap.overflow);
       }
     });
   });
 
-  await step('a table header stays in view while its rows go past', async () => {
+  await step('a table header holds at the top of its own table', async () => {
+    /*
+     * It used to hold at the line that clears SharePoint's own chrome, and
+     * follow the reader down the page. That reads well and hides a row: a
+     * sticky cell cannot leave its containing block, so once that line falls
+     * outside the table's rows the header is pushed as far down as the table
+     * allows and sits on top of the last one, which z-index then hides.
+     *
+     * It needs no scrolling to happen. A fixed-height web part is itself a
+     * scroll container, so the header was pushed the offset's worth down
+     * inside it on load: blank band where the header should be, header partway
+     * down, a row invisible underneath. Reported from a tenant, reproduced
+     * here, and checked against the old stylesheet to be sure it was this.
+     *
+     * So it holds at the top of its own table and can never be pushed
+     * anywhere else. What that gives up is following the reader; what it buys
+     * is that a header can never hide a row.
+     */
     const stuck = await page.evaluate(async () => {
-      const wrap = document.querySelector('.strata-table-scroll--fits');
-      if (!wrap) { return { error: 'no table is out of its box' }; }
+      const wrap = document.querySelector('.strata-table-scroll');
+      if (!wrap) { return { error: 'no table is in a scroll box' }; }
       const table = wrap.querySelector('table');
       const header = table.querySelector('thead th');
-      const root = document.querySelector('.strata-root');
-      const offset = parseFloat(getComputedStyle(root).getPropertyValue('--strata-scroll-offset')) || 0;
-
-      /* Far enough that the table's own top has gone past the line the header
-         should hold, while its last row is still below it. */
       const head = header.getBoundingClientRect().height;
-      window.scrollBy(0, table.getBoundingClientRect().top - offset + head);
+
+      /* Far enough that the table's own top has gone past where the header
+         used to hold, which is where the old rule started moving it. */
+      window.scrollBy(0, table.getBoundingClientRect().top + head);
       await new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done)));
 
-      const bounds = table.getBoundingClientRect();
+      const box = (el) => {
+        const r = el.getBoundingClientRect();
+        return { top: r.top, bottom: r.bottom };
+      };
+      const seen = box(header);
       return {
-        offset: offset,
-        header: header.getBoundingClientRect().top,
-        tableTop: bounds.top,
-        tableBottom: bounds.bottom,
-        position: getComputedStyle(header).position
+        position: getComputedStyle(header).position,
+        header: seen,
+        table: box(table),
+        covered: [...table.querySelectorAll('tbody tr')]
+          .filter((row) => seen.top < box(row).bottom && seen.bottom > box(row).top)
+          .map((row) => (row.children[0].textContent || '').trim())
       };
     });
-    if (stuck.error) throw new Error(stuck.error);
-    if (stuck.position !== 'sticky') throw new Error('the header is ' + stuck.position);
-    if (stuck.tableTop >= stuck.offset || stuck.tableBottom <= stuck.offset) {
-      throw new Error('the table did not straddle the line: ' + JSON.stringify(stuck));
-    }
-    if (Math.abs(stuck.header - stuck.offset) > 2) {
-      throw new Error('the header rode up to ' + Math.round(stuck.header)
-        + ' with the line at ' + Math.round(stuck.offset));
-    }
     await page.evaluate(() => window.scrollTo(0, 0));
+
+    if (stuck.error) throw new Error(stuck.error);
+    /* What position it is given is incidental now, and deliberately not
+       asserted: what matters is where it ends up and what it hides. */
+    if (Math.abs(stuck.header.top - stuck.table.top) > 2) {
+      throw new Error('the header left the top of its table: ' + JSON.stringify(stuck));
+    }
+    if (stuck.covered.length) {
+      throw new Error('the header is sitting on top of ' + stuck.covered.join(', '));
+    }
   });
 
   await step('clicking a column sorts by it, and a third click puts it back', async () => {
@@ -1912,6 +1954,47 @@ const LIBRARY_PATH = '/sites/demo/Documents';
         throw new Error(name + ': ' + JSON.stringify(counts));
       }
       if (counts.entries < 2) throw new Error(name + ' has an empty contents');
+    }
+  });
+
+  /*
+   * The published HTML page, which is the HTML web part rather than a document
+   * about it. It is built by a different entry point from every other page on
+   * the site, so nothing else here would notice it failing to start - and
+   * because it is bundled and minified for publication, a fault that only
+   * shows in that build shows nowhere else either.
+   */
+  await step('the published HTML page runs the HTML web part', async () => {
+    await page.goto('file://' + path.join(__dirname, '..', 'site', 'html', 'index.html'),
+      { waitUntil: 'load' });
+    await page.waitForTimeout(2000);
+    const seen = await page.evaluate(() => ({
+      heading: ((document.querySelector('#host h1') || {}).textContent || '').trim(),
+      toolbar: !!document.querySelector('#host .strata-toolbar'),
+      header: !!document.querySelector('.site-header'),
+      footer: !!document.querySelector('.site-footer'),
+      /* The document's own <style> block, which is only there if the styles
+         were lifted out of the file before the sanitiser reached them. */
+      note: document.querySelector('#host .note')
+        ? window.getComputedStyle(document.querySelector('#host .note')).borderLeftWidth
+        : 'no .note element',
+      /* And the leak probe, which is the published stylesheet doing its job
+         rather than the one the development harness links. */
+      probe: window.getComputedStyle(document.getElementById('wp-probe')).color
+    }));
+
+    if (seen.heading.indexOf('Deploy notes') === -1) {
+      throw new Error('the web part drew nothing: heading reads ' + JSON.stringify(seen.heading));
+    }
+    if (!seen.toolbar) throw new Error('no toolbar');
+    if (!seen.header || !seen.footer) {
+      throw new Error('the page is missing the site chrome every other page has');
+    }
+    if (seen.note !== '4px') {
+      throw new Error('the document\u2019s own styles did not survive publication: ' + seen.note);
+    }
+    if (seen.probe === 'rgb(200, 0, 0)') {
+      throw new Error('the document\u2019s stylesheet escaped the web part on the published page');
     }
   });
 
@@ -4480,6 +4563,690 @@ const LIBRARY_PATH = '/sites/demo/Documents';
       throw new Error('the refusal reached the page unhandled: ' + JSON.stringify(leaked[0]));
     }
   });
+
+  /*
+   * The HTML web part, on a page of its own.
+   *
+   * Everything here is a question only a browser can answer. Whether a shadow
+   * root really keeps an author's stylesheet off the page; whether a sandboxed
+   * frame really is the opaque origin its sandbox attribute says it is;
+   * whether the CSS narrowing survives Chromium's own parser rather than a
+   * test that reads strings. The unit tests cover what can be reasoned about
+   * from the source, and stop exactly where these begin.
+   *
+   * The page carries a paragraph outside the web part, styled in values
+   * nothing else uses, so a leak out of the document is a measurable thing
+   * rather than an inspection.
+   */
+  console.log('\nDriving the HTML web part:');
+
+  /* The values the fixtures use, so a match below is a match and not a
+     coincidence. notes.html says `body { background: #fff8e1 }`, shared.css
+     says `html, body { background: #eef5ff }` and `h1 { color: #14532d }`,
+     and the page says the paragraph outside is rgb(240, 240, 240). */
+  /*
+   * The values the fixtures use, so a match below is a match and not a
+   * coincidence.
+   *
+   * The two leak probes are bare element selectors on purpose. The first
+   * version of this measured a paragraph the page had given an id and a
+   * background of its own, and it passed with the CSS narrowing switched off:
+   * an id beats a bare element selector, so what was being measured was
+   * specificity rather than anything the web part does. Checked the other way
+   * round before being trusted - with the narrowing removed, the probe
+   * paragraph goes red and the page body takes the document's colour, and both
+   * checks below fail.
+   */
+  const LEAKED_TEXT = 'rgb(200, 0, 0)';           // notes.html: p { color }
+  const LEAKED_BACKGROUND = 'rgb(255, 248, 225)'; // notes.html: body { background }
+  const SHARED_BACKGROUND = 'rgb(238, 245, 255)'; // shared.css: html, body
+  const SHARED_HEADING = 'rgb(20, 83, 45)';       // shared.css: h1 { color }
+
+  /** Everything in the page that a rule escaping the document would change. */
+  const outsideTheWebPart = () => page.evaluate(() => ({
+    text: window.getComputedStyle(document.getElementById('wp-probe')).color,
+    background: window.getComputedStyle(document.body).backgroundColor
+  }));
+
+  await step('the HTML web part starts and draws a document', async () => {
+    await page.goto(htmlWebPartUrl, { waitUntil: 'load' });
+    await page.waitForTimeout(1500);
+
+    const state = await page.evaluate(() => {
+      const strip = document.getElementById('wp-status');
+      const failure = document.querySelector('#host .strata-status[data-tone="error"]');
+      return {
+        state: strip.dataset.state,
+        text: (strip.textContent || '').trim(),
+        failure: failure ? (failure.textContent || '').trim() : '',
+        heading: (document.querySelector('#host h1') || {}).textContent || '',
+        toolbar: !!document.querySelector('#host .strata-toolbar')
+      };
+    });
+    if (state.state !== 'started') {
+      throw new Error(state.text || ('the status strip reads ' + state.state));
+    }
+    if (state.failure) { throw new Error(state.failure); }
+    if (state.heading.indexOf('Deploy notes') === -1) {
+      throw new Error('the document is not on the page: heading reads ' + JSON.stringify(state.heading));
+    }
+    if (!state.toolbar) { throw new Error('no toolbar'); }
+  });
+
+  await step('the document’s own stylesheet reaches the document', async () => {
+    /* The whole reason the styles are lifted out of the file before it is
+       sanitised: the sanitiser deletes a <style> block and says nothing, so
+       without that step an author's document renders with none of their
+       styling and nothing to explain it. */
+    const border = await page.evaluate(() => {
+      const note = document.querySelector('#host .note');
+      return note ? window.getComputedStyle(note).borderLeftWidth : 'no .note element';
+    });
+    if (border !== '4px') {
+      throw new Error('the document’s own rule did not apply: border-left-width is ' + border);
+    }
+  });
+
+  await step('and does not reach the page around it', async () => {
+    /* The document says `body { background }` and `p { color }`. Inline mode
+       narrows both to rules about the document, so the page keeps its own.
+       This is the assertion the whole scoping module exists for. */
+    const outside = await outsideTheWebPart();
+    if (outside.text === LEAKED_TEXT) {
+      throw new Error('the document\u2019s p rule escaped and coloured the page');
+    }
+    if (outside.background === LEAKED_BACKGROUND) {
+      throw new Error('the document\u2019s body rule escaped and recoloured the page');
+    }
+  });
+
+  await step('the script in the document did not run', async () => {
+    /* Scripts are off, so the document is sanitised and the script is gone.
+       Checked by what it would have done rather than by looking for the tag:
+       a script that is still in the markup and inert is a different fault
+       from one that ran. */
+    const ran = await page.evaluate(() => ({
+      flag: window.strataScriptRan,
+      tags: document.querySelectorAll('#host script').length
+    }));
+    if (ran.flag) { throw new Error('the document’s script ran in the page'); }
+    if (ran.tags) { throw new Error(ran.tags + ' script tags survived into the page'); }
+  });
+
+  await step('a stylesheet from the library dresses the document', async () => {
+    const colour = await page.evaluate(async () => {
+      await window.htmlHarness.start({
+        contentSource: 'library',
+        selectedLibrary: '/sites/demo/Documents',
+        selectedFile: '/sites/demo/Documents/notes.html',
+        cssSource: 'library',
+        selectedStyleLibrary: '/sites/demo/Documents',
+        selectedStyleFile: '/sites/demo/Documents/shared.css'
+      });
+      await new Promise((resolve) => setTimeout(resolve, 600));
+      const heading = document.querySelector('#host h1');
+      return heading ? window.getComputedStyle(heading).color : 'no heading';
+    });
+    if (colour !== SHARED_HEADING) {
+      throw new Error('the shared stylesheet did not apply: the heading is ' + colour);
+    }
+  });
+
+  await step('and that one does not reach the page either', async () => {
+    /* shared.css names `html, body`, which are exactly the selectors that
+       have to be narrowed. A stylesheet meant to dress every HTML web part in
+       a site is the one most worth containing. */
+    const outside = await outsideTheWebPart();
+    if (outside.background === SHARED_BACKGROUND) {
+      throw new Error('the shared stylesheet escaped and recoloured the page');
+    }
+  });
+
+  await step('the contents list has entries, from a file with no heading ids', async () => {
+    /* notes.html has no id on any heading, because hand-written HTML rarely
+       does. collectHeadings only takes a heading that has one, so without the
+       ids being put on here the sidebar would be empty. */
+    const toc = await page.evaluate(async () => {
+      window.htmlHarness.change('tocPosition', 'left');
+      await new Promise((resolve) => setTimeout(resolve, 400));
+      const entries = Array.prototype.slice
+        .call(document.querySelectorAll('#host .strata-toc a'))
+        .map((link) => link.getAttribute('href'));
+      return {
+        sidebar: !!document.querySelector('#host .strata-toc-sidebar'),
+        entries: entries,
+        ids: Array.prototype.slice.call(document.querySelectorAll('#host .strata-content h2'))
+          .map((heading) => heading.id)
+      };
+    });
+    if (!toc.sidebar) { throw new Error('no contents sidebar'); }
+    if (!toc.entries.length) { throw new Error('the contents list is empty'); }
+    if (toc.ids.indexOf('when-it-goes-wrong') === -1) {
+      throw new Error('the heading was not given the slug markdown would give it: '
+        + JSON.stringify(toc.ids));
+    }
+    if (toc.entries.indexOf('#when-it-goes-wrong') === -1) {
+      throw new Error('the contents entry does not point at it: ' + JSON.stringify(toc.entries));
+    }
+  });
+
+  await step('shadow mode puts the document behind a boundary', async () => {
+    const shadow = await page.evaluate(async () => {
+      window.htmlHarness.change('renderMode', 'shadow');
+      await new Promise((resolve) => setTimeout(resolve, 600));
+      const mount = document.querySelector('#host .strata-shadow');
+      return {
+        mount: !!mount,
+        root: !!(mount && mount.shadowRoot),
+        /* The page's own query cannot see through a boundary, which is the
+           whole of what a boundary is. */
+        fromThePage: !!document.querySelector('#host .strata-content'),
+        inside: !!(mount && mount.shadowRoot
+          && mount.shadowRoot.querySelector('.strata-content h1'))
+      };
+    });
+    if (!shadow.mount) { throw new Error('no shadow mount'); }
+    if (!shadow.root) { throw new Error('the mount has no shadow root'); }
+    if (!shadow.inside) { throw new Error('the document is not inside the root'); }
+    if (shadow.fromThePage) {
+      throw new Error('the document is still in the page’s own DOM, so there is no boundary');
+    }
+  });
+
+  await step('and the page still keeps its own colour', async () => {
+    /* A boundary makes the narrowing unnecessary rather than redundant: the
+       author's stylesheet goes into the root as written, so a boundary that
+       leaked would show here and nowhere else. */
+    const outside = await outsideTheWebPart();
+    if (outside.text === LEAKED_TEXT || outside.background === LEAKED_BACKGROUND
+      || outside.background === SHARED_BACKGROUND) {
+      throw new Error('a rule escaped the shadow root: ' + JSON.stringify(outside));
+    }
+  });
+
+  await step('a frame is a document of its own, readable with scripts off', async () => {
+    const frame = await page.evaluate(async () => {
+      window.htmlHarness.change('renderMode', 'frame');
+      await new Promise((resolve) => setTimeout(resolve, 900));
+      const element = document.querySelector('#host iframe.strata-frame');
+      if (!element) { return { missing: true }; }
+      const inside = element.contentDocument;
+      return {
+        sandbox: element.getAttribute('sandbox') || '',
+        /* Readable, because with scripts off the frame shares the page's
+           origin and there is no script in it to use that. */
+        readable: !!inside,
+        heading: inside ? ((inside.querySelector('h1') || {}).textContent || '') : '',
+        contents: inside ? !!inside.querySelector('nav.strata-toc') : false,
+        ran: window.strataScriptRan === true
+      };
+    });
+    if (frame.missing) { throw new Error('no frame was drawn'); }
+    if (frame.sandbox.indexOf('allow-same-origin') === -1) {
+      throw new Error('scripts are off, so the frame should be readable: ' + frame.sandbox);
+    }
+    if (frame.sandbox.indexOf('allow-scripts') !== -1) {
+      throw new Error('scripts are off but allow-scripts was granted: ' + frame.sandbox);
+    }
+    if (!frame.readable) { throw new Error('the frame could not be read'); }
+    if (frame.heading.indexOf('Deploy notes') === -1) {
+      throw new Error('the frame does not hold the document: heading reads '
+        + JSON.stringify(frame.heading));
+    }
+    if (!frame.contents) {
+      throw new Error('the contents list was not put inside the frame, where it can reach a heading');
+    }
+    if (frame.ran) { throw new Error('the document’s script ran'); }
+  });
+
+  await step('a link to a neighbouring document leaves the frame', async () => {
+    /* Nothing in a frame can call back out to a handler, so the link has to
+       carry a complete address before the reader ever sees it, and open in the
+       window rather than replacing the frame. */
+    const links = await page.evaluate(() => {
+      const inside = document.querySelector('#host iframe.strata-frame').contentDocument;
+      const read = (part) => {
+        const found = Array.prototype.slice.call(inside.querySelectorAll('a'))
+          .filter((link) => (link.textContent || '').indexOf(part) !== -1)[0];
+        return found
+          ? { href: found.getAttribute('href'), target: found.getAttribute('target'),
+              rel: found.getAttribute('rel') }
+          : undefined;
+      };
+      return {
+        document: read('rolling back'),
+        file: read('a PDF'),
+        elsewhere: read('page'),
+        base: (inside.querySelector('base') || {}).getAttribute
+          ? inside.querySelector('base').getAttribute('href') : ''
+      };
+    });
+
+    if (!links.document) { throw new Error('the link to the other document is gone'); }
+    if (links.document.target !== '_parent') {
+      throw new Error('it would open in the frame: target is ' + links.document.target);
+    }
+    if (links.document.href.indexOf('strataDoc=') === -1) {
+      throw new Error('it carries no address the page would honour: ' + links.document.href);
+    }
+    if (!links.file || links.file.target !== '_blank') {
+      throw new Error('a link to a file should open a tab, not strand the reader in the frame');
+    }
+    if (!links.base || links.base.indexOf('/sites/demo/Documents') === -1) {
+      throw new Error('no base, so the document’s relative addresses resolve against the page: '
+        + JSON.stringify(links.base));
+    }
+  });
+
+  await step('with scripts on the frame is an opaque origin', async () => {
+    /* The assertion nothing but a browser can make. allow-scripts without
+       allow-same-origin means the frame has an origin of its own, and the
+       proof of that is that the page cannot read it at all. */
+    const frame = await page.evaluate(async () => {
+      window.htmlHarness.change('runScripts', true);
+      await new Promise((resolve) => setTimeout(resolve, 900));
+      const element = document.querySelector('#host iframe.strata-frame');
+      if (!element) { return { missing: true }; }
+      let readable = false;
+      try {
+        readable = !!element.contentDocument;
+      } catch {
+        readable = false;
+      }
+      return { sandbox: element.getAttribute('sandbox') || '', readable: readable };
+    });
+    if (frame.missing) { throw new Error('no frame was drawn'); }
+    if (frame.sandbox.indexOf('allow-scripts') === -1) {
+      throw new Error('scripts are on but allow-scripts was not granted: ' + frame.sandbox);
+    }
+    if (frame.sandbox.indexOf('allow-same-origin') !== -1) {
+      throw new Error('allow-same-origin was granted alongside allow-scripts, which is not a sandbox: '
+        + frame.sandbox);
+    }
+    if (frame.sandbox.indexOf('allow-top-navigation-by-user-activation') !== -1) {
+      throw new Error('top navigation was granted to a frame running scripts: ' + frame.sandbox);
+    }
+    if (frame.readable) {
+      throw new Error('the page can read into a frame that is running scripts');
+    }
+  });
+
+  await step('and the author’s script runs in there, reaching nothing out here', async () => {
+    /* It sets a global. If the sandbox is what it claims to be, the global it
+       sets is the frame's and this page never sees it. */
+    const leaked = await page.evaluate(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 600));
+      return window.strataScriptRan === true;
+    });
+    if (leaked) {
+      throw new Error('a script in the sandboxed frame set a global on the page');
+    }
+  });
+
+  await step('the editor draws both sources over one preview', async () => {
+    const editor = await page.evaluate(async () => {
+      window.htmlHarness.change('runScripts', false);
+      window.htmlHarness.change('renderMode', 'inline');
+      window.htmlHarness.editing(true);
+      await new Promise((resolve) => setTimeout(resolve, 700));
+      const html = document.querySelector('#host textarea[data-strata-source="html"]');
+      const css = document.querySelector('#host textarea[data-strata-source="css"]');
+      const box = document.querySelector('#host .strata-preview-box');
+      return {
+        html: !!html,
+        css: !!css,
+        tabs: document.querySelectorAll('#host .strata-pane-tab').length,
+        preview: box ? !!box.querySelector('h1') : false,
+        readOnly: css ? css.readOnly : undefined,
+        source: html ? html.value.indexOf('<h1>Deploy notes</h1>') !== -1 : false
+      };
+    });
+    if (!editor.html) { throw new Error('no HTML textarea'); }
+    if (!editor.css) { throw new Error('no CSS textarea'); }
+    if (editor.tabs !== 2) { throw new Error(editor.tabs + ' source tabs, expected 2'); }
+    if (!editor.source) { throw new Error('the HTML textarea does not hold the document'); }
+    if (!editor.preview) { throw new Error('the preview drew nothing'); }
+    /* The stylesheet is a library file here, which several web parts may be
+       reading, so this editor shows it and does not offer to change it. */
+    if (editor.readOnly !== true) {
+      throw new Error('a library stylesheet should be read only in the editor');
+    }
+  });
+
+  await step('typing in it redraws the preview', async () => {
+    const changed = await page.evaluate(async () => {
+      const html = document.querySelector('#host textarea[data-strata-source="html"]');
+      html.value = '<h1>Typed just now</h1><p>And a paragraph.</p>';
+      html.dispatchEvent(new Event('input', { bubbles: true }));
+      /* Longer than the editor's debounce, and long enough for the render
+         after it. */
+      await new Promise((resolve) => setTimeout(resolve, 900));
+      const box = document.querySelector('#host .strata-preview-box');
+      return {
+        heading: box ? ((box.querySelector('h1') || {}).textContent || '') : 'no preview',
+        kept: (window.htmlHarness.settings().htmlContent || '').indexOf('Typed just now') !== -1
+      };
+    });
+    if (changed.heading !== 'Typed just now') {
+      throw new Error('the preview still reads ' + JSON.stringify(changed.heading));
+    }
+    if (!changed.kept) {
+      throw new Error('what was typed was not kept on the web part');
+    }
+  });
+
+  await step('the pickers offer HTML files and stylesheets, not markdown', async () => {
+    /* End to end: the extensions the web part declares, through the pane
+       sources, to the list an author is shown. The library holds both kinds,
+       so a picker offering the wrong one would look like it was working. */
+    const offered = await page.evaluate(async () => {
+      window.htmlHarness.editing(false);
+      await window.htmlHarness.start({
+        contentSource: 'library',
+        selectedLibrary: '/sites/demo/Documents',
+        selectedFile: '/sites/demo/Documents/notes.html',
+        cssSource: 'library',
+        selectedStyleLibrary: '/sites/demo/Documents'
+      });
+      await new Promise((resolve) => setTimeout(resolve, 900));
+      window.htmlHarness.openPane();
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      /* The pane shows one page at a time, as SharePoint's does. Content is
+         first and the stylesheet is second, so the second list has to be read
+         from its own page - read from the first one it came back empty, which
+         is a check that would have passed for a pane with nothing in it. */
+      const documents = window.htmlHarness.paneOptions('selectedFile');
+      window.htmlHarness.panePage(1);
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      return {
+        documents: documents,
+        styles: window.htmlHarness.paneOptions('selectedStyleFile')
+      };
+    });
+
+    if (offered.documents.indexOf('notes.html') === -1) {
+      throw new Error('the document picker does not offer notes.html: '
+        + JSON.stringify(offered.documents));
+    }
+    if (offered.documents.indexOf('handbook.md') !== -1) {
+      throw new Error('the document picker is offering markdown: '
+        + JSON.stringify(offered.documents));
+    }
+    if (offered.styles.indexOf('shared.css') === -1) {
+      throw new Error('the stylesheet picker does not offer shared.css: '
+        + JSON.stringify(offered.styles));
+    }
+    if (offered.styles.indexOf('notes.html') !== -1) {
+      throw new Error('the stylesheet picker is offering documents: '
+        + JSON.stringify(offered.styles));
+    }
+  });
+
+  await step('the document is indexed as its text, not as its markup', async () => {
+    /* The markdown web part declares its source searchable as well as its
+       rendered text. This one must not: the source here is markup, and the
+       index would fill with tag names. */
+    const indexed = await page.evaluate(async () => {
+      window.htmlHarness.panePage(0);
+      window.htmlHarness.closePane();
+      await new Promise((resolve) => setTimeout(resolve, 400));
+      return window.htmlHarness.settings().searchablePlainText || '';
+    });
+    if (indexed.indexOf('Watch the queue length') === -1) {
+      throw new Error('the document’s words are not in the index: '
+        + JSON.stringify(indexed.slice(0, 80)));
+    }
+    if (/<[a-z]/i.test(indexed) || indexed.indexOf('class=') !== -1) {
+      throw new Error('markup reached the search index: ' + JSON.stringify(indexed.slice(0, 120)));
+    }
+  });
+
+  await step('a narrow screen hides the web part when an author asks it to', async () => {
+    const hidden = await page.evaluate(async () => {
+      window.htmlHarness.change('showOnNarrowScreens', false);
+      await new Promise((resolve) => setTimeout(resolve, 400));
+      const root = document.querySelector('#host .strata-root');
+      return root ? window.getComputedStyle(root).display : 'no root';
+    });
+    /* Wide, so the setting applies and the rule does not: the width is what
+       decides, and here there is plenty. */
+    if (hidden !== 'block') {
+      throw new Error('hidden on a wide screen, where it should be shown: display is ' + hidden);
+    }
+
+    await page.setViewportSize({ width: 500, height: 900 });
+    await page.waitForTimeout(300);
+    const narrow = await page.evaluate(() => {
+      const root = document.querySelector('#host .strata-root');
+      return root ? window.getComputedStyle(root).display : 'no root';
+    });
+    await page.setViewportSize({ width: 1200, height: 900 });
+    await page.waitForTimeout(200);
+
+    if (narrow !== 'none') {
+      throw new Error('still shown at 500px wide: display is ' + narrow);
+    }
+  });
+
+  await step('one stylesheet follows light and dark in all three modes', async () => {
+    /*
+     * The format an author is told to use, checked in every mode it has to
+     * work in, because it did not work in any of them.
+     *
+     * var(--strata-...) inherits, so it reached inline and shadow - but a
+     * frame is a document of its own and nothing inherits into one, so the
+     * tokens resolved to nothing there. And a rule for the mode could not be
+     * written at all: the web part puts data-strata-mode on the element the
+     * stylesheet is narrowed to, and scoping turned the selector into a search
+     * for that attribute somewhere inside, where it never is.
+     *
+     * Six combinations, and the outline colours are values nothing else uses,
+     * so the right branch of the stylesheet is the only thing that could have
+     * painted them.
+     */
+    const CSS = '.card { background: var(--strata-bg-elevated); }'
+      + '[data-strata-mode="dark"] .card { outline: 3px solid rgb(0, 200, 0); }'
+      + '[data-strata-mode="light"] .card { outline: 3px solid rgb(200, 0, 0); }';
+    const DOC = '<h1>Dashboard</h1><div class="card">A card</div>';
+    const problems = [];
+
+    for (const renderMode of ['inline', 'shadow', 'frame']) {
+      for (const colorMode of ['light', 'dark']) {
+        const seen = await page.evaluate(async (asked) => {
+          await window.htmlHarness.start({
+            contentSource: 'manual', selectedLibrary: '', selectedFile: '',
+            htmlContent: asked.doc, cssSource: 'manual', cssContent: asked.css,
+            renderMode: asked.renderMode, colorMode: asked.colorMode,
+            themeFamily: 'github'
+          });
+          await new Promise((resolve) => setTimeout(resolve, 1000));
+
+          let card = null;
+          if (asked.renderMode === 'inline') {
+            card = document.querySelector('#host .card');
+          } else if (asked.renderMode === 'shadow') {
+            const mount = document.querySelector('#host .strata-shadow');
+            card = mount && mount.shadowRoot ? mount.shadowRoot.querySelector('.card') : null;
+          } else {
+            const frame = document.querySelector('#host iframe.strata-frame');
+            card = frame && frame.contentDocument
+              ? frame.contentDocument.querySelector('.card') : null;
+          }
+          if (!card) { return { missing: true }; }
+
+          const view = card.ownerDocument.defaultView || window;
+          const style = view.getComputedStyle(card);
+          return {
+            outline: style.outlineColor,
+            /* A token that resolved to nothing leaves the background at the
+               initial transparent, so this is the token working. */
+            token: style.backgroundColor
+          };
+        }, { renderMode: renderMode, colorMode: colorMode, css: CSS, doc: DOC });
+
+        const where = `${renderMode}/${colorMode}`;
+        const wanted = colorMode === 'dark' ? 'rgb(0, 200, 0)' : 'rgb(200, 0, 0)';
+        if (seen.missing) {
+          problems.push(`${where}: nothing was drawn`);
+        } else if (seen.outline !== wanted) {
+          problems.push(`${where}: the mode rule did not apply, outline is ${seen.outline}`);
+        } else if (seen.token === 'rgba(0, 0, 0, 0)') {
+          problems.push(`${where}: var(--strata-bg-elevated) resolved to nothing`);
+        }
+      }
+    }
+
+    if (problems.length) {
+      throw new Error(problems.join('; '));
+    }
+  });
+
+
+  await step('a document named on the page\u2019s address opens', async () => {
+    /*
+     * ?strataDoc=folder/page.html, which is how a SharePoint menu entry points
+     * at one document among many without a page each.
+     *
+     * It was refused. The value has to be split into a path and a heading, and
+     * once it is decoded a # in a file name looks exactly like the one that
+     * starts the heading - so the split is made at the extension instead, and
+     * the extensions were md and markdown written into the pattern. Every HTML
+     * document a menu could name came back as an address the web part could
+     * not understand.
+     */
+    const opened = await page.evaluate(async () => {
+      window.htmlHarness.addressDocument('Runbooks/rollback.html');
+      await window.htmlHarness.start({
+        contentSource: 'library',
+        selectedLibrary: '/sites/demo/Documents',
+        selectedFile: '/sites/demo/Documents/notes.html',
+        followDocumentLinks: true
+      });
+      await new Promise((resolve) => setTimeout(resolve, 1200));
+      window.htmlHarness.addressDocument(undefined);
+      return {
+        heading: ((document.querySelector('#host h1') || {}).textContent || '').trim(),
+        trail: [...document.querySelectorAll('#host .strata-crumb')]
+          .map((crumb) => (crumb.textContent || '').trim()),
+        notice: (document.querySelector('#host .strata-status[data-tone="warning"]')
+          || {}).textContent || ''
+      };
+    });
+
+    if (opened.heading.indexOf('Rolling back') === -1) {
+      throw new Error('the addressed document did not open: the heading reads '
+        + JSON.stringify(opened.heading) + (opened.notice ? ' | ' + opened.notice : ''));
+    }
+    if (opened.trail.length < 2) {
+      throw new Error('no trail back to the configured document: '
+        + JSON.stringify(opened.trail));
+    }
+  });
+
+
+  await step('an author\u2019s table is boxed, sortable, and keeps its header put', async () => {
+    /*
+     * Reported from a tenant: a table came out with a blank band where its
+     * header should be, the header partway down, and a row invisible
+     * underneath it.
+     *
+     * The cause was a precondition the stylesheet had and nothing guaranteed.
+     * markdown-it wraps every table it renders in a scroll box, so for as long
+     * as markdown was the only document, "a table is inside a box" was true by
+     * accident. An author\u2019s HTML arrives as the author wrote it, so no table
+     * in it had one: the table enhancer found no boxes and returned, which left
+     * those tables with no fit measurement, no sorting, and a sticky header
+     * with nothing to stick to but the page or the web part itself.
+     *
+     * Both halves are checked here, and the height is set to a fixed one on
+     * purpose: that makes the web part its own scroll container, which is the
+     * arrangement that showed the fault with no scrolling at all.
+     */
+    const table = await page.evaluate(async () => {
+      await window.htmlHarness.start({
+        contentSource: 'manual',
+        selectedLibrary: '',
+        selectedFile: '',
+        heightMode: 'fixed',
+        fixedHeight: 420,
+        htmlContent: '<h2>By priority</h2>'
+          + '<table><thead><tr><th>Priority</th><th>Tickets</th></tr></thead>'
+          + '<tbody><tr><td>P3</td><td>16</td></tr><tr><td>P4</td><td>119</td></tr></tbody></table>'
+      });
+      await new Promise((resolve) => setTimeout(resolve, 900));
+
+      const found = document.querySelector('#host table');
+      if (!found) { return { missing: true }; }
+      const header = found.querySelector('thead th');
+      const box = (el) => {
+        const r = el.getBoundingClientRect();
+        return { top: r.top, bottom: r.bottom };
+      };
+      const seen = box(header);
+
+      return {
+        boxed: !!found.closest('.strata-table-scroll'),
+        /* Every row still there and in the order the author wrote them: the
+           enhancer moves rows when it sorts, and nothing has asked it to. */
+        rows: [...found.querySelectorAll('tbody tr')]
+          .map((row) => (row.children[0].textContent || '').trim()),
+        headerFirst: found.querySelector('tr') === header.parentElement,
+        headerAtTop: Math.abs(seen.top - box(found).top) <= 2,
+        covered: [...found.querySelectorAll('tbody tr')]
+          .filter((row) => seen.top < box(row).bottom && seen.bottom > box(row).top)
+          .map((row) => (row.children[0].textContent || '').trim()),
+        /* Sorting was unreachable before, because the enhancer returned before
+           it got there. */
+        sortable: !!found.querySelector('.strata-th-sort')
+      };
+    });
+
+    if (table.missing) throw new Error('no table was drawn');
+    if (!table.boxed) {
+      throw new Error('the table is not in the box the stylesheet expects');
+    }
+    if (!table.headerFirst) throw new Error('the header row is not the first row');
+    if (!table.headerAtTop) {
+      throw new Error('the header is not at the top of its own table');
+    }
+    if (table.covered.length) {
+      throw new Error('the header is sitting on top of ' + table.covered.join(', '));
+    }
+    /* The row that went missing in the report. */
+    if (table.rows.join(',') !== 'P3,P4') {
+      throw new Error('the rows are ' + JSON.stringify(table.rows) + ', expected P3 then P4');
+    }
+    if (!table.sortable) {
+      throw new Error('the table did not become sortable, so the enhancer never reached it');
+    }
+  });
+
+  await step('and a markdown table is left in the one box it already had', async () => {
+    /* The boxing has to be idempotent: a markdown table arrives with a box and
+       this runs on every render, so a second box around the first would give
+       the table a scrollbar inside a scrollbar. */
+    const nested = await page.evaluate(async () => {
+      await window.htmlHarness.start({
+        contentSource: 'manual',
+        selectedLibrary: '',
+        selectedFile: '',
+        htmlContent: '<div class="strata-table-scroll"><table><thead><tr><th>A</th></tr></thead>'
+          + '<tbody><tr><td>1</td></tr></tbody></table></div>'
+      });
+      await new Promise((resolve) => setTimeout(resolve, 700));
+      return {
+        boxes: document.querySelectorAll('#host .strata-table-scroll').length,
+        direct: !!document.querySelector('#host .strata-table-scroll > table')
+      };
+    });
+    if (nested.boxes !== 1) {
+      throw new Error(nested.boxes + ' boxes around one table');
+    }
+    if (!nested.direct) {
+      throw new Error('the table is no longer a direct child of its box');
+    }
+  });
+
 
   /*
    * Closed before the tally is read, not after.

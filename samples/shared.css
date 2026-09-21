@@ -1,0 +1,55 @@
+/*
+ * .SYNOPSIS
+ * A stylesheet several HTML web parts can share.
+ *
+ * .DESCRIPTION
+ * The point of the HTML web part keeping its stylesheet apart from its
+ * document: one file in a library dresses every HTML document in a site, and
+ * changing this one file changes all of them at once. A document's own <style>
+ * block still applies on top of whatever this says, so one document can vary
+ * without the rest of them moving.
+ *
+ * Written against the theme's own custom properties wherever there is one, so
+ * that a document dressed with this follows the reader's light or dark choice
+ * rather than fighting it.
+ *
+ * .USAGE
+ *   Property pane, Stylesheet page: File in a document library, then this file.
+ *
+ * .NOTES
+ * Since:     0.0.22.0
+ * Ships in:  nothing - it is a sample for the demo and the docs
+ * Requires:  nothing
+ */
+
+h1, h2, h3 {
+  letter-spacing: -0.01em;
+}
+
+h2 {
+  border-bottom: 1px solid var(--strata-border, #d0d7de);
+  padding-bottom: 6px;
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+table th,
+table td {
+  border: 1px solid var(--strata-border, #d0d7de);
+  padding: 6px 10px;
+}
+
+table thead th {
+  background: var(--strata-bg-elevated, #f6f8fa);
+}
+
+a {
+  color: var(--strata-link, #0969da);
+}
+
+ul {
+  padding-left: 1.4em;
+}

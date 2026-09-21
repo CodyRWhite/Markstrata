@@ -120,7 +120,47 @@ declare interface IMarkstrataWebPartStrings {
   UnconfiguredOnPage: string;
   UnconfiguredInTeams: string;
   UnconfiguredSampleButton: string;
+
+  /* The HTML web part, which shares this strings file. */
+  HtmlContentPageDescription: string;
+  HtmlContentLabel: string;
+  HtmlContentDescription: string;
+  HtmlFileLabel: string;
+  HtmlFileUrlDescription: string;
+  StyleGroupName: string;
+  CssSourceLabel: string;
+  CssContentLabel: string;
+  CssContentDescription: string;
+  StyleLibraryLabel: string;
+  StyleFolderLabel: string;
+  CssFileLabel: string;
+  CssFileUrlLabel: string;
+  CssFileUrlDescription: string;
+  StyleHint: string;
+  RenderPageDescription: string;
+  RenderGroupName: string;
+  RenderModeLabel: string;
+  RenderModeHint: string;
+  RunScriptsLabel: string;
+  RunScriptsHint: string;
+  ScriptsPausedWhileEditing: string;
+  ScriptsNotAllowedHere: string;
+  FullBleedLabel: string;
+  FullBleedHint: string;
+  HeightModeLabel: string;
+  FixedHeightLabel: string;
+  HeightHint: string;
+  NarrowScreensLabel: string;
+  NarrowScreensHint: string;
+  UnconfiguredInPaneHtml: string;
+  UnconfiguredInTeamsHtml: string;
+
+  StylePageDescription: string;
+  FollowLinksHintHtml: string;
+  FrameLimitsHint: string;
+
   SampleContent: string;
+  HtmlSampleContent: string;
 }
 
 declare module 'MarkstrataWebPartStrings' {

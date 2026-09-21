@@ -1,0 +1,303 @@
+/**
+ * .SYNOPSIS
+ * Writes docs/css-for-an-llm.md: one self-contained file to hand a language
+ * model that is being asked to write CSS for the HTML web part.
+ *
+ * .DESCRIPTION
+ * Somebody generating a stylesheet with a model needs to give it the rules,
+ * and the rules are not guessable: which custom properties exist, what happens
+ * to a selector once it is narrowed to the web part, which at-rules survive,
+ * what the sanitiser takes out, and why prefers-color-scheme is the wrong
+ * question here. A model told none of that writes CSS that looks right and is
+ * wrong in the dark, or in a frame, or both.
+ *
+ * WHY IT IS GENERATED
+ * Because the token list is the half that goes stale, and a stale list is
+ * worse than none: a model given a token that no longer exists writes
+ * var(--gone) and the document renders unstyled with nothing to explain it.
+ * The names are read out of the stylesheets that define them, so the file is
+ * the truth by construction. The prose around them is written here.
+ *
+ * The tokens are also grouped by where they come from, which says more than
+ * the names do. One declared by every theme changes with the theme and the
+ * colour mode, so it is safe for anything that has to follow the reader. One
+ * declared outside the themes is the same everywhere, whether it is a
+ * measurement or a fixed value, and will not follow anybody. And one declared
+ * by some themes and not others is a gap: the file names those rather than
+ * hiding them, which is how --strata-callout-rgb turned out to be Obsidian's
+ * alone.
+ *
+ * .USAGE
+ *   node scripts/build-css-contract.js
+ *
+ *   tests/css-contract.test.js compares the file to the stylesheets, so a
+ *   token added to a theme and not regenerated here fails the build rather
+ *   than reaching somebody's model as a missing name.
+ *
+ * .NOTES
+ * Since:     0.0.22.0
+ * Ships in:  nothing - it builds documentation
+ * Requires:  the stylesheets under src/webparts/markstrata/styles
+ */
+
+const fs = require('fs');
+const path = require('path');
+
+const root = path.join(__dirname, '..');
+const stylesDir = path.join(root, 'src', 'webparts', 'markstrata', 'styles');
+const themesDir = path.join(stylesDir, 'themes');
+const OUT = path.join(root, 'docs', 'css-for-an-llm.md');
+
+/* Every --strata- property, and which files declare it. */
+function declarations() {
+  const found = new Map();
+
+  const readInto = (dir) => {
+    fs.readdirSync(dir)
+      .filter((name) => name.endsWith('.css'))
+      .forEach((name) => {
+        const css = fs.readFileSync(path.join(dir, name), 'utf8');
+        const matches = css.matchAll(/(--strata-[a-z0-9-]+)\s*:/g);
+        for (const match of matches) {
+          if (!found.has(match[1])) { found.set(match[1], new Set()); }
+          found.get(match[1]).add(name);
+        }
+      });
+  };
+
+  readInto(stylesDir);
+  readInto(themesDir);
+  return found;
+}
+
+const THEMES = fs.readdirSync(themesDir)
+  .filter((name) => name.endsWith('.css'))
+  .sort();
+
+function grouped() {
+  const found = declarations();
+  const everyTheme = [];
+  const someThemes = [];
+  const structural = [];
+
+  [...found.keys()].sort().forEach((token) => {
+    const from = found.get(token);
+    const themes = THEMES.filter((name) => from.has(name));
+    if (themes.length === THEMES.length) {
+      everyTheme.push(token);
+    } else if (themes.length > 0) {
+      someThemes.push({ token: token, themes: themes });
+    } else {
+      structural.push(token);
+    }
+  });
+
+  return { everyTheme: everyTheme, someThemes: someThemes, structural: structural };
+}
+
+/*
+ * A fenced list, one name per line, rather than a table.
+ *
+ * The reader here is a language model, and a fenced block is the one shape
+ * that cannot be misread: no column counting, no separator row to get wrong,
+ * and nothing that renders as literal pipes if the markdown is pasted
+ * somewhere that does not do tables.
+ */
+function fenced(tokens) {
+  return ['```', ...tokens, '```'].join('\n');
+}
+
+function build() {
+  const tokens = grouped();
+
+  const gaps = tokens.someThemes.length === 0
+    ? 'Every colour token is declared by all three themes, so anything below is '
+      + 'safe whichever theme a page is set to.\n'
+    : 'These are declared by some themes and not others, so a document using one '
+      + 'follows the reader in some themes and falls back in the rest. Give them a '
+      + 'fallback value, or avoid them:\n\n'
+      + tokens.someThemes
+        .map((entry) => `- \`${entry.token}\` - only ${entry.themes
+          .map((name) => name.replace('.css', '')).join(', ')}`)
+        .join('\n') + '\n';
+
+  const file = `# Writing CSS for the Markstrata HTML web part
+
+Hand this whole file to a language model before asking it to write a stylesheet
+or an HTML document for **Markstrata - HTML**. It is the set of rules that
+cannot be guessed from looking at the output.
+
+Generated by \`scripts/build-css-contract.js\`. The token lists are read out of
+the stylesheets that define them, so they are current by construction; do not
+edit them here.
+
+## What you are writing
+
+A stylesheet, or a whole HTML document with a \`<style>\` block in it, that a
+SharePoint web part will draw. The reader can be in light or dark mode, on any
+of three themes, and can switch while reading. Your CSS has to follow them.
+
+## The two rules
+
+**1. Take every colour from a token, not from a literal.** The tokens below are
+custom properties the web part sets. They change with the theme and the colour
+mode on their own. Write a fallback after the comma so a renamed token degrades
+to something readable rather than to nothing.
+
+\`\`\`css
+.card {
+  background: var(--strata-bg-elevated, #f6f8fa);
+  color: var(--strata-text, #1f2328);
+  border: 1px solid var(--strata-border, #d1d9e0);
+}
+\`\`\`
+
+**2. For anything a token does not cover, select on the mode.** Shadows and
+picture swaps are the usual reasons. Start the selector with the attribute:
+
+\`\`\`css
+[data-strata-mode="dark"]  .card { box-shadow: none; }
+[data-strata-mode="light"] .card { box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08); }
+\`\`\`
+
+\`[data-strata-theme="github"]\`, \`"obsidian"\` and \`"vscode"\` work the same way.
+
+**Never use \`@media (prefers-color-scheme: ...)\`.** It follows the operating
+system. The web part follows the setting an author chose and the reader's own
+choice in the toolbar, so on a dark laptop showing a page set to light the two
+disagree and the document comes out half in each.
+
+## The three render modes, and what each changes
+
+An author picks one. Write CSS that works in all three and you do not need to
+know which.
+
+| Mode | Your CSS | What to know |
+|---|---|---|
+| Inline | Narrowed to the web part, see below | The page's own styles also reach your document |
+| Shadow DOM | Used as written, inside a boundary | Nothing outside reaches in, and the web part's typography does not either: you own the whole look |
+| Frame | Used as written, in a document of its own | The web part copies the tokens and the mode attribute in, so both rules above still work |
+
+## What happens to your selectors in inline mode
+
+Every selector is rewritten to apply only inside the web part. Six things
+follow from that, and each is worth knowing before you write a selector that
+quietly matches nothing.
+
+- \`html\`, \`body\`, \`:root\` and \`:host\` become the web part's own element. A
+  rule on \`body\` is a rule about your document, so \`body { background: ... }\`
+  is the right way to colour the area behind it.
+- A selector starting with \`[data-strata-mode]\` or any other
+  \`[data-strata-...]\` is attached to that same element, which is what makes
+  rule 2 above work.
+- \`@media\`, \`@supports\`, \`@container\`, \`@layer\` and \`@scope\` are kept and the
+  rules inside them are rewritten.
+- \`@keyframes\`, \`@font-face\`, \`@page\`, \`@property\`, \`@counter-style\`,
+  \`@font-feature-values\` and \`@viewport\` are kept exactly as written, because
+  what is inside them is not a selector.
+- \`@import\` and \`@charset\` are **dropped**. Inline whatever you were importing.
+- Your own data attributes are left alone: \`[data-status="open"] .row\` still
+  means an element inside your document.
+
+## What is removed before your document is drawn
+
+The document is sanitised every time, in every mode, with one exception: a
+frame with the scripts setting turned on, which an author has to choose.
+
+- \`<script>\` in every spelling, and every \`on*\` handler. Do not write
+  behaviour; write a document.
+- \`<form>\`, \`<input>\`, \`<textarea>\`, \`<select>\`, \`<object>\`, \`<embed>\`,
+  \`<base>\` and \`<meta>\`.
+- \`javascript:\` in an \`href\` or a \`src\`, however it is written.
+- \`<link rel="stylesheet">\`. A stylesheet has to be inline, in a \`<style>\`
+  block, or chosen by the author in the property pane.
+- \`<iframe>\` survives only when it points at one of a fixed list of hosts:
+  YouTube, Vimeo, Microsoft Stream, Forms, Power BI, Teams, or any
+  \`*.sharepoint.com\`. Anywhere else and the frame is dropped.
+
+A \`<style>\` block **is** kept. The web part lifts it out of the file before
+sanitising, because the sanitiser would otherwise delete it silently, and puts
+it back scoped to your document.
+
+## A worked example
+
+\`\`\`html
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Service review</title>
+  <style>
+    /* Colour from tokens, measurements of your own. */
+    .summary {
+      background: var(--strata-bg-elevated, #f6f8fa);
+      border-left: 4px solid var(--strata-accent, #2f6f4f);
+      padding: 12px 16px;
+    }
+    table { border-collapse: collapse; width: 100%; }
+    th, td {
+      border: 1px solid var(--strata-border, #d1d9e0);
+      padding: 6px 10px;
+    }
+    td.num { text-align: right; font-variant-numeric: tabular-nums; }
+
+    /* What a token cannot say. */
+    [data-strata-mode="dark"] .summary { box-shadow: none; }
+    [data-strata-mode="light"] .summary { box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06); }
+  </style>
+</head>
+<body>
+  <h1>Service review</h1>
+  <div class="summary"><p>Three fixes and one new setting.</p></div>
+  <table>
+    <thead><tr><th>Queue</th><th class="num">Tickets</th></tr></thead>
+    <tbody><tr><td>Billing</td><td class="num">48</td></tr></tbody>
+  </table>
+</body>
+</html>
+\`\`\`
+
+## Do not
+
+- Write a hex colour for anything a token covers.
+- Use \`prefers-color-scheme\`.
+- Use \`@import\`.
+- Write \`<script>\`, an \`on*\` handler, or a form.
+- Set a fixed \`height\` on the document. The author chooses the height in the
+  property pane, and a document that fights it scrolls twice.
+- Use \`position: fixed\` to place something against the window. The web part is
+  a panel in a page, not the page.
+- Assume a font is installed. Use \`var(--strata-font-body, ...)\` and
+  \`var(--strata-font-mono, ...)\`.
+
+## Colour tokens
+
+Declared by all ${THEMES.length} themes, in light and dark, so a document using them
+follows the reader without a single \`[data-strata-mode]\` rule.
+
+${fenced(tokens.everyTheme)}
+
+${gaps}
+## Tokens that do not change with the theme
+
+Declared once rather than per theme, so these are the same whichever theme a
+page is set to and in both colour modes. Mostly measurements - spacing, widths,
+scales - and a few fixed values the web part's own furniture uses. Safe to
+read, but they will not follow the reader, so do not reach for one of these
+where a colour token exists.
+
+${fenced(tokens.structural)}
+`;
+
+  fs.mkdirSync(path.dirname(OUT), { recursive: true });
+  fs.writeFileSync(OUT, file);
+  console.log(`Wrote ${path.relative(root, OUT)}`
+    + ` (${tokens.everyTheme.length} colour tokens, ${tokens.structural.length} structural`
+    + `${tokens.someThemes.length ? `, ${tokens.someThemes.length} declared by some themes only` : ''})`);
+}
+
+module.exports = { grouped: grouped, OUT: OUT };
+
+if (require.main === module) {
+  build();
+}

@@ -83,6 +83,93 @@ test('anything that is not a markdown file is refused', () => {
   });
 });
 
+/*
+ * Which extensions count is the caller's to say, and it used to be md and
+ * markdown written into the pattern that splits the value. That refused every
+ * HTML document a menu entry could name: ?strataDoc=folder/page.html matched
+ * nothing and came back as an address the web part could not understand.
+ *
+ * The split has to be made at the extension rather than at the first #,
+ * because once the value is decoded a # in a file name looks exactly like the
+ * one that starts the heading. So the awkward names are checked for both kinds
+ * of document, not just the kind that had them written down.
+ */
+test('an HTML document named on the address is opened', () => {
+  const wanted = documentFromAddress(
+    '?strataDoc=Runbooks%2Fpage.html', LIBRARY, ['.html', '.htm']);
+  assert.deepEqual(wanted, { path: `${LIBRARY}/Runbooks/page.html`, heading: '' });
+});
+
+test('and the short spelling of it', () => {
+  const wanted = documentFromAddress('?strataDoc=page.htm', LIBRARY, ['.html', '.htm']);
+  assert.deepEqual(wanted, { path: `${LIBRARY}/page.htm`, heading: '' });
+});
+
+test('with a heading, which is still split at the extension', () => {
+  const wanted = documentFromAddress(
+    '?strataDoc=Runbooks%2Fpage.html%23undo-the-swap', LIBRARY, ['.html', '.htm']);
+  assert.deepEqual(wanted,
+    { path: `${LIBRARY}/Runbooks/page.html`, heading: 'undo-the-swap' });
+});
+
+test('a hash in the file name is part of the name, not a heading', () => {
+  /* The case the split at the extension exists for. Checked for both kinds,
+     because the old pattern only knew about one. */
+  for (const [name, extensions] of [
+    ['What is #1 + why.md', ['.md', '.markdown']],
+    ['What is #1 + why.html', ['.html', '.htm']]
+  ]) {
+    const wanted = documentFromAddress(
+      `?strataDoc=${encodeURIComponent(name)}`, LIBRARY, extensions);
+    assert.equal(wanted.heading, '', `${name} lost its name to a heading`);
+    assert.ok(wanted.path.indexOf(name) !== -1, `${name} came back as ${wanted.path}`);
+  }
+});
+
+test('the first extension that ends the value wins, not the last', () => {
+  /* notes.md#see-a.md is one document and a heading, not one long name. */
+  const markdown = documentFromAddress(
+    '?strataDoc=notes.md%23see-a.md', LIBRARY, ['.md', '.markdown']);
+  assert.equal(markdown.path, `${LIBRARY}/notes.md`);
+  assert.equal(markdown.heading, 'see-a.md');
+
+  const html = documentFromAddress(
+    '?strataDoc=notes.html%23see-a.html', LIBRARY, ['.html', '.htm']);
+  assert.equal(html.path, `${LIBRARY}/notes.html`);
+  assert.equal(html.heading, 'see-a.html');
+});
+
+test('a folder that ends in an extension is still a folder', () => {
+  for (const [value, extensions, expected] of [
+    ['archive.md/page.md', ['.md', '.markdown'], 'archive.md/page.md'],
+    ['archive.html/page.html', ['.html', '.htm'], 'archive.html/page.html']
+  ]) {
+    const wanted = documentFromAddress(
+      `?strataDoc=${encodeURIComponent(value)}`, LIBRARY, extensions);
+    assert.equal(wanted.path, `${LIBRARY}/${expected}`);
+    assert.equal(wanted.heading, '');
+  }
+});
+
+test('each web part refuses the other one\'s documents', () => {
+  /* Not pedantry: the HTML web part cannot render markdown and the markdown
+     one cannot render HTML, so opening the wrong kind would draw a document
+     of tag names or a page of escaped angle brackets. */
+  assert.equal(
+    documentFromAddress('?strataDoc=page.html', LIBRARY, ['.md', '.markdown']),
+    undefined, 'the markdown web part accepted an HTML document');
+  assert.equal(
+    documentFromAddress('?strataDoc=page.md', LIBRARY, ['.html', '.htm']),
+    undefined, 'the HTML web part accepted a markdown document');
+});
+
+test('markdown is what it opens when nobody says otherwise', () => {
+  /* The default keeps every menu entry written before this change working. */
+  assert.equal(
+    documentFromAddress('?strataDoc=page.md', LIBRARY).path, `${LIBRARY}/page.md`);
+  assert.equal(documentFromAddress('?strataDoc=page.html', LIBRARY), undefined);
+});
+
 test('an address that names nothing is nothing to do', () => {
   assert.equal(documentFromAddress('', LIBRARY), undefined);
   assert.equal(documentFromAddress('?other=1', LIBRARY), undefined);

@@ -45,7 +45,23 @@ const sampleArg = args.filter((arg, index) =>
 
 const root = path.join(__dirname, '..');
 const outDir = outArg === -1 ? path.join(__dirname, 'dist') : path.resolve(args[outArg + 1]);
-const libDir = path.join(root, 'temp', 'demo-lib');
+/*
+ * Where the pipeline is compiled to, and where the compiled classes are.
+ *
+ * Those are two different folders now, and that is tsc's doing rather than a
+ * choice. The renderer reaches into src/webparts/shared for the chrome the two
+ * web parts share, so the common root of everything compiled here is
+ * src/webparts, and the output mirrors it: markstrata/utils/ beside shared/.
+ * rootDir is given explicitly rather than inferred, so the layout is decided
+ * here and cannot move again the next time an import crosses a folder.
+ *
+ * libDir points into that tree at the folder the classes land in, so every
+ * require of one is unchanged, and their own relative imports of ../../shared
+ * resolve because the tree has the same shape as the source.
+ */
+const buildRoot = path.join(root, 'temp', 'demo-lib');
+const sourceRoot = path.join(root, 'src', 'webparts');
+const libDir = path.join(buildRoot, 'markstrata', 'utils');
 
 /*
  * The theme controls above the document.
@@ -88,6 +104,17 @@ const CSS_FILES = [
  */
 function compileProcessor() {
   console.log('Compiling the markdown pipeline...');
+  /*
+   * Emptied first, and this is not tidiness.
+   *
+   * These classes are loaded by require, which finds whatever is on disk. A
+   * previous build left the pipeline compiled flat, so after the layout above
+   * changed, every require went on finding the old flat copy and the build
+   * passed against code that was no longer the source. It only failed once the
+   * stale folder happened to be cleared, which is the worst way round for a
+   * check to fail: silence when it is wrong, noise when it is right.
+   */
+  fs.rmSync(buildRoot, { recursive: true, force: true });
   execFileSync(
     path.join(root, 'node_modules', '.bin', 'tsc'),
     [
@@ -102,7 +129,8 @@ function compileProcessor() {
          ambient declarations of its own, and the diagram renderer's import of
          `mermaid` is answered by this one. */
       path.join(root, 'src', 'types', 'mermaid.d.ts'),
-      '--outDir', libDir,
+      '--rootDir', sourceRoot,
+      '--outDir', buildRoot,
       '--module', 'commonjs',
       '--target', 'es2017',
       '--moduleResolution', 'node',

@@ -104,7 +104,13 @@ test('every SPFx module the web part imports has something behind it', () => {
      listed here, so a new import cannot be missed. */
   const sources = ['MarkstrataWebPart.ts', 'propertyPane.ts', 'paneSources.ts', 'webPartProps.ts']
     .map((file) => read('src', 'webparts', 'markstrata', file))
-    .concat([read('src', 'webparts', 'markstrata', 'utils', 'SharePointService.ts')]);
+    .concat([read('src', 'webparts', 'markstrata', 'utils', 'SharePointService.ts')])
+    /* The shared base holds the lifecycle, so it holds most of the SPFx
+       surface: sp-webpart-base, sp-core-library, sp-component-base and the
+       strings module all reach the harness through it now. Left out, this test
+       would read four imports off the subclass and vouch for nothing. */
+    .concat(['StrataWebPart.ts', 'strataWebPartProps.ts']
+      .map((file) => read('src', 'webparts', 'shared', file)));
 
   const imported = new Set();
   sources.forEach((source) => {
@@ -129,7 +135,12 @@ test('nothing the harness adds to the base class collides with the web part', ()
      the tenant build never sees this class. It happened within an hour of the
      file being written, and cost an afternoon's confusion. */
   const base = allMembers(read('harness', 'spfx', 'webPartBase.ts'));
-  const webPart = allMembers(read('src', 'webparts', 'markstrata', 'MarkstrataWebPart.ts'));
+  /* Both classes below the stand-in, because there are two now. StrataWebPart
+     sits between the harness base and the web part, so a member it adds
+     shadows a harness one exactly as a web part member would - and it is the
+     more likely of the two to do it by accident, being the larger. */
+  const webPart = allMembers(read('src', 'webparts', 'markstrata', 'MarkstrataWebPart.ts'))
+    .concat(allMembers(read('src', 'webparts', 'shared', 'StrataWebPart.ts')));
 
   /* What both are meant to have in common: the lifecycle the web part
      overrides on purpose, and the fields SPFx gives it. */

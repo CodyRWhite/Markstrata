@@ -77,12 +77,23 @@ const PAGES = [
     id: 'home', folder: '', label: 'Overview', title: 'Markstrata',
     section: 'evaluate',
     source: 'docs/site/home.md', toc: 'off',
-    description: 'Markdown for SharePoint and Teams, themed like the editors you write it in: GitHub, Obsidian and VS Code, light and dark.'
+    description: 'Markdown and HTML for SharePoint and Teams, themed like the editors you write it in: GitHub, Obsidian and VS Code, light and dark.'
   },
   {
     id: 'demo', folder: 'demo', label: 'Demo', title: 'Demo - Markstrata',
     section: 'evaluate',
     description: 'The web part itself, running in your browser: toolbar, contents, copy buttons, the property pane and the split editor.'
+  },
+  {
+    /*
+     * The HTML web part, running. Built by the harness rather than from a
+     * markdown source, and by its own entry point rather than the markdown
+     * demo's: a page about the HTML web part that was not the HTML web part
+     * would be a drawing of one.
+     */
+    id: 'html', folder: 'html', label: 'HTML', title: 'The HTML web part - Markstrata',
+    section: 'evaluate', builder: 'html',
+    description: 'The HTML web part running in your browser: three render modes, a stylesheet shared from one file, and the split editor with the HTML and the CSS as two tabs.'
   },
   {
     id: 'themes', folder: 'themes', label: 'Themes', title: 'Themes - Markstrata',
