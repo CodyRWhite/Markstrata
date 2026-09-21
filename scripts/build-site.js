@@ -43,6 +43,10 @@ PAGES.forEach((page) => {
   console.log(`\nBuilding /${page.folder ? `${page.folder}/` : ''} ...`);
   if (page.source) {
     run('demo/build-demo.js', [page.source, '--out', outDir, '--page', page.id]);
+  } else if (page.builder === 'html') {
+    /* The HTML web part, which is a different entry point rather than the same
+       harness with different settings. */
+    run('harness/build.js', ['--standalone', '--html', '--out', outDir, '--page', page.id]);
   } else {
     run('harness/build.js', ['--standalone', '--out', outDir, '--page', page.id]);
   }

@@ -1922,6 +1922,47 @@ const LIBRARY_PATH = '/sites/demo/Documents';
   });
 
   /*
+   * The published HTML page, which is the HTML web part rather than a document
+   * about it. It is built by a different entry point from every other page on
+   * the site, so nothing else here would notice it failing to start - and
+   * because it is bundled and minified for publication, a fault that only
+   * shows in that build shows nowhere else either.
+   */
+  await step('the published HTML page runs the HTML web part', async () => {
+    await page.goto('file://' + path.join(__dirname, '..', 'site', 'html', 'index.html'),
+      { waitUntil: 'load' });
+    await page.waitForTimeout(2000);
+    const seen = await page.evaluate(() => ({
+      heading: ((document.querySelector('#host h1') || {}).textContent || '').trim(),
+      toolbar: !!document.querySelector('#host .strata-toolbar'),
+      header: !!document.querySelector('.site-header'),
+      footer: !!document.querySelector('.site-footer'),
+      /* The document's own <style> block, which is only there if the styles
+         were lifted out of the file before the sanitiser reached them. */
+      note: document.querySelector('#host .note')
+        ? window.getComputedStyle(document.querySelector('#host .note')).borderLeftWidth
+        : 'no .note element',
+      /* And the leak probe, which is the published stylesheet doing its job
+         rather than the one the development harness links. */
+      probe: window.getComputedStyle(document.getElementById('wp-probe')).color
+    }));
+
+    if (seen.heading.indexOf('Deploy notes') === -1) {
+      throw new Error('the web part drew nothing: heading reads ' + JSON.stringify(seen.heading));
+    }
+    if (!seen.toolbar) throw new Error('no toolbar');
+    if (!seen.header || !seen.footer) {
+      throw new Error('the page is missing the site chrome every other page has');
+    }
+    if (seen.note !== '4px') {
+      throw new Error('the document\u2019s own styles did not survive publication: ' + seen.note);
+    }
+    if (seen.probe === 'rgb(200, 0, 0)') {
+      throw new Error('the document\u2019s stylesheet escaped the web part on the published page');
+    }
+  });
+
+  /*
    * The front page asks for none, and asking for none has to mean none was
    * built rather than one built and hidden: a panel nothing can reach is still
    * a panel, still in the tab order, and still read out.
