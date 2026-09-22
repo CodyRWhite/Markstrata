@@ -451,7 +451,7 @@ ${pageStyles(htmlPart ? pageId : null)}
    * paragraph has no rule of its own at all, so the only thing that can
    * colour it is a rule that escaped.
    */
-  #wp-probe { margin: 0 auto; max-width: 1100px; padding: 0 22px 12px;
+  #wp-probe { margin: 12px auto 0; max-width: 1100px; padding: 0 22px 12px;
               font: 15px/1.6 system-ui, sans-serif; }
 </style>
 ${site.MODE_BOOTSTRAP}

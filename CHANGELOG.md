@@ -85,6 +85,55 @@ back out. That is value-preserving but not spelling-preserving, and it would
 have re-encoded `strataDoc`, which is deliberately written with its slashes left
 alone so a shared address stays something a person can read.
 
+### The HTML page on the website, tidied
+
+The canvas a web part sits in was given `min-height: 100vh` to stand in for a
+SharePoint section, which is right on the bare harness where the page is
+nothing else. A page of the site has a footer under it, so a document shorter
+than the window left a band of empty canvas between the two: most of a screen of
+it on the HTML page, whose sample document is deliberately short.
+
+The page is a column now and the canvas takes what is left, so the footer comes
+up to meet the content. At an ordinary window height there is no band at all.
+
+The web part itself is left exactly as tall as its document. Stretching it to
+fill the canvas was tried and taken out again: a web part on a SharePoint page
+is as tall as what it renders, a section does not stretch it, and a page showing
+one stretched would be showing something a tenant will never see. These pages
+are meant to be a direct representation of what happens in SharePoint, so on a
+very tall window the space under a short document stays canvas, which is what a
+real page does with it too.
+
+Fixing the column broke the action buttons on the way, and how it broke says
+why. Each piece of furniture caps itself at 1100px and centres with automatic
+margins, which a block resolves against the full width and a flex item resolves
+against its own content - so the buttons collapsed to their own width and sat in
+the middle of the page. They state their width explicitly now, and the other
+pages carrying the same furniture were checked rather than assumed.
+
+The paragraph the driver measures for escaped CSS was running straight into the
+intro above it. It has space now, and only space: it has no colour of its own
+and must not get one, because a rule that escaped the document is found by
+reading its colour.
+
+### What `body` reaches, said accurately
+
+The CSS contract told authors that `html`, `body`, `:root` and `:host` become
+"the web part's own element", and that `body { background: ... }` is the way to
+colour the area behind a document. Both halves were wrong in the same
+direction.
+
+They become the element the document is drawn into, which is the document's own
+column: as wide as the reading measure the theme sets, with the web part's
+surface either side of it. So that background reaches behind the document and
+not behind the toolbar and the footer around it - visible on the website's own
+HTML page, where the sample's colour stops at the column edge.
+
+The file says that now, which is the half that was a documentation fault.
+Whether the mapping is the one it ought to be is a separate question, and one
+worth answering from what SharePoint does rather than from what reads tidily on
+a demo page.
+
 ### Both Teams apps reach a release
 
 The release workflow built two Teams apps and published one.
