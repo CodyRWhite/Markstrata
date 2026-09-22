@@ -61,9 +61,12 @@ Every selector is rewritten to apply only inside the web part. Six things
 follow from that, and each is worth knowing before you write a selector that
 quietly matches nothing.
 
-- `html`, `body`, `:root` and `:host` become the web part's own element. A
-  rule on `body` is a rule about your document, so `body { background: ... }`
-  is the right way to colour the area behind it.
+- `html`, `body`, `:root` and `:host` all become the element your document is
+  drawn into. That element is the document's own column, not the whole web
+  part: it is as wide as the reading measure the theme sets, with the web
+  part's surface either side of it. So `body { background: ... }` colours
+  behind your document and not behind the toolbar and the footer around it.
+  There is no selector that reaches those; they belong to the web part.
 - A selector starting with `[data-strata-mode]` or any other
   `[data-strata-...]` is attached to that same element, which is what makes
   rule 2 above work.

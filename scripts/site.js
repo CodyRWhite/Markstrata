@@ -509,6 +509,58 @@ const CHROME_CSS = `
   text-align: center;
 }
 .site-footer p { margin: 0 0 6px; }
+
+/*
+ * A page of the site is a column, and the canvas the web part sits in takes
+ * whatever is left over.
+ *
+ * The canvas stands in for a SharePoint section and was given min-height:100vh
+ * to say so, which is right on the bare harness where the page is nothing else.
+ * On a page of the site there is a footer under it, and a document shorter than
+ * the window left a band of empty canvas between the two - most of a screen of
+ * it on the HTML page, whose sample document is deliberately short.
+ *
+ * Flexing it instead does both halves of the job: the footer comes up to meet
+ * the content on a short document, and the canvas is as tall as the space
+ * rather than as tall as the window, so the web part in it has a full height to
+ * fill. The rule sits here rather than in either builder because both builders
+ * draw this chrome and only a page that has it needs this.
+ */
+body { display: flex; flex-direction: column; min-height: 100vh; }
+/*
+ * The furniture keeps the width it had as a block. Each of these caps itself at
+ * 1100px and centres with auto margins, which a block resolves against the full
+ * width and a flex item resolves against its own content: the buttons collapsed
+ * to their own width and sat in the middle of the page. Saying the width
+ * explicitly, in a box that counts its padding, puts them back.
+ */
+body > .demo-intro,
+body > #wp-probe,
+body > .demo-actions,
+body > .page { box-sizing: border-box; width: 100%; }
+.page {
+  /* Takes what is left. Beats the 100vh each builder writes, being later in
+     the same sheet, so the canvas is as tall as the space rather than as tall
+     as the window. */
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+/* Still centred and still capped: it is a flex item now, so it says so itself
+   rather than relying on a block box's auto margins. */
+.canvas { width: 100%; align-self: center; }
+
+/*
+ * And the web part inside it is left alone.
+ *
+ * Stretching it to fill the canvas was tried and taken out again. A web part on
+ * a SharePoint page is as tall as its document; a section does not stretch it,
+ * and a page that showed one stretched would be showing something a tenant will
+ * never see. These pages exist to be a direct representation of what happens in
+ * SharePoint, so the leftover space under a short document stays leftover
+ * space, which is what a real page does with it too.
+ */
 .site-footer-line { color: var(--site-ink); }
 .site-footer a { color: var(--site-accent); }
 
