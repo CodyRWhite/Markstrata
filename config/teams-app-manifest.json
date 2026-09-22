@@ -34,7 +34,8 @@
     }
   ],
   "supportedChannelTypes": [
-    "privateChannels"
+    "privateChannels",
+    "sharedChannels"
   ],
   "validDomains": [
     "*.sharepoint.com",

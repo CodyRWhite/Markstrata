@@ -124,17 +124,26 @@ behind the team, and everybody in the team can read them. A private channel has
 a site of its own, and its Files are in that site's library instead, visible to
 the members of that channel.
 
-Both apps can be added to a private channel, and a tab there reads that
-channel's own Files rather than the parent team's. Teams counts a private
-channel as a non-standard type and hides an app from one unless the app asks
-for it, so an app that does not ask is refused with "App isn't supported in
-private channels" - both Markstrata apps ask.
+Both apps can be added to a private or a shared channel, and a tab in either
+reads that channel's own Files rather than the parent team's. Teams counts both
+as non-standard channel types and hides an app from one unless the app asks for
+it, so an app that does not ask is refused with "App isn't supported in private
+channels" - both Markstrata apps ask for both.
 
-Shared channels are deliberately not offered. A shared channel can be shared
-with another tenant, and the tab is addressed from the SharePoint tenant the
-Teams client is signed in to, which does not resolve across tenants. Offering
-the app there would mean external members being shown a tab that cannot load
-for them.
+> [!NOTE] A shared channel with people from another organization
+> Guests cannot be in a shared channel at all. Microsoft's own words: "guests
+> (people with Microsoft Entra guest accounts in your organization) can't be
+> added to a shared channel". People from outside join one through B2B direct
+> connect instead, and they stay signed into their own tenant while doing it.
+>
+> Microsoft's guidance for tabs in that case is to request a token from the
+> visitor's home tenant, which SharePoint Framework handles for itself and no
+> manifest setting can change. So a shared channel inside your tenant works the
+> way a private one does; a participant from another organization may find the
+> tab does not load for them.
+>
+> A guest who needs to read a document belongs in a standard channel, where
+> guest access has always worked.
 
 Markstrata does not change any of this. It reads the file with the signed-in
 reader's own session, so a tab shows a document to exactly the people SharePoint

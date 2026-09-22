@@ -32,6 +32,35 @@ The website's HTML page showed the boundary and did not explain it, so the
 sample's colour stopping at the column edge read as something half-finished
 rather than as the containment it is. Its introduction says so now.
 
+### Shared channels, and what guests actually are
+
+Both Teams apps declare `sharedChannels` now as well as `privateChannels`. A
+shared channel keeps a SharePoint site of its own, exactly as a private one
+does, so the mechanism is the one already proved in a tenant: the tab is
+pointed at the channel's own site and reads that channel's own Files.
+
+The reasoning for declining it before was half right and half wrong, so it is
+worth correcting rather than quietly reversing.
+
+Guests cannot be in a shared channel at all. Microsoft's own words are that
+"guests (people with Microsoft Entra guest accounts in your organization) can't
+be added to a shared channel". People from outside join one through B2B direct
+connect and stay signed into their own tenant while doing it. So a guest who
+needs to read a document belongs in a standard channel, where guest access has
+always worked, and no setting here changes that.
+
+What remains true is the caution, narrowed to where it belongs. Microsoft's
+guidance for a tab serving a cross-tenant participant is to request a token
+from that person's home tenant, which SharePoint Framework handles for itself
+and no manifest setting can influence. So a shared channel inside the tenant
+works the way a private one does, and a participant from another organization
+may find the tab does not load for them. Declining the whole feature over that
+would have cost every in-tenant shared channel to guard a case the manifest
+cannot fix either way.
+
+Both manifests validated against Microsoft's published 1.17 schema, and the
+setting read back out of the built zips rather than off the build log.
+
 ### A tag can be moved without a checkout
 
 Finishing a rewritten history means moving every tag that points into the old
