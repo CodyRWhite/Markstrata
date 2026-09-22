@@ -208,7 +208,10 @@ function build() {
 
 /* Exported so the version rule can be checked without building a package.
    Run directly, this still builds. */
-module.exports = { teamsVersion: teamsVersion };
+/* APPS is exported so a test can ask what this writes rather than keeping a
+   second list of the same names. A third app added here has to reach the
+   release workflow too, and that is what the test checks. */
+module.exports = { teamsVersion: teamsVersion, APPS: APPS };
 
 if (require.main === module) {
   build().catch((error) => {
