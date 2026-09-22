@@ -96,15 +96,27 @@ jobs:
         id: teams
         run: |
           npm run teams
+          # Both of them. The solution ships two web parts and a Teams manifest
+          # allows one configurable tab, so there are two apps: the markdown
+          # one, which Sync to Teams deploys because it is inside the .sppkg,
+          # and the HTML one, which is not and has to be uploaded by hand. The
+          # second is the one that can only come from here, and it was the one
+          # missing: this step was written when there was a single app and
+          # nothing failed when a second appeared beside it.
           test -f teams/TeamsSPFxApp.zip
+          test -f teams/MarkstrataHtmlTeamsApp.zip
           # Attached to a pre-release and to nothing else. It is the only way
           # to test the Teams half on its own, which is what it was needed for
           # the day Sync to Teams refused the app and SharePoint reported
           # nothing useful. On a recommended release it is a liability: a Teams
           # app that installs without the SharePoint half it talks to, and that
           # goes stale in a tenant that keeps an old copy.
+          #
+          # Two paths in one value, split by the shell where they are used. The
+          # names carry no spaces, which is what makes that safe, and a test
+          # above would have failed already if either were missing.
           if [ "${{ inputs.recommended }}" != "true" ]; then
-            echo "path=teams/TeamsSPFxApp.zip" >> "$GITHUB_OUTPUT"
+            echo "path=teams/TeamsSPFxApp.zip teams/MarkstrataHtmlTeamsApp.zip" >> "$GITHUB_OUTPUT"
           else
             echo "path=" >> "$GITHUB_OUTPUT"
           fi

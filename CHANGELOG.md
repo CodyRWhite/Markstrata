@@ -85,6 +85,28 @@ back out. That is value-preserving but not spelling-preserving, and it would
 have re-encoded `strataDoc`, which is deliberately written with its slashes left
 alone so a shared address stays something a person can read.
 
+### Both Teams apps reach a release
+
+The release workflow built two Teams apps and published one.
+
+It was written when there was one, and a second arriving beside it broke
+nothing: the build kept writing both, the step that collects them kept naming
+the first, and the release came out with the markdown app attached and the HTML
+one nowhere. The one it left out is the only one a tenant can get from a
+release at all - the markdown app rides inside the .sppkg, where Sync to Teams
+finds it, and the HTML app does not, so downloading it from the release is how
+it is installed.
+
+Both are named now, and both are checked for before anything is published, so a
+missing file fails the run rather than publishing an incomplete release quietly.
+
+The list is no longer kept twice. The Teams builder exports what it writes and a
+test reads that, so a third app has to reach the workflow rather than having to
+be remembered. Proved against the workflow as it was, where it fails on the
+attachment and on the check.
+
+Caught before the tag rather than after, so no release has shipped with the gap.
+
 ### Show the document trail
 
 A new setting in both web parts, beside the toolbar's own. *Once a reader has
