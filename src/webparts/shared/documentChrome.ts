@@ -72,6 +72,19 @@ import {
   CLOCK_ICON, RELOAD_ICON, HISTORY_ICON, LINK_ICON, PRINT_ICON, themeIcon
 } from '../markstrata/utils/icons';
 import { withoutExtension } from './documentNaming';
+import { IPageCrumb, withTrail } from './pageTrail';
+import type { IOnwardTrail } from '../markstrata/utils/documentLinks';
+
+/**
+ * When the trail is drawn.
+ *
+ * `followed` is what it has always done: the bar appears once the reader has
+ * gone somewhere, and a page nobody navigated to has none. `always` draws it
+ * on every page, which is what a wiki wants where a reader arrives from search
+ * as often as from a link - the bar is then furniture rather than a record of
+ * a journey, and on a page with nothing behind it says only where they are.
+ */
+export type TrailVisibility = 'always' | 'followed' | 'never';
 
 export type TocPosition = 'left' | 'right' | 'inline' | 'off';
 
@@ -118,6 +131,29 @@ export interface IChromeOptions {
   documentTrail?: string[];
   /** A crumb was clicked, by its place in documentTrail. */
   onGoToCrumb?: (index: number) => void;
+  /**
+   * The pages the reader walked to get to this one, when the wiki is built as
+   * a SharePoint page per document rather than as one page swapping documents.
+   *
+   * These come off the address rather than out of this web part's memory, so
+   * they are drawn as links to those pages: crossing to one of them is a
+   * navigation, not something this web part can do. They sit in front of
+   * documentTrail, which is the part of the journey that happened here.
+   */
+  pageTrail?: IPageCrumb[];
+  /**
+   * The document on screen, named. The last crumb, and on a page nobody
+   * followed a link to it is the only one there is.
+   */
+  hereName?: string;
+  /** Whether the trail is drawn when there is no journey behind it. */
+  trailVisibility?: TrailVisibility;
+  /**
+   * This page, server relative, which is where a crumb for it points and what
+   * decides whether a link is in the same site collection. Undefined wherever
+   * there is no SharePoint page to name, which is the harness and the site.
+   */
+  pageAddress?: string;
   /**
    * The address of what is on screen, to put on the clipboard. Undefined
    * leaves the share button out, which is right wherever the address would
@@ -234,6 +270,46 @@ export class DocumentChrome {
     this.enhancer.trackActiveHeading(article, nav);
   }
 
+  /**
+   * Whether the trail bar is drawn at all.
+   *
+   * Three things can put something in it: a document opened here, pages walked
+   * to get to this one, and the author asking for it on every page. Without
+   * any of them there is nothing to say, and a bar saying nothing is furniture
+   * charging rent.
+   */
+  public shouldDrawTrail(options: IChromeOptions): boolean {
+    if (options.trailVisibility === 'never') {
+      return false;
+    }
+    if (options.openDocumentName && options.onGoToCrumb) {
+      return true;
+    }
+    if (options.pageTrail && options.pageTrail.length) {
+      return true;
+    }
+    return options.trailVisibility === 'always' && !!options.hereName;
+  }
+
+  /**
+   * What a link to another page in this site collection should carry away: the
+   * trail as it stands, with this page on the end of it.
+   *
+   * Undefined where there is no page to name, which leaves every link exactly
+   * as the author wrote it.
+   */
+  public onwardTrail(options: IChromeOptions): IOnwardTrail | undefined {
+    if (!options.pageAddress || !options.hereName
+      || options.trailVisibility === 'never') {
+      return undefined;
+    }
+    return {
+      here: options.pageAddress,
+      crumbs: (options.pageTrail || [])
+        .concat([{ label: options.hereName, url: options.pageAddress }])
+    };
+  }
+
   /*
    * The bar over a document the reader followed a link to.
    *
@@ -248,9 +324,35 @@ export class DocumentChrome {
     const list: HTMLElement = document.createElement('ol');
     list.className = 'strata-crumbs';
 
+    /*
+     * The pages walked to get here, in front of the documents opened once the
+     * reader arrived. They are links rather than buttons because each one is
+     * another SharePoint page: this web part cannot open them, only send the
+     * reader to them, and a link is what a reader can middle-click, copy and
+     * open in a new tab.
+     *
+     * Each crumb carries the trail as far as itself and no further, so going
+     * back three pages and forward again walks the same trail rather than
+     * piling a second copy of it onto the first.
+     */
+    const walked: IPageCrumb[] = options.pageTrail || [];
+    walked.forEach((crumb: IPageCrumb, index: number) => {
+      const item: HTMLElement = document.createElement('li');
+      item.className = 'strata-crumb';
+
+      const step: HTMLAnchorElement = document.createElement('a');
+      step.className = 'strata-crumb-link';
+      step.href = withTrail(crumb.url, walked.slice(0, index));
+      step.textContent = withoutExtension(crumb.label, this.ownExtensions);
+      step.title = `Go back to ${crumb.label}`;
+      item.appendChild(step);
+
+      list.appendChild(item);
+    });
+
     const trail: string[] = options.documentTrail && options.documentTrail.length
       ? options.documentTrail
-      : [options.openDocumentName as string];
+      : [(options.openDocumentName || options.hereName) as string];
     const goTo: (index: number) => void = options.onGoToCrumb as (index: number) => void;
 
     trail.forEach((name: string, index: number) => {

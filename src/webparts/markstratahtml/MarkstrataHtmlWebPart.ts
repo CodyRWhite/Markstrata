@@ -72,6 +72,7 @@ import '../markstrata/styles/print.css';
 import './styles/html.css';
 
 import { StrataWebPart, IUnconfiguredGuidance } from '../shared/StrataWebPart';
+import { trailFromSearch, withTrail } from '../shared/pageTrail';
 import { ContentEnhancer } from '../markstrata/utils/ContentEnhancer';
 import { SharePointService } from '../markstrata/utils/SharePointService';
 import { ThemeFamily } from '../markstrata/utils/ThemeManager';
@@ -453,6 +454,16 @@ export default class MarkstrataHtmlWebPart extends StrataWebPart<IMarkstrataHtml
           .concat(this.navigator.trailNames, [this.navigator.name])
         : undefined,
       onGoToCrumb: (index: number) => { void this.navigator.goTo(index - 1, true); },
+      /* And the pages walked before this one, which arrived on the address
+         because a navigation is the only thing that can carry them. */
+      pageTrail: trailFromSearch(window.location.search),
+      hereName: this.navigator.name
+        || (this.properties.fileMetadata ? this.properties.fileMetadata.name : undefined),
+      /* This page, with any trail already on it taken off: a crumb pointing
+         here has the trail as far as here written onto it when it is drawn,
+         and a trail nested inside a trail grows without end. */
+      pageAddress: withTrail(`${window.location.pathname}${window.location.search}`, []),
+      trailVisibility: this.properties.trailVisibility,
       /* Taken by the read path, never here: takeHeading consumes it, and an
          author in edit mode has no document on screen to land on. Consumed
          here it would be gone by the time they left edit mode. */

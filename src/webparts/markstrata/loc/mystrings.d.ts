@@ -91,6 +91,8 @@ declare interface IMarkstrataWebPartStrings {
 
   ToolbarGroupName: string;
   ToolbarVisibilityLabel: string;
+  TrailVisibilityLabel: string;
+  TrailHint: string;
   ToolbarHint: string;
   StickyToolbarLabel: string;
   StickyToolbarHint: string;

@@ -342,6 +342,13 @@
   opacity: 0.7;
 }
 
+/*
+ * A crumb is a button where the web part can open the document itself, and an
+ * anchor where the crumb is another SharePoint page and crossing to it is a
+ * navigation. They sit in one bar and have to read as one thing, so the rule
+ * covers both: the anchor gives up its underline here and takes it back on
+ * hover, which is what the buttons beside it already do.
+ */
 .strata-crumb-link {
   padding: 0;
   border: 0;
@@ -349,6 +356,7 @@
   font: inherit;
   color: var(--strata-link);
   cursor: pointer;
+  text-decoration: none;
 }
 
 .strata-crumb-link:hover,

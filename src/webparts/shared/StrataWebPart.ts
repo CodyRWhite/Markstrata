@@ -432,6 +432,9 @@ export abstract class StrataWebPart<TProps extends IStrataWebPartProps>
       tocWidthUnit: 'em',
       tocWidthValue: 15,
       toolbarVisibility: 'always',
+      /* What it has always done. A bar on every page is a change to every page
+         somebody already has, so it is asked for rather than arrived at. */
+      trailVisibility: 'followed',
       stickyToolbar: false,
       showExportButton: true,
       exportCoverPage: true,

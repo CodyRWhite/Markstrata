@@ -103,7 +103,7 @@ export class ViewModeRenderer {
 
        Without a toolbar there is nothing to sit inside, and it stands where
        the toolbar would have been. */
-    if (options.openDocumentName && options.onGoToCrumb) {
+    if (this.chrome.shouldDrawTrail(options)) {
       (toolbar || host).appendChild(this.chrome.buildOpenDocumentBar(options));
     }
 
@@ -153,7 +153,12 @@ export class ViewModeRenderer {
          the page's router, which would take the reader back to the configured
          document with the fragment still on the address. Smoothly, so it
          arrives the way the contents list already arrives. */
-      (heading: string) => { landOnHeading(article, heading, true); }
+      (heading: string) => { landOnHeading(article, heading, true); },
+      undefined,
+      /* A link to another page in this site collection carries the trail away
+         with it, so a wiki built as a page per document keeps its breadcrumbs
+         across the navigation. */
+      this.chrome.onwardTrail(options)
     );
     this.enhancer.enhanceImages(article, options.enableImageZoom !== false);
     this.enhancer.enhanceTables(article, options.enableTableSort !== false);

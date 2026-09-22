@@ -91,7 +91,12 @@ const state: any = {
   backToTop: 'right',
   showSourceInfo: true,
   pinMeta: false,
-  fillHeight: false
+  fillHeight: false,
+  /* The SharePoint page this harness stands in for, and the trail that
+     arrived on its address. Invented, like every other address here. */
+  pageAddress: '/sites/demo/SitePages/Handbook.aspx',
+  pageTrail: [],
+  trailVisibility: 'followed'
 };
 
 /* The options the processor is built from, as opposed to the ones the
@@ -290,6 +295,17 @@ function draw(showing?: string, heading?: string): void {
       ? ['handbook.md'].concat(navigator.trailNames, [navigator.name])
       : undefined,
     onGoToCrumb: (index: number) => { void navigator.goTo(index - 1, true); },
+    /*
+     * The page this stands in for. The harness runs from a file:// address,
+     * which is in no site collection at all, so a page address is made up here
+     * the way the rest of SharePoint is: without one, a link to another page
+     * would never be recognised as being in the same site and the trail could
+     * not be driven at all.
+     */
+    pageAddress: state.pageAddress,
+    pageTrail: state.pageTrail,
+    hereName: navigator.name || 'handbook.md',
+    trailVisibility: state.trailVisibility,
     shareAddress: () => (navigator.path
       ? `${window.location.href}?strataDoc=${encodeURIComponent(navigator.path)}`
       : window.location.href),
@@ -328,6 +344,17 @@ function log(message: string): void {
     draw();
   },
   setLibraryBase: setLibraryBase,
+  /* The trail that arrived on this page's address, and whether the bar is
+     drawn without one. Both stand in for what a real page gets from its
+     query string and its property pane. */
+  setPageTrail: (crumbs: any) => {
+    state.pageTrail = crumbs || [];
+    draw();
+  },
+  setTrailVisibility: (value: any) => {
+    state.trailVisibility = value;
+    draw();
+  },
   /* Swaps the document being shown, for a check that needs markdown the sample
      does not carry - a fence pointed at an address nothing answers, say. */
   setMarkdown: (markdown: string) => {

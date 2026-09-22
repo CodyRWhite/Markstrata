@@ -748,6 +748,141 @@ const LIBRARY_PATH = '/sites/demo/Documents';
     if (home.bar) throw new Error('the bar is still there at home');
   });
 
+  /*
+   * A wiki built as one SharePoint page per document rather than as one page
+   * swapping documents. The trail cannot live in the web part there, because
+   * every click unloads the page and takes the web part with it, so it rides
+   * on the address instead.
+   *
+   * Driven against the href rather than by following it. The harness is one
+   * page and cannot navigate to a second, but the whole mechanism is in what
+   * the link says before anybody clicks it - which is the point of writing it
+   * into the href rather than catching the click, and is what makes a middle
+   * click carry the trail too.
+   */
+  await step('a link to another page in this site carries the trail away', async () => {
+    await page.evaluate(() => window.harness.setLibraryBase('/sites/demo/runbooks',
+      '# Handbook\n\nSee [Deploying](/sites/demo/SitePages/Deploying.aspx).\n'));
+    await page.waitForTimeout(600);
+
+    const link = await page.evaluate(() => {
+      const found = document.querySelector('.strata-content a[href*="Deploying.aspx"]');
+      return found ? { href: found.getAttribute('href'), classes: found.className } : undefined;
+    });
+    if (!link) throw new Error('the page link is not in the document');
+    if (link.classes.indexOf('strata-page-link') === -1) {
+      throw new Error('the page link was not recognised: ' + link.classes);
+    }
+
+    /* Decoded twice on purpose: once off the query parameter, once per field.
+       That is the shape the other side reads it back in. */
+    const value = new URLSearchParams(link.href.split('?')[1] || '').get('strataTrail');
+    if (!value) throw new Error('no trail on the address: ' + link.href);
+    const crumbs = value.split('|').map((part) => part.split(',').map(decodeURIComponent));
+    if (crumbs.length !== 1 || crumbs[0][1] !== '/sites/demo/SitePages/Handbook.aspx') {
+      throw new Error('the trail reads ' + JSON.stringify(crumbs));
+    }
+  });
+
+  /*
+   * A crumb's label is a page title and this writes it into an address, so the
+   * boundary is the site collection: a title from one site has no business in
+   * a URL pointing at another. A link out of the site has to come through
+   * exactly as the author wrote it.
+   */
+  await step('a link to another site collection is left alone', async () => {
+    await page.evaluate(() => window.harness.setLibraryBase('/sites/demo/runbooks',
+      '# Handbook\n\nSee [Elsewhere](/sites/other/SitePages/Elsewhere.aspx).\n'));
+    await page.waitForTimeout(600);
+
+    const link = await page.evaluate(() => {
+      const found = document.querySelector('.strata-content a[href*="Elsewhere.aspx"]');
+      return found ? { href: found.getAttribute('href'), classes: found.className } : undefined;
+    });
+    if (!link) throw new Error('the link is not in the document');
+    if (link.href.indexOf('strataTrail') !== -1) {
+      throw new Error('a page title was written into an address in another site: ' + link.href);
+    }
+    if (link.classes.indexOf('strata-page-link') !== -1) {
+      throw new Error('a link out of the site was taken as a page link');
+    }
+  });
+
+  await step('a trail that arrived on the address is drawn as the way back', async () => {
+    await page.evaluate(() => {
+      window.harness.setPageTrail([
+        { label: 'Handbook.md', url: '/sites/demo/SitePages/Handbook.aspx' },
+        { label: 'Runbooks.md', url: '/sites/demo/SitePages/Runbooks.aspx' }
+      ]);
+      window.harness.setLibraryBase('/sites/demo/runbooks', '# Deploying\n\nHere.\n');
+    });
+    await page.waitForTimeout(600);
+
+    const seen = await page.evaluate(() => ({
+      crumbs: [...document.querySelectorAll('.strata-crumb-link')].map((crumb) => ({
+        text: (crumb.textContent || '').trim(),
+        href: crumb.getAttribute('href'),
+        tag: crumb.tagName
+      })),
+      here: ((document.querySelector('.strata-crumb-here') || {}).textContent || '').trim()
+    }));
+
+    if (seen.crumbs.length !== 2) {
+      throw new Error('the trail reads ' + JSON.stringify(seen.crumbs));
+    }
+    /* Anchors, not buttons: crossing to one of these is a navigation, and a
+       reader has to be able to middle-click it like any other link. */
+    if (seen.crumbs.some((crumb) => crumb.tag !== 'A')) {
+      throw new Error('a page crumb is not a link: ' + JSON.stringify(seen.crumbs));
+    }
+    /* The extension comes off a crumb, the same as anywhere else in the bar. */
+    if (seen.crumbs[0].text !== 'Handbook' || seen.crumbs[1].text !== 'Runbooks') {
+      throw new Error('the crumbs read ' + JSON.stringify(seen.crumbs.map((c) => c.text)));
+    }
+    /* The first crumb goes back to the start, so it carries nothing; the
+       second carries the one before it. Without this the trail would grow by
+       a copy of itself every time somebody went back and forward again. */
+    if (seen.crumbs[0].href.indexOf('strataTrail') !== -1) {
+      throw new Error('the first crumb carries a trail: ' + seen.crumbs[0].href);
+    }
+    const second = new URLSearchParams(seen.crumbs[1].href.split('?')[1] || '')
+      .get('strataTrail');
+    if (!second || second.split('|').length !== 1) {
+      throw new Error('the second crumb should carry one crumb, not ' + second);
+    }
+    if (!seen.here) throw new Error('the bar does not say where the reader is');
+  });
+
+  await step('on every page, or only once a reader has gone somewhere', async () => {
+    await page.evaluate(() => {
+      window.harness.setPageTrail([]);
+      window.harness.setLibraryBase('/sites/demo/runbooks', '# Handbook\n\nNothing followed.\n');
+    });
+    await page.waitForTimeout(500);
+    if (await page.locator('.strata-open-doc').count()) {
+      throw new Error('the default draws a bar on a page nobody navigated to');
+    }
+
+    await page.evaluate(() => window.harness.setTrailVisibility('always'));
+    await page.waitForTimeout(500);
+    const alone = await page.evaluate(() => ({
+      bar: !!document.querySelector('.strata-open-doc'),
+      links: document.querySelectorAll('.strata-crumb-link').length,
+      here: ((document.querySelector('.strata-crumb-here') || {}).textContent || '').trim()
+    }));
+    if (!alone.bar) throw new Error('asking for it on every page did not draw one');
+    if (alone.links !== 0) throw new Error('a way back appeared where there is nowhere to go');
+    if (!alone.here) throw new Error('the one crumb does not name the document');
+
+    await page.evaluate(() => window.harness.setTrailVisibility('never'));
+    await page.waitForTimeout(500);
+    if (await page.locator('.strata-open-doc').count()) {
+      throw new Error('never still drew a bar');
+    }
+    await page.evaluate(() => window.harness.setTrailVisibility('followed'));
+    await page.waitForTimeout(400);
+  });
+
   await step('a link to a heading in another document lands on it', async () => {
     await page.evaluate(() => window.harness.setLibraryBase('/sites/demo/runbooks',
       '# Handbook\n\nStraight to [[deploy#Rollback]].\n'

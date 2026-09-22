@@ -181,6 +181,13 @@ export class HtmlViewRenderer {
       backToTop: 'off',
       openDocumentName: undefined,
       onGoToCrumb: undefined,
+      /* And no trail of any kind. The preview is a picture of the document,
+         not a place a reader has navigated to, so there is no journey to draw
+         and no page for a link to carry one away to. */
+      pageTrail: undefined,
+      hereName: undefined,
+      pageAddress: undefined,
+      trailVisibility: 'never',
       openDocument: undefined,
       documentAddress: undefined,
       shareAddress: undefined,
@@ -214,7 +221,7 @@ export class HtmlViewRenderer {
       toolbar = this.chrome.buildToolbar(options);
       host.appendChild(toolbar);
     }
-    if (options.openDocumentName && options.onGoToCrumb) {
+    if (this.chrome.shouldDrawTrail(options)) {
       (toolbar || host).appendChild(this.chrome.buildOpenDocumentBar(options));
     }
 
@@ -506,7 +513,11 @@ export class HtmlViewRenderer {
       options.documentBase,
       options.openDocument,
       (heading: string) => { landOnHeading(article, heading, true); },
-      HTML_DOCUMENTS
+      HTML_DOCUMENTS,
+      /* A link to another page in this site collection carries the trail away
+         with it, so a wiki built as a page per document keeps its breadcrumbs
+         across the navigation. */
+      this.chrome.onwardTrail(options)
     );
     this.enhancer.enhanceImages(article, options.enableImageZoom !== false);
     this.enhancer.enhanceTables(article, options.enableTableSort !== false);

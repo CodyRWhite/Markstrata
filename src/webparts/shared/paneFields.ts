@@ -389,6 +389,16 @@ export function toolbarFields(properties: IStrataWebPartProps): Fields {
     // toolbar never sees printing either. Saying so here costs a line and
     // saves someone turning the toggle on and wondering why nothing changed.
     PropertyPaneLabel('toolbarHint', { text: strings.ToolbarHint }),
+    PropertyPaneDropdown('trailVisibility', {
+      label: strings.TrailVisibilityLabel,
+      options: [
+        { key: 'followed', text: 'Once a reader has followed a link' },
+        { key: 'always', text: 'On every page' },
+        { key: 'never', text: 'Never' }
+      ],
+      selectedKey: properties.trailVisibility
+    }),
+    PropertyPaneLabel('trailHint', { text: strings.TrailHint }),
     /* Nothing to stick when the toolbar is never drawn, and nothing worth
        sticking when only an author sees it. */
     PropertyPaneToggle('stickyToolbar', {

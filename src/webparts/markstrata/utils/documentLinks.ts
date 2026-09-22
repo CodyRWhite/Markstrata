@@ -20,6 +20,20 @@
 
 import { resolveAgainst } from './imagePaths';
 import { fetchableUrl } from './remoteDocuments';
+import { IPageCrumb, PAGE_LINK, sameSiteCollection, withTrail } from '../../shared/pageTrail';
+
+/**
+ * What a link to another SharePoint page should carry away with it.
+ *
+ * `here` is the page this document is being drawn on, server relative, and is
+ * what decides whether a link is in the same site collection. `crumbs` is the
+ * trail as it stands including this page, which is what the page on the other
+ * side will draw.
+ */
+export interface IOnwardTrail {
+  here: string;
+  crumbs: IPageCrumb[];
+}
 
 /** Opens off-site links in a new tab without handing over window.opener. */
 export function secureExternalLinks(container: HTMLElement): void {
@@ -64,7 +78,8 @@ export function followDocumentLinks(
   container: HTMLElement,
   base: string | undefined,
   open?: (path: string, heading: string) => void,
-  extensions?: RegExp
+  extensions?: RegExp,
+  onward?: IOnwardTrail
 ): void {
   const links: HTMLAnchorElement[] = Array.prototype.slice.call(
     container.querySelectorAll('a[href]')
@@ -111,6 +126,28 @@ export function followDocumentLinks(
     }
 
     const target: string = resolved || href;
+
+    /*
+     * A link to another SharePoint page, which is a wiki built as a page per
+     * document rather than as one page swapping documents. The trail is
+     * written onto the address so it survives the navigation.
+     *
+     * Written into the href here rather than caught as a click. That way a
+     * middle click, a Ctrl click, "copy link address" and a reader opening it
+     * in a new tab tomorrow all carry the trail as well, and nothing has to
+     * out-race the page's own router for the click.
+     *
+     * Only in the same site collection. A crumb's label is a page title, and
+     * this writes it into an address: a title from one site does not belong in
+     * a URL pointing at another, so a link out of the site is left exactly as
+     * it was.
+     */
+    if (onward && isPage(target) && sameSiteCollection(onward.here, target)) {
+      link.setAttribute('href', withTrail(target, onward.crumbs));
+      link.classList.add('strata-page-link');
+      return;
+    }
+
     if (!open || !isDocument(target, extensions)) {
       return;
     }
@@ -261,6 +298,11 @@ export const HTML_DOCUMENTS: RegExp = /\.(html?)$/i;
 function isDocument(href: string, extensions?: RegExp): boolean {
   const path: string = href.split('#')[0].split('?')[0];
   return (extensions || MARKDOWN_DOCUMENTS).test(path);
+}
+
+/** Whether a link points at a SharePoint page rather than at a file. */
+function isPage(href: string): boolean {
+  return PAGE_LINK.test(href.split('#')[0].split('?')[0]);
 }
 
 

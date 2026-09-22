@@ -61,6 +61,7 @@ import './styles/modifiers.css';
 import './styles/print.css';
 
 import { StrataWebPart } from '../shared/StrataWebPart';
+import { trailFromSearch, withTrail } from '../shared/pageTrail';
 import { MarkdownProcessor, IMarkdownProcessorOptions } from './utils/MarkdownProcessor';
 import { MermaidRenderer } from './utils/MermaidRenderer';
 import { ContentEnhancer } from './utils/ContentEnhancer';
@@ -318,6 +319,16 @@ export default class MarkstrataWebPart extends StrataWebPart<IMarkstrataWebPartP
       /* Crumb zero is the configured document, which sits before the trail
          the navigator keeps, so everything after it is offset by one. */
       onGoToCrumb: (index: number) => { void this.navigator.goTo(index - 1, true); },
+      /* And the pages walked before this one, which arrived on the address
+         because a navigation is the only thing that can carry them. */
+      pageTrail: trailFromSearch(window.location.search),
+      hereName: this.navigator.name
+        || (this.properties.fileMetadata ? this.properties.fileMetadata.name : undefined),
+      /* This page, with any trail already on it taken off: a crumb pointing
+         here has the trail as far as here written onto it when it is drawn,
+         and a trail nested inside a trail grows without end. */
+      pageAddress: withTrail(`${window.location.pathname}${window.location.search}`, []),
+      trailVisibility: this.properties.trailVisibility,
       landOnHeading: landOn,
       /* Only from a library: a preview is addressed by a file's id in this
          site, and a document fetched from a URL has neither. */
