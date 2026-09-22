@@ -423,7 +423,11 @@ async function buildHtmlWebPartPage() {
 <title>${htmlPart && pageId ? site.page(pageId).title : 'Markstrata - the HTML web part itself'}</title>
 ${htmlPart && pageId ? brandHead(site.page(pageId).title, site.page(pageId).description) : ''}
 ${htmlLinks}
-${pageStyles(null)}
+${/* The site's own chrome CSS, when this page IS a page of the site rather
+      than the development harness. Passing null unconditionally drew the
+      header, the nav and the footer with none of the CSS that lays them out,
+      and left the harness log box on a published page. */''}
+${pageStyles(htmlPart ? pageId : null)}
 <style>
   .wp-intro { max-width: 1100px; margin: 0 auto; padding: 18px 22px 0;
               color: var(--site-intro); font: 15px/1.6 system-ui, sans-serif; }

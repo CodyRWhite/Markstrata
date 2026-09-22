@@ -192,6 +192,31 @@ Fluent glyph undid half the point of giving the two separate names. Same editor,
 same tilt, same palette; one shows markdown source and the other an HTML file
 with a `<style>` block in it.
 
+### The published HTML page had no chrome
+
+Reported after the release was cut: the /html/ page on the site was broken. The
+header lockup came out at its full intrinsic size, the two navigation groups ran
+together as one line of underlined links, and the harness's own debugging log
+box sat in the corner of a published page.
+
+The page is built by a different entry point from every other page on the site,
+because it is the HTML web part running rather than a document about it, and
+that entry point asked for the page styles with the page identity hard-coded to
+null. One argument decides two things: whether the site's chrome CSS is included
+and whether the log box is hidden. So the builder drew the header, the nav and
+the footer and then shipped none of the CSS that lays them out.
+
+It asks with the identity now, when the page is a page of the site rather than
+the development harness.
+
+The check that should have caught it was asking the wrong question. It tested
+`document.querySelector('.site-header')`, which the markup answers on its own -
+and the markup was never the part that was missing. It measures three things now,
+each of a rule in the chrome stylesheet: the lockup against the 30px cap it is
+given, a navigation link's underline, and whether the log box is showing. A
+missing stylesheet fails all three and a moved rule fails one. Confirmed by
+putting the fault back: the lockup measures 128px and the driver says so.
+
 ### Driven in a real browser
 
 Everything that matters about the HTML web part is a question only a browser can

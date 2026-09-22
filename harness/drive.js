@@ -1973,6 +1973,26 @@ const LIBRARY_PATH = '/sites/demo/Documents';
       toolbar: !!document.querySelector('#host .strata-toolbar'),
       header: !!document.querySelector('.site-header'),
       footer: !!document.querySelector('.site-footer'),
+      /*
+       * Whether the chrome is drawn, not merely present. Asking only whether
+       * .site-header exists is a question the markup answers on its own, and
+       * it answered yes for a published page whose header had none of the CSS
+       * that lays it out: the lockup came out at its full intrinsic size and
+       * the nav read as one run of underlined links. Three measurements, each
+       * of a rule in CHROME_CSS, because a missing stylesheet fails all three
+       * and a moved rule fails one.
+       */
+      logoHeight: document.querySelector('.site-logo')
+        ? Math.round(document.querySelector('.site-logo').getBoundingClientRect().height)
+        : -1,
+      navUnderline: document.querySelector('.site-nav-link')
+        ? window.getComputedStyle(document.querySelector('.site-nav-link')).textDecorationLine
+        : 'no nav link',
+      /* And the harness's own log box, which is hidden on a page of the site
+         and was left showing in the corner of the published one. */
+      logShowing: document.getElementById('log')
+        ? window.getComputedStyle(document.getElementById('log')).display !== 'none'
+        : false,
       /* The document's own <style> block, which is only there if the styles
          were lifted out of the file before the sanitiser reached them. */
       note: document.querySelector('#host .note')
@@ -1989,6 +2009,17 @@ const LIBRARY_PATH = '/sites/demo/Documents';
     if (!seen.toolbar) throw new Error('no toolbar');
     if (!seen.header || !seen.footer) {
       throw new Error('the page is missing the site chrome every other page has');
+    }
+    if (seen.logoHeight < 0 || seen.logoHeight > 40) {
+      throw new Error('the site header is unstyled: .site-logo is capped at 30px by '
+        + 'CHROME_CSS and measures ' + seen.logoHeight + 'px');
+    }
+    if (seen.navUnderline !== 'none') {
+      throw new Error('the site nav is unstyled: a nav link should have no underline '
+        + 'and reads ' + JSON.stringify(seen.navUnderline));
+    }
+    if (seen.logShowing) {
+      throw new Error('the harness log box is showing on a page of the site');
     }
     if (seen.note !== '4px') {
       throw new Error('the document\u2019s own styles did not survive publication: ' + seen.note);
