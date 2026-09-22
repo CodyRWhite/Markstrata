@@ -42,7 +42,7 @@
 
 import { ThemeFamily, ColorMode } from '../markstrata/utils/ThemeManager';
 import { BackToTop } from '../markstrata/utils/backToTop';
-import { TocPosition } from './documentChrome';
+import { TocPosition, TrailVisibility } from './documentChrome';
 import { TocWidthMode, TocWidthUnit } from '../markstrata/utils/tocWidth';
 import { IFileMetadata } from '../markstrata/utils/SharePointService';
 
@@ -94,6 +94,16 @@ export interface IStrataWebPartProps {
   // -------------------------------------------------------------------- chrome
 
   toolbarVisibility: 'always' | 'editing' | 'never';
+  /**
+   * When the trail of documents and pages is drawn.
+   *
+   * `followed` is what this has always done and stays the default: the bar
+   * appears once a reader has gone somewhere. `always` suits a wiki built as a
+   * SharePoint page per document, where a reader arrives from search as often
+   * as from a link and the bar is navigation rather than a record of a
+   * journey.
+   */
+  trailVisibility: TrailVisibility;
   /** Keep the toolbar in view while the document scrolls under it. */
   stickyToolbar: boolean;
   showExportButton: boolean;

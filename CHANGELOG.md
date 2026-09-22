@@ -8,6 +8,86 @@ is normally zero. `scripts/set-version.js` stamps it when a release is cut.
 
 Entries below 0.0.10.0 were written before the switch and are three-part.
 
+## 0.0.23.0
+
+### The trail survives a whole page load
+
+A wiki can be built two ways, and only one of them kept its breadcrumbs.
+
+One SharePoint page whose web part swaps documents as links are followed is the
+shape everything so far was written for: the page never unloads, so the trail
+can live in the web part and ride in the browser's history entry. The other
+shape is a page per document, which is what a wiki becomes when its pages want
+their own addresses, their own place in navigation and their own permissions.
+There, following a link is a navigation. The page unloads, the web part goes
+with it, and the one that starts on the other side has no way of knowing where
+the reader came from. The history entry is no help either: that state belongs to
+the entry it was pushed into, and a new page makes a new one.
+
+So the trail travels on the address, which is the one thing that survives a
+navigation and arrives before the web part starts. A link to another page in the
+same site collection is given the trail as a query parameter, and the page on
+the other side reads it and carries on.
+
+It is written into the link when the document is drawn rather than caught as a
+click. That way a middle click, a Ctrl click, "copy link address" and a reader
+opening it in a new tab tomorrow all carry the trail as well, and nothing has to
+out-race the page's own router for a click.
+
+Only inside the site collection. A crumb's label is a page title and this writes
+it into an address, so a title from one site has no business in a URL pointing
+at another; a link out of the site is left exactly as the author wrote it.
+
+Each crumb carries the trail as far as itself and no further, so going back
+three pages and forward again walks the same trail rather than piling a second
+copy onto the first.
+
+### Every way it can fail, it fails to no trail
+
+The parameter arrives from outside, so anything can be in it. A crumb is drawn
+as a link and a link is something a reader clicks, so only a path on this server
+is accepted: `javascript:`, another host, a protocol-relative address and a
+relative one are all refused rather than rendered. A crumb missing either half,
+or carrying something that is not valid encoding, costs that crumb and not the
+trail around it. A parameter that is absent, truncated or written by hand into
+nonsense yields an empty trail, and the bar is drawn from what the page knows on
+its own.
+
+The encoding is built so that a page can be called anything. Fields are joined
+by a comma and crumbs by a pipe, both of which are characters encodeURIComponent
+always escapes, so neither can survive inside a field and the split cannot
+happen in the wrong place. Eight crumbs are kept, and the far end is dropped
+before the near one, because the near end is the part a reader would use and an
+address that grows without limit eventually stops being followed at all.
+
+The query is spliced by hand rather than read into URLSearchParams and written
+back out. That is value-preserving but not spelling-preserving, and it would
+have re-encoded `strataDoc`, which is deliberately written with its slashes left
+alone so a shared address stays something a person can read.
+
+### Show the document trail
+
+A new setting in both web parts, beside the toolbar's own. *Once a reader has
+followed a link* is what the bar has always done and stays the default, so
+nothing changes for a page that already exists. *On every page* suits a wiki
+where readers arrive from search as often as from a link: the bar becomes
+furniture rather than a record of a journey, and a page nobody navigated to says
+only where the reader is. *Never* turns it off.
+
+A crumb from the address is an anchor rather than a button, because crossing to
+it is a navigation this web part cannot perform, and a reader has to be able to
+middle-click it like any other link. Both kinds sit in one bar and read as one
+thing: the anchor gives up its underline and takes it back on hover, which is
+what the buttons beside it already did.
+
+### Proved by breaking it
+
+Nineteen tests over the encoding, including the names that would break a
+carelessly chosen separator: commas, pipes, per cent signs and accents. Four
+driver steps in a real browser, each confirmed to fail first - removing the link
+rewriting fails the step about the href, and emptying the crumbs fails the step
+about the bar.
+
 ## 0.0.22.0
 
 A second web part: **Markstrata - HTML**. The markdown one is renamed

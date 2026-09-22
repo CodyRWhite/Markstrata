@@ -18,6 +18,7 @@
     "src/webparts/shared/documentNaming.ts",
     "src/webparts/shared/headingIds.ts",
     "src/webparts/shared/htmlFrame.ts",
+    "src/webparts/shared/pageTrail.ts",
     "src/webparts/markstrata/utils/MarkdownProcessor.ts",
     "src/webparts/markstrata/utils/htmlSanitiser.ts",
     "src/webparts/markstrata/utils/ThemeManager.ts",

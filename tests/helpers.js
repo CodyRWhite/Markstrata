@@ -94,6 +94,7 @@ module.exports = {
   htmlDocument: shared('htmlDocument'),
   documentNaming: shared('documentNaming'),
   headingIds: shared('headingIds'),
+  pageTrail: shared('pageTrail'),
   htmlFrame: shared('htmlFrame'),
   scrolling: lib('scrolling')
 };

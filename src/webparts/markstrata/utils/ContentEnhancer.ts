@@ -39,7 +39,9 @@ import { attachCodeZoom } from './codeZoom';
 import { HeadingTracker, ITocEntry, adoptAuthoredToc, buildToc, collectHeadings } from './contents';
 import { CopyFeedback } from './copyFeedback';
 import { attachDiagramTools } from './diagramTools';
-import { DocumentLinkWatcher, followDocumentLinks, secureExternalLinks } from './documentLinks';
+import {
+  DocumentLinkWatcher, IOnwardTrail, followDocumentLinks, secureExternalLinks
+} from './documentLinks';
 import { HeightFiller } from './fillHeight';
 import { enhanceImages } from './images';
 import { FileIdLookup, buildOfficeCards } from './officeCards';
@@ -107,9 +109,10 @@ export class ContentEnhancer {
     base: string | undefined,
     open?: (path: string, heading: string) => void,
     onAnchor?: (heading: string) => void,
-    extensions?: RegExp
+    extensions?: RegExp,
+    onward?: IOnwardTrail
   ): void {
-    followDocumentLinks(container, base, open, extensions);
+    followDocumentLinks(container, base, open, extensions, onward);
     /* Marking the links is per render; catching the click is not, and has to
        be taken down again when the web part goes away.
 

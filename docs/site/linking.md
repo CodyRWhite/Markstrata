@@ -125,6 +125,41 @@ browser's own Back button walks the same path. The two cannot disagree about
 where the reader has been, which is what happened when the bar simply said
 "Back" and always meant the beginning.
 
+### A wiki built as one page per document
+
+The trail above lives inside the web part, which is why it works: one SharePoint
+page, one web part, and the document swaps underneath as links are followed.
+
+A wiki can be built the other way, as a SharePoint page per document, so every
+document has its own address, its own place in navigation and its own
+permissions. Following a link there is a navigation: the page unloads, the web
+part goes with it, and there is nothing left to remember the way back.
+
+So the trail travels on the address instead. A link to another page in the same
+site collection is given the trail as a query parameter when the document is
+drawn, and the web part on the other side reads it and carries on where the last
+one left off.
+
+```markdown
+[Deploying](/sites/wiki/SitePages/Deploying.aspx)
+```
+
+Written into the link rather than caught as a click, which means a middle click,
+a Ctrl click, "copy link address" and a reader opening it in a new tab tomorrow
+all carry the trail too.
+
+> [!NOTE] Only inside the site collection
+> A crumb carries a page's title, and this writes that title into an address. A
+> title from one site has no business in a URL pointing at another, so a link
+> out of the site collection is left exactly as the author wrote it and starts
+> the reader on a clean trail when they arrive.
+
+Set **Show the document trail** to *On every page* in the property pane if
+readers arrive from search as often as from a link. The bar is then furniture
+rather than a record of a journey, and a page nobody navigated to says only
+where the reader is. The default, *Once a reader has followed a link*, is the
+behaviour described above and changes nothing.
+
 > [!NOTE] Nothing about this is saved into the page
 > The web part is still configured to show the file somebody chose for it, and
 > the next reader starts there. Version history is hidden while a followed

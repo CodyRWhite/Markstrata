@@ -94,6 +94,8 @@ define([], function () {
     "AllowHtmlHint": "Leave off unless you trust everyone who can edit the source. With it on, HTML in the markdown is rendered as-is.",
     "ToolbarGroupName": "Toolbar",
     "ToolbarVisibilityLabel": "Show toolbar",
+    "TrailVisibilityLabel": "Show the document trail",
+    "TrailHint": "The breadcrumbs above a document. Once a reader has followed a link is the usual choice. On every page suits a wiki built as one SharePoint page per document, where a reader arrives from search as often as from a link: a link to another page in this site then carries the trail with it, so the breadcrumbs survive the move.",
     "ToolbarHint": "The reload, version history, theme and export controls all live in the toolbar. With \"Only while editing the page\", readers of the page never see them.",
     "StickyToolbarLabel": "Keep the toolbar in view",
     "StickyToolbarHint": "The toolbar stays at the top while the document scrolls under it, which suits a long document somebody reads a section at a time. It comes to rest below the page's own bars rather than behind them, and headings scrolled to land below it.",
