@@ -190,6 +190,11 @@ quietly matches nothing.
   part's surface either side of it. So \`body { background: ... }\` colours
   behind your document and not behind the toolbar and the footer around it.
   There is no selector that reaches those; they belong to the web part.
+  That boundary is deliberate rather than an oversight. The toolbar's own text
+  takes its colour from the theme, so a document painting the whole web part
+  dark on a page set to light would leave Markstrata's controls unreadable with
+  nothing you could write to fix them. Your background stops where your
+  document stops, and the surface either side stays the theme's.
 - A selector starting with \`[data-strata-mode]\` or any other
   \`[data-strata-...]\` is attached to that same element, which is what makes
   rule 2 above work.
