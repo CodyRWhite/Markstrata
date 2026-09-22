@@ -10,6 +10,28 @@ Entries below 0.0.10.0 were written before the switch and are three-part.
 
 ## 0.0.24.0
 
+### Why a document's background stops where it does
+
+The previous release corrected the CSS contract to say that `body`, `html`,
+`:root` and `:host` reach the document's own column rather than the whole web
+part. That left the obvious question open: whether the mapping was right, or
+just what the code happened to do.
+
+It is right, and the contract now says why rather than leaving an author to
+wonder.
+
+The toolbar's text takes its colour from the theme, because it is Markstrata's
+furniture and not the author's. If a document's background painted the whole web
+part, an author writing a dark background on a page set to light would leave
+those controls dark on dark - unreadable, and unfixable, because there is no
+selector that reaches them and there should not be. So a document's background
+stops where the document stops, and the surface either side stays the theme's.
+The author owns their document; the web part owns its chrome.
+
+The website's HTML page showed the boundary and did not explain it, so the
+sample's colour stopping at the column edge read as something half-finished
+rather than as the containment it is. Its introduction says so now.
+
 ### A tag can be moved without a checkout
 
 Finishing a rewritten history means moving every tag that points into the old
