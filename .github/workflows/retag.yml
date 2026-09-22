@@ -1,0 +1,100 @@
+name: Move a tag
+
+# Points an existing tag at a different commit, by hand:
+#   Actions -> Move a tag -> Run workflow -> v0.0.21.0  48e3a719...
+#
+# WHY THIS EXISTS
+# A tag is a reference, so a rewritten history is not rewritten until every tag
+# pointing into the old one has moved. Withdrawing the release is one way and
+# `Retire releases` does that, but it takes the release with it: a version
+# somebody installed stops being downloadable to fix a tag. This moves the tag
+# and leaves the release where it is.
+#
+# It is also the only way to reach a tag from a sandbox whose git remote
+# refuses tag pushes, which is the same reason `Retire releases` exists.
+#
+# WHAT IT REFUSES
+# A commit that is not on the default branch. That is the exact fault being
+# repaired - v0.0.21.0 pointed at a commit the rewrite left orphaned - and a
+# tool for fixing it that can commit it again is not worth having. It also
+# refuses a tag that does not already exist, so this can retarget and never
+# invent.
+#
+# The ancestry check earns its keep twice over. A commit on the default branch
+# is a commit CI has run over, which includes the check that no real tenant's
+# host, database or document identifier is in the tree. So a tag moved by this
+# lands on content that has been looked at, rather than on whatever SHA
+# somebody pasted.
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to move, with its leading v (e.g. v0.0.21.0)'
+        required: true
+      commit:
+        description: 'Commit to move it to, full 40 character SHA, and it must be on the default branch'
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  retag:
+    name: Move the tag
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      # Everything, because the whole point is to ask where a commit sits in
+      # the history, and a shallow clone cannot answer that.
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Move it
+        env:
+          TAG: ${{ inputs.tag }}
+          COMMIT: ${{ inputs.commit }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          set -euo pipefail
+
+          # Retarget, never invent. A tag that does not exist is somebody
+          # typing the wrong name, and creating it silently would be worse
+          # than refusing.
+          if ! git rev-parse -q --verify "refs/tags/$TAG" >/dev/null; then
+            echo "There is no tag called $TAG. This moves a tag; it does not create one."
+            exit 1
+          fi
+
+          if ! git cat-file -e "${COMMIT}^{commit}" 2>/dev/null; then
+            echo "$COMMIT is not a commit in this repository."
+            exit 1
+          fi
+
+          # The guard. A tag on a commit nobody can reach answers "what
+          # shipped?" with a straight face and gets it wrong.
+          if ! git merge-base --is-ancestor "$COMMIT" "origin/$DEFAULT_BRANCH"; then
+            echo "$COMMIT is not on $DEFAULT_BRANCH."
+            echo "A tag pointing off the branch is the fault this exists to repair,"
+            echo "so it will not make another one."
+            exit 1
+          fi
+
+          WAS=$(git rev-parse "refs/tags/$TAG^{commit}")
+          if [ "$WAS" = "$(git rev-parse "${COMMIT}^{commit}")" ]; then
+            echo "$TAG already points at $COMMIT. Nothing to do."
+            exit 0
+          fi
+
+          # Annotated, so what is left behind says who moved it and why, and
+          # the tag does not quietly become a different kind of object than
+          # the one it replaced.
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -f -a "$TAG" "$COMMIT" -m "Markstrata $TAG, moved onto $DEFAULT_BRANCH"
+          git push --force origin "refs/tags/$TAG"
+
+          echo "Moved $TAG"
+          echo "  from $WAS"
+          echo "  to   $COMMIT"

@@ -8,6 +8,39 @@ is normally zero. `scripts/set-version.js` stamps it when a release is cut.
 
 Entries below 0.0.10.0 were written before the switch and are three-part.
 
+## 0.0.24.0
+
+### A tag can be moved without a checkout
+
+Finishing a rewritten history means moving every tag that points into the old
+one, and there was no way to do that from here: the git remote this is built
+against refuses tag pushes, which is the same reason `Retire releases` exists.
+Withdrawing the release was the only lever, and it takes the release with it -
+a version somebody installed stops being downloadable in order to fix a tag.
+
+`Move a tag` does the narrow thing instead. It is run by hand from the Actions
+tab, takes a tag and a commit, and leaves the release where it is.
+
+What it refuses is the point. A commit that is not on the default branch is
+refused, because that is the exact fault being repaired: `v0.0.21.0` points at
+a commit the rewrite left orphaned, and a tool for fixing that which can cause
+it again is not worth having. A tag that does not already exist is refused too,
+so this retargets and never invents.
+
+The ancestry check earns its keep twice. A commit on the default branch is a
+commit CI has run over, which includes the check that no real tenant's host,
+database or document identifier is in the tree - so a tag moved by this lands
+on content that has been looked at rather than on whatever SHA was pasted into
+the box.
+
+The guard is one line of shell and would be easy to lose in a tidy-up, so a
+test asserts it is there, along with the default branch being read from the
+repository rather than written in, and the workflow having no trigger but the
+manual one. Confirmed by removing the guard and watching the test fail. The
+test reads the workflow's text, which is all it can do without running GitHub
+Actions: it catches the guard being deleted and not the guard being subtly
+wrong, and says so rather than implying otherwise.
+
 ## 0.0.23.0
 
 ### The trail survives a whole page load
