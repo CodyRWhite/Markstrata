@@ -154,6 +154,32 @@ all carry the trail too.
 > out of the site collection is left exactly as the author wrote it and starts
 > the reader on a clean trail when they arrive.
 
+#### One search result per document, not two
+
+A wiki built this way is indexed twice over. SharePoint crawls the page, which
+carries the rendered text because the web part publishes it, and it crawls the
+source file in the library as a file in its own right. Searching then returns
+both: the page, which is the one worth opening, and the `.md` file, which hands
+the reader raw markdown or a download.
+
+The fix is in SharePoint rather than here, and it is one setting. In the
+library holding the source files, go to **Library settings**, then **Advanced
+settings**, and in the **Search** section set **Allow items from this document
+library to appear in search results** to **No**.
+
+The pages keep their results. Only the files stop having results of their own,
+which is what leaves a clean list.
+
+Two things to know before doing it. The setting is for the whole library, so
+keep the source files in a library of their own if anything else in there
+should still be findable on its own. And it changes the index rather than the
+index right now: entries already crawled drop out on the next crawl rather than
+immediately.
+
+It changes nothing about permissions. Search results are security trimmed
+whatever this is set to, and a reader who could not open a file before still
+cannot.
+
 Set **Show the document trail** to *On every page* in the property pane if
 readers arrive from search as often as from a link. The bar is then furniture
 rather than a record of a journey, and a page nobody navigated to says only

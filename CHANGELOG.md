@@ -42,6 +42,26 @@ Each crumb carries the trail as far as itself and no further, so going back
 three pages and forward again walks the same trail rather than piling a second
 copy onto the first.
 
+### One search result per document
+
+A wiki built as a page per document is indexed twice: SharePoint crawls the
+page, which carries the rendered text because the web part publishes it, and it
+crawls the source file in the library as a file in its own right. Searching
+returns both, and the second one hands a reader raw markdown or a download.
+
+Nothing in the web part can prevent that. The file is a file and the library
+indexes it, which is the library doing its job. The lever is SharePoint's own,
+so the documentation now says where it is: in the library holding the source
+files, Library settings, Advanced settings, and in the Search section set
+"Allow items from this document library to appear in search results" to No. The
+pages keep their results; only the files stop having results of their own.
+
+Written down with the two things that bite. It is a whole library at a time, so
+the source files want a library to themselves if anything else in there should
+still be findable. And it changes the index rather than the index right now:
+what is already crawled drops out on the next crawl. It does not touch
+permissions - results are security trimmed either way.
+
 ### Every way it can fail, it fails to no trail
 
 The parameter arrives from outside, so anything can be in it. A crumb is drawn
