@@ -54,7 +54,7 @@
     "@microsoft/rush-stack-compiler-4.7": "0.1.1",
     "@microsoft/sp-build-web": "1.23.2",
     "@microsoft/sp-module-interfaces": "1.23.2",
-    "@rushstack/eslint-config": "4.6.6",
+    "@rushstack/eslint-config": "4.7.0",
     "@types/markdown-it": "14.2.0",
     "@types/webpack-env": "~1.18.0",
     "ajv": "8.20.0",
