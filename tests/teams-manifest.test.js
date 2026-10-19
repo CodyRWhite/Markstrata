@@ -248,21 +248,36 @@ test('the tab points at the web part that is actually deployed', () => {
  * available tenant wide rather than installed site by site, so a channel's new
  * site collection needs nothing done to it.
  *
- * sharedChannels is the other value this property takes and is deliberately
- * not asked for. A shared channel can be shared with another tenant, and the
- * webApplicationInfo resource is anchored on {teamSiteDomain}; Microsoft's own
- * guidance is that it "will not work cross-tenant/cross-domain", so offering
- * the app there would mean external members being shown a tab that cannot
- * load for them. Declining is better than that.
+ * Shared channels are asked for as well, and the reasoning is worth keeping
+ * because it is not the reasoning this file carried first.
+ *
+ * A shared channel also keeps a SharePoint site of its own, so the mechanism
+ * is the one private channels already proved in a tenant: the tab is pointed
+ * at the channel's own site and reads that channel's own Files.
+ *
+ * What differs is who can be in one. Guests cannot: Microsoft's own words are
+ * that "guests (people with Microsoft Entra guest accounts in your
+ * organization) can't be added to a shared channel". People from outside join
+ * a shared channel through B2B direct connect instead, and they stay signed
+ * into their own tenant while doing it. Microsoft's guidance for tabs in that
+ * case is to request a token from the user's home tenant, which is not
+ * something this manifest decides and not something the web part does for
+ * itself - SharePoint Framework handles its own authentication.
+ *
+ * So the honest position is: shared channels inside the tenant work the way
+ * private ones do, and a cross-tenant participant may find the tab will not
+ * load for them. Declining the whole feature over that would cost every
+ * in-tenant shared channel to protect a case the manifest cannot fix either
+ * way.
  */
 [
   ['the markdown app', manifest],
   ['the HTML app', htmlManifest]
 ].forEach(([which, subject]) => {
-  test(`${which} can be added to a private channel`, () => {
-    assert.deepEqual(subject.supportedChannelTypes, ['privateChannels'],
-      'a private channel has its own site and Teams hides the app from one '
-      + 'unless the manifest names the channel type');
+  test(`${which} can be added to a private or a shared channel`, () => {
+    assert.deepEqual(subject.supportedChannelTypes, ['privateChannels', 'sharedChannels'],
+      'a private or shared channel has its own site and Teams hides the app '
+      + 'from one unless the manifest names the channel type');
   });
 });
 
