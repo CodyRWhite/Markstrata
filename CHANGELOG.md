@@ -32,6 +32,25 @@ The website's HTML page showed the boundary and did not explain it, so the
 sample's colour stopping at the column edge read as something half-finished
 rather than as the containment it is. Its introduction says so now.
 
+### A sample worth the frame it is shown in
+
+The website publishes the HTML web part running, with a sample document of four
+paragraphs and a two-row table. On a tall window that left most of a screen of
+empty canvas under the card.
+
+The canvas was honest - a real SharePoint page shows the same under a short web
+part, and the previous release deliberately stopped stretching the web part to
+hide it - so the fix is a document worth the frame rather than a frame that
+lies about the document. The sample is a runbook now rather than a fragment of
+one: 1244px of document where there were 539, and nothing below it at any
+window height.
+
+What was already there is untouched, because it is all load bearing: the style
+block whose three rules are looked for, the one table the table checks count,
+and the three links whose handling differs. The addition is prose and headings
+only. A second table would change what the table checks measure, and a fourth
+link would change which one a check finds by its address.
+
 ### A tag can be moved without a checkout
 
 Finishing a rewritten history means moving every tag that points into the old

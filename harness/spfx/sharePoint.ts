@@ -244,6 +244,44 @@ const NOTES_HTML: string = [
   '    <thead><tr><th>Step</th><th>Minutes</th></tr></thead>',
   '    <tbody><tr><td>Drain</td><td>4</td></tr><tr><td>Swap</td><td>2</td></tr></tbody>',
   '  </table>',
+  /*
+   * Everything above is load bearing and was here first. Everything below is
+   * length, and length is the point of it: the website publishes this document
+   * as the HTML web part running, and a document of four paragraphs left most
+   * of a tall window showing empty canvas under the card. The canvas is honest
+   * - a real page shows the same under a short web part - so the fix is a
+   * document worth the frame rather than a frame that lies about the document.
+   *
+   * It stays prose, one table and the same three links. A second table would
+   * change what the table checks count, and a fourth link would change which
+   * one a check finds by its address.
+   */
+  '  <h2>Before you start</h2>',
+  '  <p>Two people, one running and one reading this. The reader keeps the',
+  '     clock and says the numbers out loud, because the person running is',
+  '     watching a terminal and will not be watching anything else.</p>',
+  '  <p>Anything below that says wait means wait. A step that looks finished',
+  '     before its minutes are up has usually not started.</p>',
+  '  <h2>While it runs</h2>',
+  '  <p>The queue drains first and the swap follows it. Neither reports',
+  '     progress, so the only honest signal is the clock and the queue length',
+  '     beside it.</p>',
+  '  <p>A queue that stops falling for a whole minute is the one thing worth',
+  '     stopping for. Everything else that looks wrong at this point looks',
+  '     wrong every time and has never been wrong yet.</p>',
+  '  <h2>After</h2>',
+  '  <p>Leave it alone for ten minutes and watch. The failure this replaces',
+  '     did not show up until the cache had turned over, which is about that',
+  '     long, and every earlier check said it was fine.</p>',
+  '  <p>Write down what the queue peaked at. Nobody has ever needed it during',
+  '     a deploy and everybody has wanted it a fortnight later.</p>',
+  '  <h2>If it has to come back</h2>',
+  '  <p>Rolling back is the same list upside down, and it is a separate',
+  '     document because reading a list backwards under pressure is how steps',
+  '     get missed.</p>',
+  '  <p>The decision is not technical. If the queue is draining at all, let it',
+  '     drain; if it has stopped, come back. There is no third answer worth',
+  '     arguing about at two in the morning.</p>',
   '  <script>window.strataScriptRan = true;</script>',
   '</body>',
   '</html>',
