@@ -32,6 +32,25 @@ The website's HTML page showed the boundary and did not explain it, so the
 sample's colour stopping at the column edge read as something half-finished
 rather than as the containment it is. Its introduction says so now.
 
+### The plain kind of link is driven too
+
+Every check on the document trail clicked a wiki link, because that is how the
+trail was first built and driven. A wiki link is not what most documents are
+written with, and a wiki was reported that used neither - only links to other
+SharePoint pages.
+
+Both kinds run the same code: they are both anchors, and what decides whether
+one opens here is the href's extension rather than the syntax that produced it.
+But "the code looks shared" is not a check, and the one that was there could
+have gone on passing while an ordinary `[text](file.md)` link quietly stopped
+working.
+
+It has a step of its own now, asserting the same bar, the same crumb and the
+same way back, with a selector that excludes the wiki class so it cannot start
+passing by clicking the link the other step already covers. Confirmed by making
+plain links stop being followed: the new step is the first to fail, and says
+the link was not recognised.
+
 ### A tag can be moved without a checkout
 
 Finishing a rewritten history means moving every tag that points into the old

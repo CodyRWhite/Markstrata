@@ -883,6 +883,68 @@ const LIBRARY_PATH = '/sites/demo/Documents';
     await page.waitForTimeout(400);
   });
 
+  /*
+   * The same thing, written the other way.
+   *
+   * The step above clicks a wiki link, which is how this was always driven,
+   * and a wiki link is not what most documents are written with. Nothing here
+   * knew whether an ordinary markdown link built the same trail: the code path
+   * is shared - both are anchors, and what decides is the href's extension
+   * rather than the syntax that produced it - but "the code looks shared" is
+   * not a check, and a wiki has been reported that used neither.
+   *
+   * So the plain form gets a step of its own, asserting the same bar, the same
+   * crumb and the same way back. The selector deliberately excludes the wiki
+   * class, so this cannot quietly start passing by clicking the link the other
+   * step already covers.
+   */
+  await step('an ordinary markdown link builds the same trail', async () => {
+    await page.evaluate(() => window.harness.setLibraryBase('/sites/demo/runbooks',
+      '# Handbook\n\nSee [how we ship](deploy.md) before you start.\n'));
+    await page.waitForTimeout(600);
+
+    const link = page.locator('.strata-content a:not(.strata-wiki-link)[href$="deploy.md"]');
+    if (!(await link.count())) {
+      throw new Error('the markdown link is not in the document, or was drawn as a wiki link');
+    }
+    const classes = await link.first().getAttribute('class');
+    if ((classes || '').indexOf('strata-doc-link') === -1) {
+      throw new Error('the link was not recognised as a document: ' + classes);
+    }
+
+    await link.first().click();
+    await page.waitForTimeout(600);
+
+    const opened = await page.evaluate(() => ({
+      heading: ((document.querySelector('.strata-content h1') || {}).textContent || '')
+        .replace('#', '').trim(),
+      bar: !!document.querySelector('.strata-open-doc'),
+      name: (document.querySelector('.strata-crumb-here') || {}).textContent,
+      crumbs: Array.prototype.slice
+        .call(document.querySelectorAll('.strata-crumb-link'))
+        .map((crumb) => (crumb.textContent || '').trim())
+    }));
+    if (opened.heading !== 'Deploying') {
+      throw new Error('the document on screen is "' + opened.heading + '"');
+    }
+    if (!opened.bar) throw new Error('a plain link opened a document and drew no trail');
+    if (opened.name !== 'deploy') throw new Error('the bar names "' + opened.name + '"');
+    if (opened.crumbs.length !== 1 || opened.crumbs[0] !== 'handbook') {
+      throw new Error('the trail behind it reads ' + JSON.stringify(opened.crumbs));
+    }
+
+    /* And the way back, because a trail that cannot be walked is a label. */
+    await page.locator('.strata-crumb-link').first().click();
+    await page.waitForTimeout(600);
+    const home = await page.evaluate(() => ({
+      heading: ((document.querySelector('.strata-content h1') || {}).textContent || '')
+        .replace('#', '').trim(),
+      bar: !!document.querySelector('.strata-open-doc')
+    }));
+    if (home.heading !== 'Handbook') throw new Error('back gave "' + home.heading + '"');
+    if (home.bar) throw new Error('the bar is still there at home');
+  });
+
   await step('a link to a heading in another document lands on it', async () => {
     await page.evaluate(() => window.harness.setLibraryBase('/sites/demo/runbooks',
       '# Handbook\n\nStraight to [[deploy#Rollback]].\n'
