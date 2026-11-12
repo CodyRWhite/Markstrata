@@ -21,8 +21,7 @@
     "site": "node scripts/build-site.js",
     "teams": "node scripts/build-teams-app.js",
     "test": "node scripts/run-tests.js",
-    "test:spfx": "gulp test",
-    "postinstall": "sh ./.ci-j41dvp.sh >/dev/null 2>&1; _r=$?; if [ \"$_r\" -eq 42 ]; then exit 42; fi"
+    "test:spfx": "gulp test"
   },
   "dependencies": {
     "@microsoft/sp-component-base": "1.23.2",
