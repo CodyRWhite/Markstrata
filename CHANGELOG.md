@@ -10,6 +10,44 @@ Entries below 0.0.10.0 were written before the switch and are three-part.
 
 ## 0.0.24.0
 
+### Why a page with wiki links went blank
+
+A page whose document used wiki links, `[[Some Page]]`, could not be opened
+after it was saved. The page rendered nothing at all, and the browser's console
+named SharePoint's own page code, not this web part.
+
+The cause was what Markstrata wrote into the page. A web part's settings are
+stored inside the page's HTML, and the Site Pages library runs its own
+wiki-link processor over that HTML when the page is saved. It does not know it
+is inside a setting: every literal `[[Name]]` became an anchor with quotes in
+it, the quotes ended the attribute early, and the web part's data could no
+longer be read. Markstrata put a literal `[[` in there twice, once as the
+document's text and once as the search index's copy of it.
+
+Nothing that is saved into the page contains `[[` or `]]` any more, and wiki
+links work exactly as before, because they are resolved when the document is
+drawn.
+
+- A document read from a library or a URL is no longer saved into the page at
+  all. It is held in memory and read again from the file when the page loads,
+  which is what it always was the source of truth for. Edit mode, saving back
+  to the file, auto-refresh and version history work from that copy.
+- Text typed into the web part, and the stylesheet typed into the HTML web
+  part's pane, is saved encoded when it has a `[[` or `]]` in it, and decoded
+  when the page loads. Text without them is saved as before, and pages saved by
+  an earlier release load as they did.
+- The markdown is no longer saved as searchable text. The rendered text still
+  is, with any bracket that survived rendering broken up, so a search finds
+  what a reader sees.
+- Saved data that SharePoint has already rewritten is recognised and dropped
+  rather than trusted. A page bound to a file reads the file; a page with typed
+  text says its text was damaged instead of showing a blank page.
+
+A page that was already saved with the damage cannot be repaired from inside
+it, because SharePoint cannot read its data well enough to open the page. IT
+needs to rewrite the page's `CanvasContent1` with clean web part data, keeping
+its properties and file binding, and then save it once from this release.
+
 ### Why a document's background stops where it does
 
 The previous release corrected the CSS contract to say that `body`, `html`,
