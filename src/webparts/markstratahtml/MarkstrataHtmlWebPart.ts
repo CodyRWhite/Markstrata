@@ -73,6 +73,7 @@ import './styles/html.css';
 
 import { StrataWebPart, IUnconfiguredGuidance } from '../shared/StrataWebPart';
 import { trailFromSearch, withTrail } from '../shared/pageTrail';
+import { plainText } from '../shared/persistedText';
 import { ContentEnhancer } from '../markstrata/utils/ContentEnhancer';
 import { SharePointService } from '../markstrata/utils/SharePointService';
 import { ThemeFamily } from '../markstrata/utils/ThemeManager';
@@ -156,11 +157,6 @@ export default class MarkstrataHtmlWebPart extends StrataWebPart<IMarkstrataHtml
     return 'htmlContent';
   }
 
-  /** A stylesheet typed into the pane is kept in the page, so it is stored encoded too. */
-  protected otherStoredText(): string[] {
-    return ['cssContent'];
-  }
-
   protected logName(): string {
     return 'Markstrata HTML';
   }
@@ -174,7 +170,7 @@ export default class MarkstrataHtmlWebPart extends StrataWebPart<IMarkstrataHtml
   }
 
   protected loadFailure(error: Error): string {
-    return `Could not load the HTML: ${error.message}`;
+    return `The document's HTML file could not be read${error.message ? `: ${error.message}` : ''}.`;
   }
 
   protected sampleContent(): string | undefined {
@@ -350,7 +346,7 @@ export default class MarkstrataHtmlWebPart extends StrataWebPart<IMarkstrataHtml
   /** What the renderer is given, which is the fetched sheet or the typed one. */
   private stylesheet(): string {
     if (this.properties.cssSource === 'manual') {
-      return this.properties.cssContent || '';
+      return plainText(this.properties.cssContent || '');
     }
     return this.sharedCss;
   }
@@ -615,6 +611,8 @@ export default class MarkstrataHtmlWebPart extends StrataWebPart<IMarkstrataHtml
    * as building the things that fetch these lists.
    */
   protected getPropertyPaneConfiguration(): IPropertyPaneConfiguration {
+    /* The text box reads the property itself, so it must not hold a stored form. */
+    this.decodeStoredProperties();
     const empty: { libraries: []; folders: []; files: [] } =
       { libraries: [], folders: [], files: [] };
     const documents: PaneSources | typeof empty = this.paneSources || empty;

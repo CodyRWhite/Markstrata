@@ -138,7 +138,7 @@ export default class MarkstrataWebPart extends StrataWebPart<IMarkstrataWebPartP
   }
 
   protected loadFailure(error: Error): string {
-    return `Could not load the markdown: ${error.message}`;
+    return `The document's markdown file could not be read${error.message ? `: ${error.message}` : ''}.`;
   }
 
   protected sampleContent(): string | undefined {
@@ -402,6 +402,8 @@ export default class MarkstrataWebPart extends StrataWebPart<IMarkstrataWebPartP
    * describing the pane lands in the page, not in the pane.
    */
   protected getPropertyPaneConfiguration(): IPropertyPaneConfiguration {
+    /* The text box reads the property itself, so it must not hold a stored form. */
+    this.decodeStoredProperties();
     const sources: PaneSources | { libraries: []; folders: []; files: [] } =
       this.paneSources || { libraries: [], folders: [], files: [] };
 
