@@ -64,14 +64,17 @@ const SLICE: number = 0x8000;
 const DOUBLED_BRACKETS: RegExp = /\[\[|\]\]/;
 
 /**
- * What the wiki-link processor leaves behind: an anchor whose id starts with
- * digits and "::" and whose class is ms-missinglink, either as markup or
- * already escaped as text. Both have to be there, in the one anchor. A value
- * that only mentions the class - a stylesheet with a rule for it, a note about
- * it - is somebody's content and is not damage.
+ * What the wiki-link processor leaves behind: an anchor whose id is the
+ * processor's own "N::Target|Text" form, either as markup or already escaped
+ * as text. The class is not required, because the processor only adds
+ * ms-missinglink when the target page does not exist; a link to a page that
+ * does exist is the same anchor without it. A value that only mentions the
+ * class - a stylesheet with a rule for it, a note about it - is somebody's
+ * content and is not damage, and neither is an anchor whose id merely starts
+ * with digits and "::" without the "|" that separates target from text.
  */
 const DAMAGE: RegExp =
-  /(?:<|&lt;|&#0*60;|\\u003c)a\s+id=(?:\\?["']|&quot;|&#0*34;)?\d+::[\s\S]{0,2000}?ms-missinglink/i;
+  /(?:<|&lt;|&#0*60;|\\u003c)a\s+id=(?:\\?["']|&quot;|&#0*34;)?\d+::[^"'<>|\\&]*\|/i;
 
 /** [[Page]], [[Page|Alias]] and [[Page#Heading|Alias]], on one line. */
 const WIKI_LINK: RegExp = /\[\[([^[\]|\r\n]*)(?:\|([^[\]\r\n]*))?\]\]/g;

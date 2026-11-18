@@ -71,6 +71,9 @@ test('the damage SharePoint does is recognised, as markup or as escaped text', (
   assert.equal(isDamaged('| Teams | &lt;a id="4::x|x" class="ms-missinglink">'), true);
   assert.equal(isDamaged('<a id="12::Page|Page" class="ms-missinglink" href="/x">'), true);
   assert.equal(isDamaged('{"a":"<a id=\\"4::x|x\\" class=\\"ms-missinglink\\" href=\\"/x\\">"}'), true);
+  /* A link to a page that exists gets the same anchor without the class. */
+  assert.equal(isDamaged('<a id="3::Existing Page|Existing Page" href="/x/SitePages/Existing-Page.aspx">'), true);
+  assert.equal(isDamaged('&lt;a id=&quot;3::Existing Page|Existing Page&quot; href=&quot;/x&quot;&gt;'), true);
   assert.equal(isDamaged('# A clean document\n\nWith [[a link]] and <a href="x">html</a>.'), false);
   assert.equal(isDamaged(toStoredText('[[a]] ms-missinglink')), false);
 });
