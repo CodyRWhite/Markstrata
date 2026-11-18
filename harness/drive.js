@@ -5152,14 +5152,16 @@ const LIBRARY_PATH = '/sites/demo/Documents';
       const box = document.querySelector('#host .strata-preview-box');
       return {
         heading: box ? ((box.querySelector('h1') || {}).textContent || '') : 'no preview',
-        kept: (window.htmlHarness.settings().htmlContent || '').indexOf('Typed just now') !== -1
+        /* A library document is edited in memory and saved back to its file;
+           the page's own data must never hold a copy of it. */
+        persisted: (window.htmlHarness.settings().htmlContent || '').indexOf('Typed just now') !== -1
       };
     });
     if (changed.heading !== 'Typed just now') {
       throw new Error('the preview still reads ' + JSON.stringify(changed.heading));
     }
-    if (!changed.kept) {
-      throw new Error('what was typed was not kept on the web part');
+    if (changed.persisted) {
+      throw new Error('a library document was copied into the web part properties');
     }
   });
 

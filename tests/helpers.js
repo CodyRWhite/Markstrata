@@ -95,6 +95,7 @@ module.exports = {
   documentNaming: shared('documentNaming'),
   headingIds: shared('headingIds'),
   pageTrail: shared('pageTrail'),
+  persistedText: shared('persistedText'),
   htmlFrame: shared('htmlFrame'),
   scrolling: lib('scrolling')
 };

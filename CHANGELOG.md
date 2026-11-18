@@ -10,6 +10,44 @@ Entries below 0.0.10.0 were written before the switch and are three-part.
 
 ## 0.0.24.0
 
+### Why a page with wiki links went blank
+
+A page whose document used wiki links, `[[Some Page]]`, could not be opened
+after it was saved. The page rendered nothing at all, and the browser's console
+named SharePoint's own page code, not this web part.
+
+The cause was what Markstrata wrote into the page. A web part's settings are
+stored inside the page's HTML, and the Site Pages library runs its own
+wiki-link processor over that HTML when the page is saved. It does not know it
+is inside a setting: every literal `[[Name]]` became an anchor with quotes in
+it, the quotes ended the attribute early, and the web part's data could no
+longer be read. Markstrata put a literal `[[` in there twice, once as the
+document's text and once as the search index's copy of it.
+
+Nothing that is saved into the page contains `[[` or `]]` any more, and wiki
+links work exactly as before, because they are resolved when the document is
+drawn.
+
+- A document read from a library or a URL is no longer saved into the page at
+  all. It is held in memory and read again from the file when the page loads,
+  which is what it always was the source of truth for. Edit mode, saving back
+  to the file, auto-refresh and version history work from that copy.
+- Text typed into the web part, and the stylesheet typed into the HTML web
+  part's pane, is saved encoded when it has a `[[` or `]]` in it, and decoded
+  when the page loads. Text without them is saved as before, and pages saved by
+  an earlier release load as they did.
+- The markdown is no longer saved as searchable text. The rendered text still
+  is, with any bracket that survived rendering broken up, so a search finds
+  what a reader sees.
+- Saved data that SharePoint has already rewritten is recognised and dropped
+  rather than trusted. A page bound to a file reads the file; a page with typed
+  text says its text was damaged instead of showing a blank page.
+
+A page that was already saved with the damage cannot be repaired from inside
+it, because SharePoint cannot read its data well enough to open the page. IT
+needs to rewrite the page's `CanvasContent1` with clean web part data, keeping
+its properties and file binding, and then save it once from this release.
+
 ### Why a document's background stops where it does
 
 The previous release corrected the CSS contract to say that `body`, `html`,
@@ -50,6 +88,54 @@ same way back, with a selector that excludes the wiki class so it cannot start
 passing by clicking the link the other step already covers. Confirmed by making
 plain links stop being followed: the new step is the first to fail, and says
 the link was not recognised.
+
+### Shared channels, and what guests actually are
+
+Both Teams apps declare `sharedChannels` now as well as `privateChannels`. A
+shared channel keeps a SharePoint site of its own, exactly as a private one
+does, so the mechanism is the one already proved in a tenant: the tab is
+pointed at the channel's own site and reads that channel's own Files.
+
+The reasoning for declining it before was half right and half wrong, so it is
+worth correcting rather than quietly reversing.
+
+Guests cannot be in a shared channel at all. Microsoft's own words are that
+"guests (people with Microsoft Entra guest accounts in your organization) can't
+be added to a shared channel". People from outside join one through B2B direct
+connect and stay signed into their own tenant while doing it. So a guest who
+needs to read a document belongs in a standard channel, where guest access has
+always worked, and no setting here changes that.
+
+What remains true is the caution, narrowed to where it belongs. Microsoft's
+guidance for a tab serving a cross-tenant participant is to request a token
+from that person's home tenant, which SharePoint Framework handles for itself
+and no manifest setting can influence. So a shared channel inside the tenant
+works the way a private one does, and a participant from another organization
+may find the tab does not load for them. Declining the whole feature over that
+would have cost every in-tenant shared channel to guard a case the manifest
+cannot fix either way.
+
+Both manifests validated against Microsoft's published 1.17 schema, and the
+setting read back out of the built zips rather than off the build log.
+
+### A sample worth the frame it is shown in
+
+The website publishes the HTML web part running, with a sample document of four
+paragraphs and a two-row table. On a tall window that left most of a screen of
+empty canvas under the card.
+
+The canvas was honest - a real SharePoint page shows the same under a short web
+part, and the previous release deliberately stopped stretching the web part to
+hide it - so the fix is a document worth the frame rather than a frame that
+lies about the document. The sample is a runbook now rather than a fragment of
+one: 1244px of document where there were 539, and nothing below it at any
+window height.
+
+What was already there is untouched, because it is all load bearing: the style
+block whose three rules are looked for, the one table the table checks count,
+and the three links whose handling differs. The addition is prose and headings
+only. A second table would change what the table checks measure, and a fourth
+link would change which one a check finds by its address.
 
 ### A tag can be moved without a checkout
 

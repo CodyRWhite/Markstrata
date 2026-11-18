@@ -37,7 +37,6 @@
 
 import { DisplayMode } from '@microsoft/sp-core-library';
 import { IPropertyPaneConfiguration } from '@microsoft/sp-property-pane';
-import { IWebPartPropertiesMetadata } from '@microsoft/sp-webpart-base';
 import * as strings from 'MarkstrataWebPartStrings';
 
 // KaTeX's stylesheet and its fonts are bundled with the solution: no part of
@@ -113,12 +112,16 @@ export default class MarkstrataWebPart extends StrataWebPart<IMarkstrataWebPartP
 
   // ----------------------------------------------------------------- contract
 
-  protected get documentText(): string {
+  protected get inlineText(): string {
     return this.properties.markdownContent;
   }
 
-  protected set documentText(value: string) {
+  protected set inlineText(value: string) {
     this.properties.markdownContent = value;
+  }
+
+  protected documentProperty(): string {
+    return 'markdownContent';
   }
 
   protected logName(): string {
@@ -139,17 +142,6 @@ export default class MarkstrataWebPart extends StrataWebPart<IMarkstrataWebPartP
 
   protected sampleContent(): string | undefined {
     return strings.SampleContent;
-  }
-
-  /**
-   * The markdown itself is searchable as well as the rendered text, so a
-   * document that failed to render is still findable by what it says.
-   */
-  protected get propertiesMetadata(): IWebPartPropertiesMetadata {
-    return {
-      ...super.propertiesMetadata,
-      markdownContent: { isSearchablePlainText: true }
-    };
   }
 
   /**
@@ -203,7 +195,10 @@ export default class MarkstrataWebPart extends StrataWebPart<IMarkstrataWebPartP
 
     this.editManager = new EditModeManager(this.processor, this.mermaid, this.enhancer, {
       onChange: (markdown: string) => {
-        this.properties.markdownContent = markdown;
+        /* Through the accessor, not the property: a document read from a
+           file is edited in memory and saved back to the file, and must
+           never be copied into the page's own data. */
+        this.documentText = markdown;
       },
       onSave: async (markdown: string) => {
         const saved: boolean = await this.saveToSharePoint(markdown);

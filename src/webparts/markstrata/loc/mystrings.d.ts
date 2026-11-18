@@ -122,6 +122,7 @@ declare interface IMarkstrataWebPartStrings {
   UnconfiguredOnPage: string;
   UnconfiguredInTeams: string;
   UnconfiguredSampleButton: string;
+  SavedContentDamaged: string;
 
   /* The HTML web part, which shares this strings file. */
   HtmlContentPageDescription: string;

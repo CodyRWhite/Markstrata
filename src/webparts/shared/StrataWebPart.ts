@@ -28,17 +28,24 @@
  * helper cannot own an order it does not control.
  *
  * WHAT IS DELIBERATELY NOT HERE
- * The document's text under a name. Each web part keeps it as
- * markdownContent or htmlContent, because the property pane and the search
- * index both show that name to somebody. The base reaches it through
- * documentText instead.
+ * The document's text under a name. Each web part keeps text typed into it as
+ * markdownContent or htmlContent, because the property pane shows that name
+ * to somebody. The base reaches it through inlineText, and through
+ * documentText, which is the text on screen whichever source it came from.
+ *
+ * WHAT IS NEVER WRITTEN INTO THE PAGE
+ * A document read from a file is held in memory and nowhere else, and text
+ * typed into the web part is written encoded. See persistedText.ts for why:
+ * SharePoint rewrites every literal [[ in a saved page, and does it inside
+ * the web part's own data.
  *
  * .USAGE
  *   export default class MarkstrataWebPart
  *     extends StrataWebPart<IMarkstrataWebPartProps> {
  *
- *     protected get documentText(): string { return this.properties.markdownContent; }
- *     protected set documentText(value: string) { this.properties.markdownContent = value; }
+ *     protected get inlineText(): string { return this.properties.markdownContent; }
+ *     protected set inlineText(value: string) { this.properties.markdownContent = value; }
+ *     protected documentProperty(): string { return 'markdownContent'; }
  *
  *     protected buildRenderers(): void { ... }
  *     protected drawDocument(): void { ... }
@@ -47,7 +54,7 @@
  * .NOTES
  * Since:     0.0.22.0
  * Ships in:  both web part bundles
- * Requires:  strataWebPartProps.ts, SharePointService.ts, documentNavigator.ts,
+ * Requires:  strataWebPartProps.ts, persistedText.ts, SharePointService.ts, documentNavigator.ts,
  *            documentParameter.ts, themeOverride.ts, paneSources.ts,
  *            VersionPanel.ts, pdfExport.ts, exportNaming.ts, imagePaths.ts,
  *            wikiLinks.ts, tocWidth.ts, remoteDocuments.ts, ThemeManager.ts
@@ -60,6 +67,9 @@ import { ThemeProvider, IReadonlyTheme } from '@microsoft/sp-component-base';
 import * as strings from 'MarkstrataWebPartStrings';
 
 import { IStrataWebPartProps } from './strataWebPartProps';
+import {
+  IPersistedTextRules, storedProperties, recoverProperties, cleanSearchText
+} from './persistedText';
 import { SharePointService } from '../markstrata/utils/SharePointService';
 import { DocumentNavigator, ILoadedDocument } from '../markstrata/utils/documentNavigator';
 import {
@@ -136,17 +146,65 @@ export abstract class StrataWebPart<TProps extends IStrataWebPartProps>
    */
   private addressNotice: string | undefined;
 
+  /**
+   * A document read from a file, which is held here and nowhere else.
+   *
+   * Not in this.properties, because everything in this.properties is written
+   * into the page when it is saved, and the page is what SharePoint runs its
+   * wiki-link processor over. See persistedText.ts.
+   */
+  private fileText: string = '';
+  /**
+   * What was found wrong with the saved data when it was read, if anything.
+   * Declared without an initialiser on purpose: SPFx reads the saved data and
+   * calls onAfterDeserialize, which sets this, and an initialiser would run
+   * as part of construction and could not be trusted to come first.
+   */
+  private damagedNotice: string | undefined;
+  /** Puts back the text onBeforeSerialize swapped for its stored form. */
+  private restoreAfterSerialize: (() => void) | undefined;
+
   // ----------------------------------------------------------------- contract
 
   /**
-   * The document's own text, under whatever name this web part keeps it.
+   * The text typed into this web part, under whatever name it keeps it.
    *
    * An accessor rather than a property name, because the generic half of this
-   * class both reads it (to decide whether anything is configured) and writes
-   * it (when the configured file is loaded), and the name differs.
+   * class reads and writes it and the name differs. This is only the manual
+   * source's text: a document read from a file never goes in here, see
+   * documentText.
    */
-  protected abstract get documentText(): string;
-  protected abstract set documentText(value: string);
+  protected abstract get inlineText(): string;
+  protected abstract set inlineText(value: string);
+
+  /** The name of the property inlineText is kept in. */
+  protected abstract documentProperty(): string;
+
+  /** Other free text this web part keeps in its properties, which is stored encoded too. */
+  protected otherStoredText(): string[] {
+    return [];
+  }
+
+  /**
+   * The text on screen: the file's, held in memory, when the document comes
+   * from a file, and what was typed into the web part when it does not.
+   */
+  protected get documentText(): string {
+    return this.usesFile() ? this.fileText : this.inlineText;
+  }
+
+  protected set documentText(value: string) {
+    if (this.usesFile()) {
+      this.fileText = value;
+    } else {
+      this.inlineText = value;
+    }
+  }
+
+  /** Whether the document is read from a file rather than typed in. */
+  protected usesFile(): boolean {
+    return this.properties.contentSource === 'library' || this.properties.contentSource === 'url';
+  }
 
   /** Defaults for the settings this web part has and the other one does not. */
   protected abstract ownDefaults(): Record<string, unknown>;
@@ -385,6 +443,134 @@ export abstract class StrataWebPart<TProps extends IStrataWebPartProps>
     }
   }
 
+  // ------------------------------------------------------ what is persisted
+
+  private persistedRules(): IPersistedTextRules {
+    return {
+      documentKey: this.documentProperty(),
+      textKeys: this.otherStoredText(),
+      fileSource: this.usesFile()
+    };
+  }
+
+  /**
+   * Swaps the properties' text for what may be written into a page, for as
+   * long as it takes SharePoint to copy them.
+   *
+   * WHY HERE, AND WHY IT IS PUT BACK
+   * SharePoint's wiki-link processor rewrites a literal [[ anywhere in the
+   * saved page, including inside the JSON of data-sp-webpartdata, and the JSON
+   * stringify SPFx uses cannot be told to escape brackets. So the text has to
+   * be changed before it is stringified, and this is the hook for that.
+   *
+   * I read @microsoft/sp-webpart-base 1.23.2 to be sure it is safe.
+   * BaseWebPart._internalSerialize calls onBeforeSerialize and then, in the
+   * same synchronous run, _serialize, which takes
+   * _cloneProperties(this._persistedProperties) - lodash cloneDeepWith, a full
+   * copy - and builds the saved data from the copy. _persistedProperties is
+   * this.properties, except in a non-reactive property pane, which this web
+   * part does not use (it never sets disableReactivePropertyChanges). Nothing
+   * about the live properties is kept after that call returns.
+   *
+   * So the live properties can have their text put back straight afterwards,
+   * which matters because the property pane's text box and the edit mode
+   * handlers read the plain text from them, and a page stays open after a
+   * save. The put-back is a microtask: it runs when the synchronous
+   * serialisation has finished and before anything else can. A second
+   * serialisation that arrives first puts it back itself, so the swap is never
+   * applied to text that is already swapped.
+   *
+   * The alternative was keeping the document in a separate encoded property
+   * and decoding it in onAfterDeserialize. It still needs the plain text in
+   * the live properties for the pane's text box, so it needs this swap as
+   * well; this keeps one property and one meaning.
+   */
+  protected onBeforeSerialize(): void {
+    super.onBeforeSerialize();
+    try {
+      if (this.restoreAfterSerialize) {
+        this.restoreAfterSerialize();
+      }
+
+      const live: Record<string, unknown> = this.properties as unknown as Record<string, unknown>;
+      const write: Record<string, string> = storedProperties(live, this.persistedRules());
+      const keys: string[] = Object.keys(write);
+      if (keys.length === 0) {
+        return;
+      }
+
+      const original: Record<string, unknown> = {};
+      keys.forEach((key: string) => {
+        original[key] = live[key];
+        live[key] = write[key];
+      });
+
+      const restore: () => void = (): void => {
+        if (this.restoreAfterSerialize === restore) {
+          this.restoreAfterSerialize = undefined;
+        }
+        keys.forEach((key: string) => {
+          /* Only if nothing has changed it since, which would be an edit that
+             is newer than the text being put back. */
+          if (live[key] === write[key]) {
+            live[key] = original[key];
+          }
+        });
+      };
+      this.restoreAfterSerialize = restore;
+      void Promise.resolve().then(restore);
+    } catch (error) {
+      console.error(`[${this.logName()}] The text could not be prepared for saving`, error);
+    }
+  }
+
+  /**
+   * Reads what the page saved, and mends what it can.
+   *
+   * Nothing is allowed to throw from here: SharePoint reads this while it
+   * builds the page, and a failure is the page's. Text that was encoded is
+   * decoded, text that SharePoint's wiki-link processor already rewrote is
+   * dropped, and a copy of a file's text that an older release left in the
+   * page is dropped so that the next save cleans it out. A web part whose
+   * typed-in text was lost says so when it draws, in damagedNotice.
+   *
+   * This is also where an older page's text comes back, whichever of the two
+   * places it was saved in: SPFx has already put a searchable property's saved
+   * value back into the bag by the time this runs, so a page from 0.0.23.0 and
+   * earlier, which saved the document that way, arrives here looking the same
+   * as one saved now.
+   */
+  // The signature is fixed by BaseClientSideWebPart.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  protected onAfterDeserialize(deserializedObject: any, dataVersion: Version): TProps {
+    try {
+      if (deserializedObject && typeof deserializedObject === 'object') {
+        const bag: Record<string, unknown> = deserializedObject as Record<string, unknown>;
+        const rules: IPersistedTextRules = {
+          documentKey: this.documentProperty(),
+          textKeys: this.otherStoredText(),
+          fileSource: bag.contentSource === 'library' || bag.contentSource === 'url'
+        };
+        const recovery = recoverProperties(bag, rules);
+        if (recovery.discarded.length > 0) {
+          console.warn(`[${this.logName()}] Saved data was damaged and was discarded: `
+            + recovery.discarded.join(', '));
+          if (recovery.discarded.indexOf(rules.documentKey) !== -1 && !rules.fileSource) {
+            this.damagedNotice = strings.SavedContentDamaged;
+          }
+        }
+      }
+    } catch (error) {
+      console.error(`[${this.logName()}] The saved data could not be read cleanly`, error);
+    }
+    try {
+      return super.onAfterDeserialize(deserializedObject, dataVersion);
+    } catch (error) {
+      console.error(`[${this.logName()}] The saved data could not be read`, error);
+      return (deserializedObject || {}) as TProps;
+    }
+  }
+
   protected get dataVersion(): Version {
     return Version.parse('1.0');
   }
@@ -395,7 +581,11 @@ export abstract class StrataWebPart<TProps extends IStrataWebPartProps>
    * copied. Without this, a document rendered by a client-side web part is
    * invisible to search.
    *
-   * The document's own property is added by the web part that owns its name.
+   * Only the rendered text is searchable, never the source. The source is what
+   * has [[ in it, and a searchable property is written into the page a second
+   * time, as markup, where the wiki-link processor rewrites it. The document's
+   * own property is deliberately not listed, so it stays an ordinary property
+   * and is written encoded; see onBeforeSerialize.
    */
   protected get propertiesMetadata(): IWebPartPropertiesMetadata {
     return {
@@ -495,6 +685,19 @@ export abstract class StrataWebPart<TProps extends IStrataWebPartProps>
   }
 
   private draw(): void {
+    /* Text typed into the web part that SharePoint had already damaged, and
+       nothing since. Said plainly instead of showing a page that looks as if
+       nobody ever set it up. A file-backed page never gets here: it reads its
+       document again. Gone as soon as there is text again. */
+    if (this.damagedNotice) {
+      if (this.usesFile() || this.inlineText) {
+        this.damagedNotice = undefined;
+      } else {
+        this.drawFailure(this.damagedNotice);
+        return;
+      }
+    }
+
     /* Before anything is built for a document: there is not one. */
     if (this.isConfigured() === false && this.previewContent === undefined
       && this.navigator.markdown === undefined) {
@@ -558,7 +761,7 @@ export abstract class StrataWebPart<TProps extends IStrataWebPartProps>
    * What a reader sees instead of a document. Plain DOM on purpose: whatever
    * went wrong may have been the renderer, so nothing here goes through one.
    */
-  private drawFailure(): void {
+  private drawFailure(message?: string): void {
     this.domElement.textContent = '';
 
     const box: HTMLElement = document.createElement('div');
@@ -571,7 +774,9 @@ export abstract class StrataWebPart<TProps extends IStrataWebPartProps>
     box.style.border = '1px solid #d13438';
     box.style.color = '#a4262c';
     box.style.font = '14px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
-    box.textContent = `Markstrata could not start: ${this.startUpError}`;
+    box.textContent = message !== undefined
+      ? message
+      : `Markstrata could not start: ${this.startUpError}`;
 
     this.domElement.appendChild(box);
   }
@@ -795,11 +1000,11 @@ export abstract class StrataWebPart<TProps extends IStrataWebPartProps>
 
     try {
       if (this.properties.contentSource === 'library' && this.properties.selectedFile) {
-        this.documentText = await this.sharePoint.getFileContent(this.properties.selectedFile);
+        this.fileText = await this.sharePoint.getFileContent(this.properties.selectedFile);
         this.properties.fileMetadata = await this.sharePoint.getFileMetadata(this.properties.selectedFile);
         this.setupAutoRefresh();
       } else if (this.properties.contentSource === 'url' && this.properties.fileUrl) {
-        this.documentText = await SharePointService.fetchUrl(this.properties.fileUrl);
+        this.fileText = await SharePointService.fetchUrl(this.properties.fileUrl);
         this.properties.fileMetadata = undefined;
       }
     } catch (error) {
@@ -1036,7 +1241,9 @@ export abstract class StrataWebPart<TProps extends IStrataWebPartProps>
     if (!article) {
       return;
     }
-    const text: string = (article.textContent || '').replace(/\s+/g, ' ').trim();
+    /* Cleaned as well as read: a [[ in the index is a [[ in the page, which is
+       what SharePoint rewrites. See persistedText.ts. */
+    const text: string = cleanSearchText((article.textContent || '').replace(/\s+/g, ' ').trim());
     this.properties.searchablePlainText = text.substring(0, MAX_SEARCH_TEXT);
   }
 

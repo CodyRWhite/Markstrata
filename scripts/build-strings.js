@@ -175,6 +175,9 @@ const STRINGS = {
   UnconfiguredInTeams: 'Open this tab\'s settings and choose a markdown file. '
     + 'In a channel that is the arrow beside the tab name, then Settings.',
   UnconfiguredSampleButton: 'Start with the sample document',
+  SavedContentDamaged: 'The text saved in this web part was damaged when the page '
+    + 'was saved, and could not be read. Edit the page and enter the content '
+    + 'again, or choose a file for it in the web part settings.',
 
 
   /*
