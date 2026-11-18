@@ -75,6 +75,7 @@ import { PaneSources } from './paneSources';
 export { IMarkstrataWebPartProps } from './webPartProps';
 import { IMarkstrataWebPartProps } from './webPartProps';
 import { paneConfiguration } from './propertyPane';
+import { heldHeading } from './utils/headingLanding';
 
 /*
  * Settings the markdown pipeline is built from: changing one of these means
@@ -137,7 +138,7 @@ export default class MarkstrataWebPart extends StrataWebPart<IMarkstrataWebPartP
   }
 
   protected loadFailure(error: Error): string {
-    return `Could not load the markdown: ${error.message}`;
+    return `The document's markdown file could not be read${error.message ? `: ${error.message}` : ''}.`;
   }
 
   protected sampleContent(): string | undefined {
@@ -272,7 +273,13 @@ export default class MarkstrataWebPart extends StrataWebPart<IMarkstrataWebPartP
       return;
     }
 
-    const landOn: string | undefined = this.navigator.takeHeading();
+    /* The heading is handed over once, and the document can be drawn twice
+       before the reader has done anything: the second draw replaces what the
+       first landed on. It is asked for again while the landing is still held,
+       for the same document only. */
+    const landOn: string | undefined = this.navigator.takeHeading()
+      || (this.landedPath === this.navigator.path ? heldHeading() : undefined);
+    this.landedPath = landOn ? this.navigator.path : undefined;
 
     this.viewRenderer.render(this.domElement, markdown, {
       settings: settings,
@@ -395,6 +402,8 @@ export default class MarkstrataWebPart extends StrataWebPart<IMarkstrataWebPartP
    * describing the pane lands in the page, not in the pane.
    */
   protected getPropertyPaneConfiguration(): IPropertyPaneConfiguration {
+    /* The text box reads the property itself, so it must not hold a stored form. */
+    this.decodeStoredProperties();
     const sources: PaneSources | { libraries: []; folders: []; files: [] } =
       this.paneSources || { libraries: [], folders: [], files: [] };
 

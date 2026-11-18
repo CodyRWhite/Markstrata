@@ -4745,7 +4745,7 @@ const LIBRARY_PATH = '/sites/demo/Documents';
       throw new Error('the web part reports ' + shown.state + ' rather than starting anyway');
     }
     if (shown.drawn !== 1) throw new Error('nothing was drawn');
-    if (shown.banner.indexOf('Could not load') === -1) {
+    if (shown.banner.indexOf('could not be read') === -1 || shown.banner.indexOf('no longer keeps a copy') === -1) {
       throw new Error('the page says ' + JSON.stringify(shown.banner));
     }
   });

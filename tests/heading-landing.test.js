@@ -30,7 +30,7 @@ const { JSDOM } = require('jsdom');
 const { wikiLinks, headingLanding } = require('./helpers');
 
 const { headingTargets } = wikiLinks;
-const { findHeading, landOnHeading } = headingLanding;
+const { findHeading, landOnHeading, heldHeading } = headingLanding;
 
 /** A rendered document, as the headings the markdown pipeline would give it. */
 function document(html) {
@@ -119,7 +119,7 @@ test('landing on a heading scrolls to it and says so', () => {
   heading.scrollIntoView = (options) => { scrolled = options; };
 
   assert.equal(landOnHeading(article, 'Rollback'), true);
-  assert.deepEqual(scrolled, { block: 'start' });
+  assert.deepEqual(scrolled, { behavior: 'instant', block: 'start' });
 });
 
 test('landing smoothly is what a click in the text asks for', () => {
@@ -134,4 +134,131 @@ test('landing smoothly is what a click in the text asks for', () => {
 
 test('landing on a heading that is not there scrolls nothing', () => {
   assert.equal(landOnHeading(document(HEADINGS), 'Nowhere'), false);
+});
+
+/**
+ * A stand-in window that keeps its listeners and its one timer, so a landing
+ * can be held, disturbed and released without a browser.
+ */
+function fakeWindow() {
+  const listeners = {};
+  const fake = {
+    listeners,
+    timers: [],
+    addEventListener: (name, fn) => { (listeners[name] = listeners[name] || []).push(fn); },
+    removeEventListener: (name, fn) => {
+      listeners[name] = (listeners[name] || []).filter((f) => f !== fn);
+    },
+    setTimeout: (fn) => { fake.timers.push(fn); return fake.timers.length; },
+    clearTimeout: () => {}
+  };
+  return fake;
+}
+
+/** Runs a body with the stand-in installed as the global window. */
+function withWindow(body) {
+  const fake = fakeWindow();
+  globalThis.window = fake;
+  try { body(fake); } finally { delete globalThis.window; }
+}
+
+/** A heading that reports where it sits, and counts the times it is scrolled to. */
+function trackedHeading(article) {
+  const heading = article.querySelector('#rollback');
+  const state = { top: 0, scrolls: 0 };
+  heading.getBoundingClientRect = () => ({ top: state.top });
+  heading.scrollIntoView = () => { state.scrolls++; state.top = 0; };
+  return { heading, state };
+}
+
+test('a picture loading above the heading puts the heading back where it landed', () => {
+  withWindow(() => {
+    const article = document(HEADINGS);
+    const { state } = trackedHeading(article);
+
+    landOnHeading(article, 'Rollback');
+    assert.equal(state.scrolls, 1);
+
+    /* The picture arrives and pushes the heading a screen down the page. */
+    state.top = 990;
+    article.dispatchEvent(new (new JSDOM('').window.Event)('load'));
+    assert.equal(state.scrolls, 2, 'the heading was left where the picture pushed it');
+    assert.equal(state.top, 0);
+  });
+});
+
+test('a heading that has not moved is not scrolled again', () => {
+  withWindow(() => {
+    const article = document(HEADINGS);
+    const { state } = trackedHeading(article);
+
+    landOnHeading(article, 'Rollback');
+    article.dispatchEvent(new (new JSDOM('').window.Event)('load'));
+    assert.equal(state.scrolls, 1);
+  });
+});
+
+test('a reader who scrolls takes the page back from the hold', () => {
+  withWindow((fake) => {
+    const article = document(HEADINGS);
+    const { state } = trackedHeading(article);
+
+    landOnHeading(article, 'Rollback');
+    fake.listeners.wheel.forEach((fn) => fn());
+
+    state.top = 990;
+    article.dispatchEvent(new (new JSDOM('').window.Event)('load'));
+    assert.equal(state.scrolls, 1, 'the page was pulled back after the reader moved it');
+  });
+});
+
+test('the hold ends when its time is up', () => {
+  withWindow((fake) => {
+    const article = document(HEADINGS);
+    const { state } = trackedHeading(article);
+
+    landOnHeading(article, 'Rollback');
+    fake.timers.forEach((fn) => fn());
+
+    state.top = 990;
+    article.dispatchEvent(new (new JSDOM('').window.Event)('load'));
+    assert.equal(state.scrolls, 1);
+    assert.equal((fake.listeners.wheel || []).length, 0, 'listeners left behind');
+  });
+});
+
+test('a smooth landing, which is a click, is not held', () => {
+  withWindow((fake) => {
+    const article = document(HEADINGS);
+    const { state } = trackedHeading(article);
+
+    landOnHeading(article, 'Rollback', true);
+    state.top = 990;
+    article.dispatchEvent(new (new JSDOM('').window.Event)('load'));
+    assert.equal(state.scrolls, 1);
+    assert.equal((fake.listeners.wheel || []).length, 0);
+  });
+});
+
+test('a landing is held by name until the reader takes the page back', () => {
+  /* So a second draw of the same document, which replaces the elements the
+     first landed on, can land on the same heading again. */
+  withWindow((fake) => {
+    const article = document(HEADINGS);
+    trackedHeading(article);
+
+    assert.equal(heldHeading(), undefined);
+    landOnHeading(article, 'Rollback');
+    assert.equal(heldHeading(), 'Rollback');
+
+    fake.listeners.keydown.forEach((fn) => fn());
+    assert.equal(heldHeading(), undefined);
+  });
+});
+
+test('a landing that is not held is not offered again', () => {
+  withWindow(() => {
+    landOnHeading(document(HEADINGS), 'Nowhere');
+    assert.equal(heldHeading(), undefined);
+  });
 });

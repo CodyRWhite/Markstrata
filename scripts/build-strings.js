@@ -176,8 +176,10 @@ const STRINGS = {
     + 'In a channel that is the arrow beside the tab name, then Settings.',
   UnconfiguredSampleButton: 'Start with the sample document',
   SavedContentDamaged: 'The text saved in this web part was damaged when the page '
-    + 'was saved, and could not be read. Edit the page and enter the content '
-    + 'again, or choose a file for it in the web part settings.',
+    + 'was saved, and could not be read. Enter the content again, or choose '
+    + 'a file for it in the web part settings.',
+  FileNotKept: 'This page no longer keeps a copy of the document, so nothing is '
+    + 'shown until the file can be read again.',
 
 
   /*

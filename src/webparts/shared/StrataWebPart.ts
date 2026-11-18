@@ -68,7 +68,7 @@ import * as strings from 'MarkstrataWebPartStrings';
 
 import { IStrataWebPartProps } from './strataWebPartProps';
 import {
-  IPersistedTextRules, storedProperties, recoverProperties, cleanSearchText
+  IPersistedTextRules, storedProperties, recoverProperties, cleanSearchText, plainText, decodeStoredInPlace
 } from './persistedText';
 import { SharePointService } from '../markstrata/utils/SharePointService';
 import { DocumentNavigator, ILoadedDocument } from '../markstrata/utils/documentNavigator';
@@ -119,6 +119,8 @@ export abstract class StrataWebPart<TProps extends IStrataWebPartProps>
   protected paneSources: PaneSources;
   /** A document the reader followed a link to, and the history that goes with it. */
   protected navigator: DocumentNavigator;
+  /** The document a heading was last landed on in, so a redraw of it can land again. */
+  protected landedPath: string | undefined;
   protected versionPanel: VersionPanel;
   /** The theme this reader chose for themselves, if they chose one. */
   protected themeOverride: ThemeOverride;
@@ -180,17 +182,15 @@ export abstract class StrataWebPart<TProps extends IStrataWebPartProps>
   /** The name of the property inlineText is kept in. */
   protected abstract documentProperty(): string;
 
-  /** Other free text this web part keeps in its properties, which is stored encoded too. */
-  protected otherStoredText(): string[] {
-    return [];
-  }
-
   /**
    * The text on screen: the file's, held in memory, when the document comes
    * from a file, and what was typed into the web part when it does not.
    */
   protected get documentText(): string {
-    return this.usesFile() ? this.fileText : this.inlineText;
+    /* Read through plainText so that a value still in its stored form, which
+       is what the live property holds for a moment during a save, is never
+       taken for the document. */
+    return this.usesFile() ? this.fileText : plainText(this.inlineText || '');
   }
 
   protected set documentText(value: string) {
@@ -445,10 +445,24 @@ export abstract class StrataWebPart<TProps extends IStrataWebPartProps>
 
   // ------------------------------------------------------ what is persisted
 
+  /**
+   * Puts any value still in its stored form back to plain text, in the live
+   * properties. The swap in onBeforeSerialize undoes itself, so this finds
+   * nothing to do; it is here so that if the undoing is ever missed, an
+   * encoded document is decoded before it is shown, edited or put in the
+   * property pane's text box, and never mistaken for the document.
+   */
+  protected decodeStoredProperties(): void {
+    try {
+      decodeStoredInPlace(this.properties as unknown as Record<string, unknown>);
+    } catch (error) {
+      console.error(`[${this.logName()}] Stored text could not be decoded`, error);
+    }
+  }
+
   private persistedRules(): IPersistedTextRules {
     return {
       documentKey: this.documentProperty(),
-      textKeys: this.otherStoredText(),
       fileSource: this.usesFile()
     };
   }
@@ -493,7 +507,7 @@ export abstract class StrataWebPart<TProps extends IStrataWebPartProps>
       }
 
       const live: Record<string, unknown> = this.properties as unknown as Record<string, unknown>;
-      const write: Record<string, string> = storedProperties(live, this.persistedRules());
+      const write: Record<string, unknown> = storedProperties(live, this.persistedRules());
       const keys: string[] = Object.keys(write);
       if (keys.length === 0) {
         return;
@@ -548,7 +562,6 @@ export abstract class StrataWebPart<TProps extends IStrataWebPartProps>
         const bag: Record<string, unknown> = deserializedObject as Record<string, unknown>;
         const rules: IPersistedTextRules = {
           documentKey: this.documentProperty(),
-          textKeys: this.otherStoredText(),
           fileSource: bag.contentSource === 'library' || bag.contentSource === 'url'
         };
         const recovery = recoverProperties(bag, rules);
@@ -571,8 +584,21 @@ export abstract class StrataWebPart<TProps extends IStrataWebPartProps>
     }
   }
 
+  /**
+   * 1.1: what is stored changed in 0.0.24.1 (any string with [[ or ]] in it is
+   * kept encoded, and a file's text is not kept at all), so the version says
+   * which format a page was saved in.
+   *
+   * SPFx does nothing with the number except write it into the page and hand
+   * the stored one back to onAfterDeserialize (BaseWebPart._deserialize; there
+   * is no comparison and no refusal of a newer one). Nothing here branches on
+   * it either: recoverProperties reads 1.0 pages, which hold plain values, and
+   * 1.1 pages, which hold some encoded ones, by looking at each value, so a 1.0
+   * page loads exactly as it did and is written as 1.1 the next time it is
+   * saved.
+   */
   protected get dataVersion(): Version {
-    return Version.parse('1.0');
+    return Version.parse('1.1');
   }
 
   /**
@@ -689,19 +715,29 @@ export abstract class StrataWebPart<TProps extends IStrataWebPartProps>
        nothing since. Said plainly instead of showing a page that looks as if
        nobody ever set it up. A file-backed page never gets here: it reads its
        document again. Gone as soon as there is text again. */
+    let notice: string | undefined;
     if (this.damagedNotice) {
       if (this.usesFile() || this.inlineText) {
         this.damagedNotice = undefined;
+      } else if (this.displayMode === DisplayMode.Edit) {
+        /* An author needs the editor, or the way to set the part up, to put
+           the text back: the notice goes with it, not instead of it. */
+        notice = this.damagedNotice;
       } else {
         this.drawFailure(this.damagedNotice);
         return;
       }
     }
 
+    this.decodeStoredProperties();
+
     /* Before anything is built for a document: there is not one. */
     if (this.isConfigured() === false && this.previewContent === undefined
       && this.navigator.markdown === undefined) {
       this.drawUnconfigured();
+      if (notice) {
+        this.showBanner(notice, 'error');
+      }
       return;
     }
 
@@ -710,6 +746,9 @@ export abstract class StrataWebPart<TProps extends IStrataWebPartProps>
     this.versionPanel.close();
 
     this.drawDocument();
+    if (notice) {
+      this.showBanner(notice, 'error');
+    }
   }
 
   /**
@@ -1008,7 +1047,10 @@ export abstract class StrataWebPart<TProps extends IStrataWebPartProps>
         this.properties.fileMetadata = undefined;
       }
     } catch (error) {
-      this.loadError = this.loadFailure(error as Error);
+      /* The page does not keep a copy of a file's text, so there is nothing
+         to fall back on and the document is empty. Said, not left to look as
+         if nothing was ever set up. */
+      this.loadError = `${this.loadFailure(error as Error)} ${strings.FileNotKept}`;
     }
 
     // The base path follows the chosen file, and the property list that
