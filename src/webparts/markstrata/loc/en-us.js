@@ -122,6 +122,7 @@ define([], function () {
     "UnconfiguredOnPage": "Somebody who can edit this page needs to choose a document for it in the web part settings.",
     "UnconfiguredInTeams": "Open this tab's settings and choose a markdown file. In a channel that is the arrow beside the tab name, then Settings.",
     "UnconfiguredSampleButton": "Start with the sample document",
+    "SavedContentDamaged": "The text saved in this web part was damaged when the page was saved, and could not be read. Edit the page and enter the content again, or choose a file for it in the web part settings.",
     "HtmlContentPageDescription": "Choose where the HTML comes from.",
     "HtmlContentLabel": "HTML",
     "HtmlContentDescription": "Typed here and stored with the web part. Good for a small fragment; use a library file for a whole document you want to version.",

@@ -143,12 +143,21 @@ export default class MarkstrataHtmlWebPart extends StrataWebPart<IMarkstrataHtml
 
   // ----------------------------------------------------------------- contract
 
-  protected get documentText(): string {
+  protected get inlineText(): string {
     return this.properties.htmlContent;
   }
 
-  protected set documentText(value: string) {
+  protected set inlineText(value: string) {
     this.properties.htmlContent = value;
+  }
+
+  protected documentProperty(): string {
+    return 'htmlContent';
+  }
+
+  /** A stylesheet typed into the pane is kept in the page, so it is stored encoded too. */
+  protected otherStoredText(): string[] {
+    return ['cssContent'];
   }
 
   protected logName(): string {
@@ -264,7 +273,8 @@ export default class MarkstrataHtmlWebPart extends StrataWebPart<IMarkstrataHtml
 
     this.editManager = new HtmlEditModeManager(this.viewRenderer, this.enhancer, {
       onChange: (html: string) => {
-        this.properties.htmlContent = html;
+        /* Through the accessor, not the property: see the markdown web part. */
+        this.documentText = html;
       },
       /* Kept on the web part rather than saved anywhere: a stylesheet typed
          into the pane is stored with the part, and SharePoint writes it when
