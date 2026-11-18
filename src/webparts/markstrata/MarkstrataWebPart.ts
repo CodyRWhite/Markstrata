@@ -75,6 +75,7 @@ import { PaneSources } from './paneSources';
 export { IMarkstrataWebPartProps } from './webPartProps';
 import { IMarkstrataWebPartProps } from './webPartProps';
 import { paneConfiguration } from './propertyPane';
+import { heldHeading } from './utils/headingLanding';
 
 /*
  * Settings the markdown pipeline is built from: changing one of these means
@@ -272,7 +273,13 @@ export default class MarkstrataWebPart extends StrataWebPart<IMarkstrataWebPartP
       return;
     }
 
-    const landOn: string | undefined = this.navigator.takeHeading();
+    /* The heading is handed over once, and the document can be drawn twice
+       before the reader has done anything: the second draw replaces what the
+       first landed on. It is asked for again while the landing is still held,
+       for the same document only. */
+    const landOn: string | undefined = this.navigator.takeHeading()
+      || (this.landedPath === this.navigator.path ? heldHeading() : undefined);
+    this.landedPath = landOn ? this.navigator.path : undefined;
 
     this.viewRenderer.render(this.domElement, markdown, {
       settings: settings,

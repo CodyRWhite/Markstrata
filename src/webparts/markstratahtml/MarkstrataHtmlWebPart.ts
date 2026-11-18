@@ -84,6 +84,7 @@ import { IMarkstrataHtmlWebPartProps } from './htmlWebPartProps';
 import { HtmlViewRenderer, IHtmlViewOptions } from './utils/HtmlViewRenderer';
 import { HtmlEditModeManager } from './utils/HtmlEditModeManager';
 import { htmlPaneConfiguration } from './htmlPropertyPane';
+import { heldHeading } from '../markstrata/utils/headingLanding';
 
 /** Which files the document picker offers. */
 const HTML_EXTENSIONS: string[] = ['.html', '.htm'];
@@ -400,7 +401,9 @@ export default class MarkstrataHtmlWebPart extends StrataWebPart<IMarkstrataHtml
     }
 
     /* Taken here rather than in viewOptions, because taking it consumes it. */
-    options.landOnHeading = this.navigator.takeHeading();
+    options.landOnHeading = this.navigator.takeHeading()
+      || (this.landedPath === this.navigator.path ? heldHeading() : undefined);
+    this.landedPath = options.landOnHeading ? this.navigator.path : undefined;
 
     this.viewRenderer.render(this.domElement, html, options);
 

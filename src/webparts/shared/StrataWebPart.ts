@@ -119,6 +119,8 @@ export abstract class StrataWebPart<TProps extends IStrataWebPartProps>
   protected paneSources: PaneSources;
   /** A document the reader followed a link to, and the history that goes with it. */
   protected navigator: DocumentNavigator;
+  /** The document a heading was last landed on in, so a redraw of it can land again. */
+  protected landedPath: string | undefined;
   protected versionPanel: VersionPanel;
   /** The theme this reader chose for themselves, if they chose one. */
   protected themeOverride: ThemeOverride;

@@ -8,6 +8,30 @@ is normally zero. `scripts/set-version.js` stamps it when a release is cut.
 
 Entries below 0.0.10.0 were written before the switch and are three-part.
 
+## 0.0.24.1
+
+### Why a link to a heading landed a screen too high
+
+A link, a menu entry or an address that named a heading scrolled to it as soon
+as the document was drawn. On a page whose pictures had not loaded yet, they
+were a line tall at that moment and several hundred pixels tall a moment later,
+so everything below them, the heading included, was pushed down the page. The
+reader arrived a screen or two above the section they had asked for, and the
+nearer the heading was to the bottom of a long document, the worse it was.
+
+A heading landed on this way is now held where it landed while the content above
+it settles, whether that is a picture loading or a diagram being drawn. The hold
+lets go the moment the reader scrolls or presses anything, and in any case after
+a few seconds. A click on a link in the text, which scrolls smoothly, is
+unchanged.
+
+The same landing was also lost when the page drew the document a second time
+straight after the first, as SharePoint does when a web part starts: the second
+drawing replaced everything the first had scrolled to, and the heading, which is
+handed over once, had already been spent. The second drawing now lands on it
+again, for the same document and for as long as the reader has not touched the
+page.
+
 ## 0.0.24.0
 
 ### Why a page with wiki links went blank
