@@ -32,6 +32,34 @@ handed over once, had already been spent. The second drawing now lands on it
 again, for the same document and for as long as the reader has not touched the
 page.
 
+### Hardening what 0.0.24.0 stopped saving
+
+0.0.24.0 kept `[[` out of the page's data for the document and the stylesheet.
+This finishes the job and tidies what it left rough.
+
+- Any text saved into the page is covered now, not a fixed list of two. A file
+  called `[[Draft]] plan.md` put `[[` in the saved file path and file details as
+  surely as a document does. Every saved string that has `[[` or `]]` in it, at
+  any depth, is stored encoded and read back exactly; strings without are saved
+  as they were, and older pages load unchanged. The saved data's version is now
+  1.1. SharePoint only records it and hands it back when the page loads, so
+  nothing refuses an older or newer page, and a 1.0 page is simply written as
+  1.1 the next time it is saved.
+- Saved text is called damaged only when it carries SharePoint's real rewrite,
+  an anchor with a numbered id and the `ms-missinglink` class together. A
+  stylesheet with a rule for that class, or a note that mentions it, used to be
+  wiped on load and is now left alone.
+- A document whose file cannot be read now says so: that the document's file
+  could not be read, why when that is known, and that the page no longer keeps a
+  copy, so nothing is shown until the file can be read again. The copy is not
+  brought back, because it is what put `[[` in the page.
+- An author editing a page whose typed text was lost now sees the notice and
+  the editor, or the setup panel, together, so the text can be put back from
+  the page. A reader still sees the notice alone.
+- Text still in its stored form is decoded wherever it is read, in the
+  document, the editor and the settings pane's text box, so it can never be
+  taken for the document itself.
+
 ## 0.0.24.0
 
 ### Why a page with wiki links went blank
