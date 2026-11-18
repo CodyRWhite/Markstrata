@@ -91,9 +91,7 @@ export function landOnHeading(
   /* Instant, by name, because a page whose stylesheet asks for smooth scrolling
      would otherwise animate this one too, and the heading could not be measured
      where it landed. */
-  found.scrollIntoView(
-    smooth ? { behavior: 'smooth', block: 'start' } : { behavior: 'instant', block: 'start' }
-  );
+  found.scrollIntoView({ behavior: (smooth ? 'smooth' : 'instant') as ScrollBehavior, block: 'start' });
 
   /* A smooth scroll is a reader's own click and is already moving; it is the
      one that arrives with the page as it is. */
@@ -168,7 +166,7 @@ function holdWhileSettling(container: HTMLElement, target: HTMLElement, name: st
       return;
     }
     if (Math.abs(topOf(target) - landedAt) > 1) {
-      target.scrollIntoView({ behavior: 'instant', block: 'start' });
+      target.scrollIntoView({ behavior: 'instant' as ScrollBehavior, block: 'start' });
     }
   }
 
