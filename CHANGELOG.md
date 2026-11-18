@@ -46,7 +46,8 @@ This finishes the job and tidies what it left rough.
   nothing refuses an older or newer page, and a 1.0 page is simply written as
   1.1 the next time it is saved.
 - Saved text is called damaged only when it carries SharePoint's real rewrite,
-  an anchor with a numbered id and the `ms-missinglink` class together. A
+  an anchor whose id is the processor's own `N::Target|Text` form, with or
+  without the `ms-missinglink` class it adds for a page that does not exist. A
   stylesheet with a rule for that class, or a note that mentions it, used to be
   wiped on load and is now left alone.
 - A document whose file cannot be read now says so: that the document's file
